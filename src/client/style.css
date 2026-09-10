@@ -1763,23 +1763,6 @@ small {
     min-height: 0;
   }
 }
-/* Derived class palettes. These separate the four classes that share a
-   borrowed atlas cell; replacing them with real cells removes these rules. */
-/* Normalising through sepia first keeps the shift predictable: a plain
-   hue-rotate drags the atlas's reds into magenta. */
-.sprite-borrowed.sprite-reaver {
-  filter: sepia(0.4) saturate(3.2) hue-rotate(-24deg) brightness(0.92)
-    contrast(1.08);
-}
-.sprite-borrowed.sprite-herald {
-  filter: sepia(0.45) saturate(2) hue-rotate(2deg) brightness(1.12);
-}
-.sprite-borrowed.sprite-beguiler {
-  filter: hue-rotate(72deg) saturate(1.3);
-}
-.sprite-borrowed.sprite-broker {
-  filter: sepia(0.6) saturate(2.4) hue-rotate(-14deg) brightness(1.06);
-}
 
 /* ── Round playback ────────────────────────────────────────────────────────
    A resolved round arrives from the server all at once. These rules give it

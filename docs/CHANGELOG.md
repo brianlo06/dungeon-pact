@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6 class art — 2026-09-10
+
+- Broker, Herald, Reaver and Beguiler have their own sprites. The palette-shifted placeholders they shipped with are gone, along with the `derived` map and the `.sprite-<class>` filters.
+- Added `public/art/characters-v2.png`, a 2×2 512px-cell atlas. `Sprite.tsx` selects the sheet per id, so both atlases coexist and a third needs only another entry.
+- Added `scripts/build-sprite-sheet.py`, which keys the generated magenta background, trims to the artwork and centres each sprite in its cell. Keying on a flat threshold leaves a purple fringe, so it neutralises the key across a band and feathers alpha instead.
+- Recorded what actually makes the generation work in ART_DIRECTION.md: two cropped v1 cells as visual reference fix the proportions, which words alone do not; ask for exactly one character alone or a multi-character reference produces a scene; and require the whole body head to feet or the framing crops to a bust.
+- Provenance recorded in ASSET_LICENSES.md as AI-generated, not commissioned illustration.
+
 ## 0.5 combat presentation — 2026-09-10
 
 - Added round playback. The engine resolved a whole round in one message and the client snapped to the aftermath, so a fight had no moments in it. Rounds now replay as timed beats: the acting unit is spotlit while the board dims, the move announces itself as a skewed callout, targets flash and shake, floating numbers rise off them, and reactions get a full-width banner.

@@ -17,44 +17,33 @@ User feedback: the first presentation felt AI-generated and lacked an indie game
 
 `public/art/characters-v1.png`: 4×4 equal-cell RGBA atlas, generated at 1254×1254. Row-major mapping in `Sprite.tsx`: Vanguard, Arcanist, Ranger, Warden; Stoker, Bulwark, Acolyte, Mender; Hound, Sniper, Thief, Bellows; Collector, Miser, Auctioneer, Chest. CSS background-size 400% isolates cells without image transformation. Do not change the layout without updating the coordinate contract.
 
-### Second atlas — cell manifest to generate
+### Second atlas
 
-`Sprite.tsx` already supports a second sheet. Producing
-`public/art/characters-v2.png` and filling in the `v2` constant is the whole
-integration; no other code changes, and the borrowed cells and palette filters
-stop being used automatically.
+`public/art/characters-v2.png`: 2×2 equal-cell RGBA atlas, 512px cells, holding
+the classes added after v1 was generated. Row-major mapping in `Sprite.tsx`:
+Broker, Herald; Reaver, Beguiler. `Sprite` picks the sheet per id, so the two
+atlases coexist and a third would only need another entry.
 
-Required: a **2×2 equal-cell RGBA sheet**, transparent background, each cell
-square and the character centred with a few pixels of margin. Match v1's
-density — its characters read at roughly 64×64 logical pixels with hard
-outlines and two-tone shading. Row-major order:
+Each character was generated separately against a flat pure magenta #FF00FF
+field, then keyed, trimmed and centred by `scripts/build-sprite-sheet.py`. A
+flat threshold on the key leaves a purple fringe, because the edge pixels are
+part sprite and part background; the script instead neutralises the key's
+contribution across a band and feathers alpha through it.
 
-| Cell | Class    | Read                                                                                                                          |
-| ---- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| 0    | Broker   | A ledger-carrying dealer. Long coat, coin pouches, scales or an abacus, a quill. Amber and brass. Reads as money, not combat. |
-| 1    | Herald   | A standard bearer. Tabard, horn or banner on a pole, laurel. Pale gold and bone. Upright, chin high, inspiring not armoured.  |
-| 2    | Reaver   | A blood-priced berserker. Bare arms, torn straps, a heavy notched cleaver, bandages showing old wounds. Crimson and iron.     |
-| 3    | Beguiler | A crooked-tongue manipulator. Hood over a half-mask, trailing ribbons, puppet strings or a mirror shard. Violet and green.    |
+Style is held by the prompt in `scripts/generate-sprites.ts` plus two cropped
+v1 cells supplied as visual reference. The reference is what fixes proportions:
+described in words alone the model produces slim modern figures, and shown a
+cell it matches the chunky big-head builds. Two further rules matter — ask for
+exactly one character alone in frame, since a multi-character reference makes
+it compose a scene; and state the whole body from head to feet must be visible,
+or it crops to a bust.
 
-Style constraints to carry into any prompt: chunky 2–3 px dark outlines, flat
-fills with one highlight and one shadow tone per material, no gradients, no
-anti-aliasing, no drop shadows, no ground plane or background scenery, scruffy small
-adventurer proportions with roughly a 1:3 head-to-body ratio, and a palette of
-ink purple, dusty violet, rust orange, bone and amber. Each character faces
-three-quarters toward the viewer in a ready stance.
-
-Whatever tool produces it, record the provenance in ASSET_LICENSES.md and do
-not describe generated output as commissioned human illustration.
-
-### Current placeholder
-
-The atlas predates the second class wave, so Broker, Herald, Reaver and Beguiler borrow the closest silhouette — Ranger, Warden, Vanguard and Arcanist respectively — and are separated by palette in `Sprite.tsx` and `style.css`. Deriving a variant by recolouring is ordinary pixel-art practice, but these four still read as recoloured versions of another class rather than their own characters. The fix is an atlas regeneration adding four cells plus four entries in `cells`; the `derived` map and the `.sprite-<class>` filters then disappear. Do not describe these as bespoke class art. The filters normalise through `sepia()` first because a bare `hue-rotate` drags the atlas's reds into magenta.
-
-Sprites appear in hero selection, battlefield, Guild Hall, auction host, rewards and results. `PixelIcon.tsx` provides source-authored coin, sword, shield, gavel, gem, crown, skull, leaf, fire and question icons. Actual equipment still uses category icons; unique per-item art is future work.
-
-## Screen decisions
-
-Guild Hall: compact invitation form beside a small tavern tableau. Lobby: four character stages with clear selection borders. Combat: two columns preserve explicit front/back labels and reduce vertical scrolling. Intentions sit above enemies as speech panels, with damage and targets in text. Auctions: the skeleton host speaks beside a framed item pedestal. Maps use pixel room icons and dashed route connectors.
+Cell subjects, for regeneration: Broker, a stout spectacled money-dealer with a
+ledger, coin pouches and brass scales in amber over violet. Herald, a standard
+bearer with laurel circlet, sun-sigil banner and horn in pale gold and bone.
+Reaver, a scarred bare-armed berserker with bandaged forearms and a notched
+cleaver in crimson and iron. Beguiler, a hooded figure in a cracked porcelain
+half-mask with puppet strings and a mirror shard in violet and sickly green.
 
 ## Combat presentation
 

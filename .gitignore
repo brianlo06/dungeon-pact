@@ -6,3 +6,5 @@ dist/
 *.log
 
 .screenshots/
+
+art-out/
