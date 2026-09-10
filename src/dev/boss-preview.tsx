@@ -20,16 +20,44 @@ const defaults: FixtureOptions = {
   legacy: false,
 };
 
+/**
+ * The lab is driven by the query string as well as the controls, so a scene can
+ * be linked, reloaded and asserted against. Every automated layout check names
+ * the state it is testing in its URL rather than clicking its way there.
+ */
+function fromUrl(): { options: FixtureOptions; viewport: string; you: number } {
+  const q = new URLSearchParams(location.search);
+  const num = (k: string, fallback: number) => {
+    const v = Number(q.get(k));
+    return Number.isFinite(v) && q.has(k) ? v : fallback;
+  };
+  return {
+    options: {
+      ...defaults,
+      boss: (q.get("boss") as FixtureOptions["boss"]) ?? defaults.boss,
+      size: num("party", defaults.size) as FixtureOptions["size"],
+      stage: (q.get("stage") as FixtureOptions["stage"]) ?? defaults.stage,
+      gold: num("gold", defaults.gold),
+      legacy: q.get("legacy") === "1",
+      downed: q.get("downed") === "1",
+      longNames: q.get("longNames") === "1",
+    },
+    viewport: q.get("viewport") ?? "fit",
+    you: num("you", 0),
+  };
+}
+const initial = fromUrl();
+
 function BossPreview() {
-  const [options, setOptions] = useState(defaults);
-  const [run, setRun] = useState(() => bossFixture(defaults));
-  const [you, setYou] = useState("preview-0");
+  const [options, setOptions] = useState(initial.options);
+  const [run, setRun] = useState(() => bossFixture(initial.options));
+  const [you, setYou] = useState(`preview-${initial.you}`);
   const [generation, setGeneration] = useState(0);
   const [error, setError] = useState("");
   const [motion, setMotion] = useState(false);
   // Explicit viewport sizes, so the resolutions the design has to survive can
   // be checked without resizing the browser window.
-  const [size, setSize] = useState("1280x720");
+  const [size, setSize] = useState(initial.viewport);
   const [evidence, setEvidence] = useState(false);
   const [w, h] = size === "fit" ? [0, 0] : size.split("x").map(Number);
   useEffect(() => {

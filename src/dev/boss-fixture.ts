@@ -12,6 +12,10 @@ export interface FixtureOptions {
   stage: Stage;
   gold: number;
   legacy: boolean;
+  /** Drop a hero, so the downed and revival presentation can be inspected. */
+  downed?: boolean;
+  /** Give a hero an absurd name, to prove the layout survives real content. */
+  longNames?: boolean;
 }
 
 /** Supply the remaining players' legal Brace plans through the real reducer. */
@@ -29,7 +33,14 @@ export function finishPreviewRound(state: RunState): RunState {
 /** Seed selection preserves the engine's actual boss stats and support formation. */
 export function bossFixture(options: FixtureOptions): RunState {
   const classes = ["vanguard", "arcanist", "ranger", "warden"];
-  const names = ["Ada", "Bram", "Cora", "Dain"];
+  const names = options.longNames
+    ? [
+        "Adelheid of the Long Ledger",
+        "Bramwell Thricebound",
+        "Coraline Quillbreaker",
+        "Dainsleif the Unpaid",
+      ]
+    : ["Ada", "Bram", "Cora", "Dain"];
   for (let seed = 0; seed < 100; seed++) {
     let s = createRun("PREVIEW", `boss-preview-${seed}`);
     if (options.legacy) {
@@ -68,6 +79,13 @@ export function bossFixture(options: FixtureOptions): RunState {
     }
     if (options.stage === "resolved" || options.stage === "released")
       s = finishPreviewRound(s);
+    if (options.downed) {
+      const victim = s.players[s.players.length - 1];
+      effects(s, s.enemies[0], victim, [
+        { kind: "damage", amount: victim.maxHp + 50 },
+      ]);
+      prepareIntents(s);
+    }
     if (options.stage === "released") {
       const box = s.enemies.find((e) => e.definition === "strongbox");
       // A visual fixture for the break moment; normal play remains available below.
