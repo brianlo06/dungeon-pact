@@ -14,7 +14,7 @@ import {
   standing,
 } from "./combat";
 import { upgradeOffer } from "../content/upgrades";
-import { enterAuction, nominate, purchase } from "./auction";
+import { enterAuction, nextLot, nominate, purchase } from "./auction";
 export function createRun(room: string, seed: string): RunState {
   return {
     encounterVersion: 2,
@@ -277,8 +277,11 @@ export function reduce(
     }
     case "continue":
       requirePhase("REWARD", "AUCTION");
-      if (s.phase === "AUCTION" && s.auction?.stage !== "sold")
-        throw Error("Auction is not complete");
+      if (s.phase === "AUCTION") {
+        if (s.auction?.stage !== "sold") throw Error("Auction is not complete");
+        // An exchange runs several lots; only the last one returns to the map.
+        if (nextLot(s)) break;
+      }
       s.phase = "MAP";
       s.auction = null;
       break;
@@ -373,7 +376,8 @@ export function snapshot(
     ...(s.phase === "COMPLETE" ? { seed } : {}),
     auction: auction
       ? (() => {
-          const { itemId, ...a } = auction;
+          // itemId and offered both name concealed lots; neither leaves the server.
+          const { itemId, offered: _offered, ...a } = auction;
           const item = items.find((i) => i.id === itemId)!;
           return {
             ...a,

@@ -20,7 +20,8 @@ export function Auction({
   return (
     <section className="auction-room">
       <span className="eyebrow">
-        THE GILDED EXCHANGE · LOT {a.round.toString().padStart(2, "0")}
+        THE GILDED EXCHANGE · LOT {a.lot ?? 1} OF {a.lots ?? 1}
+        {a.round > 1 ? ` · BIDDING ROUND ${a.round}` : ""}
       </span>
       <h1>Going once. Going broke.</h1>
       <div className="auction-host">
@@ -198,7 +199,9 @@ export function Auction({
               disabled={disabled}
               onClick={() => send({ type: "continue" })}
             >
-              Return to the dungeon →
+              {(a.lot ?? 1) < (a.lots ?? 1)
+                ? "Bring out the next lot →"
+                : "Return to the dungeon →"}
             </button>
           </div>
         )}

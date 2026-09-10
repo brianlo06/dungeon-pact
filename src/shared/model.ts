@@ -158,6 +158,13 @@ export interface Auction {
   owner?: string;
   approvals: Record<string, boolean>;
   round: number;
+  /** Position in this exchange's sequence of lots. Absent in single-lot saves. */
+  lot?: number;
+  lots?: number;
+  mystery?: boolean;
+  /** Item ids already offered here, so one exchange never repeats a lot.
+   * Never sent to clients: it would name a concealed lot. */
+  offered?: string[];
 }
 export interface GameLog {
   seq: number;
@@ -199,7 +206,7 @@ export interface RunState {
   reward: number;
   pact: string | null;
 }
-export type PublicAuction = Omit<Auction, "itemId"> & {
+export type PublicAuction = Omit<Auction, "itemId" | "offered"> & {
   item: Partial<ItemDef>;
 };
 export interface Snapshot extends Omit<

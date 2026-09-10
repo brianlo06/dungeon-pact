@@ -160,17 +160,16 @@ function lotFit(s: RunState, p: Player) {
   return n;
 }
 
-/** Gold the party keeps back for camp medicine and one battlefield revival. */
+/**
+ * Gold the party keeps back for recovery. It shrinks as the run progresses:
+ * treasury left over at the results screen bought nothing.
+ */
 const reserve = (s: RunState) => {
   const depth = s.map.find((n) => n.id === s.currentNode)?.depth ?? 0;
-  return depth >= 5 ? 0 : 210;
+  return Math.max(0, 240 - depth * 45);
 };
-
-function bestBuyer(s: RunState) {
-  return [...s.players]
-    .map((p) => ({ p, fit: lotFit(s, p) }))
-    .sort((a, b) => b.fit - a.fit || a.p.id.localeCompare(b.p.id))[0];
-}
+/** What a hero will pay for a lot before letting a rival have it. */
+const valuation = (fit: number) => fit * 70;
 
 /** The original attack-focused bot, preserved so old baselines stay comparable. */
 export const attackPolicy: Policy = {
@@ -467,12 +466,13 @@ export const tacticalPolicy: Policy = {
   interest(s, p) {
     const a = s.auction!;
     if (a.price > s.gold - reserve(s)) return false;
-    const best = bestBuyer(s);
-    return best.p.id === p.id && best.fit >= 3;
+    // Every hero the lot suits raises a paddle, so contested lots really bid up.
+    return lotFit(s, p) >= 3 && a.price <= valuation(lotFit(s, p));
   },
   bid(s, p) {
     const a = s.auction!;
-    return a.price + 30 <= s.gold - reserve(s) && lotFit(s, p) >= 4;
+    const next = a.price + 30;
+    return next <= s.gold - reserve(s) && next <= valuation(lotFit(s, p));
   },
   approve(s, _p) {
     return s.auction!.price <= s.gold - reserve(s);
