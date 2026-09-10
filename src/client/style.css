@@ -1,3 +1,5 @@
+@import "./combat.css";
+
 @font-face {
   font-family: Silkscreen;
   src: url("/fonts/silkscreen.ttf") format("truetype");

@@ -71,7 +71,12 @@ function strongbox(s: RunState): Enemy {
   const existing = s.enemies.find((e) => e.definition === "strongbox");
   if (existing && existing.hp > 0) return existing;
   const def = definitions.find((d) => d.id === "strongbox")!;
-  const hp = Math.round(def.hp * (0.6 + s.players.length * 0.2));
+  // Priced against the party's actions, not its headcount. A container that
+  // scales as `base + players` costs a duo a whole round and a quartet three
+  // quarters of one, which is why two-hero parties wore the largest share of
+  // the objectives pass. Scaling straight off the party's output makes opening
+  // it the same fraction of a round at every size.
+  const hp = Math.round(def.hp * s.players.length * 0.35);
   const box: Enemy = {
     id: `enemy-box-${s.enemies.length}`,
     definition: def.id,
@@ -258,6 +263,8 @@ export function effects(
     ) {
       const carried = target.items
         .map((id) => items.find((i) => i.id === id)!)
+        // Supplies are stock, not collateral: an appraiser takes what is worn.
+        .filter((i) => i.slot !== "supply")
         .sort((a, b) => b.price - a.price || a.id.localeCompare(b.id))
         .slice(0, e.count);
       if (carried.length) {

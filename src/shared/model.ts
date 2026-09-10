@@ -25,7 +25,13 @@ export type StatusId =
   | "guarded"
   | "interrupted";
 export type Trigger =
-  "roundStart" | "afterAttack" | "afterHeal" | "onHurt" | "onKill";
+  | "roundStart"
+  | "afterAttack"
+  | "afterHeal"
+  | "onHurt"
+  | "onKill"
+  /** Never fired by the trigger loop: a supply is spent by being used. */
+  | "use";
 export type Effect =
   | {
       kind: "damage";
@@ -93,13 +99,20 @@ export interface ItemDef {
   id: string;
   name: string;
   rarity: "Common" | "Rare" | "Epic" | "Legendary";
-  slot: "weapon" | "armor" | "relic";
+  /**
+   * A supply is carried rather than worn: several fit at once, none replaces
+   * anything, and using one spends it. Everything else occupies its slot.
+   */
+  slot: "weapon" | "armor" | "relic" | "supply";
   tags: string[];
   description: string;
   clue: string;
   cursed: boolean;
   trigger: Trigger;
+  /** Passive effects fired by `trigger`. Empty for a supply. */
   effects: Effect[];
+  /** The action carrying a supply grants. Absent on worn equipment. */
+  use?: Ability;
   target: "self" | "target";
   price: number;
 }

@@ -1,157 +1,164 @@
 # Handoff
 
-Updated 2026-09-10 · branch `boss-objectives`, 1 commit ahead of `main`
+Updated 2026-09-10 · branch `boss-objectives`, 3 commits ahead of `main`
 
 **Read this first, then `BALANCE.md`.** Everything below is current as of the
 last commit. Counts come from `validateContent()`, not memory.
 
 ## Where the work lives
 
-The previous session's ten commits are **merged into `main`** (fast-forward, no
-merge commit). This session's boss-objective work sits on **`boss-objectives`**,
-not merged. Nothing is pushed: the repository still has no remote at all.
+The route/upgrade/healing work is merged into `main`. Boss objectives,
+supplies and the reliability pass sit on **`boss-objectives`**, not merged.
+Nothing is pushed: the repository still has no remote at all.
+
+Codex is working in the same tree on presentation. Its boss preview harness
+(`src/dev/`, `dev/bosses.html`, `docs/BOSS_PREVIEW.md`) and the `BossObjective`
+component are committed alongside this work at the user's direction. `npm run
+build` excludes the preview from production.
 
 ## What the game is now
 
 An 8-class cooperative roguelite over a 7-depth branching route. Guest lobby →
 hero choice → starting pact → route → chambers → boss → results.
 
-Chambers: combat, elite, exchange (three lots each), veiled lot, event, mentor,
-camp, boss. Clearing a fight opens a branch upgrade for every hero. A mentor
-teaches one class path per hero, paid from the shared treasury.
+Chambers: combat, elite, exchange, veiled lot, event, mentor, camp, boss. An
+exchange runs three equipment lots and closes with a consumables tray. Clearing
+a fight opens a branch upgrade for every hero. A mentor teaches one class path.
 
-Both bosses now fight for an objective and state it before the first round. The
-Collector seizes equipment into a Strongbox the party may choose to break open;
-the Miser shields itself with whatever gold the treasury is still sitting on.
-`GAME_DESIGN.md` has the rules, `BALANCE.md` the evidence.
+Both bosses fight for an objective and state it before the first round: the
+Collector seizes equipment into a breakable Strongbox, the Miser shields itself
+with treasury the party never spent.
 
 Content: 8 heroes, 24 class paths across 3 mentors, 48 ability branches, 12
-items, 8 normal enemies, 2 bosses, 1 container, 2 elite traits, 12 statuses,
-3 events.
+items and 5 supplies, 8 normal enemies, 2 bosses, 1 container, 2 elite traits,
+12 statuses, 3 events.
 
-Verified at the last commit: production build, 75 automated tests across 9
-files. The boss objectives were measured across 486 compositions on two builds
-and two policies, but **were not driven in a browser** — reaching a boss by hand
-takes a full run, and no shortcut for it exists. That is the first thing to do
-if the presentation matters to you.
+Verified at the last commit: production build, 95 automated tests across 13
+files, and 12 real-WebSocket checks against a live Worker. **Neither the boss
+objectives nor the supplies have been driven in a browser by this session** —
+reaching a boss by hand takes a full run. Codex's preview harness exists
+precisely to make that cheap; use it.
 
 ## What is worth doing next
 
-### 1. Decide what Vanguard and Warden are for
+### 1. The Vanguard/Warden gap is now a ceiling problem
 
-Unchanged as a design question, but the evidence is now much stronger. Both sat
-near +15 before this pass; after it they sit at +17 and +21. Making the game
-harder made them better, which is what should have been expected: any increase
-in difficulty raises the value of not dying. That closes off the whole direction
-— the gap will not move by tuning, and it will not move by adding threat either.
+Supplies took the Vanguard gap from +17 to +11 and the Warden's from +21 to
++17, and every point came from lifting parties that field neither: parties with
+one did not move at all. That is the mechanism working. It stops there for a
+reason worth understanding before touching it again — Warden parties sit at
+**98%**, so nothing that lifts a floor can close the gap further. Closing it
+means making Warden parties lose more, and the healing pass already established
+what happens then.
 
-It is a design decision. Either accept that the two survivability classes are
-the strongest picks, or move some of what they provide into equipment or
-consumables so a party can buy what a Vanguard gives. **Do not attempt it as a
-numbers pass, and do not attempt it by making the dungeon harder.**
+If it is worth another pass, the lever is the ceiling, not the floor, and the
+lever is not healing. Consider whether the boss layer should have an objective
+that a healer specifically cannot answer, the way the Strongbox is one that a
+tank cannot.
 
-### 2. Two-hero parties took the largest share of the difficulty drop
+### 2. Two-hero parties still trail, and the container was not why
 
-72% → 63%, against 91% → 86% at four. That is the wrong way round: duos were
-already the hardest bracket. The Strongbox scales its health with party size,
-but a duo still spends half a round opening it where a quartet spends a
-quarter. Containers should be priced against a party's actions, not its
-headcount. This is the cleanest small win left.
+Duos sit at 67% against 89% at four. Pricing the Strongbox against party
+actions rather than headcount — the fix the last handoff proposed — was worth
+**one point**, measured on its own. It was the right shape and it was not the
+cause. Whatever is hurting duos is somewhere else, and the next person should
+measure before designing. Start by splitting duo losses by chamber type rather
+than assuming the boss.
 
-### 3. The Reaver
+### 3. Economy
 
-Worth re-checking before acting. The last handoff called it the weakest class;
-it now reads +3 to +5 in the matrix and appears in the easiest compositions.
-Either the healing pass or the objectives moved it. Measure before designing.
+Supplies are the gold sink the notebook wanted, and mean final treasury fell
+from 253 to 245 — barely. Parties still reach the boss with 50–95 gold in hand.
+A party still has no way to spend gold down deliberately before the Counting
+House, so the Miser's shield remains a penalty on hoarding rather than a
+decision on the route. A supply seller somewhere other than an exchange would
+fix both.
 
-### 4. Economy, and consumables
+### 4. Reliability, continued
 
-Parties reach the boss with about 50–95 gold in hand — far less than the
-results screen suggests, because mean final treasury is counted after the 240
-boss reward lands. Consumables would give non-Warden parties something to buy,
-and would give a party a way to spend gold down deliberately before the Counting
-House, which is currently impossible: see the note on the Miser below.
+The concurrency model, room expiry, idle disconnection and creation limits are
+done and documented in `NETWORK_PROTOCOL.md`. What is left before strangers
+play: four physical devices, Worker restart smoke, network-interruption
+behaviour, a long session soak, schema fuzzing — and watching the retention
+alarms actually fire, which none of the tests do because every timer is
+measured in hours.
 
-### 5. Reliability, before anyone outside your group plays it
-
-Unchanged and still real: strict room-revision validation makes simultaneous
-commands produce stale rejections — migrate to phase/round epochs. No heartbeat
-timeout, AFK handling, room expiry, creation limits or retention policy.
+There is still no AFK _handling_ in the game sense. A player who stops
+answering blocks a phase indefinitely; only their socket times out, not their
+turn. That is a design decision — auto-pass, or a party vote to proceed — and
+it is the last thing between this and a public room.
 
 ## Things that are true but easy to misread
 
-**"Leftover gold" figures include the boss reward.** The 242–268 recorded in
-earlier passes is mostly the 240 prize for winning. This matters more than it
-sounds: it is why a treasury-scaled boss shield had to be given an allowance,
-and why a first attempt keyed to raw gold would have measured as doing nothing.
+**Supplies narrow the survivability gap; they do not close it.** One action
+bought is not one action every round. A Warden heals seven or eight times in a
+boss fight; a party carries two or three Field Dressings. This was always going
+to be a narrowing.
 
-**The Miser's shield is currently a penalty, not a decision.** Nothing in the
-game lets a party spend gold down on purpose before the boss, so the shield can
-only punish hoarding after the fact. It becomes a real route-level decision the
-moment consumables exist.
+**"Leftover gold" figures include the boss reward.** Mean final treasury is
+counted after the 240 prize lands, so most of what looks like leftover is the
+prize. Gold actually in hand at the boss is 50–95.
 
-**The `hoard` policy is deliberately a bad bot.** It buys nothing, trains
-nobody and never pays for medicine, so its absolute win rates are low and mean
-nothing on their own. It exists only to be compared against itself across two
-builds. Read it that way or it will look like a regression.
+**The Miser's shield is a penalty, not yet a decision.** See economy above.
+
+**The `hoard` policy is deliberately a bad bot.** It buys nothing and trains
+nobody, so its absolute win rates are low and mean nothing alone. It exists to
+be compared against itself across two builds.
 
 **`scripts/generate-sprites.ts` has never been run end to end.** The API key
-works but the account has no prepay credits, which blocks text and image models
-alike. Its request shape is confirmed by a billing rejection, not by an
-inspected image. Treat the first real run as a review step.
+works but the account has no prepay credits. Its request shape is confirmed by a
+billing rejection, not an inspected image.
 
-**Class art is generated, not commissioned.** `ASSET_LICENSES.md` records the
-provenance of both atlases. Do not describe either as hand-painted. The
-Strongbox has no art of its own and falls back to the chest cell.
-
-**Multi-frame animation is still not implemented.** Round playback knows when a
-unit acts, is hit, heals or falls, but no such sheet exists.
+**Class art is generated, not commissioned.** Do not describe it as
+hand-painted. The Strongbox has no art and falls back to the chest cell.
 
 **Save compatibility is deliberate.** Rooms without `combatVersion: 2` keep
-legacy skills, intentions, generation, flat revival prices and unbounded
-combat, never see the upgrade or mentor phases, and get bosses with **no
-objectives at all**. Schema and content versions remain 1; every field added
-this session is optional. Start a new pact to see current rules.
+legacy skills, intentions, generation, flat revival prices and unbounded combat,
+never see the upgrade or mentor phases, get bosses with no objectives, and are
+never granted a supply action. Schema and content versions remain 1.
 
 ## How to check anything
 
 ```sh
 npm run build
 npm test
-npm run simulate -- 25 --matrix                        # all 486 combinations
-npm run simulate -- 25 --matrix --policy=tactical,hoard # ...and the hoarder
-npm run dev:server                                      # then npm run test:network
+npm run simulate -- 25 --matrix                         # all 486 combinations
+npm run simulate -- 25 --matrix --policy=tactical,hoard  # ...and the hoarder
+npm run dev:server                                       # then npm run test:network
 ```
 
-`--matrix` prints aggregates and tails; `--policy=attack` reproduces the older,
-deliberately naive bot for comparison. The runner counts plans the server
-rejected and the tests assert that count is zero — a non-zero count means the
-policy is proposing illegal actions and every balance number from that run is
-worthless.
+To compare a change against a previous commit, put a worktree beside the repo,
+symlink `node_modules`, and copy `scripts/policy.ts` across so both builds are
+measured by the _same_ bot. A policy improvement otherwise reads as a balance
+change — and this session changed the policy three times.
 
-To compare a change against `main`, put a worktree beside it, symlink
-`node_modules`, and copy `scripts/policy.ts` across so both builds are measured
-by the _same_ bot. A policy improvement otherwise reads as a balance change.
+The runner counts plans the server rejected, and now records **why**. A non-zero
+count means the policy proposed something illegal and braced instead, and every
+number from that run is worthless. It also counts supplies bought and used.
 
-### Three traps, recorded because each one cost real time
+### Four traps, recorded because each one cost real time
 
 **An instrument that cannot reach a system reports that the system does
-nothing.** Branching the route once hid evolutions from the matrix. It happened
-twice more this pass: the tactical bot spends down to nearly nothing by the last
-chamber, so a treasury-scaled boss shield measured as inert until the `hoard`
-policy was written to reach it; and the bot only knew the Warden's Unravel by
-name, so the Broker's Liquidate did not count as Barrier counterplay until the
-rule was rewritten to select by effect. Both would have read as "the mechanic
-does nothing."
+nothing.** This has now happened four times: the route branching hid evolutions;
+the tactical bot arrives broke, so a treasury-scaled shield read as inert until
+the `hoard` policy was written; the bot knew only the Warden's Unravel by name,
+so the Broker's Liquidate did not count as counterplay; and supplies mixed into
+the general lot pool were bought once a run and moved nothing until the tray and
+the case made them reachable. Whenever a new system measures as doing nothing,
+suspect the instrument first.
 
-**Never read a fight's history out of `s.logs`.** The log is capped at the last
-100 entries, so anything that asks "did this happen in this run" silently gets
-the answer "not in a long fight". A first attribution pass built on log greps
-gave results that were confidently wrong in both directions. Read the end state
-instead.
+**Never read a fight's history out of `s.logs`.** The chronicle is capped at 100
+entries, so any question of the form "did this happen in this run" silently gets
+"not in a long fight". This produced confidently wrong answers twice in one
+session — once attributing boss difficulty to the wrong boss, once reporting
+supply usage as near zero. Read the end state, or count it in the runner.
 
-**A rotation slot that deals no damage is a free round.** Giving each boss a
-new intention for its objective softened both of them measurably, because they
-now spent a third or a quarter of the fight not attacking. Both objectives were
-rebuilt to ride an attack the boss already had. If you add an intention to an
-enemy, check what you removed from it.
+**A rotation slot that deals no damage is a free round.** Giving each boss a new
+intention for its objective softened both. Both were rebuilt to ride an attack
+the boss already had.
+
+**Difficulty and the survivability gap move together.** Every honest attempt to
+make the game harder widened the Vanguard/Warden gap; trimming supply potency to
+claw difficulty back bought one point and cost three points of gap. Decide which
+one you are buying before you touch a number, because you cannot have both from
+the same lever.

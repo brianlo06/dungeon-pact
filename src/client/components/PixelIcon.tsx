@@ -13,6 +13,8 @@ const shapes: Record<string, string> = {
   book: "M1 2h6v1h2V2h6v11h-6v1H7v-1H1zM3 4v7h4V4zM9 4v7h4V4z",
   // The party's position on the route.
   pin: "M5 1h6v2h2v6h-2v2H9v4H7v-4H5V9H3V3h2zM7 4v4h2V4z",
+  // A stoppered flask, so a consumable lot never reads as another relic.
+  potion: "M6 1h4v2h2v2h1v9H3V5h1V3h2zM6 6v6h4V6z",
 };
 export function PixelIcon({
   name,

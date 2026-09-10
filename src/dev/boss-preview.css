@@ -1,0 +1,57 @@
+.preview-toolbar {
+  padding: 16px 4%;
+  border-bottom: 2px solid var(--line);
+  background: var(--panel);
+}
+.preview-toolbar > strong {
+  font-family: var(--pixel);
+  color: var(--gold);
+}
+.preview-toolbar p {
+  margin: 6px 0 12px;
+  font-size: 12px;
+}
+.preview-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
+}
+.preview-controls label {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12px;
+}
+.preview-controls select {
+  max-width: 100%;
+  padding: 7px;
+  color: var(--cream);
+  background: var(--ink);
+  border: 1px solid var(--line);
+  font: inherit;
+}
+.preview-controls select:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+.preview-controls input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+.preview-turn {
+  margin-bottom: 20px;
+}
+.preview-evidence {
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 2px solid var(--line);
+  font-size: 12px;
+}
+.preview-evidence h2 {
+  font-size: 14px;
+}
+.preview-evidence li {
+  margin: 6px 0;
+}

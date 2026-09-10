@@ -1,6 +1,7 @@
 import type { Ability, HeroDef } from "../shared/model";
 import { chosenUpgrades } from "./upgrades";
 import { evolution } from "./evolutions";
+import { items } from "./items";
 const a = (
   id: string,
   name: string,
@@ -590,11 +591,22 @@ export const tacticalSkills: Record<string, Ability[]> = {
  * upgrade branches patched over it. Upgrades keep ability ids, so locked plans
  * and cooldowns survive the change.
  */
+/** The one-shot actions a hero's carried supplies grant, one entry per supply. */
+export function supplyActions(carried: string[] = []): Ability[] {
+  return carried
+    .map((id) => items.find((i) => i.id === id)?.use)
+    .filter((a): a is Ability => !!a);
+}
+/** The supply an ability came from, or undefined if it is part of the kit. */
+export function supplyFor(abilityId: string) {
+  return items.find((i) => i.use?.id === abilityId);
+}
 export function abilities(
   id: string,
   combatVersion?: 2,
   chosen: string[] = [],
   path?: string,
+  carried: string[] = [],
 ): Ability[] {
   const base = hero(id).abilities;
   const changes = combatVersion === 2 ? (tacticalSkills[id] ?? []) : [];
@@ -603,7 +615,13 @@ export function abilities(
     ...changes,
     ...utility,
   ];
+  // Supplies join the kit only under tactical rules; legacy rooms never sold
+  // any, so a legacy save cannot be carrying one.
   if (combatVersion !== 2) return list;
+  // One entry however many copies are carried: the plan names the action, and
+  // resolving it spends one copy.
+  for (const use of supplyActions(carried))
+    if (!list.some((a) => a.id === use.id)) list.push(use);
   // A class path swaps one signature ability, keeping its id so branches,
   // cooldowns and locked plans still line up.
   const taken = evolution(path);

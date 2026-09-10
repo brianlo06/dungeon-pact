@@ -1,5 +1,6 @@
 import type {
   Ability,
+  Effect,
   Enemy,
   Player,
   Row,
@@ -40,7 +41,7 @@ const price = (a: Ability) =>
     0,
   );
 const usable = (s: RunState, p: Player) =>
-  abilities(p.heroId, s.combatVersion, p.upgrades, p.evolution).filter(
+  abilities(p.heroId, s.combatVersion, p.upgrades, p.evolution, p.items).filter(
     (a) =>
       a.cost <= p.resource &&
       !(p.cooldowns[a.id] > 0) &&
@@ -89,6 +90,7 @@ function plannedDamage(s: RunState, target: Unit) {
       s.combatVersion,
       mate.upgrades,
       mate.evolution,
+      mate.items,
     ).find((x) => x.id === plan.ability);
     if (!a) continue;
     const aim = unit(s, plan.target);
@@ -147,15 +149,38 @@ const wounded = (s: RunState) =>
     s.players.reduce((n, p) => n + p.maxHp, 0),
   );
 
+/** Every effect kind the party can already produce from its own kits. */
+function partyCan(s: RunState, want: (e: Effect) => boolean) {
+  return s.players.some((x) =>
+    abilities(x.heroId, s.combatVersion, x.upgrades, x.evolution).some((a) =>
+      a.effects.some(want),
+    ),
+  );
+}
 /** What a hero could see of an unrevealed lot: rarity, slot, tags, clue. */
 function lotFit(s: RunState, p: Player) {
   const a = s.auction!;
   const item = items.find((i) => i.id === a.itemId)!;
   const tags = a.revealed ? item.tags : item.tags.filter((t) => t !== "Cursed");
-  const owns = p.items.some(
-    (id) => items.find((i) => i.id === id)!.slot === item.slot,
-  );
+  // A supply is stock, not a slot: holding one is no reason to decline another.
+  const owns =
+    item.slot !== "supply" &&
+    p.items.some((id) => items.find((i) => i.id === id)!.slot === item.slot);
   let n = 1;
+  // A supply is worth what the party cannot already do for itself. Judged by
+  // effect rather than by class, so an upgrade branch that covers the same gap
+  // counts and the roster is never consulted by name.
+  if (item.slot === "supply") {
+    n += 2;
+    const sells = (want: (e: Effect) => boolean) =>
+      item.use!.effects.some(want) && !partyCan(s, want);
+    if (sells((e) => e.kind === "heal" && !e.self)) n += 3;
+    if (sells((e) => e.kind === "status" && e.status === "barrier")) n += 3;
+    if (sells((e) => e.kind === "removeStatus" && e.status === "barrier"))
+      n += 3;
+    if (sells((e) => e.kind === "interrupt")) n += 3;
+    return n;
+  }
   const wants = (tag: string, hero: string, bonus: number) => {
     if (tags.includes(tag) && p.heroId === hero) n += bonus;
   };
@@ -360,8 +385,12 @@ export const tacticalPolicy: Policy = {
         return { ability: heals[0].id, target: patient.id };
     }
 
-    // 3. Break a telegraphed windup that is about to hurt.
-    const counter = has("counterspell");
+    // 3. Break a telegraphed windup that is about to hurt. Chosen by effect,
+    // not by name, so a bought Flashpowder counts as an answer as much as the
+    // Arcanist's Counterspell does.
+    const counter = opts.find((a) =>
+      a.effects.some((e) => e.kind === "interrupt"),
+    );
     if (counter) {
       const windup = ordered.find(
         (e) =>
@@ -369,9 +398,9 @@ export const tacticalPolicy: Policy = {
           !status(e, "interrupted") &&
           ((t.perEnemy.get(e.id) ?? 0) >= 16 ||
             e.intent.ability.effects.some((x) => x.kind === "heal")) &&
-          !claimed("counterspell", e.id),
+          !claimed(counter.id, e.id),
       );
-      if (windup) return { ability: "counterspell", target: windup.id };
+      if (windup) return { ability: counter.id, target: windup.id };
     }
 
     // 4. Step in front of a hit that would drop an ally.
@@ -471,6 +500,27 @@ export const tacticalPolicy: Policy = {
         return { ability: "insure", target: exposed.x.id };
     }
 
+    // 6e. A shield the party bought rather than rostered. Priced at zero gold,
+    // so the Broker's treasury-funded Insure keeps its own rule above.
+    const ward = opts.find(
+      (a) =>
+        a.target === "ally" &&
+        price(a) === 0 &&
+        // An upgraded Intercept also grants Barrier, but it is a protect and
+        // may never be aimed at its own caster. Rule 4 owns those.
+        !a.effects.some((e) => e.kind === "protect") &&
+        a.effects.some((e) => e.kind === "status" && e.status === "barrier"),
+    );
+    if (ward) {
+      const exposed = s.players
+        .filter((x) => x.hp > 0 && !x.fallen && !status(x, "barrier"))
+        .map((x) => ({ x, hit: t.perHero.get(x.id) ?? 0 }))
+        .filter(({ x, hit }) => hit >= x.hp * 0.5)
+        .sort((a, b) => b.hit - a.hit || a.x.id.localeCompare(b.x.id))[0];
+      if (exposed && !claimed(ward.id, exposed.x.id))
+        return { ability: ward.id, target: exposed.x.id };
+    }
+
     // 7. Fortified enemies waste the party's damage until they are opened.
     // Selected by effect, not by name: the Warden, the Broker and two upgraded
     // branches all strip Barrier, and a policy that only knows one of them
@@ -512,9 +562,13 @@ export const tacticalPolicy: Policy = {
       s.players.some(
         (x) =>
           x.hp > 0 &&
-          abilities(x.heroId, s.combatVersion, x.upgrades, x.evolution).some(
-            (a) => a.id === "storm",
-          ),
+          abilities(
+            x.heroId,
+            s.combatVersion,
+            x.upgrades,
+            x.evolution,
+            x.items,
+          ).some((a) => a.id === "storm"),
       ) &&
       p.resource >= primer.cost + 3
     )

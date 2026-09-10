@@ -1,10 +1,12 @@
 import { useState } from "react";
 import type { Snapshot } from "../../shared/model";
 import type { Intent } from "../../shared/protocol";
-import { abilities, hero } from "../../content/heroes";
-import { enemies as enemyDefs } from "../../content/enemies";
+import { abilities, hero, supplyFor } from "../../content/heroes";
+import { isObject } from "../../content/enemies";
 import { UnitCard } from "./UnitCard";
 import { usePlayback } from "../usePlayback";
+import { BossObjective } from "./BossObjective";
+import { describeIntentEffect } from "../combat-presentation";
 export function Combat({
   s,
   send,
@@ -46,25 +48,14 @@ export function Combat({
   const reads = (
     effect: (typeof s.enemies)[number]["intent"]["ability"]["effects"][number],
     power: number,
-  ) =>
-    effect.kind === "damage"
-      ? `${effect.amount + power} damage before defenses`
-      : effect.kind === "heal"
-        ? `${effect.amount} healing`
-        : effect.kind === "seize"
-          ? "seizes equipment into the Strongbox"
-          : effect.kind === "bank"
-            ? "shields itself with your treasury"
-            : "";
-  // Bosses now fight for something. Say what, where the party is looking.
-  const objective =
-    s.combatVersion === 2
-      ? s.enemies
-          .filter((e) => e.hp > 0)
-          .map((e) => enemyDefs.find((d) => d.id === e.definition)?.objective)
-          .find(Boolean)
-      : undefined;
-  const list = abilities(me.heroId, s.combatVersion, me.upgrades, me.evolution);
+  ) => describeIntentEffect(effect, power, s);
+  const list = abilities(
+    me.heroId,
+    s.combatVersion,
+    me.upgrades,
+    me.evolution,
+    me.items,
+  );
   const [ability, setAbility] = useState(list[0].id);
   const [target, setTarget] = useState("");
   const chosen = list.find((a) => a.id === ability) ?? list[0];
@@ -119,11 +110,7 @@ export function Combat({
           ENEMY FORMATION{" "}
           <span>Intentions are fixed. Make your move together.</span>
         </div>
-        {objective && (
-          <p className="objective-banner">
-            <strong>OBJECTIVE</strong> {objective}
-          </p>
-        )}
+        <BossObjective s={s} />
         {(["back", "front"] as const).map((row) => (
           <div className="battle-row" key={row}>
             <span className="row-label">{row}</span>
@@ -161,12 +148,15 @@ export function Combat({
                                 ?.name)}
                         </span>
                       </>
+                    ) : isObject(e.definition) ? (
+                      "Opened"
                     ) : (
                       "Defeated"
                     )}
                   </div>
                   <UnitCard
                     unit={e}
+                    owners={s.players}
                     selected={target === e.id}
                     onClick={() => setTarget(e.id)}
                     {...beatFor(e.id)}
@@ -237,9 +227,11 @@ export function Combat({
                   <small>
                     {a.id === "revive"
                       ? "90 team gold"
-                      : a.cost
-                        ? `${a.cost} ${hero(me.heroId).resource}`
-                        : "Free"}{" "}
+                      : supplyFor(a.id)
+                        ? `${me.items.filter((id) => id === supplyFor(a.id)!.id).length} carried · spent on use`
+                        : a.cost
+                          ? `${a.cost} ${hero(me.heroId).resource}`
+                          : "Free"}{" "}
                     · Speed {me.speed + a.speed}
                     {(me.cooldowns[a.id] ?? 0) > 0
                       ? ` · CD ${me.cooldowns[a.id]}`

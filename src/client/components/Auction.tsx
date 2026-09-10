@@ -14,9 +14,16 @@ export function Auction({
 }) {
   const a = s.auction!;
   const me = s.players.find((p) => p.id === s.you)!;
-  const old = me.items
-    .map((id) => items.find((i) => i.id === id)!)
-    .find((i) => i.slot === a.item.slot);
+  const supply = a.item.slot === "supply";
+  // A supply displaces nothing, so there is no piece being surrendered to show.
+  const old = supply
+    ? undefined
+    : me.items
+        .map((id) => items.find((i) => i.id === id)!)
+        .find((i) => i.slot === a.item.slot);
+  const packed = me.items.filter(
+    (id) => items.find((i) => i.id === id)?.slot === "supply",
+  ).length;
   return (
     <section className="auction-room">
       <span className="eyebrow">
@@ -58,7 +65,9 @@ export function Auction({
                     ? "sword"
                     : a.item.slot === "armor"
                       ? "shield"
-                      : "gem"
+                      : a.item.slot === "supply"
+                        ? "potion"
+                        : "gem"
                 }
               />
             ) : (
@@ -82,9 +91,19 @@ export function Auction({
           )}
         </div>
         <div className="auction-aside">
-          <span className="eyebrow">YOUR EQUIPMENT</span>
-          <h3>{old?.name ?? "Empty " + a.item.slot + " slot"}</h3>
-          <p>{old?.description ?? "This lot would begin a new build."}</p>
+          <span className="eyebrow">
+            {supply ? "YOUR PACK" : "YOUR EQUIPMENT"}
+          </span>
+          <h3>
+            {supply
+              ? `${packed} suppl${packed === 1 ? "y" : "ies"} carried`
+              : (old?.name ?? "Empty " + a.item.slot + " slot")}
+          </h3>
+          <p>
+            {supply
+              ? "Sold by the case of two. Supplies stack; using one spends it and costs the whole action."
+              : (old?.description ?? "This lot would begin a new build.")}
+          </p>
           {old && <p>Winning replaces and surrenders this item.</p>}
           <div className="bidder-list">
             {s.players.map((p) => (

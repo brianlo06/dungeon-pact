@@ -69,6 +69,80 @@ one Strongbox to a chamber. The Miser's Weight of wealth also shields it for one
 Barrier per 12 gold the treasury holds **above 160** — the allowance is the
 whole mechanic, and is explained below.
 
+## Simulation evidence — supplies, 486 compositions, 25 seeds each
+
+Measured against the boss-objectives build with the _same_ policy on both, so
+none of this is the bot getting smarter.
+
+| Bracket   | before | after |
+| --------- | -----: | ----: |
+| 2 players |    63% |   67% |
+| 3 players |    81% |   85% |
+| 4 players |    86% |   89% |
+
+| Class    | before | after   |
+| -------- | ------ | ------- |
+| Vanguard | +17    | **+11** |
+| Warden   | +21    | **+17** |
+
+Every point of that came from lifting the parties that field neither. Parties
+**with** a Vanguard did not move (94% → 94%) and parties with a Warden moved one
+point the wrong way (97% → 98%); parties **without** went 77% → 83% and 76% →
+81%. That is the design working exactly as intended and is the strongest
+evidence available that the supplies sell what they were meant to sell.
+
+The bot bears it out unprompted: parties with neither protector buy more
+supplies (2.6 a run against 2.3) and spend more of them (2.3 against 1.7).
+
+### Why the gap does not close further
+
+It is now a ceiling problem, not a floor problem. Warden parties sit at 98%;
+nothing that lifts a floor can close a gap against that. Closing it the rest of
+the way means making Warden parties lose more, and the healing pass already
+established what happens then — scarce healing makes the only supplier of it
+more valuable, not less.
+
+There is also a hard limit on what a consumable can do: one action bought is
+not one action every round. A Warden heals seven or eight times in a boss fight;
+a party can carry two or three Field Dressings. Supplies were always going to
+narrow this gap rather than close it.
+
+### Availability was the whole mechanic
+
+Mixed into the general lot pool, supplies were bought about **once a run** and
+moved nothing. A route reaches at most two exchanges, so anything sold only
+there is rare by construction. Two changes fixed it, and the second mattered
+more than the first: every exchange now closes with a consumables tray, and a
+tray is a case of two. That took purchases from 1.0 to 2.5 a run.
+
+This is the same trap as the treasury shield and the Broker's Liquidate, in a
+third costume: the mechanic existed, was reachable in principle, and measured as
+nothing because in practice nobody could get at it.
+
+### A trade that was measured and rejected
+
+Trimming supply potency — 24 Barrier to 18, 34 healing to 26 — was tried to give
+back the three points of difficulty supplies had added. It bought **one** point
+of difficulty and cost **two to three** points of gap, because supplies only
+ever help the parties that lack a protector. The potency was restored and the
+price rise kept. Difficulty and the survivability gap move together on this
+lever, and the gap was the thing being paid for.
+
+### The container repricing did almost nothing
+
+Pricing the Strongbox against the party's actions rather than its headcount was
+worth **+1 point at two players, +1 at three and nothing at four**, measured on
+its own. It is the right shape — a duo and a quartet now spend the same share of
+a round opening it — but it is not the reason two-hero parties trail, and the
+next person to look at that bracket should start somewhere else.
+
+### The Reaver is not the weakest class
+
+Closed by measurement rather than design. It reads +3 (87% with, 84% without)
+and appears in five of the six easiest compositions. The healing pass that gave
+every class a floor moved it, and the previous handoff's ranking was written
+before that was re-measured.
+
 ## Simulation evidence — boss objectives, 486 compositions, 25 seeds each
 
 12,150 runs per policy per build, with the _same_ policy file on both, so the

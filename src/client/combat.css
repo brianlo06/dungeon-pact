@@ -1,0 +1,285 @@
+/* Combat foundations, restored from before the route-map stylesheet change. */
+.combat-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px 20px;
+  position: relative;
+  border: 4px solid #16131e;
+  box-shadow: 0 0 0 2px #695565;
+  padding: 17px 20px;
+  background-color: #39313e;
+  background-image:
+    linear-gradient(#302734 3px, transparent 3px),
+    linear-gradient(90deg, #302734 3px, transparent 3px);
+  background-size: 80px 48px;
+}
+.arena-caption {
+  grid-column: 1/-1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--pixel);
+  font-size: 10px;
+  color: #d1b097;
+  border-bottom: 2px solid #645063;
+  padding-bottom: 12px;
+}
+.arena-caption span {
+  font-family: Verdana, sans-serif;
+  font-size: 10px;
+  color: #bcabb9;
+}
+.battle-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  position: relative;
+  align-items: flex-end;
+  padding: 21px 0 0;
+  min-height: 35px;
+  border: 1px dashed #594655;
+}
+.row-label {
+  position: absolute;
+  top: 3px;
+  left: 8px;
+  font-family: var(--pixel);
+  font-size: 8px;
+  text-transform: uppercase;
+  color: #b298ab;
+}
+.enemy-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  max-width: 145px;
+}
+.unit {
+  width: 138px;
+  background: transparent;
+  border: 2px solid transparent;
+  box-shadow: none;
+  padding: 6px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.unit:hover:not(:disabled) {
+  background: #493a4855;
+  border-color: #aa8e7b;
+}
+.unit.selected {
+  background: #6c53454d;
+  border-color: var(--gold);
+  box-shadow: none;
+}
+.unit-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  color: #bba8b8;
+  text-transform: uppercase;
+}
+.unit-sprite {
+  width: 96px;
+  height: 96px;
+  align-self: center;
+  margin: 2px 0 3px;
+}
+.unit strong {
+  font-size: 11px;
+  background: #231d2b;
+  padding: 3px 2px;
+  line-height: 1.4;
+}
+.unit > small {
+  font-size: 8px;
+  color: #bb9ba7;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.health {
+  display: block;
+  height: 8px;
+  border: 2px solid #15121e;
+  background: #51404a;
+  margin: 7px 0 4px;
+}
+.health > span {
+  display: block;
+  height: 100%;
+  background: #91a77a;
+  transition: width 0.2s steps(6, end);
+}
+.enemy .health > span {
+  background: #c76c50;
+}
+.hp-label {
+  font-family: var(--pixel);
+  font-size: 8px;
+  color: #e3cab2;
+  line-height: 1.5;
+}
+.status-list {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  flex-wrap: wrap;
+  min-height: 4px;
+}
+.status-list > span {
+  font-size: 10px;
+  background: #211c2a;
+  border: 1px solid #786279;
+  padding: 2px 4px;
+  margin-top: 4px;
+}
+.status-list small {
+  font-size: 8px;
+}
+.downed {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+.intent {
+  position: relative;
+  max-width: 150px;
+  background: #241d2b;
+  border: 2px solid #a67867;
+  padding: 7px 5px;
+  text-align: center;
+  font-size: 10px;
+  color: #f1b487;
+  line-height: 1.5;
+  margin: 3px 0 4px;
+  min-height: 65px;
+}
+.intent:after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: calc(50% - 4px);
+  width: 8px;
+  height: 6px;
+  background: #a67867;
+}
+.intent span {
+  display: block;
+  font-size: 8px;
+  color: #c9b5ba;
+  margin-top: 2px;
+}
+.field-divider {
+  grid-column: 1/-1;
+  height: 8px;
+  border-bottom: 3px dashed #86644f;
+  text-align: center;
+  margin: 0 12px 6px;
+}
+.field-divider span {
+  display: none;
+}
+.party-row {
+  padding-top: 19px;
+}
+.action-dock {
+  background: #2e2533;
+  border: 3px solid #16131e;
+  padding: 18px 20px;
+  margin-top: 16px;
+  box-shadow: 0 0 0 2px #665063;
+}
+.dock-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 15px;
+  font-size: 12px;
+}
+.dock-heading strong {
+  font-weight: 400;
+  color: #f0ce99;
+}
+.dock-heading small {
+  font-size: 10px;
+  color: #b59cac;
+  margin-left: 10px;
+}
+.dock-heading > span {
+  color: #b6c69b;
+  font-family: var(--pixel);
+  font-size: 10px;
+}
+.abilities {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.ability {
+  flex: 1;
+  min-width: 110px;
+  text-align: left;
+  padding: 10px;
+}
+.ability strong {
+  display: block;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.ability small {
+  display: block;
+  font-size: 8px;
+  margin-top: 6px;
+  color: #c3aeba;
+  line-height: 1.5;
+}
+.plan-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-top: 17px;
+}
+.plan-line p {
+  font-size: 11px;
+}
+.plan-line small {
+  color: #ad97aa;
+  font-size: 10px;
+}
+.plan-line .primary {
+  white-space: nowrap;
+}
+
+/* Keep objective details readable, including inside the narrow-screen overrides. */
+.phase-combat .intent {
+  width: 100%;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.phase-combat .intent span {
+  font-size: 10px;
+}
+.unit .holding {
+  font:
+    11px/1.5 Verdana,
+    sans-serif;
+  overflow-wrap: anywhere;
+}
+.holding .held-item,
+.objective-banner .objective-detail {
+  display: block;
+  margin-top: 4px;
+}
+.phase-combat .hp-label,
+.unit .container-note {
+  font:
+    10px/1.5 Verdana,
+    sans-serif;
+}
+.phase-combat .unit {
+  max-width: 100%;
+}

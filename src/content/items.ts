@@ -1,4 +1,142 @@
-import type { ItemDef } from "../shared/model";
+import type { Ability, ItemDef } from "../shared/model";
+/**
+ * A supply is an item whose whole value is one action. `trigger: "use"` is
+ * never fired by the trigger loop, so a supply has no passive: carrying it
+ * grants `use` as an ability, and spending that ability spends the supply.
+ */
+const supply = (
+  id: string,
+  name: string,
+  rarity: ItemDef["rarity"],
+  tags: string[],
+  clue: string,
+  price: number,
+  use: Ability,
+): ItemDef => ({
+  id,
+  name,
+  rarity,
+  slot: "supply",
+  tags,
+  description: use.description,
+  clue,
+  cursed: false,
+  trigger: "use",
+  effects: [],
+  use,
+  target: "self",
+  price,
+});
+const action = (
+  id: string,
+  name: string,
+  description: string,
+  target: Ability["target"],
+  effects: Ability["effects"],
+  speed = 8,
+): Ability => ({
+  id,
+  name,
+  description,
+  target,
+  effects,
+  cost: 0,
+  speed,
+  cooldown: 0,
+});
+export const supplies: ItemDef[] = [
+  supply(
+    "ward-iron",
+    "Ward-iron Flask",
+    "Common",
+    ["Guardian", "Supply"],
+    "Heavy for its size, and cold.",
+    80,
+    action(
+      "use-ward-iron",
+      "Ward-iron Flask",
+      "Give an ally 24 Barrier and pull them out of the front.",
+      "ally",
+      [
+        { kind: "status", status: "barrier", stacks: 24, duration: 2 },
+        { kind: "move", row: "back" },
+      ],
+    ),
+  ),
+  supply(
+    "field-dressing",
+    "Field Dressing",
+    "Common",
+    ["Healing", "Supply"],
+    "Someone has used most of the roll already.",
+    80,
+    action(
+      "use-field-dressing",
+      "Field Dressing",
+      "Restore 34 HP to an ally.",
+      "ally",
+      [{ kind: "heal", amount: 34 }],
+    ),
+  ),
+  supply(
+    "clear-draught",
+    "Clear Draught",
+    "Rare",
+    ["Healing", "Supply"],
+    "It smells like a cold morning.",
+    100,
+    action(
+      "use-clear-draught",
+      "Clear Draught",
+      "Strip Burn, Poison, Vulnerable and Weak from an ally, and heal 14.",
+      "ally",
+      [
+        { kind: "removeStatus", status: "burn" },
+        { kind: "removeStatus", status: "poison" },
+        { kind: "removeStatus", status: "vulnerable" },
+        { kind: "removeStatus", status: "weak" },
+        { kind: "heal", amount: 14 },
+      ],
+    ),
+  ),
+  supply(
+    "solvent",
+    "Solvent Flask",
+    "Rare",
+    ["Storm", "Supply"],
+    "The glass is etched from the inside.",
+    100,
+    action(
+      "use-solvent",
+      "Solvent Flask",
+      "Strip all Barrier from an enemy, then deal 14 damage.",
+      "enemy",
+      [
+        { kind: "removeStatus", status: "barrier" },
+        { kind: "damage", amount: 14 },
+      ],
+    ),
+  ),
+  supply(
+    "flashpowder",
+    "Flashpowder",
+    "Rare",
+    ["Mechanical", "Supply"],
+    "Keep it away from the furnace.",
+    110,
+    action(
+      "use-flashpowder",
+      "Flashpowder",
+      "Break an enemy's windup and leave it Weak.",
+      "enemy",
+      [
+        { kind: "interrupt" },
+        { kind: "status", status: "weak", stacks: 1, duration: 1 },
+      ],
+      14,
+    ),
+  ),
+];
 /** Each item is a composition of engine primitives; no item IDs in combat code. */
 export const items: ItemDef[] = [
   {
@@ -172,4 +310,9 @@ export const items: ItemDef[] = [
     target: "target",
     price: 130,
   },
+  // Supplies. A party's floor should be purchasable, not rostered: each of
+  // these sells one thing the Vanguard or the Warden would otherwise be the
+  // only source of, for one action and one payment. They are consumed by use,
+  // several fit at once, and none of them replaces equipment.
+  ...supplies,
 ];

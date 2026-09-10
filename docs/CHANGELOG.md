@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.12 reliability — 2026-09-10
+
+- Commands carry a decision epoch instead of matching an exact revision. Two
+  heroes locking plans in the same round, or voting at the same instant, are
+  both accepted; a decision made about a moment that has passed is still
+  refused. Safety comes from the per-handler idempotency guards, which were
+  already there.
+- Rooms expire: idle sockets close after 45 minutes, a finished run is deleted
+  two hours after it ends, and an untouched room is deleted after 24 hours.
+  Expiry deletes the run, the sessions and the receipts together.
+- Room creation is limited to twelve per address per hour.
+- The live smoke harness now asserts the new concurrency rule in both
+  directions.
+
+## 0.11 supplies — 2026-09-10
+
+- Five consumables: Ward-iron Flask, Field Dressing, Clear Draught, Solvent
+  Flask, Flashpowder. Each sells one thing a Vanguard or Warden would otherwise
+  be the only source of, for one action and one payment.
+- Every exchange now closes with a consumables tray, sold by the case of two.
+  Equipment lots are unchanged in number.
+- Supplies stack, never displace worn equipment, and are never seized.
+- The Vanguard gap falls from +17 to +11 and the Warden's from +21 to +17.
+  Parties that field them are unchanged; every point of that came from lifting
+  the parties that do not.
+- The Strongbox is priced against a party's actions rather than its headcount,
+  so opening it costs a duo and a quartet the same share of a round.
+- The simulation runner records why a plan was rejected, and counts supplies
+  bought and used. A rejection count with no reason cannot be chased, and the
+  chronicle is capped at 100 entries so it cannot be asked what happened.
+- The policy picks interrupts by effect as well as Barrier strips, so a bought
+  Flashpowder counts as counterplay alongside the Arcanist's Counterspell.
+
 ## 0.10 boss objectives — 2026-09-10
 
 - Both bosses now fight for something and say so before the first round.

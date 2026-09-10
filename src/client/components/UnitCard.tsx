@@ -2,6 +2,7 @@ import type { Unit, Player, Enemy } from "../../shared/model";
 import { Sprite } from "./Sprite";
 import { statuses } from "../../content/statuses";
 import { items } from "../../content/items";
+import { isObject } from "../../content/enemies";
 export function UnitCard({
   unit,
   selected,
@@ -12,6 +13,7 @@ export function UnitCard({
   impact,
   pop,
   acting,
+  owners = [],
 }: {
   unit: Unit;
   selected?: boolean;
@@ -23,9 +25,16 @@ export function UnitCard({
   impact?: "damage" | "heal" | "block" | "combo" | "defeat" | null;
   pop?: string;
   acting?: boolean;
+  owners?: Pick<Player, "id" | "name">[];
 }) {
   const player = "heroId" in unit ? (unit as Player) : null;
   const enemy = "definition" in unit ? (unit as Enemy) : null;
+  const container = enemy && isObject(enemy.definition);
+  const holding = (enemy?.holding ?? []).map((h) => {
+    const owner = owners.find((p) => p.id === h.playerId)?.name;
+    const item = items.find((i) => i.id === h.itemId)?.name ?? h.itemId;
+    return owner ? `${owner}: ${item}` : item;
+  });
   const shown = hp ?? unit.hp;
   return (
     <button
@@ -38,7 +47,11 @@ export function UnitCard({
           ? connected
             ? "● Connected"
             : "○ Away"
-          : (enemy?.elite ?? "Hostile")}{" "}
+          : container
+            ? shown <= 0
+              ? "Opened"
+              : "Container"
+            : (enemy?.elite ?? "Hostile")}{" "}
         <span>{locked ? "✓ Locked" : unit.row}</span>
       </span>
       <Sprite
@@ -46,6 +59,11 @@ export function UnitCard({
         className="unit-sprite"
       />
       <strong>{unit.name}</strong>
+      {container && (
+        <small className="container-note">
+          {shown <= 0 ? "Equipment returned" : "Optional target"}
+        </small>
+      )}
       {(player || enemy?.phase === 2) && (
         <small>
           {player
@@ -61,16 +79,13 @@ export function UnitCard({
         />
       </span>
       {!!enemy?.holding?.length && (
-        <span
-          className="holding"
-          title={enemy.holding
-            .map((h) => items.find((i) => i.id === h.itemId)?.name ?? h.itemId)
-            .join(", ")}
-        >
-          ⚿ holding{" "}
-          {enemy.holding
-            .map((h) => items.find((i) => i.id === h.itemId)?.name ?? h.itemId)
-            .join(" · ")}
+        <span className="holding" title={holding.join("; ")}>
+          Seized equipment:{" "}
+          {holding.map((label, i) => (
+            <span className="held-item" key={i}>
+              {label}
+            </span>
+          ))}
         </span>
       )}
       <span className="hp-label">

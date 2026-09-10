@@ -275,10 +275,11 @@ export default function App() {
                   {p.hp}/{p.maxHp} HP · {p.power} Power · {p.guard} Guard
                 </p>
                 {p.items.length ? (
-                  p.items.map((id) => {
+                  p.items.map((id, n) => {
                     const i = items.find((i) => i.id === id)!;
+                    // Supplies stack, so an id is not unique in this list.
                     return (
-                      <p key={id}>
+                      <p key={`${id}-${n}`}>
                         <strong>{i.name}</strong> · {i.slot}
                         <br />
                         {i.description}

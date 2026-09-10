@@ -15,6 +15,12 @@ export const LOTS = 3;
  * catalogue, which is the scarcity the shared purse is supposed to create.
  */
 export const ASK = 1;
+/**
+ * Supplies are sold by the case. A route reaches at most two exchanges, so a
+ * single bottle a lot left a party buying about one consumable per run, which
+ * is not enough of anything to be a decision.
+ */
+export const CASE = 2;
 export function enterAuction(s: RunState, mystery: boolean) {
   s.phase = "AUCTION";
   openLot(s, mystery, 1, []);
@@ -30,14 +36,27 @@ function openLot(
   lot: number,
   offered: string[],
 ) {
-  const owned = new Set(s.players.flatMap((p) => p.items));
-  const fresh = items.filter(
+  // Worn equipment nobody owns is preferred, but supplies are consumed, so a
+  // party holding one is still a customer for another.
+  const owned = new Set(
+    s.players
+      .flatMap((p) => p.items)
+      .filter((id) => items.find((i) => i.id === id)?.slot !== "supply"),
+  );
+  // Every exchange closes with the consumables tray. A party that fielded no
+  // protector has to be able to decide to buy protection, not hope one is
+  // offered: with supplies mixed into the general pool a run saw about one,
+  // which is not a decision anybody gets to make.
+  const catalogue = items.filter(
+    (i) => (i.slot === "supply") === (lot === LOTS),
+  );
+  const fresh = catalogue.filter(
     (i) => !offered.includes(i.id) && !owned.has(i.id),
   );
   const pool = fresh.length
     ? fresh
-    : items.filter((i) => !offered.includes(i.id));
-  const item = pick(s, pool.length ? pool : items);
+    : catalogue.filter((i) => !offered.includes(i.id));
+  const item = pick(s, pool.length ? pool : catalogue);
   s.auction = {
     itemId: item.id,
     revealed: !mystery,
@@ -91,15 +110,21 @@ export function purchase(s: RunState) {
   const item = items.find((i) => i.id === a.itemId)!;
   spend(s, a.price);
   p.spent += a.price;
-  const old = p.items.find(
-    (id) => items.find((i) => i.id === id)!.slot === item.slot,
-  );
+  // A supply is packed alongside whatever the hero is wearing; only worn
+  // equipment displaces the piece already in its slot.
+  const old =
+    item.slot === "supply"
+      ? undefined
+      : p.items.find(
+          (id) => items.find((i) => i.id === id)!.slot === item.slot,
+        );
   p.items = p.items.filter((id) => id !== old);
-  p.items.push(item.id);
+  for (let n = 0; n < (item.slot === "supply" ? CASE : 1); n++)
+    p.items.push(item.id);
   a.revealed = true;
   a.stage = "sold";
   log(
     s,
-    `${p.name} buys ${item.name} for ${a.price} gold.${old ? " Previous equipment is surrendered." : ""}`,
+    `${p.name} buys ${item.slot === "supply" ? `a case of ${CASE} × ${item.name}` : item.name} for ${a.price} gold.${old ? " Previous equipment is surrendered." : ""}`,
   );
 }

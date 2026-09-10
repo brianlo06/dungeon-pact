@@ -5,7 +5,7 @@ import {
   enemyAbilities,
   isObject,
 } from "../content/enemies";
-import { abilities } from "../content/heroes";
+import { abilities, supplyFor } from "../content/heroes";
 import { resourceCap } from "../content/evolutions";
 import { upgradeOffer } from "../content/upgrades";
 import { pick } from "./rng";
@@ -196,9 +196,13 @@ export function validatePlan(
 ): Ability {
   if (p.hp <= 0 || p.fallen)
     throw Error("Downed heroes can use spirit support");
-  const a = abilities(p.heroId, s.combatVersion, p.upgrades, p.evolution).find(
-    (a) => a.id === abilityId,
-  );
+  const a = abilities(
+    p.heroId,
+    s.combatVersion,
+    p.upgrades,
+    p.evolution,
+    p.items,
+  ).find((a) => a.id === abilityId);
   if (!a) throw Error("Unknown ability");
   if ((p.cooldowns[a.id] ?? 0) > 0 || p.resource < a.cost)
     throw Error("Ability is unavailable");
@@ -265,9 +269,13 @@ export function resolveRound(s: RunState) {
     .map((p) => ({
       p,
       plan: s.plans[p.id],
-      a: abilities(p.heroId, s.combatVersion, p.upgrades, p.evolution).find(
-        (a) => a.id === s.plans[p.id]?.ability,
-      )!,
+      a: abilities(
+        p.heroId,
+        s.combatVersion,
+        p.upgrades,
+        p.evolution,
+        p.items,
+      ).find((a) => a.id === s.plans[p.id]?.ability)!,
     }))
     .filter((x) => x.a)
     .sort(
@@ -288,6 +296,14 @@ export function resolveRound(s: RunState) {
     )!;
     p.resource -= a.cost;
     p.cooldowns[a.id] = a.cooldown + 1;
+    // A supply is spent by being used. One copy leaves the pack before the
+    // action resolves, so nothing it does can hand it back.
+    const spent = supplyFor(a.id);
+    if (spent) {
+      const at = p.items.indexOf(spent.id);
+      if (at >= 0) p.items.splice(at, 1);
+      log(s, `${p.name} uses up the ${spent.name}.`);
+    }
     // Content objects are shared, so price the rising revival on a copy.
     let cast = a;
     if (a.id === "revive") {

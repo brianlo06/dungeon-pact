@@ -37,7 +37,7 @@ Server keeps the selected lot ID; `snapshot()` emits only rarity, slot, non-curs
 
 ## Inventory at this revision
 
-8 heroes; 33 class abilities in tactical v2 (26 legacy) plus 4 common actions; 48 ability branches; 24 class paths across 3 mentors; 12 items; 8 normal enemies, 2 bosses and 1 container; 2 elite traits; 12 statuses; 2 reactions; 3 events; standard and mystery versions of one ascending auction rule. Content targets in the master brief are roadmap targets, not present inventory.
+8 heroes; 33 class abilities in tactical v2 (26 legacy) plus 4 common actions; 48 ability branches; 24 class paths across 3 mentors; 12 items and 5 supplies; 8 normal enemies, 2 bosses and 1 container; 2 elite traits; 12 statuses; 2 reactions; 3 events; standard and mystery versions of one ascending auction rule. Content targets in the master brief are roadmap targets, not present inventory.
 
 ## Tactical content extension
 
@@ -120,6 +120,31 @@ mattered once the Broker made treasury-funded abilities common.
 Anything reasoning about "the enemies left to beat" must use `combatants()`
 from `combat.ts` rather than `s.enemies`, or a standing container will keep a
 won fight from ending.
+
+## Supplies
+
+A supply is an item whose whole value is one action. `slot: "supply"` and
+`trigger: "use"` — a trigger the trigger loop never fires — so it has no
+passive at all; `ItemDef.use` is the ability carrying one grants. Adding one is
+adding an entry to `supplies` in `src/content/items.ts`; nothing in combat
+knows any supply by name.
+
+- Carrying a supply appends its `use` to the hero's kit, deduplicated, so
+  carrying three Field Dressings offers the action once. Resolving that action
+  spends one copy. `supplyFor(abilityId)` names the supply an action came from
+  and is how the engine and the dock both recognise one.
+- Supplies stack: buying one never displaces worn equipment, and holding one is
+  no reason to decline another. Everything else still displaces its slot.
+- They are sold by the case, and every exchange closes with the consumables
+  tray. Both exist because a route reaches at most two exchanges: mixed into
+  the general pool, a party bought about one consumable per run, which is not
+  enough of anything to be a decision.
+- They are never seized. An appraiser takes what is worn.
+- `validateContent` enforces the shape both ways: a supply with a passive, or a
+  worn item with a `use`, is rejected. Either mistake produces an item that
+  silently does nothing, which no other check would catch.
+- Legacy rooms never sold one, so `abilities()` grants supply actions only
+  under `combatVersion: 2`.
 
 ## Class paths
 

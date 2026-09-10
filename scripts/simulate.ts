@@ -1,5 +1,6 @@
 import { createRun, addPlayer, reduce } from "../src/engine/game";
 import { heroes } from "../src/content/heroes";
+import { items } from "../src/content/items";
 import type { RunState } from "../src/shared/model";
 import type { Intent } from "../src/shared/protocol";
 import { policies, type Policy } from "./policy";
@@ -13,11 +14,17 @@ export interface RunResult {
   policy: string;
   /** Plans the policy proposed that the server refused. Should always be zero. */
   invalid: number;
+  /** Why they were refused. A count with no reason is a bug you cannot chase. */
+  invalidReasons: string[];
   /** Depth reached when the run ended; the boss sits at depth 6. */
   depth: number;
   revives: number;
   campSpend: number;
   auctionSpend: number;
+  /** Supplies bought and spent. Counted by diffing packs: the chronicle is
+   * capped at 100 entries and cannot be asked what happened in a long run. */
+  suppliesBought: number;
+  suppliesUsed: number;
 }
 
 const compositions = (
@@ -47,11 +54,26 @@ export function run(
   let s = createRun("SIMULATE", seed);
   let steps = 0;
   let invalid = 0;
+  const invalidReasons: string[] = [];
   let campSpend = 0;
   let auctionSpend = 0;
+  let suppliesBought = 0;
+  let suppliesUsed = 0;
   let auctionEntry: number | null = null;
+  const supplyIds = new Set(
+    items.filter((i) => i.slot === "supply").map((i) => i.id),
+  );
+  const packed = () =>
+    s.players.reduce(
+      (n, p) => n + p.items.filter((id) => supplyIds.has(id)).length,
+      0,
+    );
   const send = (id: string, intent: Intent) => {
+    const before = packed();
     s = reduce(s, id, intent, steps * 1000);
+    const change = packed() - before;
+    if (change > 0) suppliesBought += change;
+    else suppliesUsed -= change;
   };
   roster.forEach((_, i) => addPlayer(s, `p${i}`, `Hero ${i}`));
   roster.forEach((heroId, i) => {
@@ -76,8 +98,11 @@ export function run(
       const choice = policy.plan(s, p);
       try {
         send(p.id, { type: "plan", ...choice });
-      } catch {
+      } catch (error) {
         invalid++;
+        invalidReasons.push(
+          `${p.heroId} ${choice.ability}→${choice.target}: ${(error as Error).message}`,
+        );
         const fallback = { ability: "brace", target: p.id };
         send(p.id, { type: "plan", ...fallback });
       }
@@ -118,10 +143,13 @@ export function run(
     party: roster,
     policy: policy.name,
     invalid,
+    invalidReasons,
     depth: s.map.find((n) => n.id === s.currentNode)?.depth ?? 0,
     revives: s.players.reduce((n, p) => n + p.revives, 0),
     campSpend,
     auctionSpend,
+    suppliesBought,
+    suppliesUsed,
   };
 }
 
