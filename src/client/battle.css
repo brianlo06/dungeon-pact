@@ -1,0 +1,857 @@
+/*
+ * The battle screen.
+ *
+ * One rule governs this file: combat owns exactly one viewport and never
+ * scrolls. The strip and the controls are the only fixed heights; the stage
+ * takes everything left over. Anything that wants more room has to earn it from
+ * one of those two, which is what stops the screen growing a section at a time
+ * until it needs 1.3 screens the way the old layout did.
+ */
+
+.battle {
+  --strip: 44px;
+  --controls: clamp(132px, 21vh, 186px);
+  height: 100%;
+  display: grid;
+  grid-template-rows: var(--strip) minmax(0, 1fr) auto;
+  overflow: hidden;
+  position: relative;
+  background: #1b1822;
+}
+
+/* ---------------------------------------------------------------- strip -- */
+
+.battle-strip {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 18px;
+  min-width: 0;
+  background: linear-gradient(#2a2333, #221c2b);
+  border-bottom: 2px solid #14121b;
+  box-shadow: 0 2px #4a3d52;
+  font-size: 11px;
+}
+.strip-chamber {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  color: var(--cream);
+  white-space: nowrap;
+}
+.strip-chamber b {
+  font: 9px var(--pixel);
+  color: var(--gold);
+}
+.strip-objective {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: #f0dcc4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-left: 3px solid var(--gold);
+  padding-left: 10px;
+}
+.strip-objective b {
+  font: 8px var(--pixel);
+  color: var(--gold);
+}
+.strip-objective i {
+  color: #ffcc75;
+  font-style: normal;
+}
+.strip-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  white-space: nowrap;
+}
+.strip-treasury {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 11px var(--pixel);
+  color: var(--gold);
+}
+.strip-treasury .pixel-icon {
+  width: 13px;
+  height: 13px;
+}
+.strip-locked {
+  font: 9px var(--pixel);
+  color: var(--muted);
+}
+.strip-history {
+  padding: 4px 9px;
+  font-size: 12px;
+  box-shadow:
+    inset 0 2px #6d5668,
+    0 2px var(--ink);
+}
+
+/* ---------------------------------------------------------------- stage -- */
+
+.stage {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  container-type: size;
+  container-name: stage;
+  background:
+    radial-gradient(120% 80% at 50% 12%, #4a2f30 0%, transparent 60%),
+    linear-gradient(#2c2130 0%, #241d2c 55%, #1d1825 100%);
+}
+/* Layered scenery. Phase C replaces these with real art; the layering and the
+ * parallax hooks are what matter now. */
+.stage-scenery {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.scenery-far,
+.scenery-mid,
+.scenery-glow {
+  position: absolute;
+  inset: 0;
+}
+.scenery-far {
+  background-image:
+    linear-gradient(#3a2b3a 2px, transparent 2px),
+    linear-gradient(90deg, #362836 2px, transparent 2px);
+  background-size: 190px 120px;
+  opacity: 0.22;
+  filter: blur(1px);
+  transform: translateY(-4%);
+}
+.scenery-mid {
+  background:
+    radial-gradient(closest-side, #6d3324 0%, transparent 70%) -6% 34% / 34% 46%
+      no-repeat,
+    radial-gradient(closest-side, #5c2f22 0%, transparent 70%) 104% 28% / 30%
+      40% no-repeat;
+  opacity: 0.5;
+}
+.scenery-glow {
+  background: radial-gradient(
+    120% 55% at 50% 100%,
+    rgba(233, 128, 61, 0.22) 0%,
+    transparent 65%
+  );
+  animation: furnace 6s ease-in-out infinite;
+}
+@keyframes furnace {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+/* The floor the fight stands on, receding toward the enemies. */
+.stage-ground {
+  position: absolute;
+  inset: 34% -10% -2%;
+  background:
+    linear-gradient(
+      rgba(74, 58, 72, 0.9) 0 2px,
+      rgba(46, 36, 52, 0.9) 2px,
+      rgba(20, 17, 27, 0.95)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.03) 0 2px,
+      transparent 2px 90px
+    );
+  transform: perspective(520px) rotateX(52deg);
+  transform-origin: 50% 0;
+  box-shadow: inset 0 14px 40px rgba(0, 0, 0, 0.55);
+}
+
+.stage-bands {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 6px 20px 4px;
+  gap: 0;
+}
+.stage-band {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(22px, 4.5cqw, 80px);
+  /* Sides lean away from each other so the fight reads as a confrontation
+   * across a space rather than two lists stacked on one axis. */
+  transform: translateX(var(--lean, 0));
+}
+.band-enemy-back {
+  align-items: flex-start;
+  --lean: 14%;
+}
+.band-enemy-front {
+  --lean: 7%;
+}
+.band-hero-front {
+  --lean: -7%;
+}
+.band-hero-back {
+  --lean: -14%;
+}
+.stage-divide {
+  height: 1px;
+  margin: 0 12%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(238, 184, 96, 0.28),
+    transparent
+  );
+}
+
+/* ------------------------------------------------------------ combatant -- */
+
+.combatant {
+  flex: 0 0 auto;
+  --unit: clamp(52px, 19cqh, 138px);
+  /* Depth reads as size: further away is smaller and cooler. */
+  --size: calc(var(--unit) * (0.74 + var(--depth) * 0.36) * var(--scale, 1));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  filter: saturate(calc(0.72 + var(--depth) * 0.4));
+}
+.combatant[data-down] {
+  filter: grayscale(0.8) brightness(0.6);
+}
+.combatant-body {
+  position: relative;
+  display: block;
+  width: var(--size);
+  height: var(--size);
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  cursor: pointer;
+}
+.combatant-body:disabled {
+  cursor: default;
+}
+.combatant[data-side="enemy"] .combatant-sprite {
+  /* Enemies face the party. */
+  transform: scaleX(-1);
+}
+.combatant-body .combatant-sprite {
+  width: 100%;
+  height: 100%;
+  display: block;
+  animation: breathe 3.4s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+.combatant[data-side="enemy"] .combatant-sprite {
+  animation: breathe-enemy 3.9s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-2%) scale(1.015);
+  }
+}
+@keyframes breathe-enemy {
+  0%,
+  100% {
+    transform: scaleX(-1) translateY(0);
+  }
+  50% {
+    transform: scaleX(-1) translateY(-1.6%);
+  }
+}
+/* Grounding. Without a shadow every sprite floats like a sticker. */
+.combatant-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: -4%;
+  width: 74%;
+  height: 12%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(0, 0, 0, 0.62),
+    transparent 78%
+  );
+}
+.combatant-ring {
+  position: absolute;
+  left: 50%;
+  bottom: -6%;
+  width: 96%;
+  height: 20%;
+  transform: translateX(-50%);
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(238, 184, 96, 0.55);
+  animation: ring 1.4s ease-in-out infinite;
+}
+@keyframes ring {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.combatant-body:not(:disabled):hover .combatant-sprite {
+  filter: drop-shadow(0 0 8px rgba(238, 184, 96, 0.8));
+}
+
+.combatant-plate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 3px;
+  max-width: calc(var(--size) * 1.7);
+  text-align: center;
+}
+.combatant-name {
+  font: 9px var(--pixel);
+  text-shadow: 0 1px 2px #000;
+  color: var(--cream);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.combatant[data-you] .combatant-name {
+  color: var(--gold);
+}
+.combatant-lock {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 4px;
+  background: var(--gold);
+  transform: rotate(45deg);
+}
+.combatant-bar {
+  position: relative;
+  width: calc(var(--size) * 0.92);
+  height: 7px;
+  background: #17131d;
+  border: 1px solid #0f0d15;
+  overflow: hidden;
+}
+.combatant-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(#e08a5a, #b8503a);
+  transition: width 0.28s ease;
+}
+.combatant[data-side="hero"] .combatant-bar i {
+  background: linear-gradient(#9ec27a, #5f8f55);
+}
+.combatant-bar b {
+  position: absolute;
+  right: 1px;
+  top: -1px;
+  font: 7px var(--pixel);
+  color: #cfe6ff;
+}
+.combatant-tag {
+  font: 7px var(--pixel);
+  color: #ffcc75;
+}
+.combatant-tag.holding {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.combatant-statuses {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.combatant-statuses i {
+  font-style: normal;
+  font-size: 9px;
+  line-height: 1;
+  color: #d7c2e0;
+}
+
+/* Intentions ride the creature instead of floating in a detached card. */
+.combatant-intent {
+  margin-bottom: 3px;
+  max-width: calc(var(--size) * 2.1);
+}
+.intent-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 3px 7px;
+  background: rgba(24, 20, 30, 0.9);
+  border: 1px solid #6a5570;
+  font-size: 9px;
+  line-height: 1.3;
+  color: #e7d4bb;
+  max-width: 100%;
+}
+.intent-chip strong {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.intent-chip em {
+  font-style: normal;
+  font-size: 8px;
+  color: var(--muted);
+}
+.intent-chip b {
+  font: 7px var(--pixel);
+  color: #ffcc75;
+}
+.intent-windup {
+  border-color: #d08a3a;
+  box-shadow: 0 0 10px rgba(208, 138, 58, 0.4);
+  animation: windup 1.6s ease-in-out infinite;
+}
+@keyframes windup {
+  0%,
+  100% {
+    box-shadow: 0 0 6px rgba(208, 138, 58, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(224, 120, 60, 0.75);
+  }
+}
+.intent-gone {
+  opacity: 0.5;
+  border-style: dashed;
+}
+
+/* -------------------------------------------------------------- impacts -- */
+
+.combatant[data-impact="damage"] .combatant-body {
+  animation: recoil 0.26s ease;
+}
+.combatant[data-impact="heal"] .combatant-sprite {
+  filter: drop-shadow(0 0 10px #8fdc8a);
+}
+.combatant[data-impact="block"] .combatant-sprite {
+  filter: drop-shadow(0 0 10px #8fc6ff);
+}
+.combatant[data-acting] .combatant-body {
+  animation: lunge 0.34s ease;
+}
+@keyframes recoil {
+  0% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(6px) rotate(2deg);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+@keyframes lunge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-9%) scale(1.04);
+  }
+}
+.combatant-pop {
+  position: absolute;
+  left: 50%;
+  top: 4%;
+  transform: translateX(-50%);
+  font: 15px var(--pixel);
+  color: #ffd9b0;
+  text-shadow: 0 2px 0 #000;
+  pointer-events: none;
+  animation: pop 0.85s ease-out forwards;
+}
+.pop-heal {
+  color: #9ff08f;
+}
+.pop-block {
+  color: #9fd0ff;
+}
+@keyframes pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(-50%, -8px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -34px);
+  }
+}
+
+/* --------------------------------------------------------- beat overlay -- */
+
+.beat-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.callout {
+  text-align: center;
+  animation: slam 0.5s ease-out;
+}
+.callout small {
+  display: block;
+  font: 8px var(--pixel);
+  color: var(--muted);
+}
+.callout strong {
+  font: clamp(18px, 3.4vw, 34px) var(--pixel);
+  color: var(--cream);
+  text-shadow: 0 3px 0 #000;
+}
+.combo-banner {
+  font: clamp(20px, 4vw, 44px) var(--pixel);
+  color: var(--gold);
+  text-shadow: 0 4px 0 #000;
+  animation: slam 0.5s ease-out;
+}
+.combo-banner.defeat {
+  color: var(--rust);
+}
+@keyframes slam {
+  0% {
+    opacity: 0;
+    transform: scale(1.5) skewX(-8deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.98) skewX(-8deg);
+  }
+  100% {
+    transform: scale(1) skewX(-8deg);
+  }
+}
+.skip-replay {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  font-size: 10px;
+  padding: 5px 11px;
+}
+
+/* ------------------------------------------------------------- controls -- */
+
+.battle-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  padding: 8px 16px 10px;
+  min-height: 0;
+  max-height: var(--controls);
+  background: linear-gradient(#251f2e, #1d1826);
+  border-top: 2px solid #14121b;
+  box-shadow: 0 -2px #4a3d52;
+}
+.control-note {
+  margin: auto;
+  font-size: 11px;
+  color: var(--muted);
+  max-width: 60ch;
+}
+
+.party-hud {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  flex: 0 0 auto;
+}
+.hud-hero {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px 5px 5px;
+  background: #2c2436;
+  border: 1px solid #423650;
+  min-width: 118px;
+}
+.hud-hero[data-you] {
+  border-color: var(--gold);
+  box-shadow: inset 0 0 0 1px rgba(238, 184, 96, 0.3);
+}
+.hud-hero[data-state="down"],
+.hud-hero[data-state="spirit"] {
+  filter: grayscale(0.85);
+  opacity: 0.7;
+}
+.hud-portrait {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+}
+.hud-portrait .sprite {
+  width: 100%;
+  height: 100%;
+}
+.hud-away {
+  position: absolute;
+  right: -2px;
+  top: -4px;
+  font-size: 9px;
+  color: var(--muted);
+}
+.hud-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.hud-name {
+  font: 8px var(--pixel);
+  color: var(--cream);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hud-bar {
+  height: 4px;
+  background: #17131d;
+  overflow: hidden;
+}
+.hud-bar i {
+  display: block;
+  height: 100%;
+  transition: width 0.28s ease;
+}
+.hud-hp i {
+  background: linear-gradient(#9ec27a, #5f8f55);
+}
+.hud-resource i {
+  background: linear-gradient(#7fa6d8, #4c6ca8);
+}
+.hud-state {
+  font: 7px var(--pixel);
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+.hud-hero[data-state="locked"] .hud-state {
+  color: var(--gold);
+}
+
+.action-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.action-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-content: flex-start;
+  overflow: auto;
+  min-height: 0;
+}
+.action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 5px 10px;
+  min-width: 104px;
+  text-align: left;
+  background: #362c40;
+  border: 2px solid var(--ink);
+  box-shadow:
+    inset 0 2px #55425c,
+    0 2px var(--ink);
+}
+.action strong {
+  font-size: 11px;
+  line-height: 1.2;
+}
+.action small {
+  font: 7px var(--pixel);
+  color: var(--muted);
+}
+.action.is-chosen {
+  background: #57402f;
+  border-color: var(--gold);
+  box-shadow:
+    inset 0 2px #7d6040,
+    0 0 10px rgba(238, 184, 96, 0.35);
+}
+.action[data-blocked] {
+  opacity: 0.55;
+}
+.action[data-blocked] small {
+  color: var(--rust);
+}
+.action-commit {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.action-commit p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #d8c6ce;
+  flex: 1;
+  min-width: 0;
+}
+.action-commit small {
+  display: block;
+  font: 8px var(--pixel);
+  color: var(--gold);
+  margin-top: 2px;
+}
+.lock-action {
+  flex: 0 0 auto;
+  padding: 9px 16px;
+}
+
+/* -------------------------------------------------------------- history -- */
+
+.history-drawer {
+  position: absolute;
+  right: 0;
+  top: var(--strip);
+  bottom: 0;
+  width: min(420px, 42vw);
+  background: rgba(24, 20, 30, 0.97);
+  border-left: 2px solid #4a3d52;
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+  animation: drawer 0.18s ease-out;
+}
+@keyframes drawer {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+}
+.history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid #4a3d52;
+}
+.history-head strong {
+  font: 9px var(--pixel);
+  color: var(--gold);
+}
+.history-head button {
+  padding: 4px 10px;
+  font-size: 10px;
+}
+.history-list {
+  margin: 0;
+  padding: 10px 16px 16px 30px;
+  overflow-y: auto;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.history-list li {
+  margin-bottom: 3px;
+}
+
+/* ----------------------------------------------------------- responsive -- */
+
+/* Height is the binding constraint, so the breakpoints key off it. */
+@media (max-height: 780px) {
+  .battle {
+    --controls: clamp(120px, 19vh, 150px);
+  }
+  .action {
+    min-width: 92px;
+    padding: 4px 8px;
+  }
+  .action strong {
+    font-size: 10px;
+  }
+  .hud-hero {
+    min-width: 104px;
+  }
+}
+@media (max-height: 680px) {
+  .battle {
+    --strip: 38px;
+    --controls: 118px;
+  }
+  .combatant-intent {
+    display: none;
+  }
+  .band-enemy-front .combatant-intent,
+  .combatant[data-side="enemy"]:hover .combatant-intent {
+    display: block;
+  }
+  .hud-state,
+  .combatant-tag {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  .strip-objective {
+    display: none;
+  }
+  .hud-lines {
+    display: none;
+  }
+  .hud-hero {
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .combatant-sprite,
+  .scenery-glow,
+  .intent-windup,
+  .combatant-ring {
+    animation: none;
+  }
+}
+:root[data-motion="reduced"] .combatant-sprite,
+:root[data-motion="reduced"] .scenery-glow,
+:root[data-motion="reduced"] .intent-windup,
+:root[data-motion="reduced"] .combatant-ring,
+:root[data-motion="reduced"] .combatant-pop,
+:root[data-motion="reduced"] .callout,
+:root[data-motion="reduced"] .combo-banner {
+  animation: none;
+}

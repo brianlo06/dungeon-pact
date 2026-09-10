@@ -55,3 +55,39 @@
 .preview-evidence li {
   margin: 6px 0;
 }
+
+/* The lab holds the battle at an explicit resolution so the layouts the design
+ * has to survive can be inspected without resizing the browser window. */
+.preview-shell {
+  height: auto !important;
+  display: block !important;
+  overflow: auto !important;
+  background: #14121b;
+}
+.preview-viewport {
+  margin: 14px auto;
+  overflow: hidden;
+  border: 2px solid #4a3d52;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  resize: none;
+}
+.preview-viewport[data-fit] {
+  width: 100%;
+  height: calc(100dvh - 150px);
+  margin: 0;
+  border: 0;
+}
+.preview-shell .game-main.phase-combat {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+.preview-evidence {
+  max-width: 1100px;
+  margin: 0 auto 40px;
+  padding: 0 20px;
+  font-size: 11px;
+}

@@ -27,6 +27,11 @@ function BossPreview() {
   const [generation, setGeneration] = useState(0);
   const [error, setError] = useState("");
   const [motion, setMotion] = useState(false);
+  // Explicit viewport sizes, so the resolutions the design has to survive can
+  // be checked without resizing the browser window.
+  const [size, setSize] = useState("1280x720");
+  const [evidence, setEvidence] = useState(false);
+  const [w, h] = size === "fit" ? [0, 0] : size.split("x").map(Number);
   useEffect(() => {
     document.documentElement.dataset.motion = motion ? "full" : "reduced";
   }, [motion]);
@@ -53,7 +58,7 @@ function BossPreview() {
     }
   }
   return (
-    <div className="app-shell">
+    <div className="app-shell preview-shell" data-combat="">
       <header className="preview-toolbar">
         <strong>LOCAL BOSS PREVIEW</strong>
         <p>
@@ -144,14 +149,18 @@ function BossPreview() {
             />{" "}
             Round animation
           </label>
-          <button onClick={() => load(options)}>Reset scene</button>
-        </div>
-      </header>
-      <main className="game-main phase-combat">
-        <div className="preview-controls preview-turn">
-          <strong>Team treasury: {s.gold} gold</strong>
           <label>
-            Control hero{" "}
+            Viewport{" "}
+            <select value={size} onChange={(e) => setSize(e.target.value)}>
+              <option value="1280x720">1280 × 720</option>
+              <option value="1366x768">1366 × 768</option>
+              <option value="1440x900">1440 × 900</option>
+              <option value="1920x1080">1920 × 1080</option>
+              <option value="fit">Fit window</option>
+            </select>
+          </label>
+          <label>
+            Control{" "}
             <select value={you} onChange={(e) => setYou(e.target.value)}>
               {s.players.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -167,24 +176,42 @@ function BossPreview() {
               setError("");
             }}
           >
-            Finish round · others Brace
+            Finish round
+          </button>
+          <button onClick={() => load(options)}>Reset scene</button>
+          <button onClick={() => setEvidence((v) => !v)}>
+            {evidence ? "Hide" : "Show"} fixture data
           </button>
         </div>
-        {error && <p role="alert">{error}</p>}
-        {s.phase === "COMBAT" ? (
-          <Combat
-            key={`${generation}-${you}`}
-            s={s}
-            send={send}
-            disabled={false}
-            reducedMotion={!motion}
-          />
-        ) : (
-          <p role="status">
-            Encounter finished: {s.outcome ?? s.phase}. Reset the scene to
-            continue.
-          </p>
-        )}
+      </header>
+      <div
+        className="preview-viewport"
+        data-fit={size === "fit" ? "" : undefined}
+        style={
+          w
+            ? ({ width: `${w}px`, height: `${h}px` } as React.CSSProperties)
+            : undefined
+        }
+      >
+        <main className="game-main phase-combat">
+          {error && <p role="alert">{error}</p>}
+          {s.phase === "COMBAT" ? (
+            <Combat
+              key={`${generation}-${you}`}
+              s={s}
+              send={send}
+              disabled={false}
+              reducedMotion={!motion}
+            />
+          ) : (
+            <p role="status">
+              Encounter finished: {s.outcome ?? s.phase}. Reset the scene to
+              continue.
+            </p>
+          )}
+        </main>
+      </div>
+      {evidence && (
         <section className="preview-evidence" aria-label="Fixture evidence">
           <h2>Equipment after settlement</h2>
           <ul>
@@ -204,7 +231,7 @@ function BossPreview() {
             ))}
           </ol>
         </section>
-      </main>
+      )}
     </div>
   );
 }

@@ -91,7 +91,10 @@ export default function App() {
   const disabled = room.pending || room.connection !== "online";
   const props = s ? { s, send: room.send, disabled } : null;
   return (
-    <div className="app-shell">
+    <div
+      className="app-shell"
+      data-combat={s?.phase === "COMBAT" ? "" : undefined}
+    >
       <header className="topbar">
         <a className="wordmark" href="#" onClick={(e) => e.preventDefault()}>
           <span>◈</span> DUNGEON <b>PACT</b>

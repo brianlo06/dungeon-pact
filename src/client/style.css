@@ -1,4 +1,4 @@
-@import "./combat.css";
+@import "./battle.css";
 
 @font-face {
   font-family: Silkscreen;
@@ -364,6 +364,36 @@ small {
   margin: auto;
   padding: 30px 4% 38px;
   min-height: calc(100vh - 180px);
+}
+/*
+ * Combat is the one screen that owns the whole viewport. The shell becomes a
+ * fixed-height column, the chrome that frames every other phase steps aside,
+ * and the document is not allowed to scroll: the battle has to fit, and if it
+ * ever stops fitting that is a bug the no-scroll tests will catch rather than
+ * something a player silently scrolls past.
+ */
+.app-shell[data-combat] {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+}
+.app-shell[data-combat] > .topbar,
+.app-shell[data-combat] > .run-footer {
+  display: none;
+}
+.app-shell[data-combat] .game-main.phase-combat {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+html:has(.app-shell[data-combat]),
+body:has(.app-shell[data-combat]) {
+  overflow: hidden;
+  height: 100%;
 }
 .section-heading {
   display: flex;

@@ -1,12 +1,23 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Snapshot } from "../../shared/model";
 import type { Intent } from "../../shared/protocol";
 import { abilities, hero, supplyFor } from "../../content/heroes";
-import { isObject } from "../../content/enemies";
-import { UnitCard } from "./UnitCard";
+import { enemies as enemyDefs } from "../../content/enemies";
 import { usePlayback } from "../usePlayback";
-import { BossObjective } from "./BossObjective";
-import { describeIntentEffect } from "../combat-presentation";
+import { BattleStage } from "./BattleStage";
+import { PartyHud } from "./PartyHud";
+import { HistoryDrawer } from "./HistoryDrawer";
+import { PixelIcon } from "./PixelIcon";
+import { treasuryBarrier } from "../combat-presentation";
+import type { Impact } from "./BattleUnit";
+
+/**
+ * The battle screen. It owns one viewport and never scrolls: a fixed strip of
+ * context, the stage taking every pixel that is left, and one band of controls.
+ * Everything that used to sit permanently beside the fight — the chronicle, the
+ * full stat blocks, the standing explanation of the rules — is either on the
+ * stage itself or one keystroke away.
+ */
 export function Combat({
   s,
   send,
@@ -21,13 +32,43 @@ export function Combat({
   const me = s.players.find((p) => p.id === s.you)!;
   const replay = usePlayback(s, reducedMotion);
   const b = replay.beat;
+  const [history, setHistory] = useState(false);
+
+  const list = abilities(
+    me.heroId,
+    s.combatVersion,
+    me.upgrades,
+    me.evolution,
+    me.items,
+  );
+  const [ability, setAbility] = useState(list[0].id);
+  const [target, setTarget] = useState("");
+  const chosen = list.find((a) => a.id === ability) ?? list[0];
+  const locked = s.locked.includes(me.id);
+  const selectedTarget = chosen.target === "self" ? me.id : target;
+
+  /** Every unit the chosen ability may legally be aimed at. */
+  const targetable = useMemo(() => {
+    const ids = new Set<string>();
+    if (chosen.target === "self") ids.add(me.id);
+    else if (chosen.target === "ally" || chosen.target === "allyRow")
+      for (const p of s.players)
+        if (!p.fallen) ids.add(p.id);
+        else for (const e of s.enemies) if (e.hp > 0) ids.add(e.id);
+    return ids;
+  }, [chosen, s.players, s.enemies, me.id]);
+  const targetValid = targetable.has(selectedTarget);
+
+  // A target that stops being legal should not silently stay selected.
+  useEffect(() => {
+    if (target && !targetable.has(target)) setTarget("");
+  }, [target, targetable]);
+
   const named = (id?: string) =>
     [...s.players, ...s.enemies].find((u) => u.id === id)?.name ?? "";
-  /** Presentation for one unit during replay: impact, floating number, spotlight. */
   const beatFor = (id: string) => {
     if (!replay.playing || !b) return {};
-    // Written as an if-chain so the beat kind narrows to what a card can show.
-    let impact: "damage" | "heal" | "block" | "combo" | "defeat" | null = null;
+    let impact: Impact = null;
     if (b.target === id) {
       if (b.kind === "damage") impact = "damage";
       else if (b.kind === "heal") impact = "heal";
@@ -44,217 +85,152 @@ export function Combat({
       pop: shows && b.amount !== undefined ? `${sign}${b.amount}` : undefined,
     };
   };
-  /** What one effect of an intention means, in the words the fight uses. */
-  const reads = (
-    effect: (typeof s.enemies)[number]["intent"]["ability"]["effects"][number],
-    power: number,
-  ) => describeIntentEffect(effect, power, s);
-  const list = abilities(
-    me.heroId,
-    s.combatVersion,
-    me.upgrades,
-    me.evolution,
-    me.items,
+
+  const boss = s.enemies.find(
+    (e) => e.hp > 0 && enemyDefs.find((d) => d.id === e.definition)?.objective,
   );
-  const [ability, setAbility] = useState(list[0].id);
-  const [target, setTarget] = useState("");
-  const chosen = list.find((a) => a.id === ability) ?? list[0];
-  const locked = s.locked.includes(me.id);
-  const selectedTarget = chosen.target === "self" ? me.id : target;
-  const targetValid =
-    chosen.target === "self" ||
-    (chosen.target === "ally"
-      ? s.players.some((p) => p.id === target && !p.fallen)
-      : s.enemies.some((e) => e.id === target && e.hp > 0));
+  const bossDef = enemyDefs.find((d) => d.id === boss?.definition);
+  const bank = boss?.intent.ability.effects.find((e) => e.kind === "bank");
+  const chamber = s.map.find((n) => n.id === s.currentNode)?.name;
+  const alive = s.players.filter((p) => p.hp > 0).length;
+
+  const cost = (a: (typeof list)[number]) => {
+    if (a.id === "revive") return "90 gold";
+    const supply = supplyFor(a.id);
+    if (supply)
+      return `${me.items.filter((id) => id === supply.id).length} left`;
+    return a.cost ? `${a.cost} ${hero(me.heroId).resource}` : "Free";
+  };
+  const why = (a: (typeof list)[number]) => {
+    if ((me.cooldowns[a.id] ?? 0) > 0)
+      return `Cooling down · ${me.cooldowns[a.id]}`;
+    if (me.resource < a.cost)
+      return `${a.cost} ${hero(me.heroId).resource} required`;
+    return null;
+  };
+
   return (
-    <>
-      <div className="section-heading">
-        <div>
-          <span className="eyebrow">THE EMBER FOUNDRY · ROUND {s.round}</span>
-          <h1>{s.map.find((n) => n.id === s.currentNode)?.name}</h1>
-        </div>
-        <span className="badge">
-          {s.locked.length}/{s.players.filter((p) => p.hp > 0).length} plans
-          locked
+    <div className="battle">
+      <div className="battle-strip">
+        <span className="strip-chamber">
+          <b>ROUND {s.round}</b>
+          {chamber}
+        </span>
+        {bossDef?.objective && (
+          <span className="strip-objective" title={bossDef.objective}>
+            <b>OBJECTIVE</b>
+            {bossDef.objective}
+            {bank?.kind === "bank" && (
+              <i> · +{treasuryBarrier(s.gold, bank)} Barrier from your gold</i>
+            )}
+          </span>
+        )}
+        <span className="strip-right">
+          <span className="strip-treasury" title="Shared treasury">
+            <PixelIcon name="coin" /> {s.gold.toLocaleString()}
+          </span>
+          <span className="strip-locked">
+            {s.locked.length}/{alive} ready
+          </span>
+          <button
+            className="strip-history"
+            onClick={() => setHistory(true)}
+            title="Battle history"
+            aria-label="Battle history"
+          >
+            ☰
+          </button>
         </span>
       </div>
-      <div
-        className={`combat-field ${replay.playing ? "replaying" : ""} ${b?.kind === "damage" && (b.amount ?? 0) >= 20 ? "jolt" : ""}`}
-      >
-        {replay.playing && b && (
-          <div className="beat-layer" aria-hidden="true">
-            {b.kind === "cast" && (
-              <div className="callout" key={`${b.actor}-${b.label}`}>
-                <small>{named(b.actor)}</small>
-                <strong>{b.label}</strong>
-              </div>
-            )}
-            {b.kind === "combo" && (
-              <div className="combo-banner" key={`${b.label}-${b.target}`}>
-                {b.label}
-              </div>
-            )}
-            {b.kind === "defeat" && (
-              <div className="combo-banner defeat" key={`down-${b.target}`}>
-                {named(b.target)} DOWN
-              </div>
-            )}
-          </div>
-        )}
-        {replay.playing && (
-          <button className="skip-replay" onClick={replay.skip}>
-            Skip ▸▸
-          </button>
-        )}
-        <div className="arena-caption">
-          ENEMY FORMATION{" "}
-          <span>Intentions are fixed. Make your move together.</span>
-        </div>
-        <BossObjective s={s} />
-        {(["back", "front"] as const).map((row) => (
-          <div className="battle-row" key={row}>
-            <span className="row-label">{row}</span>
-            {s.enemies
-              .filter((e) => e.row === row)
-              .map((e) => (
-                <div className="enemy-wrap" key={e.id}>
-                  <div
-                    className="intent"
-                    title={e.intent.ability.effects
-                      .map((x) => reads(x, e.power) || x.kind)
-                      .join(", ")}
-                  >
-                    {e.hp > 0 ? (
-                      <>
-                        {e.intent.ability.interruptible && (
-                          <strong className="windup-label">
-                            WINDUP · interruptible
-                          </strong>
-                        )}
-                        {e.intent.ability.name}
-                        <span>
-                          {e.intent.ability.effects
-                            .map((effect) => reads(effect, e.power))
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </span>
-                        <span>
-                          →{" "}
-                          {e.intent.ability.target === "enemyRow"
-                            ? `${s.players.find((p) => p.id === e.intent.target)?.row} row`
-                            : (s.players.find((p) => p.id === e.intent.target)
-                                ?.name ??
-                              s.enemies.find((n) => n.id === e.intent.target)
-                                ?.name)}
-                        </span>
-                      </>
-                    ) : isObject(e.definition) ? (
-                      "Opened"
-                    ) : (
-                      "Defeated"
-                    )}
-                  </div>
-                  <UnitCard
-                    unit={e}
-                    owners={s.players}
-                    selected={target === e.id}
-                    onClick={() => setTarget(e.id)}
-                    {...beatFor(e.id)}
-                  />
+
+      <BattleStage
+        s={s}
+        target={selectedTarget}
+        onTarget={setTarget}
+        targetable={targetable}
+        beat={{
+          beatFor,
+          playing: replay.playing,
+          overlay: (
+            <>
+              {replay.playing && b && (
+                <div className="beat-layer" aria-hidden="true">
+                  {b.kind === "cast" && (
+                    <div className="callout" key={`${b.actor}-${b.label}`}>
+                      <small>{named(b.actor)}</small>
+                      <strong>{b.label}</strong>
+                    </div>
+                  )}
+                  {b.kind === "combo" && (
+                    <div
+                      className="combo-banner"
+                      key={`${b.label}-${b.target}`}
+                    >
+                      {b.label}
+                    </div>
+                  )}
+                  {b.kind === "defeat" && (
+                    <div
+                      className="combo-banner defeat"
+                      key={`down-${b.target}`}
+                    >
+                      {named(b.target)} DOWN
+                    </div>
+                  )}
                 </div>
-              ))}
-          </div>
-        ))}
-        <div className="field-divider">
-          <span>✦</span>
-        </div>
-        {(["front", "back"] as const).map((row) => (
-          <div className="battle-row party-row" key={row}>
-            <span className="row-label">{row}</span>
-            {s.players
-              .filter((p) => p.row === row)
-              .map((p) => (
-                <UnitCard
-                  key={p.id}
-                  unit={p}
-                  selected={selectedTarget === p.id}
-                  onClick={() => setTarget(p.id)}
-                  locked={s.locked.includes(p.id)}
-                  connected={s.connected.includes(p.id)}
-                  {...beatFor(p.id)}
-                />
-              ))}
-          </div>
-        ))}
-      </div>
-      <section className="action-dock">
-        {s.combatVersion === 2 && (
-          <p className="tactical-note">
-            One action each. Break a windup, intercept an ally’s next hit, or
-            weaken a heavy attack.
-          </p>
-        )}
-        <div className="dock-heading">
-          <strong>
-            {hero(me.heroId).glyph} {me.name}{" "}
-            <small>{hero(me.heroId).name}</small>
-          </strong>
-          <span>
-            {me.resource}/{hero(me.heroId).maxResource}{" "}
-            {hero(me.heroId).resource}
-          </span>
-        </div>
+              )}
+              {replay.playing && (
+                <button className="skip-replay" onClick={replay.skip}>
+                  Skip ▸▸
+                </button>
+              )}
+            </>
+          ),
+        }}
+      />
+
+      <div className="battle-controls" data-locked={locked ? "" : undefined}>
+        <PartyHud s={s} />
         {me.hp <= 0 ? (
-          <p>
-            Your pact still holds. Ping priorities and help choose the next
-            route. Allies can revive you; the camp restores fallen heroes.
+          <p className="control-note">
+            Your pact still holds. Ping priorities and help choose the route.
+            Allies can revive you; the camp restores fallen heroes.
           </p>
         ) : (
-          <>
-            <div className="abilities">
-              {list.map((a) => (
-                <button
-                  className={`ability ${a.id === chosen.id ? "selected" : ""}`}
-                  key={a.id}
-                  disabled={
-                    locked ||
-                    me.resource < a.cost ||
-                    (me.cooldowns[a.id] ?? 0) > 0
-                  }
-                  onClick={() => setAbility(a.id)}
-                >
-                  <strong>{a.name}</strong>
-                  <small>
-                    {a.id === "revive"
-                      ? "90 team gold"
-                      : supplyFor(a.id)
-                        ? `${me.items.filter((id) => id === supplyFor(a.id)!.id).length} carried · spent on use`
-                        : a.cost
-                          ? `${a.cost} ${hero(me.heroId).resource}`
-                          : "Free"}{" "}
-                    · Speed {me.speed + a.speed}
-                    {(me.cooldowns[a.id] ?? 0) > 0
-                      ? ` · CD ${me.cooldowns[a.id]}`
-                      : ""}
-                  </small>
-                </button>
-              ))}
+          <div className="action-area">
+            <div className="action-menu" role="group" aria-label="Your actions">
+              {list.map((a) => {
+                const blocked = why(a);
+                return (
+                  <button
+                    key={a.id}
+                    className={`action ${a.id === chosen.id ? "is-chosen" : ""}`}
+                    data-blocked={blocked ? "" : undefined}
+                    disabled={locked || !!blocked}
+                    onClick={() => setAbility(a.id)}
+                    title={a.description}
+                  >
+                    <strong>{a.name}</strong>
+                    <small>{blocked ?? cost(a)}</small>
+                  </button>
+                );
+              })}
             </div>
-            <div className="plan-line">
+            <div className="action-commit">
               <p>
                 {chosen.description}
-                <br />
                 <small>
-                  {chosen.target === "enemyRow"
-                    ? "Choose an enemy to target its row."
-                    : `Target: ${chosen.target}.`}{" "}
-                  {selectedTarget
-                    ? `Selected: ${[...s.players, ...s.enemies].find((u) => u.id === selectedTarget)?.name ?? "—"}`
-                    : ""}
+                  {chosen.target === "self"
+                    ? "Targets you."
+                    : selectedTarget
+                      ? `Target: ${named(selectedTarget)}`
+                      : chosen.target === "enemyRow"
+                        ? "Pick an enemy to hit its row."
+                        : `Pick a target on the field.`}
                 </small>
               </p>
               <button
-                className="primary"
+                className="primary lock-action"
                 disabled={disabled || (!locked && !targetValid)}
                 onClick={() =>
                   send(
@@ -268,12 +244,14 @@ export function Combat({
                   )
                 }
               >
-                {locked ? "Unlock plan" : "Lock action →"}
+                {locked ? "Unlock" : "Lock action →"}
               </button>
             </div>
-          </>
+          </div>
         )}
-      </section>
-    </>
+      </div>
+
+      <HistoryDrawer s={s} open={history} onClose={() => setHistory(false)} />
+    </div>
   );
 }
