@@ -1,33 +1,10 @@
 import type { ReactNode } from "react";
 import type { Snapshot } from "../../shared/model";
-import { enemies as enemyDefs, isObject } from "../../content/enemies";
+import { isObject } from "../../content/enemies";
 import { BattleUnit, type Impact } from "./BattleUnit";
 import { describeIntentEffect } from "../combat-presentation";
-
-/**
- * How big a creature reads on the stage. Scale is threat: a boss should not
- * share a footprint with the thing standing next to it, and a container should
- * not read as a combatant. Sizes live here rather than in content until
- * presentation metadata exists, so nothing in the engine learns about them.
- */
-function footprint(definition: string) {
-  const def = enemyDefs.find((d) => d.id === definition);
-  if (def?.boss) return 1.5;
-  if (def?.object) return 1.05;
-  if (definition === "bulwark") return 1.15;
-  if (definition === "bellows") return 1.12;
-  if (definition === "hound") return 1.05;
-  if (definition === "acolyte" || definition === "sniper") return 0.9;
-  return 1;
-}
-
-/** Depth of each band, deepest first. Heroes stand nearest the camera. */
-const DEPTH = {
-  enemyBack: 0,
-  enemyFront: 0.3,
-  heroFront: 0.72,
-  heroBack: 1,
-} as const;
+import type { Placement } from "../battle/layout";
+import type { Camera } from "../battle/camera";
 
 export interface StageBeat {
   beatFor: (id: string) => {
@@ -37,33 +14,44 @@ export interface StageBeat {
     pop?: string;
   };
   playing: boolean;
+  /** Screen-space furniture: banners, the skip control. */
   overlay: ReactNode;
+  /** World-space effects that travel between units. */
+  world?: ReactNode;
 }
 
 /**
- * The battlefield. Four depth bands rather than four rows of cells: enemies
- * stand further into the scene, heroes nearer the camera, and row position is
- * expressed as size and elevation instead of a label saying FRONT.
+ * The battlefield, as a stack of layers.
+ *
+ * Scenery sits behind, combatants and world effects ride the camera, and
+ * screen-space effects sit in front of everything. The split matters: a
+ * projectile has to be able to pass in front of one creature and behind
+ * another, and a screen flash must not be dragged around by a camera shake.
+ *
+ * Combatants are placed absolutely from presentation-space coordinates rather
+ * than flowed, so the camera can move the whole scene by transforming one
+ * parent and nothing has to reflow.
  */
 export function BattleStage({
   s,
+  places,
   target,
   onTarget,
   targetable,
   beat,
+  camera,
+  children,
 }: {
   s: Snapshot;
+  places: Map<string, Placement>;
   target: string;
   onTarget: (id: string) => void;
-  /** Which unit ids the chosen ability may legally be aimed at. */
   targetable: Set<string>;
   beat: StageBeat;
+  camera: Camera;
+  /** Anything anchored in stage space — the action menu lives here. */
+  children?: ReactNode;
 }) {
-  const enemyAt = (row: "front" | "back") =>
-    s.enemies.filter((e) => e.row === row);
-  const heroAt = (row: "front" | "back") =>
-    s.players.filter((p) => p.row === row);
-
   const intentFor = (e: Snapshot["enemies"][number]) => {
     if (e.hp <= 0)
       return (
@@ -93,109 +81,54 @@ export function BattleStage({
     );
   };
 
-  const band = (
-    key: string,
-    depth: number,
-    units: ReactNode,
-    label?: string,
-  ) => (
-    <div
-      className={`stage-band band-${key}`}
-      style={{ "--depth": depth } as React.CSSProperties}
-      data-label={label}
-    >
-      {units}
-    </div>
-  );
+  const units = [...s.enemies, ...s.players]
+    .map((u) => ({ u, place: places.get(u.id) }))
+    .filter(
+      (
+        x,
+      ): x is {
+        u: (typeof s.enemies)[number] | (typeof s.players)[number];
+        place: Placement;
+      } => !!x.place,
+    )
+    .sort((a, b) => a.place.z - b.place.z);
 
   return (
     <div className={`stage ${beat.playing ? "is-replaying" : ""}`}>
-      <div className="stage-scenery" aria-hidden="true">
-        <span className="scenery-far" />
-        <span className="scenery-mid" />
-        <span className="scenery-glow" />
+      <div className="layer layer-far" aria-hidden="true" />
+      <div className="layer layer-mid" aria-hidden="true" />
+      <div className="layer layer-ground" aria-hidden="true" />
+
+      <div className="world" style={{ transform: camera.transform }}>
+        <div className="layer layer-units">
+          {units.map(({ u, place }) => {
+            const enemy = "definition" in u;
+            return (
+              <BattleUnit
+                key={u.id}
+                unit={u}
+                place={place}
+                selectable={targetable.has(u.id)}
+                selected={target === u.id}
+                onSelect={() => onTarget(u.id)}
+                intent={enemy ? intentFor(u as never) : undefined}
+                owners={s.players}
+                locked={!enemy && s.locked.includes(u.id)}
+                connected={enemy || s.connected.includes(u.id)}
+                you={u.id === s.you}
+                {...beat.beatFor(u.id)}
+              />
+            );
+          })}
+        </div>
+        <div className="layer layer-vfx" aria-hidden="true">
+          {beat.world}
+        </div>
+        {children}
       </div>
-      <div className="stage-ground" aria-hidden="true" />
-      <div className="stage-bands">
-        {band(
-          "enemy-back",
-          DEPTH.enemyBack,
-          enemyAt("back").map((e) => (
-            <BattleUnit
-              key={e.id}
-              unit={e}
-              side="enemy"
-              depth={DEPTH.enemyBack}
-              scale={footprint(e.definition)}
-              selectable={targetable.has(e.id)}
-              selected={target === e.id}
-              onSelect={() => onTarget(e.id)}
-              intent={intentFor(e)}
-              owners={s.players}
-              {...beat.beatFor(e.id)}
-            />
-          )),
-        )}
-        {band(
-          "enemy-front",
-          DEPTH.enemyFront,
-          enemyAt("front").map((e) => (
-            <BattleUnit
-              key={e.id}
-              unit={e}
-              side="enemy"
-              depth={DEPTH.enemyFront}
-              scale={footprint(e.definition)}
-              selectable={targetable.has(e.id)}
-              selected={target === e.id}
-              onSelect={() => onTarget(e.id)}
-              intent={intentFor(e)}
-              owners={s.players}
-              {...beat.beatFor(e.id)}
-            />
-          )),
-        )}
-        <div className="stage-divide" aria-hidden="true" />
-        {band(
-          "hero-front",
-          DEPTH.heroFront,
-          heroAt("front").map((p) => (
-            <BattleUnit
-              key={p.id}
-              unit={p}
-              side="hero"
-              depth={DEPTH.heroFront}
-              selectable={targetable.has(p.id)}
-              selected={target === p.id}
-              onSelect={() => onTarget(p.id)}
-              locked={s.locked.includes(p.id)}
-              connected={s.connected.includes(p.id)}
-              you={p.id === s.you}
-              {...beat.beatFor(p.id)}
-            />
-          )),
-        )}
-        {band(
-          "hero-back",
-          DEPTH.heroBack,
-          heroAt("back").map((p) => (
-            <BattleUnit
-              key={p.id}
-              unit={p}
-              side="hero"
-              depth={DEPTH.heroBack}
-              selectable={targetable.has(p.id)}
-              selected={target === p.id}
-              onSelect={() => onTarget(p.id)}
-              locked={s.locked.includes(p.id)}
-              connected={s.connected.includes(p.id)}
-              you={p.id === s.you}
-              {...beat.beatFor(p.id)}
-            />
-          )),
-        )}
-      </div>
-      {beat.overlay}
+
+      <div className="layer layer-foreground" aria-hidden="true" />
+      <div className="layer layer-screen">{beat.overlay}</div>
     </div>
   );
 }

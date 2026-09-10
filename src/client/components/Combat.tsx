@@ -8,8 +8,11 @@ import { BattleStage } from "./BattleStage";
 import { PartyHud } from "./PartyHud";
 import { HistoryDrawer } from "./HistoryDrawer";
 import { PixelIcon } from "./PixelIcon";
+import { ActionFan, type FanAbility } from "./ActionFan";
 import { treasuryBarrier } from "../combat-presentation";
 import type { Impact } from "./BattleUnit";
+import { placements } from "../battle/layout";
+import { useCamera } from "../battle/camera";
 
 /**
  * The battle screen. It owns one viewport and never scrolls: a fixed strip of
@@ -43,18 +46,24 @@ export function Combat({
   );
   const [ability, setAbility] = useState(list[0].id);
   const [target, setTarget] = useState("");
+  /** Choosing what to do, or choosing who to do it to. */
+  const [mode, setMode] = useState<"ability" | "target">("ability");
   const chosen = list.find((a) => a.id === ability) ?? list[0];
   const locked = s.locked.includes(me.id);
   const selectedTarget = chosen.target === "self" ? me.id : target;
+  const places = useMemo(() => placements(s), [s]);
+  const camera = useCamera(reducedMotion);
 
   /** Every unit the chosen ability may legally be aimed at. */
   const targetable = useMemo(() => {
     const ids = new Set<string>();
-    if (chosen.target === "self") ids.add(me.id);
-    else if (chosen.target === "ally" || chosen.target === "allyRow")
-      for (const p of s.players)
-        if (!p.fallen) ids.add(p.id);
-        else for (const e of s.enemies) if (e.hp > 0) ids.add(e.id);
+    if (chosen.target === "self") {
+      ids.add(me.id);
+    } else if (chosen.target === "ally" || chosen.target === "allyRow") {
+      for (const p of s.players) if (!p.fallen) ids.add(p.id);
+    } else {
+      for (const e of s.enemies) if (e.hp > 0) ids.add(e.id);
+    }
     return ids;
   }, [chosen, s.players, s.enemies, me.id]);
   const targetValid = targetable.has(selectedTarget);
@@ -63,6 +72,38 @@ export function Combat({
   useEffect(() => {
     if (target && !targetable.has(target)) setTarget("");
   }, [target, targetable]);
+
+  // The camera follows the decision being made, and nothing else.
+  useEffect(() => {
+    const mine = places.get(me.id) ?? null;
+    if (replay.playing) {
+      const actor = b?.actor ? places.get(b.actor) : null;
+      const victim = b?.target ? places.get(b.target) : null;
+      camera.look({ preset: "action", at: actor ?? mine, and: victim });
+      return;
+    }
+    if (locked || me.hp <= 0) {
+      camera.look({ preset: "neutral" });
+      return;
+    }
+    if (mode === "target" && selectedTarget)
+      camera.look({
+        preset: "target",
+        at: places.get(selectedTarget) ?? null,
+        and: mine,
+      });
+    else camera.look({ preset: "hero", at: mine });
+  }, [
+    mode,
+    selectedTarget,
+    locked,
+    replay.playing,
+    b,
+    places,
+    me.id,
+    me.hp,
+    camera,
+  ]);
 
   const named = (id?: string) =>
     [...s.players, ...s.enemies].find((u) => u.id === id)?.name ?? "";
@@ -94,6 +135,23 @@ export function Combat({
   const chamber = s.map.find((n) => n.id === s.currentNode)?.name;
   const alive = s.players.filter((p) => p.hp > 0).length;
 
+  const choose = (id: string) => {
+    setAbility(id);
+    const next = list.find((a) => a.id === id)!;
+    setMode(next.target === "self" ? "ability" : "target");
+    if (next.target === "self") setTarget("");
+  };
+  const cancel = () => {
+    if (mode === "target") {
+      setMode("ability");
+      setTarget("");
+    }
+  };
+  const pickTarget = (id: string) => {
+    setTarget(id);
+    if (mode === "ability") setMode("target");
+  };
+
   const cost = (a: (typeof list)[number]) => {
     if (a.id === "revive") return "90 gold";
     const supply = supplyFor(a.id);
@@ -108,6 +166,22 @@ export function Combat({
       return `${a.cost} ${hero(me.heroId).resource} required`;
     return null;
   };
+
+  const COMMON = new Set(["brace", "advance", "retreat", "revive"]);
+  const someoneDown = s.players.some((p) => p.hp <= 0 && !p.fallen);
+  const fanOptions: FanAbility[] = list
+    .map((a) => ({
+      ability: a,
+      blocked: why(a),
+      common: COMMON.has(a.id),
+      urgent: a.id === "revive" && someoneDown,
+      cost: cost(a),
+    }))
+    // Signature abilities sit nearest the hero; shared ones cascade further
+    // out. A revival jumps the queue exactly when it matters.
+    .sort(
+      (x, y) => Number(x.common && !x.urgent) - Number(y.common && !y.urgent),
+    );
 
   return (
     <div className="battle">
@@ -145,8 +219,10 @@ export function Combat({
 
       <BattleStage
         s={s}
+        places={places}
+        camera={camera}
         target={selectedTarget}
-        onTarget={setTarget}
+        onTarget={pickTarget}
         targetable={targetable}
         beat={{
           beatFor,
@@ -187,7 +263,21 @@ export function Combat({
             </>
           ),
         }}
-      />
+      >
+        {me.hp > 0 && !locked && places.get(me.id) && (
+          <ActionFan
+            me={me}
+            place={places.get(me.id)!}
+            options={fanOptions}
+            chosen={chosen}
+            onChoose={choose}
+            onCancel={cancel}
+            occupied={[...places.values()].filter((pl) => pl.id !== me.id)}
+            mode={mode}
+            disabled={disabled || replay.playing}
+          />
+        )}
+      </BattleStage>
 
       <div className="battle-controls" data-locked={locked ? "" : undefined}>
         <PartyHud s={s} />
@@ -197,56 +287,43 @@ export function Combat({
             Allies can revive you; the camp restores fallen heroes.
           </p>
         ) : (
-          <div className="action-area">
-            <div className="action-menu" role="group" aria-label="Your actions">
-              {list.map((a) => {
-                const blocked = why(a);
-                return (
-                  <button
-                    key={a.id}
-                    className={`action ${a.id === chosen.id ? "is-chosen" : ""}`}
-                    data-blocked={blocked ? "" : undefined}
-                    disabled={locked || !!blocked}
-                    onClick={() => setAbility(a.id)}
-                    title={a.description}
-                  >
-                    <strong>{a.name}</strong>
-                    <small>{blocked ?? cost(a)}</small>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="action-commit">
-              <p>
-                {chosen.description}
-                <small>
-                  {chosen.target === "self"
+          <div className="commit-bar" data-mode={mode}>
+            <p className="commit-what">
+              <strong>{chosen.name}</strong>
+              <small>
+                {locked
+                  ? "Locked. The round resolves when everyone has decided."
+                  : chosen.target === "self"
                     ? "Targets you."
                     : selectedTarget
-                      ? `Target: ${named(selectedTarget)}`
+                      ? `→ ${named(selectedTarget)}`
                       : chosen.target === "enemyRow"
-                        ? "Pick an enemy to hit its row."
-                        : `Pick a target on the field.`}
-                </small>
-              </p>
-              <button
-                className="primary lock-action"
-                disabled={disabled || (!locked && !targetValid)}
-                onClick={() =>
-                  send(
-                    locked
-                      ? { type: "unlock" }
-                      : {
-                          type: "plan",
-                          ability: chosen.id,
-                          target: selectedTarget,
-                        },
-                  )
-                }
-              >
-                {locked ? "Unlock" : "Lock action →"}
+                        ? "Choose an enemy on the field to hit its row."
+                        : "Choose a target on the field."}
+              </small>
+            </p>
+            {mode === "target" && !locked && (
+              <button className="commit-back" onClick={cancel}>
+                ← Back
               </button>
-            </div>
+            )}
+            <button
+              className="primary lock-action"
+              disabled={disabled || (!locked && !targetValid)}
+              onClick={() =>
+                send(
+                  locked
+                    ? { type: "unlock" }
+                    : {
+                        type: "plan",
+                        ability: chosen.id,
+                        target: selectedTarget,
+                      },
+                )
+              }
+            >
+              {locked ? "Unlock" : "Lock action →"}
+            </button>
           </div>
         )}
       </div>

@@ -182,3 +182,135 @@ test.describe("the chronicle overlays and never resizes the fight", () => {
     expect(await page.locator(".stage").boundingBox()).toEqual(before);
   });
 });
+
+test.describe("the action interface belongs to the hero", () => {
+  test("the fan is on the stage, not in a strip at the bottom", async ({
+    page,
+  }) => {
+    await open(page, { party: 4, stage: "objective" });
+    // The fan wrapper is a zero-area anchor, so measure what it renders.
+    await expect(page.locator(".fan-slip > button").first()).toBeVisible();
+    const stage = (await page.locator(".stage").boundingBox())!;
+    const controls = (await page.locator(".battle-controls").boundingBox())!;
+    const slips = await page.evaluate(() =>
+      [...document.querySelectorAll(".fan-slip > button")].map((el) => {
+        const b = el.getBoundingClientRect();
+        return { top: b.top, bottom: b.bottom };
+      }),
+    );
+    expect(slips.length).toBeGreaterThan(3);
+    for (const s of slips) {
+      expect(s.top).toBeGreaterThanOrEqual(stage.y - 1);
+      // Every option is on the battlefield, above the controls band.
+      expect(s.bottom).toBeLessThanOrEqual(controls.y + 1);
+    }
+  });
+
+  for (const you of [0, 1, 2, 3]) {
+    test(`every action stays on screen and readable for hero ${you}`, async ({
+      page,
+    }) => {
+      await open(page, { party: 4, stage: "objective", you });
+      const slips = page.locator(".fan-slip");
+      expect(await slips.count()).toBeGreaterThan(3);
+      const bad = await page.evaluate(() => {
+        const boxes = [...document.querySelectorAll(".fan-slip > button")].map(
+          (el) => ({ el, b: el.getBoundingClientRect() }),
+        );
+        const offscreen = boxes
+          .filter(
+            ({ b }) =>
+              b.top < -1 ||
+              b.left < -1 ||
+              b.bottom > window.innerHeight + 1 ||
+              b.right > window.innerWidth + 1,
+          )
+          .map(({ el }) => `offscreen: ${el.textContent}`);
+        // No slip may cover the label of another; that hides your own options.
+        const covered: string[] = [];
+        for (let i = 0; i < boxes.length; i++)
+          for (let j = i + 1; j < boxes.length; j++) {
+            const a = boxes[i].b,
+              c = boxes[j].b;
+            const overlap =
+              Math.max(
+                0,
+                Math.min(a.right, c.right) - Math.max(a.left, c.left),
+              ) *
+              Math.max(
+                0,
+                Math.min(a.bottom, c.bottom) - Math.max(a.top, c.top),
+              );
+            if (
+              overlap >
+              0.35 * Math.min(a.width * a.height, c.width * c.height)
+            )
+              covered.push(
+                `overlap: ${boxes[i].el.textContent} / ${boxes[j].el.textContent}`,
+              );
+          }
+        return [...offscreen, ...covered];
+      });
+      expect(bad).toEqual([]);
+    });
+  }
+
+  test("choosing an ability moves to picking a target on the field", async ({
+    page,
+  }) => {
+    await open(page, { party: 4, stage: "objective" });
+    await page.locator(".fan-slip:not([data-common]) > button").first().click();
+    await expect(page.locator(".commit-bar")).toHaveAttribute(
+      "data-mode",
+      "target",
+    );
+    // The fan collapses to the chosen slip so the field is clear to click.
+    expect(await page.locator(".fan-slips .fan-slip").count()).toBe(1);
+
+    await page
+      .locator(".combatant[data-side='enemy'] .combatant-body")
+      .first()
+      .click();
+    await expect(page.locator(".lock-action")).toBeEnabled();
+
+    // Backing out returns to choosing, and never gets stuck.
+    await page.locator(".commit-back").click();
+    await expect(page.locator(".commit-bar")).toHaveAttribute(
+      "data-mode",
+      "ability",
+    );
+    expect(await page.locator(".fan-slips .fan-slip").count()).toBeGreaterThan(
+      1,
+    );
+    expect((await overflow(page)).vertical).toBeLessThanOrEqual(TOLERANCE);
+  });
+
+  test("escape backs out of target selection", async ({ page }) => {
+    await open(page, { party: 4, stage: "objective" });
+    await page.locator(".fan-slip:not([data-common]) > button").first().click();
+    await expect(page.locator(".commit-bar")).toHaveAttribute(
+      "data-mode",
+      "target",
+    );
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".commit-bar")).toHaveAttribute(
+      "data-mode",
+      "ability",
+    );
+  });
+
+  test("the camera never pushes the page out of the viewport", async ({
+    page,
+  }) => {
+    await open(page, { party: 4, stage: "objective" });
+    await page.locator(".fan-slip:not([data-common]) > button").first().click();
+    await page
+      .locator(".combatant[data-side='enemy'] .combatant-body")
+      .first()
+      .click();
+    await page.waitForTimeout(500); // let the camera settle on the target
+    const o = await overflow(page);
+    expect(o.vertical).toBeLessThanOrEqual(TOLERANCE);
+    expect(o.horizontal).toBeLessThanOrEqual(TOLERANCE);
+  });
+});

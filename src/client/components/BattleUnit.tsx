@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { Enemy, Player, Unit } from "../../shared/model";
+import type { Placement } from "../battle/layout";
 import { Sprite } from "./Sprite";
 import { statuses } from "../../content/statuses";
 import { items } from "../../content/items";
@@ -17,9 +18,7 @@ export type Impact = "damage" | "heal" | "block" | "combo" | "defeat" | null;
  */
 export function BattleUnit({
   unit,
-  side,
-  depth,
-  scale = 1,
+  place,
   selectable,
   selected,
   onSelect,
@@ -34,11 +33,8 @@ export function BattleUnit({
   owners,
 }: {
   unit: Unit;
-  side: "hero" | "enemy";
-  /** 0 is deepest into the scene, 1 is nearest the camera. */
-  depth: number;
-  /** Extra size for creatures that should read as bigger than a person. */
-  scale?: number;
+  /** Where presentation space says this unit stands. */
+  place: Placement;
   selectable?: boolean;
   selected?: boolean;
   onSelect?: () => void;
@@ -62,12 +58,21 @@ export function BattleUnit({
   return (
     <div
       className="combatant"
-      data-side={side}
+      data-side={place.side}
       data-impact={impact ?? undefined}
       data-acting={acting ? "" : undefined}
       data-down={down ? "" : undefined}
       data-you={you ? "" : undefined}
-      style={{ "--depth": depth, "--scale": scale } as React.CSSProperties}
+      style={
+        {
+          left: `${place.x * 100}%`,
+          top: `${place.y * 100}%`,
+          zIndex: place.z,
+          "--depth": place.depth,
+          "--scale": place.scale,
+          "--shadow": place.shadow,
+        } as React.CSSProperties
+      }
     >
       {intent && <div className="combatant-intent">{intent}</div>}
       <button

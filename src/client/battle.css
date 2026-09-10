@@ -96,6 +96,12 @@
 
 /* ---------------------------------------------------------------- stage -- */
 
+/*
+ * Layers, back to front: scenery, ground, then the world the camera moves,
+ * then foreground and screen space. The split is what lets a projectile pass
+ * in front of one creature and behind another, and keeps a screen flash from
+ * being dragged around by a camera shake.
+ */
 .stage {
   position: relative;
   overflow: hidden;
@@ -103,133 +109,105 @@
   container-type: size;
   container-name: stage;
   background:
-    radial-gradient(120% 80% at 50% 12%, #4a2f30 0%, transparent 60%),
+    radial-gradient(120% 80% at 50% 10%, #4a2f30 0%, transparent 60%),
     linear-gradient(#2c2130 0%, #241d2c 55%, #1d1825 100%);
 }
-/* Layered scenery. Phase C replaces these with real art; the layering and the
- * parallax hooks are what matter now. */
-.stage-scenery {
+.layer {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
-.scenery-far,
-.scenery-mid,
-.scenery-glow {
-  position: absolute;
-  inset: 0;
-}
-.scenery-far {
+.layer-far {
   background-image:
     linear-gradient(#3a2b3a 2px, transparent 2px),
     linear-gradient(90deg, #362836 2px, transparent 2px);
   background-size: 190px 120px;
-  opacity: 0.22;
+  opacity: 0.2;
   filter: blur(1px);
-  transform: translateY(-4%);
 }
-.scenery-mid {
+.layer-mid {
   background:
-    radial-gradient(closest-side, #6d3324 0%, transparent 70%) -6% 34% / 34% 46%
+    radial-gradient(closest-side, #6d3324 0%, transparent 70%) -6% 26% / 34% 44%
       no-repeat,
-    radial-gradient(closest-side, #5c2f22 0%, transparent 70%) 104% 28% / 30%
-      40% no-repeat;
-  opacity: 0.5;
+    radial-gradient(closest-side, #5c2f22 0%, transparent 70%) 104% 20% / 30%
+      38% no-repeat;
+  opacity: 0.45;
 }
-.scenery-glow {
-  background: radial-gradient(
-    120% 55% at 50% 100%,
-    rgba(233, 128, 61, 0.22) 0%,
-    transparent 65%
-  );
-  animation: furnace 6s ease-in-out infinite;
-}
-@keyframes furnace {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-  50% {
-    opacity: 0.95;
-  }
-}
-/* The floor the fight stands on, receding toward the enemies. */
-.stage-ground {
-  position: absolute;
-  inset: 34% -10% -2%;
+/* The floor, receding away from the camera. */
+.layer-ground {
+  inset: 30% -12% -4%;
   background:
     linear-gradient(
       rgba(74, 58, 72, 0.9) 0 2px,
-      rgba(46, 36, 52, 0.9) 2px,
-      rgba(20, 17, 27, 0.95)
+      rgba(46, 36, 52, 0.92) 2px,
+      rgba(20, 17, 27, 0.96)
     ),
     repeating-linear-gradient(
       90deg,
       rgba(255, 255, 255, 0.03) 0 2px,
       transparent 2px 90px
     );
-  transform: perspective(520px) rotateX(52deg);
+  transform: perspective(560px) rotateX(54deg);
   transform-origin: 50% 0;
   box-shadow: inset 0 14px 40px rgba(0, 0, 0, 0.55);
 }
-
-.stage-bands {
-  position: relative;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 6px 20px 4px;
-  gap: 0;
-}
-.stage-band {
-  flex: 0 1 auto;
-  min-height: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: clamp(22px, 4.5cqw, 80px);
-  /* Sides lean away from each other so the fight reads as a confrontation
-   * across a space rather than two lists stacked on one axis. */
-  transform: translateX(var(--lean, 0));
-}
-.band-enemy-back {
-  align-items: flex-start;
-  --lean: 14%;
-}
-.band-enemy-front {
-  --lean: 7%;
-}
-.band-hero-front {
-  --lean: -7%;
-}
-.band-hero-back {
-  --lean: -14%;
-}
-.stage-divide {
-  height: 1px;
-  margin: 0 12%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(238, 184, 96, 0.28),
-    transparent
+.layer-foreground {
+  background: radial-gradient(
+    130% 60% at 50% 108%,
+    rgba(233, 128, 61, 0.2) 0%,
+    transparent 60%
   );
+  animation: furnace 6s ease-in-out infinite;
+}
+@keyframes furnace {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+/* Everything the camera moves. */
+.world {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 62%;
+  will-change: transform;
+}
+.layer-units {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.layer-units .combatant {
+  pointer-events: auto;
+}
+.layer-vfx {
+  z-index: 4000;
+}
+.layer-screen {
+  z-index: 6000;
+}
+.layer-screen > * {
+  pointer-events: auto;
 }
 
 /* ------------------------------------------------------------ combatant -- */
 
 .combatant {
-  flex: 0 0 auto;
-  --unit: clamp(52px, 19cqh, 138px);
-  /* Depth reads as size: further away is smaller and cooler. */
-  --size: calc(var(--unit) * (0.74 + var(--depth) * 0.36) * var(--scale, 1));
-  position: relative;
+  --unit: clamp(58px, 21cqh, 150px);
+  /* Placement already folded depth into scale; this is just the pixel size. */
+  --size: calc(var(--unit) * var(--scale, 1));
+  position: absolute;
+  /* `top` is the unit's ground point, so it stands on the floor. */
+  transform: translate(-50%, -100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   min-width: 0;
-  filter: saturate(calc(0.72 + var(--depth) * 0.4));
+  filter: saturate(calc(0.72 + var(--depth) * 0.4))
+    brightness(calc(0.86 + var(--depth) * 0.18));
 }
 .combatant[data-down] {
   filter: grayscale(0.8) brightness(0.6);
@@ -285,7 +263,7 @@
   position: absolute;
   left: 50%;
   bottom: -4%;
-  width: 74%;
+  width: calc(var(--shadow, 0.78) * 100%);
   height: 12%;
   transform: translateX(-50%);
   border-radius: 50%;
@@ -840,18 +818,261 @@
 
 @media (prefers-reduced-motion: reduce) {
   .combatant-sprite,
-  .scenery-glow,
   .intent-windup,
   .combatant-ring {
     animation: none;
   }
 }
 :root[data-motion="reduced"] .combatant-sprite,
-:root[data-motion="reduced"] .scenery-glow,
-:root[data-motion="reduced"] .intent-windup,
+:root[data-motion="reduced"] :root[data-motion="reduced"] .intent-windup,
 :root[data-motion="reduced"] .combatant-ring,
 :root[data-motion="reduced"] .combatant-pop,
 :root[data-motion="reduced"] .callout,
 :root[data-motion="reduced"] .combo-banner {
   animation: none;
+}
+
+/* ------------------------------------------------------------ action fan -- */
+
+/*
+ * Contract slips torn off the hero. They cascade away from the character, and
+ * they lean toward whichever side has room, so a hero standing near an edge
+ * still gets a readable menu. Signature abilities sit nearest to hand.
+ */
+.action-fan {
+  position: absolute;
+  z-index: 5500;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  /* Clear the hero first, then cascade outward and up. */
+  --out: 1;
+  --lead: 56px;
+  --step-x: 16px;
+  /* One slip's height, so nothing ever covers the label below it. */
+  --step-y: var(--slip, 31px);
+  --col-w: 132px;
+}
+.action-fan[data-dir="left"] {
+  --out: -1;
+}
+.fan-anchor {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.fan-seal {
+  width: 12px;
+  height: 12px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  box-shadow: 0 0 10px rgba(238, 184, 96, 0.7);
+  animation: seal 2.2s ease-in-out infinite;
+}
+@keyframes seal {
+  0%,
+  100% {
+    transform: rotate(45deg) scale(1);
+  }
+  50% {
+    transform: rotate(45deg) scale(1.18);
+  }
+}
+.fan-who {
+  font: 7px var(--pixel);
+  color: var(--muted);
+  text-shadow: 0 1px 2px #000;
+}
+.fan-slips {
+  position: absolute;
+  bottom: 30px;
+  left: calc(50% + var(--lead) * var(--out));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fan-slip {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  /* Rows climb; a full column steps sideways instead of climbing further. */
+  z-index: calc(60 - var(--i, 0));
+  transform: translate(
+      calc(
+        (var(--row, 0) * var(--step-x) + var(--col, 0) * var(--col-w)) *
+          var(--out) + (var(--out) - 1) * 50%
+      ),
+      calc(var(--row, 0) * var(--step-y) * -1)
+    )
+    skewX(-8deg);
+  animation: slip 0.22s cubic-bezier(0.2, 1.3, 0.5, 1) backwards;
+  animation-delay: calc(var(--i) * 26ms);
+  pointer-events: auto;
+}
+@keyframes slip {
+  from {
+    opacity: 0;
+  }
+}
+.action-fan[data-mode="target"] .fan-slip {
+  transform: translate(calc((var(--out) - 1) * 50%), 0) skewX(-8deg);
+  animation: none;
+}
+/* The shared actions: a quiet cluster at the hero's feet, never a cascade. */
+.fan-common {
+  position: absolute;
+  bottom: 4px;
+  left: calc(50% + var(--common-x, 0px));
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+.fan-common .fan-slip {
+  position: static;
+  transform: skewX(-8deg);
+  animation: none;
+}
+.fan-common .fan-slip > button {
+  padding: 2px 7px;
+}
+.fan-common .fan-slip > button strong {
+  font-size: 9px;
+}
+.fan-common .fan-detail {
+  left: 50%;
+  right: auto;
+  bottom: auto;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+}
+.fan-slip > button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  white-space: nowrap;
+  padding: 5px 14px 5px 11px;
+  background: linear-gradient(#3d3147, #2c2436);
+  border: 1px solid #6a5570;
+  border-left: 3px solid var(--gold);
+  border-radius: 0;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.55);
+}
+.fan-slip > button strong {
+  font-size: 12px;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+}
+.fan-slip > button small {
+  font: 7px var(--pixel);
+  color: var(--muted);
+}
+.fan-slip[data-common] > button {
+  padding: 3px 10px 3px 8px;
+  border-left-color: #6a5570;
+  background: linear-gradient(#332b3d, #272031);
+  opacity: 0.86;
+}
+.fan-slip[data-common] > button strong {
+  font-size: 10px;
+  color: #cbb9c6;
+}
+.fan-slip[data-urgent] > button {
+  border-left-color: var(--rust);
+  background: linear-gradient(#4d2f33, #38222a);
+}
+.fan-slip[data-urgent] > button strong {
+  color: #ffcfc0;
+  font-size: 12px;
+}
+.fan-slip[data-chosen] > button {
+  background: linear-gradient(#63492f, #4a3524);
+  border-color: var(--gold);
+  box-shadow:
+    2px 3px 0 rgba(0, 0, 0, 0.55),
+    0 0 14px rgba(238, 184, 96, 0.45);
+}
+.fan-slip[data-blocked] > button {
+  opacity: 0.45;
+  border-left-color: var(--rust);
+}
+.fan-slip[data-blocked] small {
+  color: var(--rust);
+}
+/* Detail on demand, never printed permanently around the hero. */
+.fan-detail {
+  position: absolute;
+  left: calc(100% + 10px);
+  bottom: 0;
+  width: 200px;
+  padding: 6px 9px;
+  background: rgba(18, 15, 24, 0.97);
+  border: 1px solid #6a5570;
+  font-size: 10px;
+  line-height: 1.4;
+  color: #ddcbd4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s;
+}
+.action-fan[data-dir="left"] .fan-detail {
+  left: auto;
+  right: calc(100% + 10px);
+}
+.fan-slip > button:hover + .fan-detail,
+.fan-slip > button:focus-visible + .fan-detail {
+  opacity: 1;
+}
+.fan-detail i {
+  font-style: normal;
+  color: var(--gold);
+}
+
+/* ----------------------------------------------------------- commit bar -- */
+
+.commit-bar {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.commit-what {
+  margin: 0;
+  min-width: 0;
+  flex: 1;
+}
+.commit-what strong {
+  display: block;
+  font-size: 13px;
+  color: var(--cream);
+}
+.commit-what small {
+  display: block;
+  font: 8px var(--pixel);
+  color: var(--gold);
+  margin-top: 3px;
+}
+.commit-back {
+  padding: 7px 12px;
+  font-size: 11px;
+}
+.commit-bar[data-mode="target"] .commit-what small {
+  animation: nudge 1.4s ease-in-out infinite;
+}
+@keyframes nudge {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
 }
