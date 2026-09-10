@@ -45,6 +45,26 @@ Reaver, a scarred bare-armed berserker with bandaged forearms and a notched
 cleaver in crimson and iron. Beguiler, a hooded figure in a cracked porcelain
 half-mask with puppet strings and a mirror shard in violet and sickly green.
 
+## Screen decisions
+
+Guild Hall: compact invitation form beside a small tavern tableau. Lobby: eight
+character stages in two rows with clear selection borders. Combat: two columns
+preserve explicit front/back labels and reduce vertical scrolling. Intentions
+sit above enemies as speech panels, with damage and targets in text. Auctions:
+the skeleton host speaks beside a framed item pedestal, with the lot's position
+in the exchange's sequence in the eyebrow.
+
+Maps draw the route as a branching descent. Links are stroked between the
+chambers they actually join, so a fork looks like a fork; reachable chambers
+are lit while everything else recedes; the party's position carries a pin; and
+the whole route fits one screen and ends on the vault. It reads as a route at a
+glance rather than a list to scroll. This depends on the generator: chambers
+feed a contiguous span of the layer below, which is what keeps links from
+crossing.
+
+Mentors: the offered path beside the fee and a live roster of who has committed,
+so the treasury draining is visible while the party decides.
+
 ## Combat presentation
 
 A resolved round arrives from the server in one message. The client replays it
