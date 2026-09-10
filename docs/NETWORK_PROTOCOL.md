@@ -49,4 +49,4 @@ Browser QA also verified duplicate-tab takeover: the replacement tab recovered c
 
 ## Tactical v2
 
-No new client intent types are required: equipped control abilities use the existing plan command. Snapshots carry optional combatVersion/encounterVersion flags, optional intent interruptible flags, and Guarded sourceId status links. Server rules reject invalid interrupts/protection targets before settlement. Windup/interrupt/cooldown behavior is included in the real-WebSocket smoke harness.
+Branch upgrades add one intent, `{type:'upgrade', choice}`, valid only during the UPGRADE phase and only for a branch the hero is currently offered; the server records picks in `votes` and applies them once every player has chosen. Equipped control abilities still use the existing plan command. Snapshots carry optional combatVersion/encounterVersion flags, an optional per-player `upgrades` array and an optional `revivals` counter, optional intent interruptible flags, and Guarded sourceId status links. Server rules reject invalid interrupts/protection targets before settlement. Windup/interrupt/cooldown behavior is included in the real-WebSocket smoke harness.

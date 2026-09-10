@@ -22,15 +22,16 @@ For client hot reload, leave the server running and use `npm run dev` in another
 ```sh
 npm run build
 npm test
-npm run simulate -- 50
-npm run test:network # requires the local server
+npm run simulate -- 40           # both policies, canonical parties
+npm run simulate -- 40 --matrix  # all 65 class combinations
+npm run test:network             # requires the local server
 ```
 
 The network script creates disposable two-player test rooms. Production deployment is not configured or claimed. Wrangler config is ready for an explicit staging deployment after security/reliability gates and Cloudflare account selection.
 
 ## Implemented loop
 
-Guest lobby → 4 hero choices → starting pact → 7-depth Foundry route → combat/auction/event → camp → final auction → boss → results. One authoritative room, versioned state, seeded RNG, ordered combat, shared treasury, majority approval, down/revive, reconnect and deduplication.
+Guest lobby → 4 hero choices → starting pact → 7-depth Foundry route → combat/auction/event → a branch upgrade after each cleared chamber → camp → final auction → boss → results. One authoritative room, versioned state, seeded RNG, ordered combat, shared treasury, majority approval, down/revive, reconnect and deduplication.
 
 ## Documents
 
@@ -43,8 +44,8 @@ Guest lobby → 4 hero choices → starting pact → 7-depth Foundry route → c
 - [Changelog](docs/CHANGELOG.md)
 - [Asset licenses](docs/ASSET_LICENSES.md)
 
-The current content and polish are intentionally smaller than the Phase 1 target. Profiles, D1, extended progression, additional biomes, other auction modes, original illustrated character art and music are not implemented yet.
+The current content and polish are intentionally smaller than the Phase 1 target. Profiles, D1, extended progression, additional biomes, other auction modes, consumables, original illustrated character art and music are not implemented yet. Balance evidence, including what it overturned, is in [Balance](docs/BALANCE.md).
 
 ## Current direction
 
-Equipped-ability tactical roguelite: D&D-inspired party cooperation and Slay the Spire-inspired telegraphed threats, relic synergies and difficult resource decisions. New rooms use tactical v2 (interception, interruption, Weak, barrier stripping and authored enemy formations). Old saves retain their legacy rules. Start a new pact to try the new combat. Pixel art and asset provenance are documented in [Art direction](docs/ART_DIRECTION.md).
+Equipped-ability tactical roguelite: D&D-inspired party cooperation and Slay the Spire-inspired telegraphed threats, relic synergies and difficult resource decisions. New rooms use tactical v2 (interception, interruption, Weak, barrier stripping, authored enemy formations and branching ability upgrades — three lines per hero, one pick per cleared chamber, each trading force against guard). Old saves retain their legacy rules. Start a new pact to try the new combat. Pixel art and asset provenance are documented in [Art direction](docs/ART_DIRECTION.md).

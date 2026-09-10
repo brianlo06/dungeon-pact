@@ -10,6 +10,12 @@ import type {
 import { statuses } from "../content/statuses";
 import { items } from "../content/items";
 import { hero } from "../content/heroes";
+/** Mark + Precision bonus. Setting up an Exploit costs a whole action, so the
+ * payoff has to beat simply attacking twice. */
+export const EXPLOIT = 20;
+/** Weak is the answer to a spike for parties with no Vanguard to intercept it,
+ * so it has to be worth the action it costs. */
+export const WEAK = 0.65;
 export function log(
   s: RunState,
   text: string,
@@ -164,27 +170,28 @@ export function effects(
         Math.min(hero(actor.heroId).maxResource, actor.resource + e.amount),
       );
     if (e.kind === "move") target.row = e.row;
-    if (e.kind === "status" && statusRecipient.hp > 0) {
-      applyStatus(statusRecipient, e.status, e.stacks, e.duration);
-      log(
-        s,
-        `${statusRecipient.name}: ${statuses[e.status].name} +${e.stacks}`,
-      );
+    if (e.kind === "status") {
+      const recipient = e.self ? actor : statusRecipient;
+      if (recipient.hp > 0) {
+        applyStatus(recipient, e.status, e.stacks, e.duration);
+        log(s, `${recipient.name}: ${statuses[e.status].name} +${e.stacks}`);
+      }
     }
     if (e.kind === "conditional" && status(target, e.status))
       effects(s, actor, target, e.effects, depth + 1);
     if (e.kind === "heal") {
-      if (isPlayer(target) && target.fallen) continue;
-      const down = target.hp === 0;
-      const healed = Math.min(target.maxHp - target.hp, e.amount);
-      target.hp += healed;
+      const patient = e.self ? actor : target;
+      if (isPlayer(patient) && patient.fallen) continue;
+      const down = patient.hp === 0;
+      const healed = Math.min(patient.maxHp - patient.hp, e.amount);
+      patient.hp += healed;
       if (isPlayer(actor)) actor.healing += healed;
-      if (down && isPlayer(target)) {
-        target.downedRounds = 0;
-        if (isPlayer(actor)) actor.revives++;
-        log(s, `${target.name} returns to the pact!`);
+      if (down && isPlayer(patient)) {
+        patient.downedRounds = 0;
+        if (isPlayer(actor) && actor.id !== patient.id) actor.revives++;
+        log(s, `${patient.name} returns to the pact!`);
       }
-      log(s, `${actor.name} heals ${target.name} for ${healed}.`, "heal");
+      log(s, `${actor.name} heals ${patient.name} for ${healed}.`, "heal");
     }
     if (e.kind === "damage") {
       let victim = target;
@@ -212,11 +219,11 @@ export function effects(
       }
       statusRecipient = victim;
       let amount =
-        (e.amount + actor.power) * (status(actor, "weak") ? 0.75 : 1) -
+        (e.amount + actor.power) * (status(actor, "weak") ? WEAK : 1) -
         victim.guard;
       if (status(victim, "vulnerable")) amount *= 1.25;
       if (e.precision && status(victim, "marked")) {
-        amount += 14;
+        amount += EXPLOIT;
         victim.statuses = victim.statuses.filter((x) => x.id !== "marked");
         log(s, "EXPLOIT · Mark + Precision", "combo");
       }

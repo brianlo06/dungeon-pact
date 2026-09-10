@@ -8,13 +8,42 @@ A 2–4 friend cooperative roguelike: shared fate, selfish temptation, uncertain
 
 ## Implemented expedition
 
-Guild Hall entry → guest room → hero choice / ready → starting pact vote → branching map → tactical encounters and auctions/events → camp → final procurement → one of two Foundry bosses → results. Seven map depths; route choice changes content and economic risk. Four hero definitions, eight normal enemies, two bosses, two elite traits, twelve equipment definitions, ten statuses, two elemental/precision reactions, three events, and versioned tactical control skills. No automatic player combat and no bots in multiplayer.
+Guild Hall entry → guest room → hero choice / ready → starting pact vote → branching map → tactical encounters and auctions/events → a branch upgrade after each cleared chamber → camp → final procurement → one of two Foundry bosses → results. Seven map depths; route choice changes content and economic risk. Four hero definitions, eight normal enemies, two bosses, two elite traits, twelve equipment definitions, twenty-four ability branches, ten statuses, two elemental/precision reactions, three events, and versioned tactical control skills. No automatic player combat and no bots in multiplayer.
 
 Vanguard uses Resolve for interception and row damage in new runs. Arcanist uses Mana for water/fire/lightning. Ranger uses Focus and Mark/Precision. Warden uses Growth for healing, poison, and Wet support. Everyone can brace, change row, and pay for a revival. Resource recovery differs through basic abilities; resources persist between encounters with a modest refill.
 
 Players select simultaneously; all standing heroes must lock. Hero speed plus ability speed sets player order, then surviving enemies act by speed. Enemy intentions are selected by the server before planning. New-run windups explicitly show that they can be interrupted; fortification turns create opportunities to prepare or strip shields. Dead targets cause an explicit fizzle; there is no silent retargeting of hero commands. Enemy attacks retarget the next standing hero if their target falls. Position influences enemy targeting and row attacks; single-target hero attacks can currently reach either row.
 
-Wet + Lightning consumes Wet and chains 12 damage to other enemies. Mark + Precision consumes Mark for 14 bonus damage. Events and logs name both reactions. Repeated proc chains are bounded. No critical RNG or expanded damage/resistance table yet.
+Wet + Lightning consumes Wet and chains 12 damage to other enemies. Mark + Precision consumes Mark for 20 bonus damage; setting up an Exploit costs a whole action, so the payoff has to beat attacking twice. Weak reduces a direct attack to 65% before Guard, which is what a party without a Vanguard uses in place of interception. Events and logs name both reactions. Repeated proc chains are bounded. No critical RNG or expanded damage/resistance table yet.
+
+## Branching ability upgrades
+
+Every cleared non-boss chamber opens a branch choice. Each hero has three
+upgrade lines and takes one pick per victory, choosing between a **force**
+branch and a **guard** branch. Force ends fights sooner; guard sustains, shields
+or weakens, and costs damage to take. Because the route offers between one and
+three combats before the boss, choosing an event over a fight trades a branch
+for healing or gold.
+
+Branches patch an ability in place and never change its id, so a locked plan,
+an active cooldown or an existing save is never invalidated. Content validation
+rejects any line that fails to offer two branches or that offers no defensive
+option, so no future class can be given a purely offensive tree. Fallen heroes
+still choose; a completed tree is recorded immediately so one finished build
+cannot stall the room.
+
+The point is that protection is no longer a single class's job. A party with no
+Vanguard can buy row-wide Weak or self-barriers; a party with no Warden can buy
+attacks that heal their user. Both cost the damage the force branch would have
+given, which is the decision the design wants.
+
+## No encounter can deadlock
+
+Combat used to have no termination pressure. A sustain party facing a
+fortifying enemy could trade heals and shields indefinitely, winning and losing
+nothing. From round 7 every enemy damage effect grows by 3 per further round, so
+a fight the party cannot finish becomes a fight it loses. Existing saves keep
+the old unbounded rules.
 
 ## Economic rules
 
@@ -26,13 +55,13 @@ Purchases at or above 30% of remaining treasury require strictly more than half 
 
 No host owns the room. Any ready player can start once 2–4 players are ready. Route, event, camp and starting-pact votes use an early strict majority; otherwise await all votes, then rotate tie authority. Votes lock once cast. Cheap auction decisions require each member's response; casual play has no timer.
 
-At zero HP a hero is downed; the current round end counts toward a three-end-of-round grace period. Healing can revive before Fallen. After the grace period the hero becomes a spirit and keeps votes, bidding, pings and build inspection. Free camp rest returns all fallen/downed heroes at 15 HP; paid medicine restores 45. All heroes down at once means defeat. Active spirit combat abilities are not implemented yet.
+At zero HP a hero is downed; the current round end counts toward a three-end-of-round grace period. Healing can revive before Fallen. After the grace period the hero becomes a spirit and keeps votes, bidding, pings and build inspection. Free camp rest returns all fallen/downed heroes at 15 HP; paid medicine costs 120 and restores 45; paid training costs 100 and grants every hero 3 Power for the rest of the run. Training used to be free, which made it the obvious pick whenever nobody was dying. Each battlefield revival costs 60 more than the last, so a party cannot both undo its mistakes and outfit itself. All heroes down at once means defeat. Active spirit combat abilities are not implemented yet.
 
 Refresh restores the same hero using a device-held room bearer credential. Duplicate tabs replace the old connection. Disconnected players retain ownership; no automatic proxy controls their hero. This deliberately preserves agency but can stall a room if a player leaves permanently. AFK policies must be added before longer sessions.
 
 ## Bosses
 
-The Collector targets the most expensive equipped investment, alternates single-target and row pressure, and adds damage below half HP. The Miser adds damage per 100 treasury gold and alternates single-target and economic row pressure. Both intensify below half HP; 3–4 player parties also face a repair support. Item suppression, battle auctions and true scripted multi-phase encounter objectives remain future work.
+The Collector targets the most expensive equipped investment, alternates single-target and row pressure, and adds damage below half HP. The Miser adds damage per 100 treasury gold and alternates single-target and economic row pressure. Both intensify below half HP; three-player parties also face a Kiln Mender, and four-player parties additionally face an Iron Bulwark, so a larger party must split its damage instead of burning the boss down before it acts. The Miser adds floor(gold/70) per attack in new runs, which makes hoarding genuinely dangerous. Item suppression, battle auctions and true scripted multi-phase encounter objectives remain future work.
 
 ## Presentation and accessibility
 

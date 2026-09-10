@@ -13,7 +13,7 @@ export function Combat({
   disabled: boolean;
 }) {
   const me = s.players.find((p) => p.id === s.you)!;
-  const list = abilities(me.heroId, s.combatVersion);
+  const list = abilities(me.heroId, s.combatVersion, me.upgrades);
   const [ability, setAbility] = useState(list[0].id);
   const [target, setTarget] = useState("");
   const chosen = list.find((a) => a.id === ability) ?? list[0];

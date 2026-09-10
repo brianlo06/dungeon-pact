@@ -6,7 +6,7 @@ import {
   validatePlan,
   resolveRound,
 } from "../src/engine/combat";
-import { effects, applyStatus, status } from "../src/engine/effects";
+import { WEAK, effects, applyStatus, status } from "../src/engine/effects";
 import { abilities } from "../src/content/heroes";
 import type { RunState } from "../src/shared/model";
 function room(): RunState {
@@ -73,7 +73,10 @@ it("weakens every hit before target guard is applied", () => {
     { kind: "damage", amount: 20 },
     { kind: "damage", amount: 20 },
   ]);
-  expect(p.hp).toBe(p.maxHp - 22);
+  // Weak scales the raw hit, then Guard subtracts: (20 × WEAK) − 4, twice.
+  const each = Math.round(20 * WEAK) - p.guard;
+  expect(each).toBe(9);
+  expect(p.hp).toBe(p.maxHp - each * 2);
 });
 it("interrupts a windup without granting unlimited counterspells", () => {
   const s = room();

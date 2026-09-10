@@ -1,4 +1,5 @@
 import type { Ability, HeroDef } from "../shared/model";
+import { chosenUpgrades } from "./upgrades";
 const a = (
   id: string,
   name: string,
@@ -298,7 +299,7 @@ export const tacticalSkills: Record<string, Ability[]> = {
     a(
       "suppress",
       "Pinning shot",
-      "Deal 8 Precision damage and weaken the enemy’s direct attacks by 25% this round.",
+      "Deal 8 Precision damage and weaken the enemy’s direct attacks by 35% this round.",
       "enemy",
       [
         { kind: "damage", amount: 8, precision: true },
@@ -325,12 +326,28 @@ export const tacticalSkills: Record<string, Ability[]> = {
     ),
   ],
 };
-export function abilities(id: string, combatVersion?: 2): Ability[] {
+/**
+ * The hero's current action list: legacy or tactical base, then any chosen
+ * upgrade branches patched over it. Upgrades keep ability ids, so locked plans
+ * and cooldowns survive the change.
+ */
+export function abilities(
+  id: string,
+  combatVersion?: 2,
+  chosen: string[] = [],
+): Ability[] {
   const base = hero(id).abilities;
   const changes = combatVersion === 2 ? (tacticalSkills[id] ?? []) : [];
-  return [
+  const list = [
     ...base.filter((a) => !changes.some((b) => b.id === a.id)),
     ...changes,
     ...utility,
   ];
+  if (!chosen.length || combatVersion !== 2) return list;
+  const picked = chosenUpgrades(chosen);
+  return list.map((a) =>
+    picked
+      .filter((u) => u.ability === a.id && u.heroId === id)
+      .reduce((current, u) => u.apply(current), a),
+  );
 }

@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import WebSocket from "ws";
 import type { Snapshot } from "../src/shared/model";
 import type { Intent, Command } from "../src/shared/protocol";
+import { abilities } from "../src/content/heroes";
+import { upgradeOffer } from "../src/content/upgrades";
 const base = process.env.PACT_TEST_URL ?? "http://127.0.0.1:8787";
 async function post(path: string, body?: unknown) {
   const r = await fetch(base + path, {
@@ -129,6 +131,62 @@ try {
     b.state.players.find((p) => p.id === two.player)!.cooldowns.counterspell,
     2,
   );
+  // Finish the encounter so the new branch-upgrade phase is exercised over the
+  // wire, not just in the reducer. Sockets mutate state between reads, so the
+  // phase is always read fresh rather than through a narrowed local.
+  const phase = (c: Client) => c.state.phase as string;
+  const pair: [Client, string][] = [
+    [resumed, one.player],
+    [b, two.player],
+  ];
+  for (let guard = 0; guard < 40 && phase(resumed) === "COMBAT"; guard++) {
+    for (const [client, playerId] of pair) {
+      if (phase(client) !== "COMBAT") break;
+      const me = client.state.players.find((p) => p.id === playerId)!;
+      if (me.hp <= 0 || client.state.locked.includes(playerId)) continue;
+      const enemy = client.state.enemies.find((e) => e.hp > 0);
+      if (!enemy) break;
+      const best = abilities(me.heroId, client.state.combatVersion, me.upgrades)
+        .filter(
+          (x) =>
+            x.target === "enemy" &&
+            x.cost <= me.resource &&
+            !(me.cooldowns[x.id] > 0) &&
+            x.effects.some((e) => e.kind === "damage"),
+        )
+        .sort(
+          (x, y) =>
+            y.effects.reduce(
+              (n, e) => n + (e.kind === "damage" ? e.amount : 0),
+              0,
+            ) -
+            x.effects.reduce(
+              (n, e) => n + (e.kind === "damage" ? e.amount : 0),
+              0,
+            ),
+        )[0];
+      if (!best) break;
+      await client.send({ type: "plan", ability: best.id, target: enemy.id });
+      const other = client === b ? resumed : b;
+      await other.wait(() => other.state.revision === client.state.revision);
+    }
+  }
+  assert.equal(phase(resumed), "UPGRADE", "Victory must offer branches");
+  for (const [client, playerId] of pair) {
+    const me = client.state.players.find((p) => p.id === playerId)!;
+    const offer = upgradeOffer(me);
+    assert.equal(offer.length, 2, "Each hero is offered two branches");
+    await client.send({ type: "upgrade", choice: offer[0].id });
+    const other = client === b ? resumed : b;
+    await other.wait(() => other.state.revision === client.state.revision);
+  }
+  await resumed.wait(() => phase(resumed!) === "REWARD");
+  for (const [, playerId] of pair)
+    assert.equal(
+      resumed.state.players.find((p) => p.id === playerId)!.upgrades?.length,
+      1,
+      "Each hero keeps exactly one branch",
+    );
   console.log(
     JSON.stringify({
       ok: true,
@@ -144,6 +202,8 @@ try {
         "reconnect restores hero/gold/phase",
         "tactical encounter entry",
         "windup/interrupt resolution and cooldown",
+        "encounter victory reaches the branch-upgrade phase",
+        "each hero locks one branch and the party advances",
       ],
     }),
   );

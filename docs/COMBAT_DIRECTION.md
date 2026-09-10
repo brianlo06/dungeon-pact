@@ -21,10 +21,34 @@ D&D influence: mechanically distinct party members, limited-use abilities, prote
 - Five authored encounter families have explicit 2/3/4-player compositions. Advanced repair/toll groups enter only at depth 2 onward.
 - Enemy patterns alternate direct pressure, fortification and windups. The sniper aims before Kill Shot, Bellows draws breath before a row blast, and acolytes channel an interruptible eruption. Defense and control consume the hero's action.
 
-Existing saves keep legacy ability/intent behavior when combatVersion is absent. New rooms use combatVersion 2 and encounterVersion 2.
+Existing saves keep legacy ability/intent behaviour when combatVersion is absent: no upgrade phase, no round-7 escalation, a flat revival price and the old Miser scaling. New rooms use combatVersion 2 and encounterVersion 2.
+
+## Second pass — branching upgrades and measured balance
+
+- **Branch upgrades.** Three lines per hero, one pick per cleared chamber, each
+  offering force against guard. Twenty-four branches; see `src/content/upgrades.ts`.
+  Sustain and mitigation are now available to every class at the cost of damage.
+- **Termination pressure.** From round 7 enemy damage grows by 3 each round.
+  This closed a real defect: sustain compositions against a fortifying enemy
+  could neither win nor lose.
+- **Scarce recovery.** Battlefield revivals cost 60 more each time. Camp
+  training costs 100 gold, so recovery, power and equipment compete for one
+  treasury.
+- **Boss support scales with spare actions.** A Kiln Mender at three heroes, an
+  Iron Bulwark as well at four.
+- **Control is worth an action.** Weak now cuts a direct attack to 65%, and
+  Mark + Precision pays 20.
+
+Balance was measured before it was tuned. The previous conclusion — that
+healer-less parties were the problem — was an artefact of a bot that never took
+a defensive action. Under a control-aware policy the Warden gap is 6 points and
+the outlier was the Vanguard at 41, now 13. See BALANCE.md.
 
 ## Next implementation priorities
 
+0. Boss objectives that change decisions rather than raise numbers. The added
+   supports are a start; phases still only hit harder. This is now the clearest
+   ceiling on difficulty for a party that plays well.
 1. Authored enemy formations with purpose (protector + caster, repair + construct, frontline pressure + backline sniper), then seeded variations. Avoid difficulty based only on duplicated random enemies.
 2. Richer intentions: visibly distinguish heavy windups, multi-hits, row attacks, support and economic attacks; show exact relevant numbers and counterplay.
 3. Defensive opportunity costs: a powerful attack may leave the party exposed. Protection, movement and control must prevent more harm than blindly attacking.

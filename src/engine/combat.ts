@@ -2,6 +2,7 @@ import { chooseEncounter } from "../content/encounters";
 import type { RunState, Player, Enemy, Ability, Unit } from "../shared/model";
 import { enemies as definitions, enemyAbilities } from "../content/enemies";
 import { abilities, hero } from "../content/heroes";
+import { upgradeOffer } from "../content/upgrades";
 import { pick } from "./rng";
 import {
   effects,
@@ -15,7 +16,27 @@ import {
 export function standing(s: RunState) {
   return s.players.filter((p) => p.hp > 0 && !p.fallen);
 }
+/** Rounds an encounter tolerates before it starts escalating. */
+export const PATIENCE = 6;
+/**
+ * Long fights escalate so no encounter can deadlock. A sustain party facing a
+ * fortifying enemy could otherwise trade heals and shields forever, winning and
+ * losing nothing. Legacy saves keep their unbounded rules.
+ */
+export function pressure(s: RunState) {
+  return s.combatVersion === 2 ? Math.max(0, s.round - PATIENCE) * 3 : 0;
+}
+export const REVIVAL = 90;
+/**
+ * Recovery has to compete with buying power. Each battlefield revival this run
+ * costs more than the last, so a party that leans on gold to undo its mistakes
+ * cannot also outfit itself. Legacy saves keep the flat price.
+ */
+export function reviveCost(s: RunState) {
+  return s.combatVersion === 2 ? REVIVAL + 60 * (s.revivals ?? 0) : REVIVAL;
+}
 export function prepareIntents(s: RunState) {
+  const impatience = pressure(s);
   for (const e of s.enemies.filter((e) => e.hp > 0)) {
     const def = definitions.find((d) => d.id === e.definition)!;
     const phase = def.boss && e.hp < e.maxHp / 2 ? 2 : 1;
@@ -28,9 +49,16 @@ export function prepareIntents(s: RunState) {
     if (e.phase === 2)
       for (const effect of ability.effects)
         if (effect.kind === "damage") effect.amount += 7;
+    if (impatience)
+      for (const effect of ability.effects)
+        if (effect.kind === "damage") effect.amount += impatience;
+    // Hoarding is meant to be dangerous, not merely wasteful.
     if (e.definition === "miser")
       for (const effect of ability.effects)
-        if (effect.kind === "damage") effect.amount += Math.floor(s.gold / 100);
+        if (effect.kind === "damage")
+          effect.amount += Math.floor(
+            s.gold / (s.combatVersion === 2 ? 70 : 100),
+          );
     let targets: Unit[] = standing(s);
     if (ability.target === "self") targets = [e];
     else if (ability.target === "ally")
@@ -70,9 +98,12 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
     const d = formation
       ? definitions.find((d) => d.id === formation[i])!
       : pick(s, pool);
+    // Larger parties cover more roles per round, so their encounters weigh more
+    // per hero. Duos face slightly lighter bosses in exchange for having no
+    // spare actions at all.
     const scale = boss
-      ? 0.65 + s.players.length * 0.32
-      : 0.85 + s.players.length * 0.08;
+      ? 0.45 + s.players.length * 0.4
+      : 0.75 + s.players.length * 0.14;
     const hp = Math.round(d.hp * scale * (elite ? 1.3 : 1));
     const e: Enemy = {
       id: `enemy-${i}`,
@@ -91,16 +122,22 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
     };
     s.enemies.push(e);
   }
-  if (boss && s.players.length >= 3) {
-    const d = definitions.find((d) => d.id === "mender")!;
-    s.enemies.push({
-      ...d,
-      id: "enemy-add",
-      definition: d.id,
-      maxHp: d.hp,
-      statuses: [],
-      intent: { ability: d.abilities[0], target: "" },
-      phase: 1,
+  // Boss support scales with the party's spare actions: a repairer at three
+  // heroes, and a shield wall at four, so a bigger party must split its damage
+  // instead of simply burning the boss down before it acts.
+  if (boss) {
+    const support = ["mender", "bulwark"].slice(0, s.players.length - 2);
+    support.forEach((id, i) => {
+      const d = definitions.find((d) => d.id === id)!;
+      s.enemies.push({
+        ...d,
+        id: `enemy-add-${i}`,
+        definition: d.id,
+        maxHp: d.hp,
+        statuses: [],
+        intent: { ability: d.abilities[0], target: "" },
+        phase: 1,
+      });
     });
   }
   for (const p of s.players) {
@@ -117,6 +154,11 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
 }
 function startRound(s: RunState) {
   for (const p of standing(s)) trigger(s, p, p, "roundStart");
+  if (s.combatVersion === 2 && s.round === PATIENCE + 1)
+    log(
+      s,
+      "The Foundry loses patience. Every enemy blow grows heavier from now on.",
+    );
   if (standing(s).length) prepareIntents(s);
   else {
     s.phase = "COMPLETE";
@@ -132,7 +174,7 @@ export function validatePlan(
 ): Ability {
   if (p.hp <= 0 || p.fallen)
     throw Error("Downed heroes can use spirit support");
-  const a = abilities(p.heroId, s.combatVersion).find(
+  const a = abilities(p.heroId, s.combatVersion, p.upgrades).find(
     (a) => a.id === abilityId,
   );
   if (!a) throw Error("Unknown ability");
@@ -148,8 +190,8 @@ export function validatePlan(
     (isPlayer(target) || target.hp <= 0)
   )
     throw Error("Choose a living enemy");
-  if (a.id === "revive" && (target.hp > 0 || s.gold < 90))
-    throw Error("Revival requires a downed ally and 90 gold");
+  if (a.id === "revive" && (target.hp > 0 || s.gold < reviveCost(s)))
+    throw Error(`Revival requires a downed ally and ${reviveCost(s)} gold`);
   if (
     a.effects.some((e) => e.kind === "interrupt") &&
     (!("intent" in target) ||
@@ -164,12 +206,33 @@ export function validatePlan(
     throw Error("Choose another standing ally to protect");
   return a;
 }
+/**
+ * A cleared chamber deepens each hero's build. Heroes whose tree is spent are
+ * recorded immediately so one finished build cannot stall the room, and legacy
+ * saves skip the phase entirely.
+ */
+export function enterUpgrade(s: RunState) {
+  s.votes = {};
+  if (s.combatVersion !== 2) {
+    s.phase = "REWARD";
+    return;
+  }
+  for (const p of s.players)
+    if (!upgradeOffer(p).length) s.votes[p.id] = "none";
+  if (s.players.every((p) => s.votes[p.id])) {
+    s.votes = {};
+    s.phase = "REWARD";
+    return;
+  }
+  s.phase = "UPGRADE";
+  log(s, "The pact deepens. Each hero sharpens one ability.");
+}
 export function resolveRound(s: RunState) {
   const queue = standing(s)
     .map((p) => ({
       p,
       plan: s.plans[p.id],
-      a: abilities(p.heroId, s.combatVersion).find(
+      a: abilities(p.heroId, s.combatVersion, p.upgrades).find(
         (a) => a.id === s.plans[p.id]?.ability,
       )!,
     }))
@@ -192,13 +255,24 @@ export function resolveRound(s: RunState) {
     )!;
     p.resource -= a.cost;
     p.cooldowns[a.id] = a.cooldown + 1;
+    // Content objects are shared, so price the rising revival on a copy.
+    let cast = a;
+    if (a.id === "revive") {
+      cast = {
+        ...a,
+        effects: a.effects.map((e) =>
+          e.kind === "gold" ? { ...e, amount: -reviveCost(s) } : e,
+        ),
+      };
+      s.revivals = (s.revivals ?? 0) + 1;
+    }
     const targets =
       a.target === "enemyRow"
         ? s.enemies.filter((e) => e.hp > 0 && e.row === target.row)
         : [target];
     log(s, `${p.name} casts ${a.name}.`);
     for (const t of targets) {
-      effects(s, p, t, a.effects);
+      effects(s, p, t, cast.effects);
       if (a.effects.some((e) => e.kind === "damage"))
         trigger(s, p, t, "afterAttack");
       if (a.effects.some((e) => e.kind === "heal"))
@@ -256,9 +330,11 @@ export function resolveRound(s: RunState) {
     const node = s.map.find((n) => n.id === s.currentNode)!;
     s.reward = node.type === "boss" ? 240 : node.type === "elite" ? 180 : 110;
     gain(s, s.reward);
-    s.phase = node.type === "boss" ? "COMPLETE" : "REWARD";
-    if (s.phase === "COMPLETE") s.outcome = "victory";
     log(s, "The chamber falls silent.");
+    if (node.type === "boss") {
+      s.phase = "COMPLETE";
+      s.outcome = "victory";
+    } else enterUpgrade(s);
   } else {
     s.round++;
     s.plans = {};

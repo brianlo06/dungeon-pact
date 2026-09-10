@@ -3,6 +3,7 @@ export type Phase =
   | "PACT"
   | "MAP"
   | "COMBAT"
+  | "UPGRADE"
   | "REWARD"
   | "AUCTION"
   | "EVENT"
@@ -32,8 +33,15 @@ export type Effect =
   | { kind: "protect"; barrier: number }
   | { kind: "interrupt" }
   | { kind: "removeStatus"; status: StatusId }
-  | { kind: "heal"; amount: number }
-  | { kind: "status"; status: StatusId; stacks: number; duration: number }
+  /** `self` sends the effect back to the actor, so an attack can also sustain. */
+  | { kind: "heal"; amount: number; self?: boolean }
+  | {
+      kind: "status";
+      status: StatusId;
+      stacks: number;
+      duration: number;
+      self?: boolean;
+    }
   | { kind: "resource"; amount: number }
   | { kind: "move"; row: Row }
   | { kind: "gold"; amount: number }
@@ -97,6 +105,8 @@ export interface Unit {
 export interface Player extends Unit {
   heroId: string;
   ready: boolean;
+  /** Chosen ability branches. Absent in saves written before upgrades existed. */
+  upgrades?: string[];
   resource: number;
   items: string[];
   cooldowns: Record<string, number>;
@@ -158,6 +168,8 @@ export interface RunState {
   /** Missing means legacy random formations; new rooms use authored v2 packs. */
   encounterVersion?: 2;
   combatVersion?: 2;
+  /** Battlefield revivals already bought this run; each one raises the price. */
+  revivals?: number;
   schemaVersion: 1;
   contentVersion: 1;
   room: string;

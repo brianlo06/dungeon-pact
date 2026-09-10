@@ -7,7 +7,7 @@ export const statuses: Record<
     name: "Weak",
     icon: "↓",
     description:
-      "Direct attack power is reduced by 25% before Guard. Expires at round end.",
+      "Direct attack power is reduced by 35% before Guard. Expires at round end.",
     max: 1,
   },
   guarded: {
@@ -47,7 +47,7 @@ export const statuses: Record<
     name: "Marked",
     icon: "◎",
     description:
-      "The next Precision hit consumes Marked for 14 bonus damage: Exploit.",
+      "The next Precision hit consumes Marked for 20 bonus damage: Exploit.",
     max: 1,
   },
   barrier: {

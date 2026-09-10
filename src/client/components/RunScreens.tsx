@@ -5,6 +5,7 @@ import type { Intent } from "../../shared/protocol";
 import { heroes } from "../../content/heroes";
 import { events } from "../../content/events";
 import { items } from "../../content/items";
+import { upgradeOffer, lines } from "../../content/upgrades";
 type Props = { s: Snapshot; send: (i: Intent) => void; disabled: boolean };
 export function Lobby({ s, send, disabled }: Props) {
   const me = s.players.find((p) => p.id === s.you)!;
@@ -271,10 +272,73 @@ export function Camp(props: Props) {
           {...props}
           id="train"
           title="Sharpen your resolve"
-          text="Every hero gains 3 Power for this run. No healing or resurrection."
+          text="Pay 100 gold. Every hero gains 3 Power for the rest of the run. No healing or resurrection."
+          cost={100}
         />
       </div>
     </section>
+  );
+}
+export function Upgrade({ s, send, disabled }: Props) {
+  const me = s.players.find((p) => p.id === s.you)!;
+  const offer = upgradeOffer(me);
+  const chosen = s.votes[me.id];
+  const step = (me.upgrades ?? []).length + 1;
+  return (
+    <>
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">
+            CHAMBER CLEARED · BRANCH {step} OF {lines(me.heroId)}
+          </span>
+          <h1>Sharpen one ability.</h1>
+          <p>
+            This choice is permanent for the run. Force ends fights sooner;
+            guard keeps the party standing when they run long.
+          </p>
+        </div>
+        <span className="badge">
+          {Object.keys(s.votes).length}/{s.players.length} chosen
+        </span>
+      </div>
+      <div className="upgrade-grid">
+        {offer.length === 0 ? (
+          <p>Your tree is complete. Waiting for the rest of the pact.</p>
+        ) : (
+          offer.map((u) => (
+            <button
+              key={u.id}
+              className={`upgrade-card upgrade-${u.kind} ${chosen === u.id ? "selected" : ""}`}
+              disabled={disabled || !!chosen}
+              onClick={() => send({ type: "upgrade", choice: u.id })}
+            >
+              <small>{u.kind === "guard" ? "GUARD" : "FORCE"}</small>
+              <h2>{u.name}</h2>
+              <p>{u.description}</p>
+              <span className="choice-footer">
+                {chosen === u.id ? "✓ TAKEN" : "Take this branch →"}
+              </span>
+            </button>
+          ))
+        )}
+      </div>
+      <section className="lobby-footer">
+        <div>
+          {s.players.map((p) => (
+            <div className="player-line" key={p.id}>
+              <span className={s.votes[p.id] ? "online" : "muted"}>
+                {s.votes[p.id] ? "✓" : "…"}
+              </span>{" "}
+              {p.name} · {p.heroId}{" "}
+              <small>{(p.upgrades ?? []).length} branches</small>
+            </div>
+          ))}
+        </div>
+        <p className="muted">
+          Everyone chooses before the party moves on. Fallen heroes still learn.
+        </p>
+      </section>
+    </>
   );
 }
 export function Reward({ s, send, disabled }: Props) {

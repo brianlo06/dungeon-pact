@@ -27,7 +27,7 @@ Example: a weapon with `trigger: 'afterAttack'`, `target: 'target'`, and a Wet s
 
 Enemies use Ability definitions and server-controlled intent selection. Add glyph, stats, row, ability rotation and boss flag. Current special boss target/scaling rules are explicit engine branches; a phase/intent policy DSL is needed before expanding to 15 bosses. Do not pretend those rules are fully data-driven yet.
 
-Heroes define base attributes, resource name/cap and abilities. Add only effects the interpreter supports; no hard-coded hero checks in presentation. Intrinsic passive hooks and branching upgrades remain Phase 2.
+Heroes define base attributes, resource name/cap and abilities. Add only effects the interpreter supports; no hard-coded hero checks in presentation. Intrinsic passive hooks remain Phase 2; branching upgrades are implemented.
 
 Events currently support deterministic party gold/HP choices with explicit costs. Add EventDef and choices, then test affordability. Delayed consequences, class-specific choices, sacrifice choices and weighted outcomes require schema expansion. Map types are a closed union; new types need an entry handler and a functional view before appearing in generation.
 
@@ -37,9 +37,34 @@ Server keeps the selected lot ID; `snapshot()` emits only rarity, slot, non-curs
 
 ## Inventory at this revision
 
-4 heroes; 17 class abilities in tactical v2 (14 legacy) plus 4 common actions; 12 items; 8 normal enemies and 2 bosses; 2 elite traits; 10 statuses; 2 reactions; 3 events; standard and mystery versions of one ascending auction rule. Content targets in the master brief are roadmap targets, not present inventory.
+4 heroes; 17 class abilities in tactical v2 (14 legacy) plus 4 common actions; 24 ability branches; 12 items; 8 normal enemies and 2 bosses; 2 elite traits; 10 statuses; 2 reactions; 3 events; standard and mystery versions of one ascending auction rule. Content targets in the master brief are roadmap targets, not present inventory.
 
 ## Tactical content extension
 
 New effect variants: `protect {barrier}` creates a one-hit Guarded source link and frontline barrier; `interrupt` applies Interrupted only to an interruptible enemy intent; `removeStatus {status}` removes all stacks before subsequent effects. Weak multiplies outgoing direct attack power by 0.75 before Guard. Guarded stores an optional sourceId; damage riders follow the intercepted hit. All expire according to centralized status rules.
 `encounters.ts` authors explicit formations by party size. `tacticalIntents` supplies versioned enemy rotations; `tacticalSkills` supplies versioned equipped abilities. Ability.interruptible marks an intent's counterplay, not a client permission grant. Server validation still enforces targeting and availability.
+
+## Ability branches
+
+`src/content/upgrades.ts` holds `UpgradeDef`s: a hero, a line index, the ability
+id they patch, a `force`/`guard` kind, and an `apply` that returns a new
+Ability. Branches are content code, not serialized state — a player stores only
+the chosen ids, and `abilities(heroId, combatVersion, chosen)` folds them over
+the base list at read time. That keeps saves small and lets a branch be revised
+without migrating rooms.
+
+Rules an upgrade must obey, all enforced by `validateContent()` at room boot:
+
+- Never change the ability's `id`. Plans, cooldowns and saved state key off it.
+- Never mutate the base ability. The catalog objects are shared; copy them.
+- Every line offers exactly two branches, at least one of them `guard`.
+- Every branch patches an ability the hero actually owns in tactical v2.
+- The patched ability still parses against the ability schema and stays castable
+  within the hero's resource cap.
+
+A hero is offered the line matching how many picks they already hold, so adding
+a fourth line extends the tree without touching existing runs. `self`-flagged
+heal and status effects send the effect to the actor instead of the target,
+which is how an offensive ability can sustain or shield its user. Note that such
+an ability still targets an enemy — anything reasoning about "healing abilities"
+must check the ability's target, not just the presence of a heal effect.

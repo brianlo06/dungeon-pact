@@ -2,6 +2,7 @@ import { encounters } from "./encounters";
 import { z } from "zod";
 import type { Effect } from "../shared/model";
 import { heroes, abilities } from "./heroes";
+import { upgrades, lines, upgradeOffer } from "./upgrades";
 import { items } from "./items";
 import { enemies, enemyAbilities } from "./enemies";
 import { events } from "./events";
@@ -32,12 +33,17 @@ export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
         .optional(),
       precision: z.boolean().optional(),
     }),
-    z.object({ kind: z.literal("heal"), amount: nonnegative }),
+    z.object({
+      kind: z.literal("heal"),
+      amount: nonnegative,
+      self: z.boolean().optional(),
+    }),
     z.object({
       kind: z.literal("status"),
       status: statusId,
       stacks: z.number().int().positive().max(100),
       duration: z.number().int().positive().max(100),
+      self: z.boolean().optional(),
     }),
     z.object({
       kind: z.literal("resource"),
@@ -118,11 +124,34 @@ export function validateContent() {
       maxResource: z.number().int().positive(),
     }).parse(h);
     unique(h.abilities, "ability");
-    for (const a of [...h.abilities, ...abilities(h.id, 2)]) {
+    const tree = upgrades.filter((u) => u.heroId === h.id);
+    const upgraded = abilities(
+      h.id,
+      2,
+      tree.map((u) => u.id),
+    );
+    for (const a of [...h.abilities, ...abilities(h.id, 2), ...upgraded]) {
       abilitySchema.parse(a);
       if (a.cost > h.maxResource) throw Error(`Uncastable ability ${a.id}`);
     }
+    // Every pick must present a real choice, and every branch must patch a
+    // tactical ability the hero actually owns.
+    for (let line = 0; line < lines(h.id); line++) {
+      const branches = upgradeOffer({
+        heroId: h.id,
+        upgrades: Array.from({ length: line }, (_, i) => `line-${i}`),
+      });
+      if (branches.length < 2) throw Error(`Upgrade line ${line} of ${h.id}`);
+      if (!branches.some((u) => u.kind === "guard"))
+        throw Error(
+          `Upgrade line ${line} of ${h.id} offers no defensive branch`,
+        );
+      for (const u of branches)
+        if (!abilities(h.id, 2).some((a) => a.id === u.ability))
+          throw Error(`Upgrade ${u.id} patches an unknown ability`);
+    }
   }
+  unique(upgrades, "upgrade");
   for (const i of items) itemSchema.parse(i);
   for (const e of enemies) {
     z.object({
@@ -151,5 +180,6 @@ export function validateContent() {
     enemies: enemies.length,
     events: events.length,
     statuses: statusId.options.length,
+    upgrades: upgrades.length,
   };
 }

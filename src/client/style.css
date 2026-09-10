@@ -1704,3 +1704,62 @@ small {
   color: #c7ad9e;
   margin-bottom: 10px;
 }
+.upgrade-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  max-width: 780px;
+  margin: 0 auto;
+}
+.upgrade-card {
+  position: relative;
+  text-align: left;
+  padding: 18px 20px 16px;
+  background: var(--panel);
+  border: 3px solid var(--ink);
+  box-shadow:
+    inset 0 2px #645166,
+    4px 5px #17141e;
+}
+.upgrade-card:hover:not(:disabled) {
+  background: #3b2f3d;
+}
+.upgrade-card.selected {
+  border-color: var(--gold);
+  background: #433234;
+}
+.upgrade-card:disabled:not(.selected) {
+  opacity: 0.5;
+}
+.upgrade-card small {
+  font-family: var(--pixel);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--rust);
+}
+.upgrade-force small {
+  color: var(--rust);
+}
+.upgrade-guard small {
+  color: #7fb0a6;
+}
+.upgrade-card h2 {
+  font-family: var(--pixel);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 8px 0 10px;
+  color: #f0d3a0;
+}
+.upgrade-card p {
+  font-size: 12px;
+  min-height: 56px;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .upgrade-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .upgrade-card p {
+    min-height: 0;
+  }
+}

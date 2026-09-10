@@ -6,12 +6,20 @@ import { events } from "../content/events";
 import { hashSeed, pick } from "./rng";
 import { generateMap, availableNodes } from "./map";
 import { log, spend, gain } from "./effects";
-import { enterCombat, validatePlan, resolveRound, standing } from "./combat";
+import {
+  enterCombat,
+  enterUpgrade,
+  validatePlan,
+  resolveRound,
+  standing,
+} from "./combat";
+import { upgradeOffer } from "../content/upgrades";
 import { enterAuction, nominate, purchase } from "./auction";
 export function createRun(room: string, seed: string): RunState {
   return {
     encounterVersion: 2,
     combatVersion: 2,
+    revivals: 0,
     schemaVersion: 1,
     contentVersion: 1,
     room,
@@ -51,6 +59,7 @@ export function addPlayer(s: RunState, id: string, name: string) {
     name,
     heroId: h.id,
     ready: false,
+    upgrades: [],
     hp: h.hp,
     maxHp: h.hp,
     power: h.power,
@@ -71,6 +80,12 @@ export function addPlayer(s: RunState, id: string, name: string) {
   s.revision++;
   log(s, `${name} joins the pact.`);
 }
+/**
+ * Camp is one shared decision. Training used to be free, which made it the
+ * obvious pick whenever nobody was dying; paying for it puts recovery and
+ * power in direct competition for the same treasury.
+ */
+export const campCosts: Record<string, number> = { restore: 120, train: 100 };
 function voteResult(s: RunState): string | undefined {
   const counts = new Map<string, number>();
   for (const c of Object.values(s.votes))
@@ -136,8 +151,8 @@ function finishVote(s: RunState, result: string) {
     return;
   }
   if (s.phase === "CAMP") {
+    if (campCosts[result]) spend(s, campCosts[result]);
     if (result === "restore") {
-      spend(s, 120);
       for (const p of s.players) {
         p.fallen = false;
         p.downedRounds = 0;
@@ -188,6 +203,7 @@ export function reduce(
         resource: h.maxResource,
         row: h.id === "vanguard" ? "front" : "back",
         ready: false,
+        upgrades: [],
       });
       break;
     }
@@ -218,8 +234,8 @@ export function reduce(
                   .choices.map((c) => c.id);
       if (!choices.includes(intent.choice)) throw Error("Invalid choice");
       const cost =
-        s.phase === "CAMP" && intent.choice === "restore"
-          ? 120
+        s.phase === "CAMP"
+          ? (campCosts[intent.choice] ?? 0)
           : s.phase === "EVENT"
             ? events
                 .find((e) => e.id === s.eventId)!
@@ -242,6 +258,23 @@ export function reduce(
       requirePhase("COMBAT");
       delete s.plans[p.id];
       break;
+    case "upgrade": {
+      requirePhase("UPGRADE");
+      if (s.votes[p.id]) throw Error("Your upgrade is already chosen");
+      if (!upgradeOffer(p).some((u) => u.id === intent.choice))
+        throw Error("That branch is not on offer");
+      s.votes[p.id] = intent.choice;
+      if (s.players.every((x) => s.votes[x.id])) {
+        for (const x of s.players) {
+          const choice = s.votes[x.id];
+          if (choice !== "none") x.upgrades = [...(x.upgrades ?? []), choice];
+        }
+        s.votes = {};
+        s.phase = "REWARD";
+        log(s, "New instincts settle in. The route waits.");
+      }
+      break;
+    }
     case "continue":
       requirePhase("REWARD", "AUCTION");
       if (s.phase === "AUCTION" && s.auction?.stage !== "sold")
