@@ -52,6 +52,17 @@ export type Effect =
   | { kind: "resource"; amount: number }
   | { kind: "move"; row: Row }
   | { kind: "gold"; amount: number }
+  /**
+   * Takes carried equipment off the target and banks it in a strongbox. The
+   * owner loses the item's triggers until the strongbox is broken open.
+   */
+  | { kind: "seize"; count: number }
+  /**
+   * Barrier for the actor worth one point per `per` gold the treasury holds
+   * above `free`. The allowance matters: a party that spent its money is
+   * carrying a working balance, not a hoard, and should not be taxed for it.
+   */
+  | { kind: "bank"; per: number; free: number }
   | { kind: "conditional"; status: StatusId; effects: Effect[] };
 export interface Ability {
   interruptible?: boolean;
@@ -131,6 +142,8 @@ export interface Enemy extends Unit {
   intent: { ability: Ability; target: string };
   elite?: "greedy" | "vampiric";
   phase: number;
+  /** Equipment this unit is holding hostage, returned when it is destroyed. */
+  holding?: { playerId: string; itemId: string }[];
 }
 export interface EnemyDef {
   id: string;
@@ -143,6 +156,13 @@ export interface EnemyDef {
   row: Row;
   abilities: Ability[];
   boss?: boolean;
+  /**
+   * A container, not a combatant: never drawn into an encounter, and standing
+   * one does not keep a chamber from falling silent. Breaking it is a choice.
+   */
+  object?: boolean;
+  /** The boss's stated objective, shown before the first round. */
+  objective?: string;
 }
 export interface MapNode {
   id: string;

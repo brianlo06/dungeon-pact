@@ -10,6 +10,7 @@ import { abilities } from "../src/content/heroes";
 import { upgradeOffer } from "../src/content/upgrades";
 import { mentors, pathFor } from "../src/content/evolutions";
 import { items } from "../src/content/items";
+import { isObject } from "../src/content/enemies";
 import { events } from "../src/content/events";
 import { EXPLOIT, WEAK, status } from "../src/engine/effects";
 import { reviveCost, standing } from "../src/engine/combat";
@@ -310,10 +311,16 @@ export const tacticalPolicy: Policy = {
         (pl) => pl.ability === ability && pl.target === target,
       );
     const remaining = (e: Enemy) => effectiveHp(e) - plannedDamage(s, e);
+    // A container is worth opening only for what is inside it. Each seized
+    // piece of equipment is an item the party fights the rest of the boss
+    // without, so it is priced against the damage the detour costs.
+    const held = (e: Enemy) => e.holding?.length ?? 0;
     const priority = (e: Enemy) =>
       (t.perEnemy.get(e.id) ?? 0) +
       (e.definition === "mender" ? 26 : 0) +
-      (e.row === "back" ? 6 : 0) -
+      (e.row === "back" ? 6 : 0) +
+      held(e) * 22 -
+      (isObject(e.definition) && !held(e) ? 999 : 0) -
       remaining(e) * 0.15;
     const ordered = [...foes].sort(
       (a, b) => priority(b) - priority(a) || a.id.localeCompare(b.id),
@@ -465,12 +472,21 @@ export const tacticalPolicy: Policy = {
     }
 
     // 7. Fortified enemies waste the party's damage until they are opened.
-    const unravel = has("unravel");
-    if (unravel) {
+    // Selected by effect, not by name: the Warden, the Broker and two upgraded
+    // branches all strip Barrier, and a policy that only knows one of them
+    // reports that the others' counterplay does not exist.
+    const strip = opts.find(
+      (a) =>
+        (a.target === "enemy" || a.target === "enemyRow") &&
+        a.effects.some(
+          (e) => e.kind === "removeStatus" && e.status === "barrier",
+        ),
+    );
+    if (strip) {
       const walled = ordered.find(
-        (e) => shield(e) >= 8 && !claimed("unravel", e.id),
+        (e) => shield(e) >= 8 && !claimed(strip.id, e.id),
       );
-      if (walled) return { ability: "unravel", target: walled.id };
+      if (walled) return { ability: strip.id, target: walled.id };
     }
 
     // 8. Blunt the biggest direct attacker instead of trading damage.
@@ -623,7 +639,39 @@ export const tacticalPolicy: Policy = {
   },
 };
 
+/**
+ * The tactical bot with its purse shut: it never raises a paddle. It exists to
+ * reach a system the tactical policy cannot. That bot spends down to a working
+ * balance by the last chamber, so a boss that shields itself with the treasury
+ * would report as doing nothing at all — the same trap that once made
+ * evolutions look inert. Comparing this policy across two builds isolates what
+ * the shield costs a party that arrives rich, with equipment held constant.
+ */
+export const hoardPolicy: Policy = {
+  ...tacticalPolicy,
+  name: "hoard",
+  interest: () => false,
+  bid: () => false,
+  reveal: () => false,
+  train: () => false,
+  vote(s, p) {
+    // Everything that costs gold is declined; a battlefield revival is not,
+    // because spending at the boss is the pressure valve being measured.
+    if (s.phase === "CAMP") return "rest";
+    if (s.phase === "EVENT") {
+      const choices = events.find((e) => e.id === s.eventId)!.choices;
+      return (
+        choices.find((c) => c.cost === 0 && c.gold > 0) ??
+        choices.find((c) => c.cost === 0) ??
+        choices.at(-1)!
+      ).id;
+    }
+    return tacticalPolicy.vote(s, p);
+  },
+};
+
 export const policies: Record<string, Policy> = {
   attack: attackPolicy,
   tactical: tacticalPolicy,
+  hoard: hoardPolicy,
 };

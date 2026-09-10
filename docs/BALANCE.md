@@ -13,7 +13,15 @@ live in `scripts/policy.ts`:
 - **tactical** — reads enemy intentions, predicts the round's incoming damage,
   interrupts windups, intercepts lethal hits, strips barriers, weakens the
   biggest attacker, focus-fires without overkill, buys for the hero who fits the
-  item and keeps a recovery reserve.
+  item and keeps a recovery reserve. It also decides whether a container is
+  worth opening, pricing each seized item against the damage the detour costs.
+- **hoard** — the tactical bot with its purse shut: no lots, no tuition, no camp
+  medicine, no paid event choices. It is not a good bot and is not meant to be.
+  It exists to reach a system the tactical bot cannot: that bot spends down to a
+  working balance by the last chamber, so a boss that shields itself with the
+  treasury reports as doing nothing at all. Comparing **hoard against hoard**
+  across two builds isolates what such a shield costs a party that arrives rich,
+  with equipment held constant.
 
 `--matrix` runs all 486 class combinations (36 duos, 120 trios, 330 quartets,
 duplicates included) instead of one canonical party per size. This matters: the
@@ -25,6 +33,7 @@ npm run simulate -- 40                        # both policies, canonical parties
 npm run simulate -- 25 --matrix               # every class combination
 npm run simulate -- 25 --matrix --full        # ...printing all 486 rows
 npm run simulate -- 40 --matrix --policy=tactical
+npm run simulate -- 25 --matrix --policy=tactical,hoard
 npm run simulate -- 40 --party=ranger,ranger  # one composition
 ```
 
@@ -51,6 +60,84 @@ second support, the Iron Bulwark, at four. Boss half-health phase adds seven
 base damage; the Miser additionally adds floor(gold/70). From round 7 every
 enemy damage effect grows by 3 per further round. Mark + Precision pays 20;
 Weak cuts a direct attack to 65% before Guard.
+
+Both bosses now carry an objective. The Collector's Repossess also seizes the
+dearest item carried by each hero in the row it hits, into a Strongbox of 60 HP
+× (0.6 + players×0.2), Guard 2, which seals itself for 4 Barrier a round.
+Breaking it returns everything and ends the seizures for the rest of the fight;
+one Strongbox to a chamber. The Miser's Weight of wealth also shields it for one
+Barrier per 12 gold the treasury holds **above 160** — the allowance is the
+whole mechanic, and is explained below.
+
+## Simulation evidence — boss objectives, 486 compositions, 25 seeds each
+
+12,150 runs per policy per build, with the _same_ policy file on both, so the
+only difference is the boss.
+
+| Bracket   | tactical, before | after | hoard, before | after |
+| --------- | ---------------: | ----: | ------------: | ----: |
+| 2 players |              72% |   63% |           15% |   11% |
+| 3 players |              88% |   81% |           49% |   41% |
+| 4 players |              91% |   86% |           63% |   59% |
+
+Difficulty moved without a single point of enemy health being added. The
+open concern that 92–95% at three and four players meant an optimal party was
+rarely punished is answered: 81–86%, and every loss still lands at the boss.
+
+### Which objective did what
+
+A slice of compositions, 12 seeds, split by the boss the run actually drew.
+This is a smaller sample than the matrix and is only meant to attribute.
+
+| Fight                 | before | after |
+| --------------------- | -----: | ----: |
+| tactical 2p Collector |    57% |   54% |
+| tactical 4p Collector |    92% |   86% |
+| tactical 2p Miser     |    84% |   84% |
+| tactical 4p Miser     |    91% |   91% |
+| hoard 2p Collector    |    28% |   28% |
+| hoard 4p Collector    |    91% |   91% |
+| hoard 2p Miser        |    15% |    0% |
+| hoard 4p Miser        |    45% |   30% |
+
+Each objective moves exactly the party it is aimed at, and nothing else. The
+Strongbox costs a normally equipped party 3–6 points and costs the hoarding bot
+**nothing at all**, because that bot never buys anything and so has nothing to
+seize — an unusually clean control. The treasury shield is the mirror image: it
+costs a normally spending party **nothing** (84→84, 91→91) and costs a hoarder
+15 points. A party that arrives at the Counting House with a working balance
+never sees it; one sitting on 400–600 gold meets 25–43 Barrier every other round.
+
+### The allowance is the design
+
+The first version of the shield was unconditional — a flat wall on top of the
+treasury scaling — and it was cut after measuring it. Two-hero parties fell from
+84% to 56%, the worst result of the pass, and the reason is worth keeping: a
+shield lengthens a fight, and a longer fight meets the round-7 escalation
+clock, so the parties least able to burst through were punished twice for
+something they had no way to answer. Scaling purely off gold above an allowance
+leaves a party that spent its money exactly where it was.
+
+The allowance had to be measured, not guessed. Parties reach the boss far
+poorer than the results screen suggests: mean final treasury includes the 240
+boss reward, so the 242–268 previously recorded as "leftover" is mostly the
+prize for winning. Actual gold at the boss is around 95 median at two players
+and 50 at four. A shield keyed to that would have been dead on arrival — which
+is precisely the trap this notebook already records under measurement traps,
+and it was found only because the hoard policy was written to reach it.
+
+### Objectives widen the Vanguard/Warden gap
+
+| Class    | before | after |
+| -------- | ------ | ----- |
+| Vanguard | +13    | +17   |
+| Warden   | +15    | +21   |
+
+This is the clearest evidence yet that the survivability gap is not a tuning
+problem. Any increase in difficulty raises the value of not dying, so every
+honest attempt to make the game harder makes the two survivability classes
+better. The gap will not close from this direction, and should not be attacked
+again with numbers.
 
 ## Simulation evidence — scarce healing, 486 compositions, 25 seeds each
 
@@ -235,22 +322,34 @@ both policies.
 
 ## Open concerns
 
-1. **Difficulty ceiling.** 92–95% at three and four players says an optimal
-   party is rarely punished. Equipment abundance from multi-lot exchanges made
-   this worse, and the answer is threat-shaped, not another price change: boss
-   objectives that change decisions rather than raise numbers. This is now the
-   single most valuable open item.
-2. **Leftover gold, mostly addressed.** Multi-lot exchanges, a 100% opening ask,
+1. **Difficulty ceiling — addressed.** Boss objectives took three and four
+   players from 88–91% to 81–86% without adding a point of enemy health, and
+   two players from 72% to 63%. Two players now carries the largest share of
+   the drop, which is the wrong way round: duos were already the hardest
+   bracket. The Strongbox scales with party size but a duo still spends half a
+   round opening it against a quarter of a round for a quartet, so the next
+   look should price containers against party actions rather than headcount.
+2. **A hoarding duo cannot beat the Miser.** 0%, from 15%. Every other cell of
+   the hoard matrix stayed survivable. This is three compounding
+   disadvantages at once — no equipment, two heroes, and the one boss that
+   punishes the hoard — and the baseline was already near the floor, so it is
+   recorded rather than tuned. If it is ever raised, raise the allowance, not
+   the boss.
+3. **Leftover gold, mostly addressed.** Multi-lot exchanges, a 100% opening ask,
    priced camp training and escalating revivals took mean final treasury from
    660–790 down to 381–463. The Broker's parties end lowest at 336, which is the
    class working as designed. Consumables and healing alternatives would close
-   the rest.
-3. **Herald duos.** Hrl+Hrl at 8% is the worst cell left. Two pure supports
+   the rest. Read that figure carefully: mean final treasury is measured after
+   the 240 boss reward lands, so most of what looks like leftover is the prize
+   for winning. Gold actually in hand at the boss is nearer 50–95.
+4. **Herald duos.** Hrl+Hrl at 8% is the worst cell left. Two pure supports
    with no healing is a defensible worst case, but it is a long way below the
    next-worst duo.
-4. **Bot blind spots.** The tactical policy still never repositions, never
+5. **Bot blind spots.** The tactical policy still never repositions, never
    buys information, and bids conservatively because of its flat reserve. Auction
-   pressure is therefore under-measured.
+   pressure is therefore under-measured. It also has no way to spend gold down
+   deliberately before a boss, so the Miser's shield can only ever be measured
+   as a penalty on hoarding, never as a decision a party makes on the route.
 
 ## Playtest priorities
 
@@ -267,5 +366,8 @@ both policies.
 6. Test whether the camp's three priced options genuinely compete.
 7. Compare both bosses and elite combinations over at least 20 human runs before
    tuning aggressively.
+8. Watch whether people read the Strongbox as an objective or as a distraction,
+   and whether anyone chooses to spend gold down before the Counting House once
+   they have met the Miser a second time.
 
 No telemetry leaves the local environment.

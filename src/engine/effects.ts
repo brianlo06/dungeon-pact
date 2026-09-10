@@ -10,6 +10,7 @@ import type {
 } from "../shared/model";
 import { statuses } from "../content/statuses";
 import { items } from "../content/items";
+import { enemies as definitions } from "../content/enemies";
 import { resourceCap } from "../content/evolutions";
 /** Mark + Precision bonus. Setting up an Exploit costs a whole action, so the
  * payoff has to beat simply attacking twice. */
@@ -60,6 +61,56 @@ export function applyStatus(
       duration,
     });
 }
+/**
+ * The Collector's vault. It is spawned by a seizure rather than by the
+ * encounter, holds what was taken, and returns all of it the moment it breaks.
+ * Nothing else in combat knows it exists: it is an ordinary enemy that happens
+ * to be an object.
+ */
+function strongbox(s: RunState): Enemy {
+  const existing = s.enemies.find((e) => e.definition === "strongbox");
+  if (existing && existing.hp > 0) return existing;
+  const def = definitions.find((d) => d.id === "strongbox")!;
+  const hp = Math.round(def.hp * (0.6 + s.players.length * 0.2));
+  const box: Enemy = {
+    id: `enemy-box-${s.enemies.length}`,
+    definition: def.id,
+    name: def.name,
+    hp,
+    maxHp: hp,
+    power: def.power,
+    guard: def.guard,
+    speed: def.speed,
+    row: def.row,
+    statuses: [],
+    intent: { ability: def.abilities[0], target: "" },
+    phase: 1,
+    holding: [],
+  };
+  s.enemies.push(box);
+  log(s, `${def.name} is hauled into the chamber.`);
+  return box;
+}
+/**
+ * Everything a broken container was holding goes back to the heroes it was
+ * taken from. Called when the box falls and again when the chamber does, so a
+ * seizure can never outlive the fight it happened in.
+ */
+export function release(s: RunState, holder: Enemy) {
+  const held = holder.holding ?? [];
+  holder.holding = [];
+  if (!held.length) return;
+  for (const { playerId, itemId } of held) {
+    const owner = s.players.find((p) => p.id === playerId);
+    if (owner && !owner.items.includes(itemId)) owner.items.push(itemId);
+  }
+  log(
+    s,
+    `${holder.name} splits open. ${held.length} piece${held.length === 1 ? "" : "s"} of equipment returns to the pact.`,
+    "combo",
+    { kind: "combo", label: "RECLAIMED", target: holder.id },
+  );
+}
 export function isEnemy(u: Unit): u is Enemy {
   return "intent" in u;
 }
@@ -108,7 +159,10 @@ function hurt(
       { kind: "defeat", target: target.id, hp: 0 },
     );
     if (isPlayer(target)) target.downedRounds = 3;
-    else if (isPlayer(source)) trigger(s, source, target, "onKill", depth + 1);
+    else {
+      if (isEnemy(target) && target.holding?.length) release(s, target);
+      if (isPlayer(source)) trigger(s, source, target, "onKill", depth + 1);
+    }
   }
   if (actual > 0 && isPlayer(target))
     trigger(s, target, source, "onHurt", depth + 1);
@@ -191,6 +245,57 @@ export function effects(
     if (e.kind === "gold") {
       if (e.amount < 0) spend(s, Math.min(s.gold, -e.amount));
       else gain(s, e.amount);
+    }
+    // Equipment is taken, not destroyed. The party can have it back, but only
+    // by spending actions on a container instead of on the boss.
+    // One strongbox to a chamber. Breaking it open is not a chore that repeats:
+    // it ends the seizures for good, which is what makes it worth the actions.
+    if (
+      e.kind === "seize" &&
+      isPlayer(target) &&
+      target.hp > 0 &&
+      !s.enemies.some((x) => x.definition === "strongbox" && x.hp <= 0)
+    ) {
+      const carried = target.items
+        .map((id) => items.find((i) => i.id === id)!)
+        .sort((a, b) => b.price - a.price || a.id.localeCompare(b.id))
+        .slice(0, e.count);
+      if (carried.length) {
+        const box = strongbox(s);
+        for (const item of carried) {
+          target.items = target.items.filter((id) => id !== item.id);
+          box.holding = [
+            ...(box.holding ?? []),
+            { playerId: target.id, itemId: item.id },
+          ];
+          log(
+            s,
+            `${actor.name} seizes ${item.name} from ${target.name}.`,
+            "combo",
+            {
+              kind: "combo",
+              label: "SEIZED",
+              actor: actor.id,
+              target: target.id,
+            },
+          );
+        }
+      } else log(s, `${target.name} carries nothing worth taking.`);
+    }
+    // Wealth left in the treasury is collateral the Miser can shield itself
+    // with, so arriving rich is a decision and not simply a cushion.
+    if (e.kind === "bank") {
+      const banked = Math.floor(
+        Math.max(0, s.gold - e.free) / Math.max(1, e.per),
+      );
+      if (banked > 0) {
+        applyStatus(actor, "barrier", banked, 2);
+        log(
+          s,
+          `${actor.name} banks the pact's hoard of ${s.gold} gold: Barrier +${banked}.`,
+          "gold",
+        );
+      }
     }
     if (e.kind === "resource" && isPlayer(actor))
       actor.resource = Math.max(

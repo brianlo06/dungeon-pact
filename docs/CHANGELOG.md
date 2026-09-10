@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.10 boss objectives — 2026-09-10
+
+- Both bosses now fight for something and say so before the first round.
+- The Collector's Repossess seizes the dearest item carried by each hero in the
+  row it hits into a Strongbox. Its owners lose those items' triggers until the
+  container is broken open, which returns everything and ends the seizures. The
+  Strongbox never blocks a victory: opening it is a choice, not a chore.
+- The Miser's Weight of wealth shields it for one Barrier per twelve gold the
+  treasury holds above 160. Spending is the counterplay; hoarding is the
+  expensive way to arrive.
+- Three new content primitives — `seize`, `bank`, and `EnemyDef.object` — plus
+  `EnemyDef.objective` for the stated goal. No enemy gained health.
+- Difficulty moved on the strength of the objectives alone: three and four
+  players from 88–91% to 81–86%, two players from 72% to 63%.
+- The balance policy now picks a Barrier strip by effect rather than by name, so
+  the Broker's Liquidate and two upgraded branches count as counterplay instead
+  of only the Warden's Unravel.
+- New `hoard` simulation policy, written to reach a system the tactical bot
+  cannot: it never spends, so a treasury-scaled shield has something to measure.
+
 ## 0.9 scarce healing — 2026-09-10
 
 - Mending roots had no cooldown, so a Warden healed every round and sustain compositions were not killable. It now heals 32 on a one-round cooldown, leaving a gap the party has to survive. Three- and four-player win rates fell from 93/92% to 81/85%.

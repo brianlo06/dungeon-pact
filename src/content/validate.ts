@@ -59,6 +59,12 @@ export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
       kind: z.literal("gold"),
       amount: z.number().int().min(-10000).max(10000),
     }),
+    z.object({ kind: z.literal("seize"), count: z.number().int().positive() }),
+    z.object({
+      kind: z.literal("bank"),
+      per: z.number().int().positive(),
+      free: nonnegative,
+    }),
     z.object({
       kind: z.literal("conditional"),
       status: statusId,
@@ -114,7 +120,10 @@ export function validateContent() {
       if (
         formation.length !== count ||
         formation.some(
-          (id) => !enemies.some((enemy) => enemy.id === id && !enemy.boss),
+          (id) =>
+            !enemies.some(
+              (enemy) => enemy.id === id && !enemy.boss && !enemy.object,
+            ),
         )
       )
         throw Error(`Invalid encounter ${e.id}`);
@@ -181,6 +190,10 @@ export function validateContent() {
       if (!pathFor(m.id, h.id))
         throw Error(`Mentor ${m.id} teaches ${h.id} nothing`);
   for (const i of items) itemSchema.parse(i);
+  // A seizure names its container in engine code, so the container has to be
+  // in the catalog and has to be an object, or breaking it would end a chamber.
+  const box = enemies.find((e) => e.id === "strongbox");
+  if (!box?.object) throw Error("Missing strongbox container");
   for (const e of enemies) {
     z.object({
       hp: z.number().int().positive(),

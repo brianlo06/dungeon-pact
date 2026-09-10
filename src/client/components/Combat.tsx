@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Snapshot } from "../../shared/model";
 import type { Intent } from "../../shared/protocol";
 import { abilities, hero } from "../../content/heroes";
+import { enemies as enemyDefs } from "../../content/enemies";
 import { UnitCard } from "./UnitCard";
 import { usePlayback } from "../usePlayback";
 export function Combat({
@@ -41,6 +42,28 @@ export function Combat({
       pop: shows && b.amount !== undefined ? `${sign}${b.amount}` : undefined,
     };
   };
+  /** What one effect of an intention means, in the words the fight uses. */
+  const reads = (
+    effect: (typeof s.enemies)[number]["intent"]["ability"]["effects"][number],
+    power: number,
+  ) =>
+    effect.kind === "damage"
+      ? `${effect.amount + power} damage before defenses`
+      : effect.kind === "heal"
+        ? `${effect.amount} healing`
+        : effect.kind === "seize"
+          ? "seizes equipment into the Strongbox"
+          : effect.kind === "bank"
+            ? "shields itself with your treasury"
+            : "";
+  // Bosses now fight for something. Say what, where the party is looking.
+  const objective =
+    s.combatVersion === 2
+      ? s.enemies
+          .filter((e) => e.hp > 0)
+          .map((e) => enemyDefs.find((d) => d.id === e.definition)?.objective)
+          .find(Boolean)
+      : undefined;
   const list = abilities(me.heroId, s.combatVersion, me.upgrades, me.evolution);
   const [ability, setAbility] = useState(list[0].id);
   const [target, setTarget] = useState("");
@@ -96,6 +119,11 @@ export function Combat({
           ENEMY FORMATION{" "}
           <span>Intentions are fixed. Make your move together.</span>
         </div>
+        {objective && (
+          <p className="objective-banner">
+            <strong>OBJECTIVE</strong> {objective}
+          </p>
+        )}
         {(["back", "front"] as const).map((row) => (
           <div className="battle-row" key={row}>
             <span className="row-label">{row}</span>
@@ -106,11 +134,7 @@ export function Combat({
                   <div
                     className="intent"
                     title={e.intent.ability.effects
-                      .map((x) =>
-                        x.kind === "damage"
-                          ? `${x.amount + e.power} damage before defenses`
-                          : x.kind,
-                      )
+                      .map((x) => reads(x, e.power) || x.kind)
                       .join(", ")}
                   >
                     {e.hp > 0 ? (
@@ -123,13 +147,7 @@ export function Combat({
                         {e.intent.ability.name}
                         <span>
                           {e.intent.ability.effects
-                            .map((effect) =>
-                              effect.kind === "damage"
-                                ? `${effect.amount + e.power} damage before defenses`
-                                : effect.kind === "heal"
-                                  ? `${effect.amount} healing`
-                                  : "",
-                            )
+                            .map((effect) => reads(effect, e.power))
                             .filter(Boolean)
                             .join(" · ")}
                         </span>

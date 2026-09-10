@@ -1,6 +1,10 @@
 import { chooseEncounter } from "../content/encounters";
 import type { RunState, Player, Enemy, Ability, Unit } from "../shared/model";
-import { enemies as definitions, enemyAbilities } from "../content/enemies";
+import {
+  enemies as definitions,
+  enemyAbilities,
+  isObject,
+} from "../content/enemies";
 import { abilities } from "../content/heroes";
 import { resourceCap } from "../content/evolutions";
 import { upgradeOffer } from "../content/upgrades";
@@ -12,10 +16,19 @@ import {
   log,
   isPlayer,
   gain,
+  release,
   status,
 } from "./effects";
 export function standing(s: RunState) {
   return s.players.filter((p) => p.hp > 0 && !p.fallen);
+}
+/**
+ * Enemies that must be cleared for a chamber to fall silent. A strongbox is
+ * not one of them: leaving it standing has to be a losable choice, not a chore
+ * the party is forced through before the fight can end.
+ */
+export function combatants(s: RunState) {
+  return s.enemies.filter((e) => !isObject(e.definition));
 }
 /** Rounds an encounter tolerates before it starts escalating. */
 export const PATIENCE = 6;
@@ -90,7 +103,7 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
   s.plans = {};
   s.enemies = [];
   const count = boss ? 1 : Math.min(4, s.players.length);
-  const pool = definitions.filter((d) => !!d.boss === boss);
+  const pool = definitions.filter((d) => !!d.boss === boss && !d.object);
   const encounter =
     !boss && s.encounterVersion === 2 ? chooseEncounter(s) : undefined;
   const formation = encounter?.formations[s.players.length as 2 | 3 | 4];
@@ -152,6 +165,14 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
       ? "The vault closes. Your final debt is due."
       : "Enemy intentions revealed. Plan together.",
   );
+  // A boss that only hits harder needs no briefing. One with an objective does.
+  if (boss && s.combatVersion === 2)
+    for (const e of s.enemies) {
+      const objective = definitions.find(
+        (d) => d.id === e.definition,
+      )?.objective;
+      if (objective) log(s, `${e.name}: ${objective}`, "combo");
+    }
 }
 function startRound(s: RunState) {
   for (const p of standing(s)) trigger(s, p, p, "roundStart");
@@ -302,6 +323,9 @@ export function resolveRound(s: RunState) {
     .filter((e) => e.hp > 0)
     .sort((a, b) => b.speed - a.speed)) {
     if (!standing(s).length) break;
+    // Once the last real enemy falls the chamber is decided; a container should
+    // not go on sealing itself over the body of the boss that filled it.
+    if (!combatants(s).some((x) => x.hp > 0)) break;
     if (e.hp <= 0) continue;
     if (status(e, "interrupted")) {
       log(s, `${e.name} loses its ${e.intent.ability.name}: interrupted.`);
@@ -374,7 +398,8 @@ export function resolveRound(s: RunState) {
     log(s, "The pact is broken. The dungeon keeps its price.");
     return;
   }
-  if (s.enemies.every((e) => e.hp <= 0)) {
+  if (combatants(s).every((e) => e.hp <= 0)) {
+    for (const e of s.enemies) if (e.holding?.length) release(s, e);
     const node = s.map.find((n) => n.id === s.currentNode)!;
     s.reward = node.type === "boss" ? 240 : node.type === "elite" ? 180 : 110;
     gain(s, s.reward);

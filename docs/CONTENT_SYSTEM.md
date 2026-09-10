@@ -37,7 +37,7 @@ Server keeps the selected lot ID; `snapshot()` emits only rarity, slot, non-curs
 
 ## Inventory at this revision
 
-8 heroes; 33 class abilities in tactical v2 (26 legacy) plus 4 common actions; 48 ability branches; 24 class paths across 3 mentors; 12 items; 8 normal enemies and 2 bosses; 2 elite traits; 12 statuses; 2 reactions; 3 events; standard and mystery versions of one ascending auction rule. Content targets in the master brief are roadmap targets, not present inventory.
+8 heroes; 33 class abilities in tactical v2 (26 legacy) plus 4 common actions; 48 ability branches; 24 class paths across 3 mentors; 12 items; 8 normal enemies, 2 bosses and 1 container; 2 elite traits; 12 statuses; 2 reactions; 3 events; standard and mystery versions of one ascending auction rule. Content targets in the master brief are roadmap targets, not present inventory.
 
 ## Tactical content extension
 
@@ -92,6 +92,34 @@ must check the ability's target, not just the presence of a heal effect.
 An ability that bills gold now requires the treasury to cover it. Previously a
 gold cost silently resolved at a discount when the purse was short, which only
 mattered once the Broker made treasury-funded abilities common.
+
+## Primitives added for boss objectives
+
+- `Effect.seize` takes the dearest carried item off the target and banks it in
+  the Collector's Strongbox, which is spawned on demand rather than by the
+  encounter. The owner loses that item's triggers until the container breaks.
+  A chamber holds one Strongbox: once it has been broken open, later seizures
+  find nothing to take, so opening it ends the objective instead of restarting
+  it.
+- `Effect.bank` shields the actor for one Barrier per `per` gold the treasury
+  holds above `free`. The allowance is not decoration — without it the effect
+  taxes every party for carrying a working balance, and the parties least able
+  to burst a shield are the ones a shield hurts most.
+- `EnemyDef.object` marks a container: never drawn into an encounter, and never
+  counted when deciding whether a chamber has been cleared. Leaving one standing
+  has to be a losable choice rather than a chore the party is walked through, and
+  a container stops acting the moment the last real enemy falls.
+- `EnemyDef.objective` is the sentence a boss states before the first round. A
+  boss that only hits harder needs no briefing; one that fights for something
+  does. It is logged only in `combatVersion: 2` rooms, where the objective
+  actually exists.
+- Both objectives ride an attack the boss already had rather than occupying a
+  rotation slot of their own. A slot that deals no damage is a free round, and
+  measurement showed that softening both bosses even as it added the objective.
+
+Anything reasoning about "the enemies left to beat" must use `combatants()`
+from `combat.ts` rather than `s.enemies`, or a standing container will keep a
+won fight from ending.
 
 ## Class paths
 

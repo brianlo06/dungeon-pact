@@ -87,7 +87,34 @@ Refresh restores the same hero using a device-held room bearer credential. Dupli
 
 ## Bosses
 
-The Collector targets the most expensive equipped investment, alternates single-target and row pressure, and adds damage below half HP. The Miser adds damage per 100 treasury gold and alternates single-target and economic row pressure. Both intensify below half HP; three-player parties also face a Kiln Mender, and four-player parties additionally face an Iron Bulwark, so a larger party must split its damage instead of burning the boss down before it acts. The Miser adds floor(gold/70) per attack in new runs, which makes hoarding genuinely dangerous. Item suppression, battle auctions and true scripted multi-phase encounter objectives remain future work.
+Both bosses fight for something, not merely harder. A boss states its objective
+in the log before the first round.
+
+**The Collector** targets the most expensive equipped investment, alternates
+single-target and row pressure, and adds damage below half HP. Its Repossess now
+also seizes the dearest item carried by each hero in the row it hits and banks
+it in a Strongbox: a container with health that sits in the enemy back row. The
+owners lose those items' triggers for as long as it holds them. Breaking it open
+returns everything and stops the Collector seizing again for the rest of the
+fight. The Strongbox is not an enemy to clear — the chamber falls silent when the
+Collector does, whether or not the box is still standing — so opening it is a
+choice between the equipment the party fights the rest of the boss with and the
+actions that opening it costs. Nothing seized ever outlives the chamber.
+
+**The Miser** adds damage per treasury gold and alternates single-target and
+economic row pressure. Its Weight of wealth now also shields it for one Barrier
+per twelve gold the treasury holds above an allowance of 160. A party that spent
+its money meets the Miser exactly as before; a party sitting on its winnings has
+handed the boss its armour. The allowance is deliberate and load-bearing: an
+unconditional shield lengthens the fight, and a longer fight meets the
+escalation clock, which punished small parties for something they could not
+answer. Spending is the counterplay, and a battlefield revival mid-fight both
+buys back an action and thins the next shield.
+
+Both still intensify below half HP; three-player parties also face a Kiln Mender,
+and four-player parties additionally face an Iron Bulwark, so a larger party must
+split its damage instead of burning the boss down before it acts. Battle auctions
+and multi-phase scripted encounters remain future work.
 
 ## Presentation and accessibility
 

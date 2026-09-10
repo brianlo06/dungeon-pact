@@ -1,6 +1,7 @@
 import type { Unit, Player, Enemy } from "../../shared/model";
 import { Sprite } from "./Sprite";
 import { statuses } from "../../content/statuses";
+import { items } from "../../content/items";
 export function UnitCard({
   unit,
   selected,
@@ -59,6 +60,19 @@ export function UnitCard({
           style={{ width: `${Math.max(0, (shown / unit.maxHp) * 100)}%` }}
         />
       </span>
+      {!!enemy?.holding?.length && (
+        <span
+          className="holding"
+          title={enemy.holding
+            .map((h) => items.find((i) => i.id === h.itemId)?.name ?? h.itemId)
+            .join(", ")}
+        >
+          ⚿ holding{" "}
+          {enemy.holding
+            .map((h) => items.find((i) => i.id === h.itemId)?.name ?? h.itemId)
+            .join(" · ")}
+        </span>
+      )}
       <span className="hp-label">
         {shown} / {unit.maxHp} HP{" "}
         {player && unit.hp <= 0
