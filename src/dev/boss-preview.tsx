@@ -25,7 +25,12 @@ const defaults: FixtureOptions = {
  * be linked, reloaded and asserted against. Every automated layout check names
  * the state it is testing in its URL rather than clicking its way there.
  */
-function fromUrl(): { options: FixtureOptions; viewport: string; you: number } {
+function fromUrl(): {
+  options: FixtureOptions;
+  viewport: string;
+  you: number;
+  motion: boolean;
+} {
   const q = new URLSearchParams(location.search);
   const num = (k: string, fallback: number) => {
     const v = Number(q.get(k));
@@ -44,6 +49,7 @@ function fromUrl(): { options: FixtureOptions; viewport: string; you: number } {
     },
     viewport: q.get("viewport") ?? "fit",
     you: num("you", 0),
+    motion: q.get("motion") === "1",
   };
 }
 const initial = fromUrl();
@@ -54,7 +60,7 @@ function BossPreview() {
   const [you, setYou] = useState(`preview-${initial.you}`);
   const [generation, setGeneration] = useState(0);
   const [error, setError] = useState("");
-  const [motion, setMotion] = useState(false);
+  const [motion, setMotion] = useState(initial.motion);
   // Explicit viewport sizes, so the resolutions the design has to survive can
   // be checked without resizing the browser window.
   const [size, setSize] = useState(initial.viewport);

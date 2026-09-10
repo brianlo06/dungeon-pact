@@ -34,8 +34,8 @@ export interface Placement {
 
 /** Where each band's feet sit, and how far it leans off centre. */
 const BANDS = {
-  "enemy-back": { y: 0.35, depth: 0, lean: 0.12 },
-  "enemy-front": { y: 0.57, depth: 0.32, lean: 0.06 },
+  "enemy-back": { y: 0.39, depth: 0, lean: 0.12 },
+  "enemy-front": { y: 0.6, depth: 0.32, lean: 0.06 },
   "hero-front": { y: 0.8, depth: 0.72, lean: -0.06 },
   "hero-back": { y: 0.97, depth: 1, lean: -0.13 },
 } as const;

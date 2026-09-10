@@ -13,14 +13,20 @@ const scene = (params: Record<string, string | number> = {}) => {
   return `/dev/bosses.html?${q}`;
 };
 
-async function open(page: Page, params: Record<string, string | number> = {}) {
+async function open(
+  page: Page,
+  params: Record<string, string | number> = {},
+  keepToolbar = false,
+) {
   await page.goto(scene(params));
   await page.locator(".battle").waitFor();
   // The lab's own toolbar is not part of the game; hide it so the measurement
   // is of the battle in a viewport rather than the battle under a dev header.
-  await page.addStyleTag({
-    content: ".preview-toolbar{display:none!important}",
-  });
+  // Tests that need to drive the fixture keep it and measure the battle box.
+  if (!keepToolbar)
+    await page.addStyleTag({
+      content: ".preview-toolbar{display:none!important}",
+    });
   await page.locator(".stage").waitFor();
   return page;
 }
@@ -312,5 +318,66 @@ test.describe("the action interface belongs to the hero", () => {
     const o = await overflow(page);
     expect(o.vertical).toBeLessThanOrEqual(TOLERANCE);
     expect(o.horizontal).toBeLessThanOrEqual(TOLERANCE);
+  });
+});
+
+test.describe("the Collector's objective is legible without the chronicle", () => {
+  test("the strongbox appears, is named, and shows it is holding something", async ({
+    page,
+  }) => {
+    await open(page, { party: 4, stage: "resolved" });
+    const box = page.locator(".combatant", {
+      has: page.locator("text=Strongbox"),
+    });
+    await expect(box).toBeVisible();
+    await expect(box.locator(".holding")).toContainText("held");
+    // What it took is named on demand rather than printed across the field.
+    await expect(box.locator(".holding")).toHaveAttribute(
+      "title",
+      /Stormglass|Briar/,
+    );
+  });
+
+  test("the strongbox is not presented as an enemy that must be killed", async ({
+    page,
+  }) => {
+    await open(page, { party: 4, stage: "released" });
+    const box = page.locator(".combatant", {
+      has: page.locator("text=Strongbox"),
+    });
+    // Opened, not "Defeated": it never blocked the chamber from ending.
+    await expect(box.locator(".intent-chip")).toContainText("Opened");
+    await expect(box.locator(".holding")).toHaveCount(0);
+  });
+
+  test("playback can be paused, stepped and re-sped without breaking layout", async ({
+    page,
+  }) => {
+    await open(page, { party: 4, stage: "objective", motion: 1 }, true);
+    await page.locator(".fan-slip:not([data-common]) > button").first().click();
+    await page
+      .locator(".combatant[data-side='enemy'] .combatant-body")
+      .nth(1)
+      .click();
+    await page.getByRole("button", { name: "Finish round" }).click();
+    const playback = page.locator(".strip-playback");
+    await expect(playback).toBeVisible();
+    await playback.getByRole("button", { name: "Pause" }).click();
+    await expect(
+      playback.getByRole("button", { name: "Resume" }),
+    ).toBeVisible();
+    // Stepping while paused advances without letting the round run away.
+    await playback.locator('button[title="Next beat"]').click();
+    await page.locator(".strip-playback button", { hasText: "2×" }).click();
+    const battle = await page.evaluate(() => {
+      const el = document.querySelector(".battle")!;
+      return {
+        overflow:
+          el.scrollHeight - Math.round(el.getBoundingClientRect().height),
+        wide: el.scrollWidth - Math.round(el.getBoundingClientRect().width),
+      };
+    });
+    expect(battle.overflow).toBeLessThanOrEqual(TOLERANCE);
+    expect(battle.wide).toBeLessThanOrEqual(TOLERANCE);
   });
 });

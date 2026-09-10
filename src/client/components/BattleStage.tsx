@@ -40,6 +40,7 @@ export function BattleStage({
   targetable,
   beat,
   camera,
+  frozen,
   children,
 }: {
   s: Snapshot;
@@ -49,6 +50,8 @@ export function BattleStage({
   targetable: Set<string>;
   beat: StageBeat;
   camera: Camera;
+  /** Hold the scene still for a beat on a heavy hit. */
+  frozen?: boolean;
   /** Anything anchored in stage space — the action menu lives here. */
   children?: ReactNode;
 }) {
@@ -94,7 +97,10 @@ export function BattleStage({
     .sort((a, b) => a.place.z - b.place.z);
 
   return (
-    <div className={`stage ${beat.playing ? "is-replaying" : ""}`}>
+    <div
+      className={`stage ${beat.playing ? "is-replaying" : ""}`}
+      data-frozen={frozen ? "" : undefined}
+    >
       <div className="layer layer-far" aria-hidden="true" />
       <div className="layer layer-mid" aria-hidden="true" />
       <div className="layer layer-ground" aria-hidden="true" />

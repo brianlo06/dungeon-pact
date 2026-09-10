@@ -28,11 +28,19 @@ const NEUTRAL: CameraState = { x: 0, y: 0, zoom: 1, shake: 0 };
 /** How hard the camera leans for each preset. Deliberately gentle. */
 const BIAS: Record<CameraPreset, { pull: number; zoom: number }> = {
   neutral: { pull: 0, zoom: 1 },
-  hero: { pull: 0.16, zoom: 1.05 },
-  target: { pull: 0.22, zoom: 1.08 },
-  action: { pull: 0.3, zoom: 1.12 },
-  boss: { pull: 0.16, zoom: 0.97 },
+  hero: { pull: 0.16, zoom: 1.04 },
+  target: { pull: 0.22, zoom: 1.07 },
+  action: { pull: 0.3, zoom: 1.1 },
+  boss: { pull: 0.16, zoom: 1 },
 };
+/**
+ * The world is drawn slightly larger than the stage so panning and shake can
+ * never expose an edge. Without this the scene slides off its own background
+ * the moment the camera moves at all.
+ */
+const OVERSCAN = 1.12;
+/** How far the view may travel, in stage fractions. The overscan must cover it. */
+const REACH = 0.05;
 
 export interface CameraCommand {
   preset: CameraPreset;
@@ -49,8 +57,14 @@ function resolve(cmd: CameraCommand): Omit<CameraState, "shake"> {
   if (!points.length || pull === 0) return { x: 0, y: 0, zoom };
   const cx = points.reduce((n, p) => n + p.x, 0) / points.length;
   const cy = points.reduce((n, p) => n + p.y, 0) / points.length;
-  // Move the view toward the subject by a fraction of its offset from centre.
-  return { x: (0.5 - cx) * pull, y: (0.55 - cy) * pull * 0.6, zoom };
+  // Move the view toward the subject by a fraction of its offset from centre,
+  // never further than the overscan can cover.
+  const clamp = (n: number) => Math.max(-REACH, Math.min(REACH, n));
+  return {
+    x: clamp((0.5 - cx) * pull),
+    y: clamp((0.55 - cy) * pull * 0.6),
+    zoom,
+  };
 }
 
 export interface Camera {
@@ -112,7 +126,7 @@ export function useCamera(reduced: boolean): Camera {
     goal.current = resolve(cmd);
   }, []);
   const shake = useCallback((amount: number) => {
-    shakeRef.current = Math.min(0.03, shakeRef.current + amount);
+    shakeRef.current = Math.min(0.022, shakeRef.current + amount);
   }, []);
   const reset = useCallback(() => {
     goal.current = { x: 0, y: 0, zoom: 1 };

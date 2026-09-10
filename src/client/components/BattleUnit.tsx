@@ -112,18 +112,20 @@ export function BattleUnit({
           </span>
         )}
         {!!held.length && (
-          <span className="combatant-tag holding">
-            ⚿{" "}
-            {held
+          <span
+            className="combatant-tag holding"
+            title={held
               .map(
                 (h) =>
                   `${items.find((i) => i.id === h.itemId)?.name ?? h.itemId}${
                     owners?.find((o) => o.id === h.playerId)
-                      ? ` (${owners.find((o) => o.id === h.playerId)!.name})`
+                      ? ` — ${owners.find((o) => o.id === h.playerId)!.name}`
                       : ""
                   }`,
               )
-              .join(" · ")}
+              .join(", ")}
+          >
+            ⚿ {held.length} held
           </span>
         )}
         {!!unit.statuses.length && (

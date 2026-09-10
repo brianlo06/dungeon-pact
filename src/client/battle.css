@@ -86,6 +86,22 @@
   font: 9px var(--pixel);
   color: var(--muted);
 }
+/* Playback controls, shown only while a round is replaying. */
+.strip-playback {
+  display: inline-flex;
+  gap: 3px;
+}
+.strip-playback button {
+  padding: 3px 6px;
+  font: 8px var(--pixel);
+  box-shadow:
+    inset 0 1px #6d5668,
+    0 1px var(--ink);
+}
+.strip-playback button[data-on] {
+  background: #57402f;
+  color: var(--gold);
+}
 .strip-history {
   padding: 4px 9px;
   font-size: 12px;
@@ -189,7 +205,19 @@
 .layer-screen {
   z-index: 6000;
 }
-.layer-screen > * {
+/* Banners centre themselves; the layer stays a plain positioning context, so
+ * absolutely-placed controls inside it keep their own size. */
+.screen-centre {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+/* Only the control is clickable; the banner wrapper must never eat a click
+ * meant for the battlefield underneath it. */
+.layer-screen .skip-replay {
   pointer-events: auto;
 }
 
@@ -357,9 +385,7 @@
   color: #ffcc75;
 }
 .combatant-tag.holding {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--gold);
   white-space: nowrap;
 }
 .combatant-statuses {
@@ -546,6 +572,7 @@
   bottom: 10px;
   font-size: 10px;
   padding: 5px 11px;
+  white-space: nowrap;
 }
 
 /* ------------------------------------------------------------- controls -- */
@@ -1075,4 +1102,230 @@
   50% {
     opacity: 1;
   }
+}
+
+/* ------------------------------------------------------------------ vfx -- */
+
+/*
+ * A small vocabulary of world-space effects. Abilities combine these rather
+ * than each shipping its own animation, which is what stops this file growing
+ * a rule per spell.
+ */
+.layer-vfx > span {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.vfx-impact {
+  width: 74px;
+  height: 74px;
+  margin-top: -3%;
+  border: 3px solid #ffd9a8;
+  border-radius: 50%;
+  animation: burst var(--life, 380ms) ease-out forwards;
+}
+@keyframes burst {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.25);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+.vfx-slash {
+  width: 96px;
+  height: 6px;
+  margin-top: -4%;
+  background: linear-gradient(90deg, transparent, #fff2d8, transparent);
+  animation: slash var(--life, 260ms) ease-out forwards;
+}
+@keyframes slash {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-38deg) scaleX(0.2);
+  }
+  40% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-38deg) scaleX(1.3);
+  }
+}
+.vfx-cast {
+  width: 60px;
+  height: 60px;
+  margin-top: -5%;
+  border: 2px dashed #b79bff;
+  border-radius: 50%;
+  animation: castring var(--life, 420ms) ease-out forwards;
+}
+@keyframes castring {
+  from {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.4) rotate(0deg);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5) rotate(140deg);
+  }
+}
+.vfx-bolt,
+.vfx-chain {
+  height: 4px;
+  transform-origin: 0 50%;
+  animation: travel var(--life, 320ms) ease-in forwards;
+}
+/* Travel is expressed as a translation to the target, so the element only ever
+ * needs its own two endpoints and never a computed angle. */
+@keyframes travel {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%);
+  }
+  15% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(calc(var(--dx) - 50%), calc(var(--dy) - 50%));
+  }
+}
+.vfx-bolt {
+  width: 22px;
+  background: linear-gradient(90deg, transparent, #cbb2ff, #fff);
+  box-shadow: 0 0 12px #a889ff;
+}
+.vfx-chain {
+  width: 30px;
+  background: repeating-linear-gradient(90deg, #ffcc75 0 6px, #7a5a2a 6px 10px);
+  box-shadow: 0 0 14px rgba(255, 204, 117, 0.8);
+}
+.vfx-heal {
+  width: 70px;
+  height: 70px;
+  margin-top: -4%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(150, 240, 140, 0.6),
+    transparent
+  );
+  animation: rise var(--life, 460ms) ease-out forwards;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20%) scale(0.6);
+  }
+  40% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -90%) scale(1.1);
+  }
+}
+.vfx-barrier {
+  width: 78px;
+  height: 78px;
+  margin-top: -4%;
+  border: 3px solid #9fd0ff;
+  border-radius: 50%;
+  box-shadow: 0 0 18px rgba(159, 208, 255, 0.7);
+  animation: hexflash var(--life, 380ms) ease-out forwards;
+}
+@keyframes hexflash {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+}
+.vfx-interrupt {
+  width: 90px;
+  height: 90px;
+  margin-top: -4%;
+  border: 4px solid #ff8a5c;
+  animation: snap var(--life, 520ms) ease-out forwards;
+}
+@keyframes snap {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(0deg) scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(35deg) scale(1.4);
+  }
+}
+.vfx-reclaim {
+  width: 120px;
+  height: 120px;
+  margin-top: -4%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 204, 117, 0.75),
+    transparent
+  );
+  animation: burst var(--life, 760ms) ease-out forwards;
+}
+.vfx-pop {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font: 17px var(--pixel);
+  color: #ffd9b0;
+  text-shadow:
+    0 2px 0 #000,
+    0 0 10px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  animation: pop 0.9s ease-out forwards;
+}
+.vfx-pop.pop-heal {
+  color: #9ff08f;
+}
+.vfx-pop.pop-block {
+  color: #9fd0ff;
+}
+.vfx-pop.pop-critical {
+  color: #ffb05c;
+  font-size: 24px;
+}
+.vfx-pop.pop-gold {
+  color: var(--gold);
+}
+
+/* Hit-stop: the whole scene holds still for a beat on a heavy landing. */
+.stage[data-frozen] .world,
+.stage[data-frozen] .combatant-sprite {
+  animation-play-state: paused;
+  transition: none;
+}
+
+/* ------------------------------------------------------------ typography -- */
+
+.ability-title {
+  text-align: center;
+  animation: slam 0.42s cubic-bezier(0.15, 1.4, 0.4, 1);
+}
+.ability-title small {
+  display: block;
+  font: 8px var(--pixel);
+  color: var(--muted);
+  letter-spacing: 0.18em;
+}
+.ability-title strong {
+  display: block;
+  font: clamp(20px, 4cqw, 40px) var(--pixel);
+  color: var(--cream);
+  text-shadow:
+    0 3px 0 #000,
+    0 0 24px rgba(0, 0, 0, 0.8);
+  transform: skewX(-9deg);
 }

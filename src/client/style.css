@@ -1041,13 +1041,6 @@ body:has(.app-shell[data-combat]) {
   .guild-scene {
     scale: 1.08;
   }
-  .unit {
-    width: 150px;
-  }
-  .unit-sprite {
-    width: 108px;
-    height: 108px;
-  }
 }
 @media (max-width: 1050px) {
   .guild-hall {
@@ -1096,30 +1089,6 @@ body:has(.app-shell[data-combat]) {
   }
   .connection {
     display: none;
-  }
-  .combat-field {
-    padding: 12px;
-    gap: 10px;
-  }
-  .unit {
-    width: 122px;
-  }
-  .unit-sprite {
-    width: 84px;
-    height: 84px;
-  }
-  .enemy-wrap {
-    max-width: 125px;
-  }
-  .battle-row {
-    gap: 4px;
-  }
-  .intent {
-    max-width: 123px;
-    font-size: 9px;
-  }
-  .unit strong {
-    font-size: 10px;
   }
 }
 @media (max-width: 760px) {
@@ -1251,70 +1220,6 @@ body:has(.app-shell[data-combat]) {
   .map-layer:has(.map-node:only-of-type) .map-node {
     width: 85%;
   }
-  .combat-field {
-    padding: 10px;
-    gap: 8px;
-  }
-  .arena-caption {
-    font-size: 8px;
-  }
-  .arena-caption span {
-    display: none;
-  }
-  .unit {
-    width: 110px;
-    padding: 4px;
-  }
-  .unit-sprite {
-    width: 80px;
-    height: 80px;
-  }
-  .unit-top {
-    font-size: 7px;
-  }
-  .unit-top > span {
-    display: none;
-  }
-  .unit strong {
-    font-size: 10px;
-  }
-  .unit > small {
-    font-size: 7px;
-  }
-  .hp-label {
-    font-size: 7px;
-  }
-  .enemy-wrap {
-    max-width: 112px;
-  }
-  .intent {
-    max-width: 112px;
-    font-size: 9px;
-    padding: 5px 3px;
-  }
-  .intent span {
-    font-size: 8px;
-  }
-  .action-dock {
-    padding: 15px 12px;
-  }
-  .dock-heading {
-    flex-wrap: wrap;
-  }
-  .abilities {
-    gap: 8px;
-  }
-  .ability {
-    min-width: 105px;
-  }
-  .plan-line {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-  .plan-line p {
-    font-size: 11px;
-  }
   .auction-layout {
     display: flex;
     flex-direction: column;
@@ -1419,41 +1324,8 @@ body:has(.app-shell[data-combat]) {
 .phase-combat .plan-line {
   margin-top: 12px;
 }
-.windup-label {
-  display: block;
-  color: #ffcc75;
-  font: 8px var(--pixel);
-  margin-bottom: 6px;
-}
 /* A boss fights for something; the party should be able to read what. */
-.objective-banner {
-  grid-column: 1 / -1;
-  margin: 0 0 6px;
-  padding: 8px 12px;
-  font-size: 11px;
-  line-height: 1.5;
-  color: #f0dcc4;
-  background: rgba(120, 60, 30, 0.28);
-  border-left: 3px solid #ffcc75;
-}
-.objective-banner strong {
-  font: 8px var(--pixel);
-  color: #ffcc75;
-  margin-right: 8px;
-}
 /* What a container has taken, listed on the container itself. */
-.holding {
-  display: block;
-  font: 7px var(--pixel);
-  line-height: 1.6;
-  color: #ffcc75;
-  margin-top: 4px;
-}
-.tactical-note {
-  font-size: 10px;
-  color: #c7ad9e;
-  margin-bottom: 10px;
-}
 .upgrade-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1519,20 +1391,6 @@ body:has(.app-shell[data-combat]) {
    beats: the actor is spotlit, the move announces itself, the target reacts.
    Everything is short and overshoots slightly; nothing lingers. All of it is
    disabled under reduced motion, where playback is skipped entirely. */
-.combat-field {
-  position: relative;
-}
-.combat-field.replaying .unit {
-  transition:
-    filter 0.12s steps(2, end),
-    opacity 0.12s steps(2, end);
-}
-.combat-field.replaying .unit:not(.acting):not(.impact) {
-  filter: brightness(0.62) saturate(0.7);
-}
-.combat-field.jolt {
-  animation: jolt 0.22s steps(3, end);
-}
 @keyframes jolt {
   0% {
     transform: translate(0, 0);
@@ -1546,38 +1404,6 @@ body:has(.app-shell[data-combat]) {
   100% {
     transform: translate(0, 0);
   }
-}
-.beat-layer {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
-  z-index: 5;
-}
-.callout {
-  text-align: left;
-  padding: 10px 22px 10px 16px;
-  background: var(--ink);
-  border: 3px solid var(--gold);
-  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.55);
-  transform: skewX(-8deg);
-  animation: callout-in 0.5s steps(4, end);
-}
-.callout small {
-  display: block;
-  font-family: var(--pixel);
-  font-size: 9px;
-  letter-spacing: 1px;
-  color: var(--rust);
-}
-.callout strong {
-  display: block;
-  font-family: var(--pixel);
-  font-size: 19px;
-  letter-spacing: 1px;
-  color: var(--cream);
-  text-shadow: 3px 3px 0 #000;
 }
 @keyframes callout-in {
   0% {
@@ -1597,22 +1423,6 @@ body:has(.app-shell[data-combat]) {
     transform: skewX(-8deg) translateX(24px) scale(1);
   }
 }
-.combo-banner {
-  font-family: var(--pixel);
-  font-size: 24px;
-  letter-spacing: 3px;
-  color: var(--ink);
-  background: var(--gold);
-  padding: 8px 26px;
-  border: 3px solid var(--ink);
-  transform: skewX(-10deg);
-  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.6);
-  animation: banner-in 0.6s steps(5, end);
-}
-.combo-banner.defeat {
-  background: var(--rust);
-  color: var(--cream);
-}
 @keyframes banner-in {
   0% {
     opacity: 0;
@@ -1630,33 +1440,6 @@ body:has(.app-shell[data-combat]) {
     transform: skewX(-10deg) scale(1.05);
   }
 }
-.unit.acting {
-  filter: brightness(1.2);
-  outline: 2px solid var(--gold);
-  outline-offset: -2px;
-}
-.unit.impact {
-  animation: impact-shake 0.24s steps(3, end);
-}
-.unit.impact-damage {
-  background-image: linear-gradient(
-    rgba(199, 108, 80, 0.45),
-    rgba(199, 108, 80, 0)
-  );
-}
-.unit.impact-heal {
-  background-image: linear-gradient(
-    rgba(127, 176, 166, 0.45),
-    rgba(127, 176, 166, 0)
-  );
-}
-.unit.impact-block,
-.unit.impact-combo {
-  background-image: linear-gradient(
-    rgba(238, 184, 96, 0.45),
-    rgba(238, 184, 96, 0)
-  );
-}
 @keyframes impact-shake {
   0% {
     transform: translateX(0);
@@ -1671,23 +1454,6 @@ body:has(.app-shell[data-combat]) {
     transform: translateX(0);
   }
 }
-.pop {
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  font-family: var(--pixel);
-  font-size: 17px;
-  color: var(--rust);
-  text-shadow: 2px 2px 0 #000;
-  animation: pop-up 0.5s steps(4, end);
-  pointer-events: none;
-}
-.pop-heal {
-  color: #8fd3b8;
-}
-.pop-block {
-  color: var(--gold);
-}
 @keyframes pop-up {
   0% {
     opacity: 0;
@@ -1701,15 +1467,6 @@ body:has(.app-shell[data-combat]) {
     opacity: 0;
     transform: translateY(-22px) scale(1);
   }
-}
-.skip-replay {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  z-index: 6;
-  font-family: var(--pixel);
-  font-size: 9px;
-  padding: 6px 10px;
 }
 :root[data-motion="reduced"] .callout,
 :root[data-motion="reduced"] .combo-banner,

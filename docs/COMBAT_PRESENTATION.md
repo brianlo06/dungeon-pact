@@ -24,11 +24,13 @@ While `s.phase === "COMBAT"` the shell carries `data-combat`, which makes it
 `100dvh`, hides the topbar and the run footer, and sets `overflow: hidden` on
 `html` and `body`. Every other phase is unaffected.
 
-Verified by hand with zero overflow at 1280×720, 1366×768, 1440×900 and
-1920×1080. `tests/battle-layout.test.ts` locks the contract that makes it true —
-it is not a pixel measurement, because the project has no headless browser yet.
-**A real browser regression test is still owed**; it needs a Playwright-shaped
-dependency decision that has not been made.
+Two layers of test, deliberately. `tests/battle-layout.test.ts` locks the CSS
+rules that make it true; `tests-browser/combat-layout.spec.ts` runs Playwright
+at all four resolutions and asserts the result — no overflow in any state a
+fight reaches, the page unscrollable even when something tries, and the stage,
+treasury, party HUD, every intention and every combatant inside the viewport.
+The contract tests catch a rule being deleted; the browser tests catch a rule
+being satisfied and the layout still being wrong. No pixel diffing.
 
 Breakpoints key off **height**, not width, because height is the constraint that
 was actually being violated.
@@ -74,11 +76,36 @@ the front row is where the pressure is.
   seized equipment; everything else is a tooltip.
 - The standing explanation of the rules.
 
+## Presentation space and the camera
+
+`battle/layout.ts` derives everything visual from side and row: x, y (the
+unit's _ground point_), depth, scale, paint order and shadow width, as
+fractions of the stage. None of it is ever written back into run state.
+`bulk()` gives creatures different footprints — a boss is 1.62, a container
+1.15 — keyed off flags the content already carries rather than off names.
+
+`battle/camera.ts` exposes presets, not transforms: neutral, hero, target,
+action, boss. One animation frame loop smooths it and decays shake. The world
+is drawn 12% larger than the stage and travel is clamped to ±5%, so panning can
+never expose an edge. Nothing in the engine reads it, and a camera that failed
+to move would still leave a playable, fully framed board.
+
 ## Beats
 
 `resolveRound` emits `Beat { kind, actor, target, label, amount, hp }` and
-`usePlayback` schedules them. Presentation consumes beats; it never decides
-anything. Current mapping:
+`battle/director.ts` turns the round into choreography: one timeline on one
+animation frame loop that moves the camera, spawns effects, throws numbers and
+interpolates health. It decides nothing — if it never ran, the board would
+still be correct.
+
+One loop rather than scattered `setTimeout`s is what makes speed control,
+pausing, stepping and hit-stop possible at all; each is a different way of
+advancing the same clock. Hit-stop is 40/75/120ms by how hard the hit landed.
+The strip carries pause, step and 0.5×/1×/2× while a round replays.
+
+Effects come from a small reusable vocabulary in `BattleVfx.tsx` — impact,
+slash, cast, projectile, heal, barrier, interrupt, seize, reclaim — combined
+per beat rather than authored per ability. Current mapping:
 
 | Beat   | Presentation                                       |
 | ------ | -------------------------------------------------- |
@@ -89,20 +116,37 @@ anything. Current mapping:
 | combo  | full-stage banner (EXPLOIT, CHAIN SHOCK…)          |
 | defeat | banner, unit desaturates                           |
 
+## Beat labels are the presentation vocabulary
+
+The director keys the seizure chain off the `SEIZED` beat label, the reclaim
+burst off `RECLAIMED`, and the break off `INTERRUPTED`. This is **not** the same
+as knowing a boss by name: any content that produces a seizure gets the
+choreography, and the engine already speaks these labels. Presentation may read
+beat labels; it may never branch on an enemy or ability id.
+
+## The Collector, as the quality bar
+
+The objective has to be legible with the chronicle closed. Repossess lands, a
+`SEIZED` banner slams, a chain travels from the robbed hero to the Strongbox,
+and the Strongbox — spawned into the back row, larger than an ordinary enemy —
+shows `⚿ N held` with the item names on hover. Breaking it plays a reclaim
+burst and the tag disappears. Its intent chip reads "Opened", never "Defeated",
+because it was never an enemy that had to die.
+
 ## Still to build
 
 Phases C–I of the overhaul are not done. In rough priority:
 
 - **C** real 2.5D — parallax scenery, atmospheric particles, foreground
   occlusion, camera translation and zoom.
-- **D** character-attached action menu. The actions are currently a compact row
-  in the controls band; they should emerge from the controlled hero.
-- **E** a frame loop. Playback is `setTimeout`-driven with a fixed 4200ms round
-  budget, which is enough for timed reveals and not enough for camera
-  interpolation, hit-stop or particles.
-- **F** a reusable VFX vocabulary (projectile, beam, slash, burst, shockwave,
-  aura, chain, dissolve) keyed by content metadata rather than hardcoded.
+- **F** presentation metadata on content (`animationKey`, `vfxKey`,
+  `cameraPreset`), so an ability picks its own effect instead of the director
+  inferring one from the beat kind. The schema must be optional and default
+  cleanly. Creature footprints move there too.
 - **G** boss entrances, boss HUD, phase transitions.
+- **Sprite animation.** Every combatant is still a single cell that breathes
+  via transform. Idle/attack/cast/hurt/downed sheets have somewhere to plug in
+  and do not exist.
 - **H** creature art direction.
 - **I** timing, shake control, audio balance.
 

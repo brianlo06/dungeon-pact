@@ -3,7 +3,7 @@ import type { Snapshot } from "../../shared/model";
 import type { Intent } from "../../shared/protocol";
 import { abilities, hero, supplyFor } from "../../content/heroes";
 import { enemies as enemyDefs } from "../../content/enemies";
-import { usePlayback } from "../usePlayback";
+import { useDirector } from "../battle/director";
 import { BattleStage } from "./BattleStage";
 import { PartyHud } from "./PartyHud";
 import { HistoryDrawer } from "./HistoryDrawer";
@@ -13,6 +13,8 @@ import { treasuryBarrier } from "../combat-presentation";
 import type { Impact } from "./BattleUnit";
 import { placements } from "../battle/layout";
 import { useCamera } from "../battle/camera";
+import { BattleVfx } from "./BattleVfx";
+import { audio } from "../audio";
 
 /**
  * The battle screen. It owns one viewport and never scrolls: a fixed strip of
@@ -33,9 +35,23 @@ export function Combat({
   reducedMotion?: boolean;
 }) {
   const me = s.players.find((p) => p.id === s.you)!;
-  const replay = usePlayback(s, reducedMotion);
-  const b = replay.beat;
   const [history, setHistory] = useState(false);
+  const places = useMemo(() => placements(s), [s]);
+  const camera = useCamera(reducedMotion);
+  const replay = useDirector(s, reducedMotion, {
+    onShake: camera.shake,
+    onSound: (kind) =>
+      audio.cue(
+        kind === "heal"
+          ? "heal"
+          : kind === "combo"
+            ? "combo"
+            : kind === "cast"
+              ? "info"
+              : "damage",
+      ),
+  });
+  const b = replay.beat;
 
   const list = abilities(
     me.heroId,
@@ -51,8 +67,6 @@ export function Combat({
   const chosen = list.find((a) => a.id === ability) ?? list[0];
   const locked = s.locked.includes(me.id);
   const selectedTarget = chosen.target === "self" ? me.id : target;
-  const places = useMemo(() => placements(s), [s]);
-  const camera = useCamera(reducedMotion);
 
   /** Every unit the chosen ability may legally be aimed at. */
   const targetable = useMemo(() => {
@@ -206,6 +220,31 @@ export function Combat({
           <span className="strip-locked">
             {s.locked.length}/{alive} ready
           </span>
+          {replay.playing && (
+            <span className="strip-playback">
+              <button
+                onClick={() => replay.setPaused(!replay.paused)}
+                title={replay.paused ? "Resume" : "Pause"}
+                aria-label={replay.paused ? "Resume" : "Pause"}
+              >
+                {replay.paused ? "▶" : "▮▮"}
+              </button>
+              {replay.paused && (
+                <button onClick={replay.step} title="Next beat">
+                  ⏭
+                </button>
+              )}
+              {[0.5, 1, 2].map((n) => (
+                <button
+                  key={n}
+                  data-on={replay.speed === n ? "" : undefined}
+                  onClick={() => replay.setSpeed(n)}
+                >
+                  {n}×
+                </button>
+              ))}
+            </span>
+          )}
           <button
             className="strip-history"
             onClick={() => setHistory(true)}
@@ -218,6 +257,7 @@ export function Combat({
       </div>
 
       <BattleStage
+        frozen={replay.frozen}
         s={s}
         places={places}
         camera={camera}
@@ -227,34 +267,29 @@ export function Combat({
         beat={{
           beatFor,
           playing: replay.playing,
+          world: (
+            <BattleVfx vfx={replay.vfx} pops={replay.pops} places={places} />
+          ),
           overlay: (
             <>
-              {replay.playing && b && (
-                <div className="beat-layer" aria-hidden="true">
-                  {b.kind === "cast" && (
-                    <div className="callout" key={`${b.actor}-${b.label}`}>
-                      <small>{named(b.actor)}</small>
-                      <strong>{b.label}</strong>
-                    </div>
-                  )}
-                  {b.kind === "combo" && (
-                    <div
-                      className="combo-banner"
-                      key={`${b.label}-${b.target}`}
-                    >
-                      {b.label}
-                    </div>
-                  )}
-                  {b.kind === "defeat" && (
-                    <div
-                      className="combo-banner defeat"
-                      key={`down-${b.target}`}
-                    >
-                      {named(b.target)} DOWN
-                    </div>
-                  )}
-                </div>
-              )}
+              <div className="screen-centre" aria-hidden="true">
+                {replay.playing && b?.kind === "cast" && replay.title && (
+                  <div className="ability-title" key={replay.title.text}>
+                    <small>{named(replay.title.actor)}</small>
+                    <strong>{replay.title.text}</strong>
+                  </div>
+                )}
+                {replay.playing && b?.kind === "combo" && (
+                  <div className="combo-banner" key={`${b.label}-${b.target}`}>
+                    {b.label}
+                  </div>
+                )}
+                {replay.playing && b?.kind === "defeat" && (
+                  <div className="combo-banner defeat" key={`down-${b.target}`}>
+                    {named(b.target)} DOWN
+                  </div>
+                )}
+              </div>
               {replay.playing && (
                 <button className="skip-replay" onClick={replay.skip}>
                   Skip ▸▸
