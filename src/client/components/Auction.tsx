@@ -1,3 +1,5 @@
+import { Sprite } from "./Sprite";
+import { PixelIcon } from "./PixelIcon";
 import type { Snapshot } from "../../shared/model";
 import type { Intent } from "../../shared/protocol";
 import { items } from "../../content/items";
@@ -20,10 +22,13 @@ export function Auction({
       <span className="eyebrow">
         THE GILDED EXCHANGE · LOT {a.round.toString().padStart(2, "0")}
       </span>
-      <h1>Everything has a price.</h1>
-      <p className="auctioneer">
-        “An excellent purchase. Financially catastrophic, naturally.”
-      </p>
+      <h1>Going once. Going broke.</h1>
+      <div className="auction-host">
+        <Sprite id="auctioneer" />
+        <p className="auctioneer">
+          “An excellent purchase. Financially catastrophic, naturally.”
+        </p>
+      </div>
       <div className="auction-layout">
         <div className="auction-aside">
           <span className="eyebrow">THE TERMS</span>
@@ -44,7 +49,21 @@ export function Auction({
           <span className="eyebrow">
             {a.item.rarity} · {a.item.slot}
           </span>
-          <div className="relic-glyph">{a.revealed ? "♜" : "◈"}</div>
+          <div className="item-pedestal">
+            {a.revealed ? (
+              <PixelIcon
+                name={
+                  a.item.slot === "weapon"
+                    ? "sword"
+                    : a.item.slot === "armor"
+                      ? "shield"
+                      : "gem"
+                }
+              />
+            ) : (
+              <Sprite id="chest" />
+            )}
+          </div>
           <h2>{a.item.name ?? "A veiled offering"}</h2>
           <p className="lore">{a.item.clue}</p>
           <div className="tags">

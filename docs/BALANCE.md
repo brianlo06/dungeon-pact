@@ -32,3 +32,7 @@ Findings: the healer composition dominates this policy, three-player scaling nee
 6. Compare both bosses and elite combinations over at least 20 human runs before tuning aggressively.
 
 Run `npm run simulate -- 100` for 100 seeds at each current party size. Add richer policies before treating results as optimization targets. No telemetry leaves the local environment.
+
+## Tactical v2 baseline — 90 fresh runs
+
+With the same attack-focused bot (which does not yet select the new control skills): 2 players won 4/30 (mean final gold 531); 3 players 2/30 (491); 4 players 30/30 (706). These results are composition-confounded and not a target difficulty. They demonstrate that the new threat patterns punish this policy; the Warden sustain composition still dominates. Add a control-aware simulation policy, test all class pairs, and tune sustain/economy before claiming good balance. Do not respond by simply increasing all enemy health.

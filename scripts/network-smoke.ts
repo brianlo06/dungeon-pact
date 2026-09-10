@@ -43,6 +43,7 @@ class Client {
     }
   }
   async send(intent: Intent) {
+    await new Promise((r) => setTimeout(r, 100));
     const revision = this.state.revision;
     const cmd: Command = {
       version: 1,
@@ -62,6 +63,8 @@ try {
   await Promise.all([a.wait(() => !!a.state), b.wait(() => !!b.state)]);
   assert.equal(a.state.players.length, 2);
   assert.equal(a.state.you, one.player);
+  await b.send({ type: "hero", hero: "arcanist" });
+  await a.wait(() => a.state.revision === b.state.revision);
   const cmd = await a.send({ type: "ready", ready: true });
   await b.wait(() => b.state.revision === a.state.revision);
   const revision = a.state.revision;
@@ -101,6 +104,31 @@ try {
   assert.equal(resumed.state.you, one.player);
   assert.equal(resumed.state.gold, before.gold);
   assert.equal(resumed.state.phase, "MAP");
+  await b.wait(() => b.state.revision === resumed!.state.revision);
+  const node = resumed.state.map.find((n) => n.depth === 0)!.id;
+  await resumed.send({ type: "vote", choice: node });
+  await b.wait(() => b.state.revision === resumed!.state.revision);
+  await b.send({ type: "vote", choice: node });
+  await resumed.wait(() => resumed!.state.phase === "COMBAT");
+  assert.equal(resumed.state.combatVersion, 2);
+  await resumed.send({ type: "plan", ability: "brace", target: one.player });
+  await b.wait(() => b.state.revision === resumed!.state.revision);
+  await b.send({ type: "plan", ability: "brace", target: two.player });
+  await resumed.wait(() => resumed!.state.round === 2);
+  const windup = b.state.enemies.find((e) => e.intent.ability.interruptible);
+  assert.ok(
+    windup,
+    "Opening packs must present an interruptible threat on round 2",
+  );
+  await resumed.send({ type: "plan", ability: "brace", target: one.player });
+  await b.wait(() => b.state.revision === resumed!.state.revision);
+  await b.send({ type: "plan", ability: "counterspell", target: windup.id });
+  await resumed.wait(() => resumed!.state.round === 3);
+  assert.ok(resumed.state.logs.some((l) => l.text.includes("interrupted.")));
+  assert.equal(
+    b.state.players.find((p) => p.id === two.player)!.cooldowns.counterspell,
+    2,
+  );
   console.log(
     JSON.stringify({
       ok: true,
@@ -114,6 +142,8 @@ try {
         "concurrent stale rejection",
         "resync",
         "reconnect restores hero/gold/phase",
+        "tactical encounter entry",
+        "windup/interrupt resolution and cooldown",
       ],
     }),
   );

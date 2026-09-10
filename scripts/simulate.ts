@@ -40,7 +40,7 @@ export function simulate(seed: string, count: number): RunState {
       const ally = [...s.players]
         .filter((p) => !p.fallen)
         .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
-      const options = abilities(p.heroId).filter(
+      const options = abilities(p.heroId, s.combatVersion).filter(
         (a) => a.cost <= p.resource && !(p.cooldowns[a.id] > 0),
       );
       let a =

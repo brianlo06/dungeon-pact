@@ -1,8 +1,9 @@
+import { encounters } from "./encounters";
 import { z } from "zod";
 import type { Effect } from "../shared/model";
-import { heroes } from "./heroes";
+import { heroes, abilities } from "./heroes";
 import { items } from "./items";
-import { enemies } from "./enemies";
+import { enemies, enemyAbilities } from "./enemies";
 import { events } from "./events";
 import { statuses } from "./statuses";
 const nonnegative = z.number().int().min(0).max(10000);
@@ -14,9 +15,15 @@ const statusId = z.enum([
   "regen",
   "vulnerable",
   "poison",
+  "weak",
+  "guarded",
+  "interrupted",
 ]);
 export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
   z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("protect"), barrier: nonnegative }),
+    z.object({ kind: z.literal("interrupt") }),
+    z.object({ kind: z.literal("removeStatus"), status: statusId }),
     z.object({
       kind: z.literal("damage"),
       amount: nonnegative,
@@ -49,6 +56,7 @@ export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
   ]),
 );
 const abilitySchema = z.object({
+  interruptible: z.boolean().optional(),
   id: z.string().min(1),
   name: z.string().min(1),
   description: z.string().min(1),
@@ -88,6 +96,19 @@ export function validateContent() {
   unique(items, "item");
   unique(enemies, "enemy");
   unique(events, "event");
+  unique(encounters, "encounter");
+  for (const e of encounters) {
+    for (const count of [2, 3, 4] as const) {
+      const formation = e.formations[count];
+      if (
+        formation.length !== count ||
+        formation.some(
+          (id) => !enemies.some((enemy) => enemy.id === id && !enemy.boss),
+        )
+      )
+        throw Error(`Invalid encounter ${e.id}`);
+    }
+  }
   for (const h of heroes) {
     z.object({
       hp: z.number().int().positive(),
@@ -97,7 +118,7 @@ export function validateContent() {
       maxResource: z.number().int().positive(),
     }).parse(h);
     unique(h.abilities, "ability");
-    for (const a of h.abilities) {
+    for (const a of [...h.abilities, ...abilities(h.id, 2)]) {
       abilitySchema.parse(a);
       if (a.cost > h.maxResource) throw Error(`Uncastable ability ${a.id}`);
     }
@@ -110,7 +131,8 @@ export function validateContent() {
       guard: nonnegative,
       speed: nonnegative,
     }).parse(e);
-    for (const a of e.abilities) abilitySchema.parse(a);
+    for (const a of [...e.abilities, ...enemyAbilities(e, 2)])
+      abilitySchema.parse(a);
   }
   for (const event of events) {
     unique(event.choices, "event choice");

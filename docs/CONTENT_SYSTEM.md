@@ -37,4 +37,9 @@ Server keeps the selected lot ID; `snapshot()` emits only rarity, slot, non-curs
 
 ## Inventory at this revision
 
-4 heroes; 15 class abilities plus 4 common actions; 12 items; 8 normal enemies and 2 bosses; 2 elite traits; 7 statuses; 2 reactions; 3 events; standard and mystery versions of one ascending auction rule. Content targets in the master brief are roadmap targets, not present inventory.
+4 heroes; 17 class abilities in tactical v2 (14 legacy) plus 4 common actions; 12 items; 8 normal enemies and 2 bosses; 2 elite traits; 10 statuses; 2 reactions; 3 events; standard and mystery versions of one ascending auction rule. Content targets in the master brief are roadmap targets, not present inventory.
+
+## Tactical content extension
+
+New effect variants: `protect {barrier}` creates a one-hit Guarded source link and frontline barrier; `interrupt` applies Interrupted only to an interruptible enemy intent; `removeStatus {status}` removes all stacks before subsequent effects. Weak multiplies outgoing direct attack power by 0.75 before Guard. Guarded stores an optional sourceId; damage riders follow the intercepted hit. All expire according to centralized status rules.
+`encounters.ts` authors explicit formations by party size. `tacticalIntents` supplies versioned enemy rotations; `tacticalSkills` supplies versioned equipped abilities. Ability.interruptible marks an intent's counterplay, not a client permission grant. Server validation still enforces targeting and availability.

@@ -13,7 +13,7 @@ export function Combat({
   disabled: boolean;
 }) {
   const me = s.players.find((p) => p.id === s.you)!;
-  const list = abilities(me.heroId);
+  const list = abilities(me.heroId, s.combatVersion);
   const [ability, setAbility] = useState(list[0].id);
   const [target, setTarget] = useState("");
   const chosen = list.find((a) => a.id === ability) ?? list[0];
@@ -60,6 +60,11 @@ export function Combat({
                   >
                     {e.hp > 0 ? (
                       <>
+                        {e.intent.ability.interruptible && (
+                          <strong className="windup-label">
+                            WINDUP · interruptible
+                          </strong>
+                        )}
                         {e.intent.ability.name}
                         <span>
                           {e.intent.ability.effects
@@ -118,6 +123,12 @@ export function Combat({
         ))}
       </div>
       <section className="action-dock">
+        {s.combatVersion === 2 && (
+          <p className="tactical-note">
+            One action each. Break a windup, intercept an ally’s next hit, or
+            weaken a heavy attack.
+          </p>
+        )}
         <div className="dock-heading">
           <strong>
             {hero(me.heroId).glyph} {me.name}{" "}

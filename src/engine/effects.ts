@@ -2,6 +2,7 @@ import type {
   RunState,
   Unit,
   Player,
+  Enemy,
   Effect,
   Trigger,
   StatusId,
@@ -48,6 +49,9 @@ export function applyStatus(
       stacks: Math.min(stacks, statuses[id].max),
       duration,
     });
+}
+export function isEnemy(u: Unit): u is Enemy {
+  return "intent" in u;
 }
 export function isPlayer(u: Unit): u is Player {
   return "heroId" in u;
@@ -111,7 +115,45 @@ export function effects(
   depth = 0,
 ) {
   if (depth > 6) return;
+  let statusRecipient = target;
   for (const e of list) {
+    // A reflected hit can defeat a multi-attacker between strikes.
+    if (s.combatVersion === 2 && actor.hp <= 0) break;
+    if (e.kind === "removeStatus") {
+      const removed = status(target, e.status);
+      target.statuses = target.statuses.filter((st) => st.id !== e.status);
+      if (removed)
+        log(
+          s,
+          `${actor.name} strips ${statuses[e.status].name} from ${target.name}.`,
+        );
+    }
+    if (
+      e.kind === "protect" &&
+      isPlayer(actor) &&
+      isPlayer(target) &&
+      target.hp > 0 &&
+      actor.id !== target.id
+    ) {
+      actor.row = "front";
+      applyStatus(actor, "barrier", e.barrier, 1);
+      applyStatus(target, "guarded", 1, 1);
+      status(target, "guarded")!.sourceId = actor.id;
+      log(s, `${actor.name} will intercept ${target.name}’s next direct hit.`);
+    }
+    if (
+      e.kind === "interrupt" &&
+      isEnemy(target) &&
+      target.hp > 0 &&
+      target.intent.ability.interruptible
+    ) {
+      applyStatus(target, "interrupted", 1, 1);
+      log(
+        s,
+        `${actor.name} breaks ${target.name}’s ${target.intent.ability.name}!`,
+        "combo",
+      );
+    }
     if (e.kind === "gold") {
       if (e.amount < 0) spend(s, Math.min(s.gold, -e.amount));
       else gain(s, e.amount);
@@ -122,9 +164,12 @@ export function effects(
         Math.min(hero(actor.heroId).maxResource, actor.resource + e.amount),
       );
     if (e.kind === "move") target.row = e.row;
-    if (e.kind === "status" && target.hp > 0) {
-      applyStatus(target, e.status, e.stacks, e.duration);
-      log(s, `${target.name}: ${statuses[e.status].name} +${e.stacks}`);
+    if (e.kind === "status" && statusRecipient.hp > 0) {
+      applyStatus(statusRecipient, e.status, e.stacks, e.duration);
+      log(
+        s,
+        `${statusRecipient.name}: ${statuses[e.status].name} +${e.stacks}`,
+      );
     }
     if (e.kind === "conditional" && status(target, e.status))
       effects(s, actor, target, e.effects, depth + 1);
@@ -142,23 +187,49 @@ export function effects(
       log(s, `${actor.name} heals ${target.name} for ${healed}.`, "heal");
     }
     if (e.kind === "damage") {
-      let amount = e.amount + actor.power - target.guard;
-      if (status(target, "vulnerable")) amount *= 1.25;
-      if (e.precision && status(target, "marked")) {
+      let victim = target;
+      // A guard link intercepts one direct enemy hit, never poison, reflected procs or corpses.
+      const link = status(target, "guarded");
+      if (
+        !isPlayer(actor) &&
+        isPlayer(target) &&
+        target.hp > 0 &&
+        link &&
+        depth === 0
+      ) {
+        const protector = s.players.find(
+          (p) => p.id === link.sourceId && p.hp > 0 && !p.fallen,
+        );
+        if (protector) {
+          target.statuses = target.statuses.filter((st) => st.id !== "guarded");
+          victim = protector;
+          log(
+            s,
+            `${protector.name} intercepts the hit meant for ${target.name}!`,
+            "combo",
+          );
+        }
+      }
+      statusRecipient = victim;
+      let amount =
+        (e.amount + actor.power) * (status(actor, "weak") ? 0.75 : 1) -
+        victim.guard;
+      if (status(victim, "vulnerable")) amount *= 1.25;
+      if (e.precision && status(victim, "marked")) {
         amount += 14;
-        target.statuses = target.statuses.filter((x) => x.id !== "marked");
+        victim.statuses = victim.statuses.filter((x) => x.id !== "marked");
         log(s, "EXPLOIT · Mark + Precision", "combo");
       }
-      const chain = e.damageType === "lightning" && status(target, "wet");
+      const chain = e.damageType === "lightning" && status(victim, "wet");
       if (chain) {
-        target.statuses = target.statuses.filter((x) => x.id !== "wet");
+        victim.statuses = victim.statuses.filter((x) => x.id !== "wet");
         log(s, "CHAIN SHOCK · Wet + Lightning", "combo");
       }
-      hurt(s, actor, target, Math.max(1, amount), depth);
+      hurt(s, actor, victim, Math.max(1, amount), depth);
       if (chain) {
-        const side = isPlayer(target) ? s.players : s.enemies;
+        const side = isPlayer(victim) ? s.players : s.enemies;
         for (const other of side)
-          if (other.id !== target.id && other.hp > 0)
+          if (other.id !== victim.id && other.hp > 0)
             hurt(s, actor, other, 12, depth + 1);
       }
     }

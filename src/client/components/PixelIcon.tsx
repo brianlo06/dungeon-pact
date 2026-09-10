@@ -1,0 +1,31 @@
+const shapes: Record<string, string> = {
+  sword: "M11 1h4v4h-2v2h-2v2H9v2H7V9H5V7h2V5h2V3h2zM3 9h2v2h2v2H5v2H1v-4h2z",
+  coin: "M5 1h6v2h2v2h2v6h-2v2h-2v2H5v-2H3v-2H1V5h2V3h2zM7 4v8h2V4z",
+  fire: "M7 1h2v4h2V3h2v4h2v6h-2v2H3v-2H1V9h2V7h2V3h2zM7 9v4h4v-2H9V9z",
+  skull: "M3 1h10v2h2v8h-2v4H9v-2H7v2H3v-4H1V3h2zM3 5v4h4V5zM9 5v4h4V5z",
+  shield: "M1 1h14v10h-2v2h-2v2H5v-2H3v-2H1zM4 4v6h2v2h4v-2h2V4z",
+  gem: "M5 1h6v2h2v2h2v6h-2v2h-2v2H5v-2H3v-2H1V5h2V3h2zM7 3v8h2V3z",
+  crown: "M1 3h2v2h2V3h2V1h2v2h2v2h2V3h2v10H1zM3 15h10v-2H3z",
+  question: "M3 1h8v2h2v6H9v2H7V7h4V3H5v2H3zM7 13h2v2H7z",
+  gavel: "M7 1h6v2h2v4h-2v2H7V7H5V3h2zM5 7h2v4H5v2H3v2H1v-4h2V9h2z",
+  leaf: "M9 1h6v6h-2v4H9v2H5v2H1v-2h2V9h2V5h4zM5 9h2V7h2V5h2v2H9v2H7v2H5z",
+};
+export function PixelIcon({
+  name,
+  className = "",
+}: {
+  name: string;
+  className?: string;
+}) {
+  return (
+    <svg
+      className={`pixel-icon ${className}`}
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      shapeRendering="crispEdges"
+      aria-hidden="true"
+    >
+      <path fillRule="evenodd" d={shapes[name] ?? shapes.gem} />
+    </svg>
+  );
+}

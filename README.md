@@ -1,6 +1,6 @@
 # Dungeon Pact
 
-A cooperative dungeon crawler built around a shared treasury, contested auctions and tactical simultaneous planning. Development expedition 0.1.0; full game roadmap in `docs/ROADMAP.md`.
+A cooperative dungeon crawler built around a shared treasury, contested auctions and tactical simultaneous planning. Development expedition 0.2; full game roadmap in `docs/ROADMAP.md`.
 
 ## Run locally
 
@@ -44,3 +44,7 @@ Guest lobby → 4 hero choices → starting pact → 7-depth Foundry route → c
 - [Asset licenses](docs/ASSET_LICENSES.md)
 
 The current content and polish are intentionally smaller than the Phase 1 target. Profiles, D1, extended progression, additional biomes, other auction modes, original illustrated character art and music are not implemented yet.
+
+## Current direction
+
+Equipped-ability tactical roguelite: D&D-inspired party cooperation and Slay the Spire-inspired telegraphed threats, relic synergies and difficult resource decisions. New rooms use tactical v2 (interception, interruption, Weak, barrier stripping and authored enemy formations). Old saves retain their legacy rules. Start a new pact to try the new combat. Pixel art and asset provenance are documented in [Art direction](docs/ART_DIRECTION.md).

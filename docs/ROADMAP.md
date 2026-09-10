@@ -16,15 +16,15 @@ Server-message schemas, save migration fixtures, explicit phase-epoch protocol f
 
 ### Phase 1 implemented
 
-4 heroes, 8 normal enemies, 2 simple mechanical bosses, 2 elite traits, 12 items, 7 statuses, 2 reactions, standard/mystery auctions, 3 events, camp, treasury, downs/revives, seeded branching route, results, basic audio/UI/accessibility.
+4 heroes, 8 normal enemies, 2 simple mechanical bosses, 2 elite traits, 12 items, 10 statuses, 2 reactions, standard/mystery auctions, 3 events, camp, treasury, downs/revives, seeded branching route, results, basic audio/UI/accessibility.
 
 ### Next concrete implementation batches
 
 1. **Reliability gate** (`src/server`, `src/shared`, `tests`): restart/duplicate-tab and four-client full-run tests; permission/target fuzzing; migrate simple strict revision to phase epoch for safe concurrent plans; extend content validation and keep receipts atomic.
 2. **Content gate** (`src/content`, `src/engine`): expand to 30–40 reviewed items and 5–10 events; add passive/resource hooks, conditional counters and generalized curses. Every new effect needs a behavior regression and content example.
-3. **Combat gate** (`src/engine/combat.ts`, client Combat): strengthen boss phase objectives, add intercept semantics (current Iron Oath is a barrier), meaningful elite combinations, spirit action each round, and row reach tradeoffs. Add branching ability upgrades before increasing stat complexity.
+3. **Combat gate** (`src/engine/combat.ts`, client Combat): strengthen boss phase objectives, expand the implemented one-hit interception and control mechanics, meaningful elite combinations, spirit action each round, and row reach tradeoffs. Add branching ability upgrades before increasing stat complexity.
 4. **Economy gate** (`auction.ts`, map/event content): consumables, healing/information alternatives, team relics, equipment trading; richer auction rule definitions including sealed/Dutch. Add server alarms only when timed mode exists.
-5. **Experience gate** (`src/client`): original illustrated hero/enemy art, contextual tutorial, compact round event playback, focus management, accessible status inspection, equipment comparisons, pings with targets, adaptive licensed audio.
+5. **Experience gate** (`src/client`): multi-frame hero/enemy animation, biome tiles, unique item art, contextual tutorial, compact round event playback, focus management, accessible status inspection, equipment comparisons, pings with targets, adaptive licensed audio.
 
 Phase 1 exit: two to four humans complete a 15–25 minute development expedition, use a cooperative reaction, make contested purchases, recover from a refresh, and finish without manual intervention; 30–40 functional items, 5–10 events and useful boss mechanics. Simulations alone do not satisfy the human playtest requirement.
 
@@ -43,4 +43,8 @@ Phase 1 exit: two to four humans complete a 15–25 minute development expeditio
 
 ## Explicitly absent / no fake completion
 
-No public hosted game, accounts/D1 progression, codex collection, achievements, run-history service, daily/weekly challenges, full Standard run, multiple regions, 250-item catalog, dedicated developer UI, adaptive music or animated character art. No placeholder navigation buttons suggest these exist. The CSS environment and glyph characters are functional temporary art, tracked in the asset manifest.
+No public hosted game, accounts/D1 progression, codex collection, achievements, run-history service, daily/weekly challenges, full Standard run, multiple regions, 250-item catalog, dedicated developer UI, adaptive music or animated character art. No placeholder navigation buttons suggest these exist. The first pixel art direction now has a generated character atlas, source-authored tavern scene, locally hosted font and compact game UI. Multi-frame character animation and unique item art remain pending; asset provenance is in the manifest.
+
+## 0.2 progress
+
+User confirmed equipped abilities and deeper tactical turns. New rooms now have authored enemy formations, versioned windups/fortification patterns, interception, Weak, interruption and barrier stripping. The pixel art direction includes hero/enemy/boss sprites, an Auctioneer, source-authored tavern geometry and local typography. Next combat work: branching skill upgrades, reliable non-healer sustain, more boss objectives and a clear round recap.

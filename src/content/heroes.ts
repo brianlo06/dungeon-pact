@@ -269,6 +269,68 @@ export function hero(id: string): HeroDef {
   if (!h) throw Error("Unknown hero");
   return h;
 }
-export function abilities(id: string): Ability[] {
-  return [...hero(id).abilities, ...utility];
+export const tacticalSkills: Record<string, Ability[]> = {
+  vanguard: [
+    a(
+      "intercept",
+      "Intercept",
+      "Step to the front and gain 12 Barrier. Take another ally’s next direct enemy hit this round.",
+      "ally",
+      [{ kind: "protect", barrier: 12 }],
+      2,
+      15,
+      1,
+    ),
+  ],
+  arcanist: [
+    a(
+      "counterspell",
+      "Break focus",
+      "Interrupt one enemy WINDUP. Costs an attack opportunity; cannot stop ordinary attacks.",
+      "enemy",
+      [{ kind: "interrupt" }],
+      3,
+      18,
+      2,
+    ),
+  ],
+  ranger: [
+    a(
+      "suppress",
+      "Pinning shot",
+      "Deal 8 Precision damage and weaken the enemy’s direct attacks by 25% this round.",
+      "enemy",
+      [
+        { kind: "damage", amount: 8, precision: true },
+        { kind: "status", status: "weak", stacks: 1, duration: 1 },
+      ],
+      2,
+      10,
+      1,
+    ),
+  ],
+  warden: [
+    a(
+      "unravel",
+      "Unravel",
+      "Strip all Barrier from an enemy, then deal 10 damage.",
+      "enemy",
+      [
+        { kind: "removeStatus", status: "barrier" },
+        { kind: "damage", amount: 10 },
+      ],
+      2,
+      8,
+      1,
+    ),
+  ],
+};
+export function abilities(id: string, combatVersion?: 2): Ability[] {
+  const base = hero(id).abilities;
+  const changes = combatVersion === 2 ? (tacticalSkills[id] ?? []) : [];
+  return [
+    ...base.filter((a) => !changes.some((b) => b.id === a.id)),
+    ...changes,
+    ...utility,
+  ];
 }

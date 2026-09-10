@@ -1,3 +1,5 @@
+import { Sprite } from "./Sprite";
+import { PixelIcon } from "./PixelIcon";
 import type { Snapshot } from "../../shared/model";
 import type { Intent } from "../../shared/protocol";
 import { heroes } from "../../content/heroes";
@@ -11,8 +13,8 @@ export function Lobby({ s, send, disabled }: Props) {
       <div className="section-heading">
         <div>
           <span className="eyebrow">EXPEDITION TABLE · 2–4 PLAYERS</span>
-          <h1>Who will you become?</h1>
-          <p>Choose your hero. Your friends will need more than your damage.</p>
+          <h1>Pick your troublemaker.</h1>
+          <p>Four seats at the table. One very questionable expedition.</p>
         </div>
         <div className="room-code">
           <small>INVITE CODE</small>
@@ -36,7 +38,9 @@ export function Lobby({ s, send, disabled }: Props) {
             disabled={disabled}
             onClick={() => send({ type: "hero", hero: h.id })}
           >
-            <span className="hero-emblem">{h.glyph}</span>
+            <div className="hero-stage">
+              <Sprite id={h.id} />
+            </div>
             <small>
               {h.resource.toUpperCase()} · {h.hp} HP
             </small>
@@ -145,20 +149,20 @@ export function DungeonMap(props: Props) {
   const { s } = props;
   const current = s.map.find((n) => n.id === s.currentNode);
   const icons = {
-    combat: "⚔",
-    elite: "♜",
-    auction: "⚖",
-    mystery: "◈",
-    event: "?",
-    camp: "♨",
-    boss: "♛",
+    combat: "sword",
+    elite: "skull",
+    auction: "gavel",
+    mystery: "gem",
+    event: "question",
+    camp: "fire",
+    boss: "crown",
   };
   return (
     <>
       <div className="section-heading">
         <div>
           <span className="eyebrow">REGION I · THE EMBER FOUNDRY</span>
-          <h1>A debt deeper than gold.</h1>
+          <h1>Into the Foundry.</h1>
           <p>The furnace still burns. Choose your next chamber together.</p>
         </div>
         <span className="badge">
@@ -184,7 +188,7 @@ export function DungeonMap(props: Props) {
                     key={n.id}
                     onClick={() => props.send({ type: "vote", choice: n.id })}
                   >
-                    <span>{icons[n.type]}</span>
+                    <PixelIcon name={icons[n.type]} />
                     <div>
                       <small>
                         {n.type === "mystery"
@@ -219,7 +223,9 @@ export function EventRoom(props: Props) {
   const event = events.find((e) => e.id === props.s.eventId)!;
   return (
     <section className="center-screen">
-      <span className="large-symbol">◈</span>
+      <span className="large-symbol">
+        <PixelIcon name="question" />
+      </span>
       <span className="eyebrow">A CHANCE ENCOUNTER</span>
       <h1>{event.name}</h1>
       <p className="lore">{event.text}</p>
@@ -241,7 +247,9 @@ export function EventRoom(props: Props) {
 export function Camp(props: Props) {
   return (
     <section className="center-screen camp">
-      <span className="large-symbol">♨</span>
+      <span className="large-symbol">
+        <PixelIcon name="fire" />
+      </span>
       <span className="eyebrow">LAST WARMTH</span>
       <h1>For a moment, breathe.</h1>
       <p>One camp action for the whole party. The vault is close.</p>
@@ -272,7 +280,7 @@ export function Camp(props: Props) {
 export function Reward({ s, send, disabled }: Props) {
   return (
     <section className="center-screen">
-      <span className="large-symbol">✦</span>
+      <Sprite id="chest" className="reward-chest" />
       <span className="eyebrow">CHAMBER CLEARED</span>
       <h1>The pact holds.</h1>
       <p className="reward-gold">+{s.reward} gold</p>
@@ -323,9 +331,7 @@ export function Results({ s, onLeave }: { s: Snapshot; onLeave: () => void }) {
       <div className="results-party">
         {s.players.map((p) => (
           <article key={p.id}>
-            <span className="large-symbol">
-              {heroes.find((h) => h.id === p.heroId)?.glyph}
-            </span>
+            <Sprite id={p.heroId} />
             <h3>{p.name}</h3>
             <small>
               {p.spent === Math.max(...s.players.map((p) => p.spent)) &&

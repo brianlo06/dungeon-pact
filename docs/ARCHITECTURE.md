@@ -46,3 +46,7 @@ Implementation checked against [Cloudflare hibernating WebSockets](https://devel
 ## Dependency audit
 
 Production dependency audit reports zero vulnerabilities. The local Wrangler toolchain currently reports three related high-severity advisories through Miniflare/sharp (libheif); it is not shipped in the browser/Worker runtime. Track an upstream compatible fix before enabling development image-transformation endpoints. Vitest is pinned to the patched 4.1.11 line; Node 24 LTS is the supported development recommendation.
+
+## Backward-compatible tactical revisions
+
+RunState now has optional `combatVersion: 2` and `encounterVersion: 2` on new rooms. Missing values explicitly select legacy skill catalogs, intent rotations and random formation generation. The JSON save schema remains readable at version 1; existing saves require no destructive rewrite. Authored formations and tactical effects are validated with shipped content. Future changes must retain the same version-selection discipline.

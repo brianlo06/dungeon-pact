@@ -1,6 +1,5 @@
 import type { Unit, Player, Enemy } from "../../shared/model";
-import { heroes } from "../../content/heroes";
-import { enemies } from "../../content/enemies";
+import { Sprite } from "./Sprite";
 import { statuses } from "../../content/statuses";
 export function UnitCard({
   unit,
@@ -17,9 +16,6 @@ export function UnitCard({
 }) {
   const player = "heroId" in unit ? (unit as Player) : null;
   const enemy = "definition" in unit ? (unit as Enemy) : null;
-  const glyph = player
-    ? heroes.find((h) => h.id === player.heroId)?.glyph
-    : enemies.find((e) => e.id === enemy?.definition)?.glyph;
   return (
     <button
       className={`unit ${selected ? "selected" : ""} ${unit.hp <= 0 ? "downed" : ""} ${player ? "hero-" + player.heroId : "enemy"}`}
@@ -34,17 +30,20 @@ export function UnitCard({
           : (enemy?.elite ?? "Hostile")}{" "}
         <span>{locked ? "✓ Locked" : unit.row}</span>
       </span>
-      <span className="unit-glyph" aria-hidden="true">
-        {glyph}
-      </span>
+      <Sprite
+        id={player?.heroId ?? enemy?.definition ?? "chest"}
+        className="unit-sprite"
+      />
       <strong>{unit.name}</strong>
-      <small>
-        {player
-          ? player.heroId
-          : enemy?.phase === 2
-            ? "ENRAGED · PHASE II"
-            : "THE EMBER FOUNDRY"}
-      </small>
+      {(player || enemy?.phase === 2) && (
+        <small>
+          {player
+            ? player.heroId
+            : enemy?.phase === 2
+              ? "ENRAGED · PHASE II"
+              : "THE EMBER FOUNDRY"}
+        </small>
+      )}
       <span className="health">
         <span style={{ width: `${(unit.hp / unit.maxHp) * 100}%` }} />
       </span>

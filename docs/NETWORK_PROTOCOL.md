@@ -46,3 +46,7 @@ Snapshot omits seed until results, RNG state, selected concealed item ID and oth
 Real local WebSockets verify two-player create/join/start, concurrent stale rejection, duplicate receipt acknowledgement, resync and reconnect. Additional release gates: four physical devices, Worker restart smoke, network interruption duration, long session soak, schema fuzzing, room retention and public creation rate limits.
 
 Browser QA also verified duplicate-tab takeover: the replacement tab recovered combat round 2 and the original displayed its superseded-connection overlay.
+
+## Tactical v2
+
+No new client intent types are required: equipped control abilities use the existing plan command. Snapshots carry optional combatVersion/encounterVersion flags, optional intent interruptible flags, and Guarded sourceId status links. Server rules reject invalid interrupts/protection targets before settlement. Windup/interrupt/cooldown behavior is included in the real-WebSocket smoke harness.

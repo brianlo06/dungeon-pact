@@ -3,6 +3,27 @@ export const statuses: Record<
   StatusId,
   { name: string; icon: string; description: string; max: number }
 > = {
+  weak: {
+    name: "Weak",
+    icon: "↓",
+    description:
+      "Direct attack power is reduced by 25% before Guard. Expires at round end.",
+    max: 1,
+  },
+  guarded: {
+    name: "Guarded",
+    icon: "⛨",
+    description:
+      "A standing protector takes your next direct enemy hit this round. One hit only.",
+    max: 1,
+  },
+  interrupted: {
+    name: "Interrupted",
+    icon: "×",
+    description:
+      "This enemy loses its current windup action. Expires at round end.",
+    max: 1,
+  },
   burn: {
     name: "Burn",
     icon: "♨",

@@ -8,11 +8,11 @@ A 2–4 friend cooperative roguelike: shared fate, selfish temptation, uncertain
 
 ## Implemented expedition
 
-Guild Hall entry → guest room → hero choice / ready → starting pact vote → branching map → tactical encounters and auctions/events → camp → final procurement → one of two Foundry bosses → results. Seven map depths; route choice changes content and economic risk. Four hero definitions, eight normal enemies, two bosses, two elite traits, twelve equipment definitions, seven statuses, two reactions, three events. No automatic player combat and no bots in multiplayer.
+Guild Hall entry → guest room → hero choice / ready → starting pact vote → branching map → tactical encounters and auctions/events → camp → final procurement → one of two Foundry bosses → results. Seven map depths; route choice changes content and economic risk. Four hero definitions, eight normal enemies, two bosses, two elite traits, twelve equipment definitions, ten statuses, two elemental/precision reactions, three events, and versioned tactical control skills. No automatic player combat and no bots in multiplayer.
 
-Vanguard uses Resolve for shields and row damage. Arcanist uses Mana for water/fire/lightning. Ranger uses Focus and Mark/Precision. Warden uses Growth for healing, poison, and Wet support. Everyone can brace, change row, and pay for a revival. Resource recovery differs through basic abilities; resources persist between encounters with a modest refill.
+Vanguard uses Resolve for interception and row damage in new runs. Arcanist uses Mana for water/fire/lightning. Ranger uses Focus and Mark/Precision. Warden uses Growth for healing, poison, and Wet support. Everyone can brace, change row, and pay for a revival. Resource recovery differs through basic abilities; resources persist between encounters with a modest refill.
 
-Players select simultaneously; all standing heroes must lock. Hero speed plus ability speed sets player order, then surviving enemies act by speed. Enemy intentions are selected by the server before planning. Dead targets cause an explicit fizzle; there is no silent retargeting of hero commands. Enemy attacks retarget the next standing hero if their target falls. Position influences enemy targeting and row attacks; single-target hero attacks can currently reach either row.
+Players select simultaneously; all standing heroes must lock. Hero speed plus ability speed sets player order, then surviving enemies act by speed. Enemy intentions are selected by the server before planning. New-run windups explicitly show that they can be interrupted; fortification turns create opportunities to prepare or strip shields. Dead targets cause an explicit fizzle; there is no silent retargeting of hero commands. Enemy attacks retarget the next standing hero if their target falls. Position influences enemy targeting and row attacks; single-target hero attacks can currently reach either row.
 
 Wet + Lightning consumes Wet and chains 12 damage to other enemies. Mark + Precision consumes Mark for 14 bonus damage. Events and logs name both reactions. Repeated proc chains are bounded. No critical RNG or expanded damage/resistance table yet.
 
@@ -36,8 +36,12 @@ The Collector targets the most expensive equipped investment, alternates single-
 
 ## Presentation and accessibility
 
-Dark green stone, warm gold, large serif titles, restrained motion, explicit enemy intentions and readable status tokens. Original synthesized UI/combat cues; every significant cue also appears in text. Master/SFX/UI settings, mute, reduced motion, responsive layouts and keyboard-operable controls exist. Music/ambience, original illustrated characters, advanced VFX, keyboard target shortcuts, focus traps and mobile combat refinement remain production work.
+Pixel dungeon presentation: ink-purple stone, rust-orange light, bone text, compact pixel headings, cohesive character sprites, explicit enemy intentions and readable status tokens. See ART_DIRECTION.md. Original synthesized UI/combat cues; every significant cue also appears in text. Master/SFX/UI settings, mute, reduced motion, responsive layouts and keyboard-operable controls exist. Music/ambience, multi-frame character animation, unique per-item art, advanced VFX, keyboard target shortcuts, focus traps and mobile combat refinement remain production work.
 
 ## Long-term scope
 
 8–12 classes, 250+ meaningful items, 50+ consumables, 60+ enemies, 20 elite traits, 15 bosses, six biomes, 60 events, 30 modifiers, ten auction modes, 100 achievements and Pact 1–20. These are targets, not implemented counts. Horizontal unlocks preserve new-player parity. Future modes: Quick Delve, Standard, Long Expedition, Endless, Boss Rush, Chaos, Custom. No matchmaking or monetization requirement in this milestone.
+
+## Confirmed combat direction and v2 pass
+
+The user chose an equipped-ability turn-based roguelite inspired by D&D party tactics and Slay the Spire decision pressure. No card draws. See COMBAT_DIRECTION.md for the exact implemented control skills, costs, cooldowns and limitations. New runs add purpose-built enemy formations and telegraphed windups. Old saves continue their legacy rules.

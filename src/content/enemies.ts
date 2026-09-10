@@ -155,3 +155,77 @@ export const enemies: EnemyDef[] = [
     ],
   },
 ];
+
+/** Versioned tactical intent rotations. Existing rooms retain their legacy definitions. */
+const windup = (ability: Ability): Ability => ({
+  ...ability,
+  interruptible: true,
+});
+const fortify = (id: string, name: string, amount: number): Ability => ({
+  id,
+  name,
+  description: name,
+  target: "self",
+  effects: [{ kind: "status", status: "barrier", stacks: amount, duration: 2 }],
+  cost: 0,
+  speed: 0,
+  cooldown: 0,
+});
+export const tacticalIntents: Record<string, Ability[]> = {
+  stoker: [
+    attack("tongs", "Branding tongs", 12),
+    attack("hammer", "Heavy hammer", 22),
+  ],
+  bulwark: [
+    fortify("brace", "Lock shields", 16),
+    attack("ram", "Shield ram", 22),
+  ],
+  acolyte: [
+    attack("ember", "Ember bolt", 10),
+    windup(
+      attack("eruption", "Cinder eruption", 20, "enemyRow", [
+        { kind: "status", status: "burn", stacks: 3, duration: 2 },
+      ]),
+    ),
+  ],
+  mender: [windup(mend), attack("wrench", "Wrench", 12)],
+  hound: [
+    {
+      ...attack("bite", "Double bite", 7),
+      effects: [
+        { kind: "damage", amount: 7 },
+        { kind: "damage", amount: 7 },
+      ],
+    },
+    attack("pounce", "Pounce", 22),
+  ],
+  sniper: [
+    fortify("aim", "Take aim", 6),
+    windup(attack("killshot", "Kill shot", 34)),
+  ],
+  bellows: [
+    fortify("inhale", "Draw breath", 8),
+    windup(attack("blast", "Furnace blast", 24, "enemyRow")),
+  ],
+  collector: [
+    attack("appraise", "Appraise the wealthy", 22),
+    windup(attack("account", "Close the account", 40)),
+    attack("repossess", "Repossess — front row", 18, "enemyRow"),
+  ],
+  miser: [
+    attack("hoard", "Weight of wealth", 20),
+    windup(
+      attack("levy", "Crushing levy", 25, "enemyRow", [
+        { kind: "gold", amount: -10 },
+      ]),
+    ),
+  ],
+};
+export function enemyAbilities(
+  definition: EnemyDef,
+  combatVersion?: 2,
+): Ability[] {
+  return combatVersion === 2
+    ? (tacticalIntents[definition.id] ?? definition.abilities)
+    : definition.abilities;
+}

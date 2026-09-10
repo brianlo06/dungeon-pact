@@ -1,8 +1,17 @@
+import { chooseEncounter } from "../content/encounters";
 import type { RunState, Player, Enemy, Ability, Unit } from "../shared/model";
-import { enemies as definitions } from "../content/enemies";
+import { enemies as definitions, enemyAbilities } from "../content/enemies";
 import { abilities, hero } from "../content/heroes";
 import { pick } from "./rng";
-import { effects, trigger, tickStatuses, log, isPlayer, gain } from "./effects";
+import {
+  effects,
+  trigger,
+  tickStatuses,
+  log,
+  isPlayer,
+  gain,
+  status,
+} from "./effects";
 export function standing(s: RunState) {
   return s.players.filter((p) => p.hp > 0 && !p.fallen);
 }
@@ -14,9 +23,8 @@ export function prepareIntents(s: RunState) {
       e.phase = phase;
       log(s, `${e.name} enters phase II — attacks intensify.`);
     }
-    const ability = structuredClone(
-      def.abilities[(s.round - 1) % def.abilities.length],
-    );
+    const rotation = enemyAbilities(def, s.combatVersion);
+    const ability = structuredClone(rotation[(s.round - 1) % rotation.length]);
     if (e.phase === 2)
       for (const effect of ability.effects)
         if (effect.kind === "damage") effect.amount += 7;
@@ -24,7 +32,8 @@ export function prepareIntents(s: RunState) {
       for (const effect of ability.effects)
         if (effect.kind === "damage") effect.amount += Math.floor(s.gold / 100);
     let targets: Unit[] = standing(s);
-    if (ability.target === "ally")
+    if (ability.target === "self") targets = [e];
+    else if (ability.target === "ally")
       targets = s.enemies
         .filter((x) => x.hp > 0)
         .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
@@ -38,7 +47,9 @@ export function prepareIntents(s: RunState) {
       if (preferred.length) targets = preferred;
     }
     const target =
-      ability.target === "ally" || e.definition === "collector"
+      ability.target === "self" ||
+      ability.target === "ally" ||
+      e.definition === "collector"
         ? targets[0]
         : pick(s, targets);
     e.intent = { ability, target: target?.id ?? "" };
@@ -51,8 +62,14 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
   s.enemies = [];
   const count = boss ? 1 : Math.min(4, s.players.length);
   const pool = definitions.filter((d) => !!d.boss === boss);
+  const encounter =
+    !boss && s.encounterVersion === 2 ? chooseEncounter(s) : undefined;
+  const formation = encounter?.formations[s.players.length as 2 | 3 | 4];
+  if (encounter) log(s, `${encounter.name} bars the way.`);
   for (let i = 0; i < count; i++) {
-    const d = pick(s, pool);
+    const d = formation
+      ? definitions.find((d) => d.id === formation[i])!
+      : pick(s, pool);
     const scale = boss
       ? 0.65 + s.players.length * 0.32
       : 0.85 + s.players.length * 0.08;
@@ -115,7 +132,9 @@ export function validatePlan(
 ): Ability {
   if (p.hp <= 0 || p.fallen)
     throw Error("Downed heroes can use spirit support");
-  const a = abilities(p.heroId).find((a) => a.id === abilityId);
+  const a = abilities(p.heroId, s.combatVersion).find(
+    (a) => a.id === abilityId,
+  );
   if (!a) throw Error("Unknown ability");
   if ((p.cooldowns[a.id] ?? 0) > 0 || p.resource < a.cost)
     throw Error("Ability is unavailable");
@@ -131,6 +150,18 @@ export function validatePlan(
     throw Error("Choose a living enemy");
   if (a.id === "revive" && (target.hp > 0 || s.gold < 90))
     throw Error("Revival requires a downed ally and 90 gold");
+  if (
+    a.effects.some((e) => e.kind === "interrupt") &&
+    (!("intent" in target) ||
+      !target.intent.ability.interruptible ||
+      status(target, "interrupted"))
+  )
+    throw Error("Choose an enemy with an active WINDUP");
+  if (
+    a.effects.some((e) => e.kind === "protect") &&
+    (target.id === p.id || target.hp <= 0)
+  )
+    throw Error("Choose another standing ally to protect");
   return a;
 }
 export function resolveRound(s: RunState) {
@@ -138,7 +169,9 @@ export function resolveRound(s: RunState) {
     .map((p) => ({
       p,
       plan: s.plans[p.id],
-      a: abilities(p.heroId).find((a) => a.id === s.plans[p.id]?.ability)!,
+      a: abilities(p.heroId, s.combatVersion).find(
+        (a) => a.id === s.plans[p.id]?.ability,
+      )!,
     }))
     .filter((x) => x.a)
     .sort(
@@ -176,6 +209,11 @@ export function resolveRound(s: RunState) {
     .filter((e) => e.hp > 0)
     .sort((a, b) => b.speed - a.speed)) {
     if (!standing(s).length) break;
+    if (e.hp <= 0) continue;
+    if (status(e, "interrupted")) {
+      log(s, `${e.name} loses its ${e.intent.ability.name}: interrupted.`);
+      continue;
+    }
     const a = e.intent.ability;
     let t = [...s.players, ...s.enemies].find((u) => u.id === e.intent.target);
     if (!t || t.hp <= 0)

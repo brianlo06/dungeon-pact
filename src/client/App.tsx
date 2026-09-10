@@ -1,3 +1,5 @@
+import { GuildScene } from "./components/GuildScene";
+import { PixelIcon } from "./components/PixelIcon";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useRoom, savedCredentials, type Credentials } from "./useRoom";
@@ -103,7 +105,8 @@ export default function App() {
               <div className="treasury">
                 <small>TEAM TREASURY</small>
                 <strong>
-                  ◈ {s.gold.toLocaleString()} <span>GOLD</span>
+                  <PixelIcon name="coin" /> {s.gold.toLocaleString()}{" "}
+                  <span>GOLD</span>
                 </strong>
               </div>
               <button onClick={() => setInventory(!inventory)}>Builds</button>
@@ -125,25 +128,17 @@ export default function App() {
       )}
       {!credentials ? (
         <main className="guild-hall">
-          <div className="hall-art" aria-hidden="true">
-            <div className="arch">
-              <div className="pact-sigil">◈</div>
-            </div>
-            <div className="hall-floor" />
-          </div>
           <section className="hall-content">
-            <span className="eyebrow">
-              A COOPERATIVE ROGUELIKE · 2–4 FRIENDS
-            </span>
+            <span className="eyebrow">2–4 FRIENDS. ONE SHARED COIN PURSE.</span>
             <h1>
-              Shared fate.
+              DUNGEON
               <br />
-              <em>Divided desires.</em>
+              <em>PACT</em>
             </h1>
             <p>
-              One dungeon. One treasury. A thousand reasons
+              Delve together. Spend irresponsibly.
               <br />
-              to buy something you probably shouldn’t.
+              Try to get everyone home.
             </p>
             <div className="entry-panel">
               <label>
@@ -184,6 +179,7 @@ export default function App() {
               <span>Development expedition</span>
             </div>
           </section>
+          <GuildScene />
         </main>
       ) : !s ? (
         <main className="center-screen">
@@ -197,7 +193,7 @@ export default function App() {
         </main>
       ) : (
         <>
-          <main className="game-main">
+          <main className={`game-main phase-${s.phase.toLowerCase()}`}>
             {s.phase === "LOBBY" && <Lobby {...props!} />}{" "}
             {s.phase === "PACT" && <Pact {...props!} />}{" "}
             {s.phase === "MAP" && <DungeonMap {...props!} />}{" "}

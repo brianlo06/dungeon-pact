@@ -10,7 +10,16 @@ export type Phase =
   | "COMPLETE";
 export type Row = "front" | "back";
 export type StatusId =
-  "burn" | "wet" | "marked" | "barrier" | "regen" | "vulnerable" | "poison";
+  | "burn"
+  | "wet"
+  | "marked"
+  | "barrier"
+  | "regen"
+  | "vulnerable"
+  | "poison"
+  | "weak"
+  | "guarded"
+  | "interrupted";
 export type Trigger =
   "roundStart" | "afterAttack" | "afterHeal" | "onHurt" | "onKill";
 export type Effect =
@@ -20,6 +29,9 @@ export type Effect =
       damageType?: "physical" | "fire" | "lightning" | "arcane";
       precision?: boolean;
     }
+  | { kind: "protect"; barrier: number }
+  | { kind: "interrupt" }
+  | { kind: "removeStatus"; status: StatusId }
   | { kind: "heal"; amount: number }
   | { kind: "status"; status: StatusId; stacks: number; duration: number }
   | { kind: "resource"; amount: number }
@@ -27,6 +39,7 @@ export type Effect =
   | { kind: "gold"; amount: number }
   | { kind: "conditional"; status: StatusId; effects: Effect[] };
 export interface Ability {
+  interruptible?: boolean;
   id: string;
   name: string;
   description: string;
@@ -65,6 +78,7 @@ export interface ItemDef {
   price: number;
 }
 export interface Status {
+  sourceId?: string;
   id: StatusId;
   stacks: number;
   duration: number;
@@ -141,6 +155,9 @@ export interface GameLog {
   kind: "info" | "damage" | "heal" | "combo" | "gold";
 }
 export interface RunState {
+  /** Missing means legacy random formations; new rooms use authored v2 packs. */
+  encounterVersion?: 2;
+  combatVersion?: 2;
   schemaVersion: 1;
   contentVersion: 1;
   room: string;

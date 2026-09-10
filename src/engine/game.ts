@@ -10,6 +10,8 @@ import { enterCombat, validatePlan, resolveRound, standing } from "./combat";
 import { enterAuction, nominate, purchase } from "./auction";
 export function createRun(room: string, seed: string): RunState {
   return {
+    encounterVersion: 2,
+    combatVersion: 2,
     schemaVersion: 1,
     contentVersion: 1,
     room,
