@@ -105,7 +105,7 @@ export function BattleStage({
       <div className="layer layer-mid" aria-hidden="true" />
       <div className="layer layer-ground" aria-hidden="true" />
 
-      <div className="world" style={{ transform: camera.transform }}>
+      <div className="world" ref={camera.attach}>
         <div className="layer layer-units">
           {units.map(({ u, place }) => {
             const enemy = "definition" in u;

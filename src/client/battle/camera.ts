@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { Placement } from "./layout";
 
 /**
@@ -68,9 +68,13 @@ function resolve(cmd: CameraCommand): Omit<CameraState, "shake"> {
 }
 
 export interface Camera {
-  state: CameraState;
-  /** CSS transform for the world layers. */
-  transform: string;
+  /**
+   * Attach the element the camera moves. The transform is written straight to
+   * the node from the frame loop — a camera that re-rendered React every frame
+   * would re-render the whole battlefield sixty times a second to move one
+   * parent, which is exactly the cost this design exists to avoid.
+   */
+  attach: (el: HTMLElement | null) => void;
   look: (cmd: CameraCommand) => void;
   shake: (amount: number) => void;
   reset: () => void;
@@ -85,8 +89,8 @@ export interface Camera {
 export function useCamera(reduced: boolean): Camera {
   const goal = useRef<Omit<CameraState, "shake">>({ x: 0, y: 0, zoom: 1 });
   const shakeRef = useRef(0);
-  const [state, setState] = useState<CameraState>(NEUTRAL);
-  const live = useRef<CameraState>(NEUTRAL);
+  const live = useRef<CameraState>({ ...NEUTRAL });
+  const node = useRef<HTMLElement | null>(null);
   const frame = useRef(0);
 
   useEffect(() => {
@@ -95,24 +99,23 @@ export function useCamera(reduced: boolean): Camera {
       if (stop) return;
       const g = goal.current;
       const cur = live.current;
-      // Critically-damped-ish easing: fast enough to feel responsive, slow
-      // enough that it reads as a camera rather than a jump.
+      // Fast enough to feel responsive, slow enough to read as a camera.
       const k = reduced ? 1 : 0.16;
-      const next: CameraState = {
-        x: cur.x + (g.x - cur.x) * k,
-        y: cur.y + (g.y - cur.y) * k,
-        zoom: cur.zoom + (g.zoom - cur.zoom) * k,
-        shake: reduced ? 0 : shakeRef.current,
-      };
+      cur.x += (g.x - cur.x) * k;
+      cur.y += (g.y - cur.y) * k;
+      cur.zoom += (g.zoom - cur.zoom) * k;
+      cur.shake = reduced ? 0 : shakeRef.current;
       shakeRef.current *= 0.86;
       if (shakeRef.current < 0.0004) shakeRef.current = 0;
-      const moved =
-        Math.abs(next.x - cur.x) > 0.00005 ||
-        Math.abs(next.y - cur.y) > 0.00005 ||
-        Math.abs(next.zoom - cur.zoom) > 0.00005 ||
-        next.shake !== cur.shake;
-      live.current = next;
-      if (moved) setState(next);
+
+      if (node.current) {
+        const jx = cur.shake ? (Math.random() - 0.5) * cur.shake : 0;
+        const jy = cur.shake ? (Math.random() - 0.5) * cur.shake : 0;
+        node.current.style.transform =
+          `translate3d(${((cur.x + jx) * 100).toFixed(3)}%, ` +
+          `${((cur.y + jy) * 100).toFixed(3)}%, 0) ` +
+          `scale(${(cur.zoom * OVERSCAN).toFixed(4)})`;
+      }
       frame.current = requestAnimationFrame(tick);
     };
     frame.current = requestAnimationFrame(tick);
@@ -122,6 +125,9 @@ export function useCamera(reduced: boolean): Camera {
     };
   }, [reduced]);
 
+  const attach = useCallback((el: HTMLElement | null) => {
+    node.current = el;
+  }, []);
   const look = useCallback((cmd: CameraCommand) => {
     goal.current = resolve(cmd);
   }, []);
@@ -132,17 +138,5 @@ export function useCamera(reduced: boolean): Camera {
     goal.current = { x: 0, y: 0, zoom: 1 };
   }, []);
 
-  // Shake is applied as a pseudo-random offset that changes every frame.
-  const jitter = state.shake
-    ? {
-        x: (Math.random() - 0.5) * state.shake,
-        y: (Math.random() - 0.5) * state.shake,
-      }
-    : { x: 0, y: 0 };
-  const transform = `translate3d(${((state.x + jitter.x) * 100).toFixed(3)}%, ${(
-    (state.y + jitter.y) *
-    100
-  ).toFixed(3)}%, 0) scale(${state.zoom.toFixed(4)})`;
-
-  return { state, transform, look, shake, reset };
+  return { attach, look, shake, reset };
 }

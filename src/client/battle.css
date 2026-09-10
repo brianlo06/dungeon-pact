@@ -917,7 +917,7 @@
 .fan-slips {
   position: absolute;
   bottom: 30px;
-  left: calc(50% + var(--lead) * var(--out));
+  left: calc(50% + var(--lead) * var(--out) + var(--fan-x, 0px));
   margin: 0;
   padding: 0;
   list-style: none;

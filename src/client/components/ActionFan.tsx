@@ -120,6 +120,36 @@ export function ActionFan({
     1,
     Math.floor((stageH ? rise * stageH : 140) / SLIP),
   );
+  /**
+   * A back-row hero has little vertical room, so the cascade wraps into more
+   * columns — and those columns can walk straight off the side of the stage.
+   * Modelling the slip widths to predict that was wrong by enough to push an
+   * ability off screen, so this measures what actually rendered and nudges the
+   * whole cascade back inside. The shift is applied on top of itself, so it
+   * settles in a single extra pass rather than oscillating.
+   */
+  const slipsRef = useRef<HTMLUListElement>(null);
+  const [fanX, setFanX] = useState(0);
+  useLayoutEffect(() => {
+    const parent = box.current?.offsetParent as HTMLElement | null;
+    const list = slipsRef.current;
+    if (!parent || !list) return;
+    const bounds = parent.getBoundingClientRect();
+    const slips = [...list.querySelectorAll("button")].map((el) =>
+      el.getBoundingClientRect(),
+    );
+    if (!slips.length) return;
+    const left = Math.min(...slips.map((b) => b.left)) - bounds.left;
+    const right = Math.max(...slips.map((b) => b.right)) - bounds.left;
+    const delta =
+      left < 8
+        ? 8 - left
+        : right > bounds.width - 8
+          ? bounds.width - 8 - right
+          : 0;
+    if (Math.abs(delta) > 0.5) setFanX((x) => x + delta);
+  }, [fanX, place.x, primary.length, perColumn, stage.w, mode]);
+
   // Keyboard: move through what is actually usable, commit, and back out.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -163,6 +193,7 @@ export function ActionFan({
           "--count": Math.max(1, primary.length),
           "--slip": `${SLIP}px`,
           "--common-x": `${commonX}px`,
+          "--fan-x": `${fanX}px`,
         } as React.CSSProperties
       }
     >
@@ -174,6 +205,7 @@ export function ActionFan({
       </div>
       <ul
         className="fan-slips"
+        ref={slipsRef}
         role="listbox"
         aria-label={`${me.name}'s actions`}
       >
