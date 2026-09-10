@@ -15,14 +15,15 @@ live in `scripts/policy.ts`:
   biggest attacker, focus-fires without overkill, buys for the hero who fits the
   item and keeps a recovery reserve.
 
-`--matrix` runs all 65 class combinations (10 duos, 20 trios, 35 quartets,
+`--matrix` runs all 486 class combinations (36 duos, 120 trios, 330 quartets,
 duplicates included) instead of one canonical party per size. This matters: the
 old table varied party size and composition together, so nothing it said about
 either was trustworthy.
 
 ```sh
 npm run simulate -- 40                        # both policies, canonical parties
-npm run simulate -- 40 --matrix               # every class combination
+npm run simulate -- 25 --matrix               # every class combination
+npm run simulate -- 25 --matrix --full        # ...printing all 486 rows
 npm run simulate -- 40 --matrix --policy=tactical
 npm run simulate -- 40 --party=ranger,ranger  # one composition
 ```
@@ -51,7 +52,44 @@ base damage; the Miser additionally adds floor(gold/70). From round 7 every
 enemy damage effect grows by 3 per further round. Mark + Precision pays 20;
 Weak cuts a direct attack to 65% before Guard.
 
-## Simulation evidence — 40 seeds per composition, 2600 runs per policy
+## Simulation evidence — eight classes, 486 compositions, 25 seeds each
+
+12,150 runs under the control-aware policy. `--matrix` prints aggregates and
+the tails; `--full` prints all 486 rows.
+
+| Bracket   | win rate | mean final gold |
+| --------- | -------: | --------------: |
+| 2 players |      77% |             463 |
+| 3 players |      92% |             445 |
+| 4 players |      95% |             381 |
+
+Class effect, measured as parties containing that class versus parties without:
+
+| Class    | with | without | delta |
+| -------- | ---: | ------: | ----: |
+| Warden   |  99% |     90% |    +9 |
+| Vanguard |  97% |     91% |    +6 |
+| Broker   |  95% |     92% |    +3 |
+| Arcanist |  94% |     93% |    +1 |
+| Ranger   |  93% |     93% |     0 |
+| Beguiler |  93% |     93% |     0 |
+| Herald   |  92% |     94% |    -2 |
+| Reaver   |  90% |     95% |    -5 |
+
+All eight classes sit inside a 14-point band, against the 41-point Vanguard gap
+this development pass started from. The hardest cells are all sustainless duos
+— Hrl+Hrl 8%, Rng+Rng 36%, Bgl+Bgl 36%, Rvr+Rvr 40% — which is a coherent
+pattern rather than a class being broken: two heroes with no healing and no
+protection have no spare action. Every loss in the tails happens at the boss.
+
+The Herald shipped broken and the sweep caught it: at first it was the only
+class that made a party _worse_ (84% with, 94% without), with Hrl+Hrl at 0%. A
+buffer that spends one of two actions to add 30% to the other is straightforwardly
+net-negative in a duo. Making Battle anthem empower the Herald as well as its
+target fixed the shape of the ability rather than its numbers, and took
+Hrl+Hrl+Hrl from 28% to 96%.
+
+## Earlier evidence — four classes, 40 seeds per composition
 
 | Bracket          | tactical policy | attack policy |
 | ---------------- | --------------: | ------------: |
@@ -94,17 +132,19 @@ both policies.
 
 ## Open concerns
 
-1. **Leftover gold.** Parties still finish holding 660–790 gold against roughly
-   1200 earned. Pricing camp training and escalating revivals helped; the deeper
-   cause is that a run offers two or three lots and nothing else to buy. This is
-   an Economy-gate content problem — consumables, healing alternatives, team
-   relics — not a number to nudge, so it is deliberately left open.
-2. **Ranger duos.** Rng+Rng at 23% is the worst cell in the matrix. Mono-class
-   duos are meant to be hard, but this one is an outlier against Van+Van 53% and
-   War+War 72%.
-3. **Optimal play is too safe.** 94–96% at three and four players says a party
-   that always makes the right call is rarely punished. Closing that needs more
-   threat variety and real boss objectives, not larger enemy health pools.
+1. **Difficulty ceiling.** 92–95% at three and four players says an optimal
+   party is rarely punished. Equipment abundance from multi-lot exchanges made
+   this worse, and the answer is threat-shaped, not another price change: boss
+   objectives that change decisions rather than raise numbers. This is now the
+   single most valuable open item.
+2. **Leftover gold, mostly addressed.** Multi-lot exchanges, a 100% opening ask,
+   priced camp training and escalating revivals took mean final treasury from
+   660–790 down to 381–463. The Broker's parties end lowest at 336, which is the
+   class working as designed. Consumables and healing alternatives would close
+   the rest.
+3. **Herald duos.** Hrl+Hrl at 8% is the worst cell left. Two pure supports
+   with no healing is a defensible worst case, but it is a long way below the
+   next-worst duo.
 4. **Bot blind spots.** The tactical policy still never repositions, never
    buys information, and bids conservatively because of its flat reserve. Auction
    pressure is therefore under-measured.

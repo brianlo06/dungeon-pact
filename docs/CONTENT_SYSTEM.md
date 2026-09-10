@@ -37,7 +37,7 @@ Server keeps the selected lot ID; `snapshot()` emits only rarity, slot, non-curs
 
 ## Inventory at this revision
 
-4 heroes; 17 class abilities in tactical v2 (14 legacy) plus 4 common actions; 24 ability branches; 12 items; 8 normal enemies and 2 bosses; 2 elite traits; 10 statuses; 2 reactions; 3 events; standard and mystery versions of one ascending auction rule. Content targets in the master brief are roadmap targets, not present inventory.
+8 heroes; 33 class abilities in tactical v2 (26 legacy) plus 4 common actions; 48 ability branches; 12 items; 8 normal enemies and 2 bosses; 2 elite traits; 12 statuses; 2 reactions; 3 events; standard and mystery versions of one ascending auction rule. Content targets in the master brief are roadmap targets, not present inventory.
 
 ## Tactical content extension
 
@@ -68,3 +68,27 @@ heal and status effects send the effect to the actor instead of the target,
 which is how an offensive ability can sustain or shield its user. Note that such
 an ability still targets an enemy — anything reasoning about "healing abilities"
 must check the ability's target, not just the presence of a heal effect.
+
+## Primitives added for the second class wave
+
+- `Effect.damage.self` pays a cost in the actor's own HP. It is deliberately
+  flat: no power scaling, no Guard, no Vulnerable and no Mark, so a blood price
+  reads as a fixed price rather than a stat check.
+- `Effect.damage.pierce` ignores Guard entirely, which is how the Reaver's
+  Blood price stays worth its cost against armoured targets.
+- `Effect.heal.self` and `Effect.status.self` send the effect back to the actor,
+  so an offensive ability can also sustain, shield or buff its user. Anything
+  reasoning about "healing abilities" must check the ability's target, not just
+  the presence of a heal effect — a self-siphoning attack still points at an
+  enemy.
+- `Ability.target: "allyRow"` resolves against everyone standing in the target's
+  row, which gives row position a support meaning as well as a targeting one.
+- `empowered` mirrors `weak`: outgoing direct attack power ×1.3 before Guard.
+- `confused` makes an enemy's next action strike its own side. The redirect
+  lives in the enemy action phase in `combat.ts`, not in a new effect kind, and
+  it flips sides for healing intents too — a confounded Kiln Mender repairs the
+  wrong thing.
+
+An ability that bills gold now requires the treasury to cover it. Previously a
+gold cost silently resolved at a discount when the purse was short, which only
+mattered once the Broker made treasury-funded abilities common.

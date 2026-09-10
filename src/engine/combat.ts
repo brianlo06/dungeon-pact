@@ -183,7 +183,10 @@ export function validatePlan(
   const target = [...s.players, ...s.enemies].find((u) => u.id === targetId);
   if (!target) throw Error("Unknown target");
   if (a.target === "self" && target.id !== p.id) throw Error("Choose yourself");
-  if (a.target === "ally" && (!isPlayer(target) || target.fallen))
+  if (
+    (a.target === "ally" || a.target === "allyRow") &&
+    (!isPlayer(target) || target.fallen)
+  )
     throw Error("Choose an ally");
   if (
     (a.target === "enemy" || a.target === "enemyRow") &&
@@ -192,6 +195,14 @@ export function validatePlan(
     throw Error("Choose a living enemy");
   if (a.id === "revive" && (target.hp > 0 || s.gold < reviveCost(s)))
     throw Error(`Revival requires a downed ally and ${reviveCost(s)} gold`);
+  // An ability billed to the treasury must actually be affordable, or it would
+  // quietly resolve at a discount when the purse is short.
+  const price = a.effects.reduce(
+    (n, e) => n + (e.kind === "gold" && e.amount < 0 ? -e.amount : 0),
+    0,
+  );
+  if (a.id !== "revive" && price > s.gold)
+    throw Error(`That costs ${price} team gold`);
   if (
     a.effects.some((e) => e.kind === "interrupt") &&
     (!("intent" in target) ||
@@ -269,7 +280,9 @@ export function resolveRound(s: RunState) {
     const targets =
       a.target === "enemyRow"
         ? s.enemies.filter((e) => e.hp > 0 && e.row === target.row)
-        : [target];
+        : a.target === "allyRow"
+          ? standing(s).filter((x) => x.row === target.row)
+          : [target];
     log(s, `${p.name} casts ${a.name}.`);
     for (const t of targets) {
       effects(s, p, t, cast.effects);
@@ -293,11 +306,30 @@ export function resolveRound(s: RunState) {
     if (!t || t.hp <= 0)
       t =
         a.target === "ally" ? s.enemies.find((x) => x.hp > 0) : standing(s)[0];
+    // A confounded enemy turns on its own side; a healer mends the wrong thing.
+    const turned = status(e, "confused");
+    if (turned) {
+      const side =
+        a.target === "ally"
+          ? standing(s)
+          : s.enemies.filter((x) => x.id !== e.id && x.hp > 0);
+      if (!side.length) {
+        log(s, `${e.name} lashes at nothing. Its ${a.name} is wasted.`);
+        continue;
+      }
+      t = side[0];
+      log(s, `${e.name} turns its ${a.name} on its own side!`, "combo");
+    }
     if (!t) continue;
+    const pool = turned
+      ? a.target === "ally"
+        ? standing(s)
+        : s.enemies.filter((x) => x.id !== e.id && x.hp > 0)
+      : a.target === "ally"
+        ? s.enemies.filter((x) => x.hp > 0)
+        : standing(s);
     const targets =
-      a.target === "enemyRow"
-        ? standing(s).filter((p) => p.row === t!.row)
-        : [t];
+      a.target === "enemyRow" ? pool.filter((p) => p.row === t!.row) : [t];
     log(s, `${e.name}: ${a.name}.`);
     for (const target of targets) {
       const before = target.hp;

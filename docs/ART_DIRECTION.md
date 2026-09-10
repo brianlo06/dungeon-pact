@@ -17,6 +17,8 @@ User feedback: the first presentation felt AI-generated and lacked an indie game
 
 `public/art/characters-v1.png`: 4×4 equal-cell RGBA atlas, generated at 1254×1254. Row-major mapping in `Sprite.tsx`: Vanguard, Arcanist, Ranger, Warden; Stoker, Bulwark, Acolyte, Mender; Hound, Sniper, Thief, Bellows; Collector, Miser, Auctioneer, Chest. CSS background-size 400% isolates cells without image transformation. Do not change the layout without updating the coordinate contract.
 
+The atlas predates the second class wave, so Broker, Herald, Reaver and Beguiler borrow the closest silhouette — Ranger, Warden, Vanguard and Arcanist respectively — and are separated by palette in `Sprite.tsx` and `style.css`. Deriving a variant by recolouring is ordinary pixel-art practice, but these four still read as recoloured versions of another class rather than their own characters. The fix is an atlas regeneration adding four cells plus four entries in `cells`; the `derived` map and the `.sprite-<class>` filters then disappear. Do not describe these as bespoke class art. The filters normalise through `sepia()` first because a bare `hue-rotate` drags the atlas's reds into magenta.
+
 Sprites appear in hero selection, battlefield, Guild Hall, auction host, rewards and results. `PixelIcon.tsx` provides source-authored coin, sword, shield, gavel, gem, crown, skull, leaf, fire and question icons. Actual equipment still uses category icons; unique per-item art is future work.
 
 ## Screen decisions

@@ -19,6 +19,8 @@ export type StatusId =
   | "vulnerable"
   | "poison"
   | "weak"
+  | "empowered"
+  | "confused"
   | "guarded"
   | "interrupted";
 export type Trigger =
@@ -29,6 +31,10 @@ export type Effect =
       amount: number;
       damageType?: "physical" | "fire" | "lightning" | "arcane";
       precision?: boolean;
+      /** Pays the cost yourself: the actor takes the hit instead of the target. */
+      self?: boolean;
+      /** Ignores Guard entirely. */
+      pierce?: boolean;
     }
   | { kind: "protect"; barrier: number }
   | { kind: "interrupt" }
@@ -53,7 +59,7 @@ export interface Ability {
   description: string;
   cost: number;
   speed: number;
-  target: "enemy" | "ally" | "self" | "enemyRow";
+  target: "enemy" | "ally" | "self" | "enemyRow" | "allyRow";
   effects: Effect[];
   cooldown: number;
 }

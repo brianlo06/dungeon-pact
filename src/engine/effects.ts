@@ -16,6 +16,8 @@ export const EXPLOIT = 20;
 /** Weak is the answer to a spike for parties with no Vanguard to intercept it,
  * so it has to be worth the action it costs. */
 export const WEAK = 0.65;
+/** Empowered is Weak's mirror: the Herald's whole job is making allies hit harder. */
+export const EMPOWERED = 1.3;
 export function log(
   s: RunState,
   text: string,
@@ -193,6 +195,11 @@ export function effects(
       }
       log(s, `${actor.name} heals ${patient.name} for ${healed}.`, "heal");
     }
+    // A blood cost is paid flat: no power scaling, no armour, no combos.
+    if (e.kind === "damage" && e.self) {
+      hurt(s, actor, actor, e.amount, depth + 1);
+      continue;
+    }
     if (e.kind === "damage") {
       let victim = target;
       // A guard link intercepts one direct enemy hit, never poison, reflected procs or corpses.
@@ -219,8 +226,10 @@ export function effects(
       }
       statusRecipient = victim;
       let amount =
-        (e.amount + actor.power) * (status(actor, "weak") ? WEAK : 1) -
-        victim.guard;
+        (e.amount + actor.power) *
+          (status(actor, "weak") ? WEAK : 1) *
+          (status(actor, "empowered") ? EMPOWERED : 1) -
+        (e.pierce ? 0 : victim.guard);
       if (status(victim, "vulnerable")) amount *= 1.25;
       if (e.precision && status(victim, "marked")) {
         amount += EXPLOIT;

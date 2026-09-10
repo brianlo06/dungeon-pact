@@ -343,6 +343,313 @@ export const upgrades: UpgradeDef[] = [
       "Poison a row for 5 per round and weaken its attacks by 35% this round.",
     apply: (a) => after(a, weaken),
   }),
+
+  // Broker — the treasury is the ammunition, so its branches price themselves.
+  make({
+    id: "brk-appraise-sharp",
+    heroId: "broker",
+    line: 0,
+    ability: "appraise",
+    kind: "force",
+    name: "Appraise · Sharp",
+    description: "Deal 21 and earn 10 team gold.",
+    apply: (a) => damage(a, 7),
+  }),
+  make({
+    id: "brk-appraise-hedged",
+    heroId: "broker",
+    line: 0,
+    ability: "appraise",
+    kind: "guard",
+    name: "Appraise · Hedged",
+    description: "Deal 14, earn 10 team gold and heal yourself 8.",
+    apply: (a) => after(a, selfHeal(8)),
+  }),
+  make({
+    id: "brk-invest-leveraged",
+    heroId: "broker",
+    line: 1,
+    ability: "invest",
+    kind: "force",
+    name: "Leveraged strike · Aggressive",
+    description: "Spend 50 team gold to deal 46.",
+    apply: (a) => damage(a, 12),
+  }),
+  make({
+    id: "brk-invest-hedged",
+    heroId: "broker",
+    line: 1,
+    ability: "invest",
+    kind: "guard",
+    name: "Leveraged strike · Diversified",
+    description: "Spend only 25 team gold to deal 34 and earn 14 Barrier.",
+    apply: (a) => ({
+      ...after(a, selfBarrier(14)),
+      effects: [
+        ...after(a, selfBarrier(14)).effects.map((e) =>
+          e.kind === "gold" ? { ...e, amount: -25 } : e,
+        ),
+      ],
+    }),
+  }),
+  make({
+    id: "brk-insure-hostile",
+    heroId: "broker",
+    line: 2,
+    ability: "insure",
+    kind: "force",
+    name: "Underwrite · Hostile",
+    description:
+      "Spend 40 team gold for 26 Barrier and 30% more damage for that ally.",
+    apply: (a) =>
+      after(a, {
+        kind: "status",
+        status: "empowered",
+        stacks: 1,
+        duration: 3,
+      }),
+  }),
+  make({
+    id: "brk-insure-full",
+    heroId: "broker",
+    line: 2,
+    ability: "insure",
+    kind: "guard",
+    name: "Underwrite · Full cover",
+    description: "Spend 40 team gold to give an ally 40 Barrier.",
+    apply: (a) => restack(a, "barrier", 40),
+  }),
+
+  // Herald — every line chooses between lifting the party and shielding it.
+  make({
+    id: "hrl-rally-sharp",
+    heroId: "herald",
+    line: 0,
+    ability: "rally",
+    kind: "force",
+    name: "Rallying note · Sharp",
+    description: "Deal 22. Gain 1 Verse.",
+    apply: (a) => damage(a, 7),
+  }),
+  make({
+    id: "hrl-rally-restorative",
+    heroId: "herald",
+    line: 0,
+    ability: "rally",
+    kind: "guard",
+    name: "Rallying note · Restorative",
+    description: "Deal 15, gain 1 Verse and heal yourself 8.",
+    apply: (a) => after(a, selfHeal(8)),
+  }),
+  make({
+    id: "hrl-anthem-hymn",
+    heroId: "herald",
+    line: 1,
+    ability: "anthem",
+    kind: "force",
+    name: "Battle anthem · Marching",
+    description:
+      "For 1 Verse, you and an ally deal 30% more damage for three rounds.",
+    apply: (a) => ({
+      ...a,
+      cost: 1,
+      effects: a.effects.map((e) =>
+        e.kind === "status" && e.status === "empowered"
+          ? { ...e, duration: 4 }
+          : e,
+      ),
+    }),
+  }),
+  make({
+    id: "hrl-anthem-sheltering",
+    heroId: "herald",
+    line: 1,
+    ability: "anthem",
+    kind: "guard",
+    name: "Battle anthem · Sheltering",
+    description: "You and an ally deal 30% more damage; they gain 16 Barrier.",
+    apply: (a) =>
+      after(a, { kind: "status", status: "barrier", stacks: 16, duration: 2 }),
+  }),
+  make({
+    id: "hrl-cadence-marching",
+    heroId: "herald",
+    line: 2,
+    ability: "cadence",
+    kind: "force",
+    name: "Closing cadence · Triumphal",
+    description: "An entire allied row gains 16 Barrier and 30% more damage.",
+    apply: (a) =>
+      after(a, {
+        kind: "status",
+        status: "empowered",
+        stacks: 1,
+        duration: 3,
+      }),
+  }),
+  make({
+    id: "hrl-cadence-bulwark",
+    heroId: "herald",
+    line: 2,
+    ability: "cadence",
+    kind: "guard",
+    name: "Closing cadence · Bulwark",
+    description: "Give an entire allied row 28 Barrier.",
+    apply: (a) => restack(a, "barrier", 28),
+  }),
+
+  // Reaver — every branch decides how much of the cost is paid in blood.
+  make({
+    id: "rvr-rend-cleaving",
+    heroId: "reaver",
+    line: 0,
+    ability: "rend",
+    kind: "force",
+    name: "Rend · Cleaving",
+    description: "Deal 25. Gain 2 Fury.",
+    apply: (a) => damage(a, 7),
+  }),
+  make({
+    id: "rvr-rend-draining",
+    heroId: "reaver",
+    line: 0,
+    ability: "rend",
+    kind: "guard",
+    name: "Rend · Draining",
+    description: "Deal 18, gain 2 Fury and heal yourself 9.",
+    apply: (a) => after(a, selfHeal(9)),
+  }),
+  make({
+    id: "rvr-price-deeper",
+    heroId: "reaver",
+    line: 1,
+    ability: "bloodprice",
+    kind: "force",
+    name: "Blood price · Deeper",
+    description: "Lose 16 HP to deal 50 that ignores armour.",
+    apply: (a) => ({
+      ...a,
+      effects: a.effects.map((e) =>
+        e.kind !== "damage"
+          ? e
+          : e.self
+            ? { ...e, amount: 16 }
+            : { ...e, amount: 50 },
+      ),
+    }),
+  }),
+  make({
+    id: "rvr-price-measured",
+    heroId: "reaver",
+    line: 1,
+    ability: "bloodprice",
+    kind: "guard",
+    name: "Blood price · Measured",
+    description: "Lose only 5 HP to deal 30 that ignores armour.",
+    apply: (a) => ({
+      ...a,
+      effects: a.effects.map((e) =>
+        e.kind !== "damage"
+          ? e
+          : e.self
+            ? { ...e, amount: 5 }
+            : { ...e, amount: 30 },
+      ),
+    }),
+  }),
+  make({
+    id: "rvr-frenzy-whirlwind",
+    heroId: "reaver",
+    line: 2,
+    ability: "frenzy",
+    kind: "force",
+    name: "Frenzy · Whirlwind",
+    description: "Lose 8 HP and hit an enemy row for 24.",
+    apply: (a) => ({
+      ...a,
+      effects: a.effects.map((e) =>
+        e.kind === "damage" && !e.self ? { ...e, amount: 24 } : e,
+      ),
+    }),
+  }),
+  make({
+    id: "rvr-frenzy-guarded",
+    heroId: "reaver",
+    line: 2,
+    ability: "frenzy",
+    kind: "guard",
+    name: "Frenzy · Guarded",
+    description: "Lose only 4 HP, hit a row for 17 and gain 16 Barrier.",
+    apply: (a) => ({
+      ...after(a, selfBarrier(16)),
+      effects: after(a, selfBarrier(16)).effects.map((e) =>
+        e.kind === "damage" && e.self ? { ...e, amount: 4 } : e,
+      ),
+    }),
+  }),
+
+  // Beguiler — sharpen the knife, or make the enemy the problem.
+  make({
+    id: "bgl-whisper-cruel",
+    heroId: "beguiler",
+    line: 0,
+    ability: "whisper",
+    kind: "force",
+    name: "Ill whisper · Cruel",
+    description: "Deal 20. Gain 1 Sway.",
+    apply: (a) => damage(a, 7),
+  }),
+  make({
+    id: "bgl-whisper-leeching",
+    heroId: "beguiler",
+    line: 0,
+    ability: "whisper",
+    kind: "guard",
+    name: "Ill whisper · Leeching",
+    description: "Deal 13, gain 1 Sway and heal yourself 8.",
+    apply: (a) => after(a, selfHeal(8)),
+  }),
+  make({
+    id: "bgl-doubt-gnawing",
+    heroId: "beguiler",
+    line: 1,
+    ability: "doubt",
+    kind: "force",
+    name: "Seed of doubt · Gnawing",
+    description: "Deal 18 and leave an enemy Vulnerable.",
+    apply: (a) => damage(a, 9),
+  }),
+  make({
+    id: "bgl-doubt-paralysing",
+    heroId: "beguiler",
+    line: 1,
+    ability: "doubt",
+    kind: "guard",
+    name: "Seed of doubt · Paralysing",
+    description:
+      "Deal 9, leave an enemy Vulnerable and weaken its attacks by 35%.",
+    apply: (a) => after(a, weaken),
+  }),
+  make({
+    id: "bgl-unpick-rend",
+    heroId: "beguiler",
+    line: 2,
+    ability: "unpick",
+    kind: "force",
+    name: "Unpick the seam · Rending",
+    description: "Deal 22 to a row and leave it Vulnerable.",
+    apply: (a) => damage(a, 7),
+  }),
+  make({
+    id: "bgl-unpick-unravel",
+    heroId: "beguiler",
+    line: 2,
+    ability: "unpick",
+    kind: "guard",
+    name: "Unpick the seam · Unravelling",
+    description: "Strip the row's Barrier, deal 15 and leave it Vulnerable.",
+    apply: (a) => before(a, { kind: "removeStatus", status: "barrier" }),
+  }),
 ];
 
 export const lines = (heroId: string) =>

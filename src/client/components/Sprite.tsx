@@ -17,6 +17,18 @@ const cells: Record<string, number> = {
   auctioneer: 14,
   chest: 15,
 };
+/**
+ * Classes added after the atlas was generated have no cell of their own. They
+ * borrow the closest silhouette and are separated by palette, which is how a
+ * pixel artist derives a variant — see ART_DIRECTION.md. Giving them real cells
+ * needs only an atlas regeneration and four entries in `cells`.
+ */
+const derived: Record<string, string> = {
+  reaver: "vanguard",
+  herald: "warden",
+  beguiler: "arcanist",
+  broker: "ranger",
+};
 /** One atlas and one coordinate contract across lobby, combat, hub and results. */
 export function Sprite({
   id,
@@ -27,7 +39,7 @@ export function Sprite({
   className?: string;
   label?: string;
 }) {
-  const index = cells[id] ?? 15;
+  const index = cells[id] ?? cells[derived[id]] ?? 15;
   return (
     <span
       role={label ? "img" : undefined}

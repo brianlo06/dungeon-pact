@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4 eight classes — 2026-09-10
+
+- Added four classes, doubling the roster. **Broker** bills the shared treasury for damage and shields and earns gold back by fighting; **Herald** empowers itself and an ally, shields whole rows and clears afflictions; **Reaver** pays HP for armour-piercing damage and drags back-row enemies to the front; **Beguiler** turns an enemy's next action against its own side.
+- Added the primitives those roles needed: `self` on damage (a flat blood cost, no scaling or armour), `pierce` on damage, `self` on heal and status, an `allyRow` target so rows carry support meaning, the `empowered` status as Weak's mirror, and `confused`, which flips an enemy's next action onto its own side — including healing intents, so a confounded Kiln Mender repairs the wrong thing.
+- Fixed a latent engine gap the Broker exposed: an ability billed to the treasury resolved at a discount when the purse was short. It is now refused.
+- Fixed the Herald, which shipped broken. The 486-composition sweep caught it as the only class that made a party worse (84% with, 94% without; Hrl+Hrl won 0%). A buffer spending one of two actions to add 30% to the other is net-negative in a duo, so Battle anthem now empowers the Herald as well as its target. Hrl+Hrl+Hrl went from 28% to 96%.
+- Rebalanced measurement for eight classes: 486 compositions, 12,150 runs per policy. All eight classes now sit inside a 14-point band, against the 41-point Vanguard gap this development pass began with. Aggregates and tails print by default; `--full` prints every row, and `--party` accepts the short labels the tables use.
+- The atlas has no cells for the new classes, so they borrow the closest silhouette and are separated by palette. This is documented as an interim in ART_DIRECTION.md, not as bespoke class art; a regenerated atlas removes the `derived` map and the filters.
+
 ## 0.3 branching upgrades and measured balance — 2026-09-10
 
 - Added branching ability upgrades. A cleared chamber opens a new UPGRADE phase where every hero picks one of two branches for one ability line; three lines per hero, one pick each, so a run produces up to eight builds per class. Every line offers force against guard, so sustain and mitigation are no longer a Vanguard or Warden monopoly.

@@ -30,9 +30,18 @@ export interface Policy {
   reveal(s: RunState): boolean;
 }
 
+/** Gold an ability bills to the shared treasury. */
+const price = (a: Ability) =>
+  a.effects.reduce(
+    (n, e) => n + (e.kind === "gold" && e.amount < 0 ? -e.amount : 0),
+    0,
+  );
 const usable = (s: RunState, p: Player) =>
   abilities(p.heroId, s.combatVersion, p.upgrades).filter(
-    (a) => a.cost <= p.resource && !(p.cooldowns[a.id] > 0),
+    (a) =>
+      a.cost <= p.resource &&
+      !(p.cooldowns[a.id] > 0) &&
+      (a.id === "revive" || price(a) <= s.gold),
   );
 const living = (s: RunState) => s.enemies.filter((e) => e.hp > 0);
 const shield = (u: Unit) => status(u, "barrier")?.stacks ?? 0;
@@ -99,7 +108,7 @@ function threats(s: RunState): Threats {
   const perEnemy = new Map<string, number>();
   const biggest = new Map<string, { enemy: Enemy; amount: number }>();
   for (const e of living(s)) {
-    if (status(e, "interrupted")) continue;
+    if (status(e, "interrupted") || status(e, "confused")) continue;
     const a = e.intent.ability;
     if (!a.effects.some((x) => x.kind === "damage")) continue;
     let aim = unit(s, e.intent.target);
@@ -367,6 +376,57 @@ export const tacticalPolicy: Policy = {
     )
       return { ability: "brace", target: p.id };
 
+    // 6b. Turn the biggest attacker on its own side.
+    const beguile = has("beguile");
+    if (beguile) {
+      const mark = ordered.find(
+        (e) =>
+          !status(e, "confused") &&
+          (t.perEnemy.get(e.id) ?? 0) >= 18 &&
+          s.enemies.filter((x) => x.id !== e.id && x.hp > 0).length > 0 &&
+          !claimed("beguile", e.id),
+      );
+      if (mark) return { ability: "beguile", target: mark.id };
+    }
+
+    // 6c. Clear what the dungeon has stuck to the party.
+    const cleanse = has("counterpoint");
+    if (cleanse) {
+      const afflictions = ["burn", "poison", "vulnerable", "weak"] as const;
+      const row = (["front", "back"] as Row[])
+        .map((r) => ({
+          r,
+          crew: standing(s).filter((x) => x.row === r),
+        }))
+        .map(({ r, crew }) => ({
+          r,
+          crew,
+          n: crew.reduce(
+            (n, x) => n + afflictions.filter((f) => status(x, f)).length,
+            0,
+          ),
+        }))
+        .sort((a, b) => b.n - a.n || a.r.localeCompare(b.r))[0];
+      if (row && row.n >= 2 && !claimed("counterpoint", row.crew[0].id))
+        return { ability: "counterpoint", target: row.crew[0].id };
+    }
+
+    // 6d. Buy an ally an emergency shield with team gold.
+    const insure = has("insure");
+    if (insure) {
+      const exposed = s.players
+        .filter((x) => x.hp > 0 && !x.fallen && !status(x, "barrier"))
+        .map((x) => ({ x, hit: t.perHero.get(x.id) ?? 0 }))
+        .filter(({ x, hit }) => hit >= x.hp * 0.6)
+        .sort((a, b) => b.hit - a.hit || a.x.id.localeCompare(b.x.id))[0];
+      if (
+        exposed &&
+        price(insure) <= s.gold - reserve(s) &&
+        !claimed("insure", exposed.x.id)
+      )
+        return { ability: "insure", target: exposed.x.id };
+    }
+
     // 7. Fortified enemies waste the party's damage until they are opened.
     const unravel = has("unravel");
     if (unravel) {
@@ -415,6 +475,33 @@ export const tacticalPolicy: Policy = {
     )
       return { ability: "mark", target: focus.id };
 
+    // 9b. Lift the hardest hitter before swinging yourself.
+    const anthem = has("anthem");
+    if (anthem) {
+      const star = s.players
+        .filter((x) => x.hp > 0 && !x.fallen && !status(x, "empowered"))
+        .sort((a, b) => b.power - a.power || a.id.localeCompare(b.id))[0];
+      if (star && !claimed("anthem", star.id))
+        return { ability: "anthem", target: star.id };
+    }
+    const cadence = has("cadence");
+    if (cadence) {
+      const crowded = (["front", "back"] as Row[])
+        .map((r) => standing(s).filter((x) => x.row === r))
+        .filter((crew) => crew.length >= 2)
+        .sort(
+          (a, b) =>
+            b.reduce((n, x) => n + (t.perHero.get(x.id) ?? 0), 0) -
+            a.reduce((n, x) => n + (t.perHero.get(x.id) ?? 0), 0),
+        )[0];
+      if (
+        crowded &&
+        crowded.reduce((n, x) => n + (t.perHero.get(x.id) ?? 0), 0) >= 24 &&
+        !claimed("cadence", crowded[0].id)
+      )
+        return { ability: "cadence", target: crowded[0].id };
+    }
+
     // 10. Otherwise spend the action where it removes the most enemy health.
     const scored = attacks
       .map((a) => {
@@ -434,14 +521,20 @@ export const tacticalPolicy: Policy = {
             .filter((x) => x.group.length)
             .sort((x, y) => y.value - x.value || x.row.localeCompare(y.row))[0];
           return best
-            ? { a, target: best.group[0].id, value: best.value - a.cost * 3 }
+            ? {
+                a,
+                target: best.group[0].id,
+                value: best.value - a.cost * 3 - price(a) / 12,
+              }
             : null;
         }
         return {
           a,
           target: focus.id,
           value:
-            Math.min(abilityDamage(p, a, focus), remaining(focus)) - a.cost * 3,
+            Math.min(abilityDamage(p, a, focus), remaining(focus)) -
+            a.cost * 3 -
+            price(a) / 12,
         };
       })
       .filter((x): x is { a: Ability; target: string; value: number } => !!x)

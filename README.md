@@ -23,7 +23,7 @@ For client hot reload, leave the server running and use `npm run dev` in another
 npm run build
 npm test
 npm run simulate -- 40           # both policies, canonical parties
-npm run simulate -- 40 --matrix  # all 65 class combinations
+npm run simulate -- 25 --matrix  # all 486 class combinations (--full for every row)
 npm run test:network             # requires the local server
 ```
 
@@ -31,7 +31,7 @@ The network script creates disposable two-player test rooms. Production deployme
 
 ## Implemented loop
 
-Guest lobby → 4 hero choices → starting pact → 7-depth Foundry route → combat/auction/event → a branch upgrade after each cleared chamber → camp → final auction → boss → results. One authoritative room, versioned state, seeded RNG, ordered combat, shared treasury, majority approval, down/revive, reconnect and deduplication.
+Guest lobby → 8 hero choices → starting pact → 7-depth Foundry route → combat/auction/event → a branch upgrade after each cleared chamber → camp → final auction → boss → results. One authoritative room, versioned state, seeded RNG, ordered combat, shared treasury, majority approval, down/revive, reconnect and deduplication.
 
 ## Documents
 

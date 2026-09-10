@@ -15,7 +15,9 @@ export function Lobby({ s, send, disabled }: Props) {
         <div>
           <span className="eyebrow">EXPEDITION TABLE · 2–4 PLAYERS</span>
           <h1>Pick your troublemaker.</h1>
-          <p>Four seats at the table. One very questionable expedition.</p>
+          <p>
+            Eight ways to make bad decisions. Two to four of you at the table.
+          </p>
         </div>
         <div className="room-code">
           <small>INVITE CODE</small>

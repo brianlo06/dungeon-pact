@@ -193,6 +193,10 @@ const short: Record<string, string> = {
   arcanist: "Arc",
   ranger: "Rng",
   warden: "War",
+  broker: "Brk",
+  herald: "Hrl",
+  reaver: "Rvr",
+  beguiler: "Bgl",
 };
 const name = (party: Party) => party.map((h) => short[h] ?? h).join("+");
 
@@ -238,8 +242,15 @@ if (process.argv[1]?.endsWith("simulate.ts")) {
   const names = (chosen[0] === "both" ? ["attack", "tactical"] : chosen).filter(
     (n): n is PolicyName => n in policies,
   );
-  const only = flag("party")?.split(",");
+  // Accept either full ids or the short labels the tables print.
+  const byShort = Object.fromEntries(
+    Object.entries(short).map(([id, label]) => [label.toLowerCase(), id]),
+  );
+  const only = flag("party")
+    ?.split(",")
+    .map((n) => byShort[n.toLowerCase()] ?? n);
   const matrix = args.includes("--matrix");
+  const full = args.includes("--full");
   for (const policyName of names) {
     console.log(`\npolicy=${policyName}  seeds=${seeds}`);
     const parties: Party[] = only
@@ -250,26 +261,33 @@ if (process.argv[1]?.endsWith("simulate.ts")) {
     const rows = parties.map((party) =>
       summarise(name(party), party, seeds, policyName),
     );
-    table(rows);
+    if (!matrix || full) table(rows);
     if (matrix) {
+      // A full sweep is hundreds of rows; the useful signal is the aggregates
+      // and the tails, so print those and keep the table behind --full.
       const bucket = (keep: (p: Party) => boolean, label: string) => {
-        const set = rows.filter((r, i) => keep(parties[i]));
+        const set = rows.filter((_, i) => keep(parties[i]));
         if (!set.length) return;
         const wins = set.reduce((n, r) => n + r.wins, 0);
         const runs = set.reduce((n, r) => n + r.runs, 0);
         const gold =
           set.reduce((n, r) => n + r.averageFinalGold, 0) / set.length;
         console.log(
-          `${label}: ${wins}/${runs} wins (${Math.round((wins / runs) * 100)}%), mean final gold ${Math.round(gold)}`,
+          `${label.padEnd(22)} ${String(Math.round((wins / runs) * 100)).padStart(3)}%  ${wins}/${runs}  gold ${Math.round(gold)}`,
         );
       };
+      console.log(`\n${rows.length} compositions`);
+      for (const n of [2, 3, 4]) bucket((p) => p.length === n, `${n} players`);
       console.log("");
-      for (const n of [2, 3, 4])
-        bucket((p) => p.length === n, `${n} players            `);
-      bucket((p) => p.includes("warden"), "with Warden          ");
-      bucket((p) => !p.includes("warden"), "without Warden       ");
-      bucket((p) => p.includes("vanguard"), "with Vanguard        ");
-      bucket((p) => !p.includes("vanguard"), "without Vanguard     ");
+      for (const h of heroes) {
+        bucket((p) => p.includes(h.id), `with ${short[h.id]}`);
+        bucket((p) => !p.includes(h.id), `  without ${short[h.id]}`);
+      }
+      const ranked = [...rows].sort((a, b) => a.winRate - b.winRate);
+      console.log("\nhardest compositions");
+      table(ranked.slice(0, 10));
+      console.log("\neasiest compositions");
+      table(ranked.slice(-6));
     }
     const invalid = rows.reduce((n, r) => n + r.invalidPlans, 0);
     if (invalid) console.log(`REJECTED PLANS: ${invalid} — policy bug`);

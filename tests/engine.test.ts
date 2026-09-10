@@ -10,6 +10,7 @@ import { generateMap } from "../src/engine/map";
 import { enterAuction } from "../src/engine/auction";
 import { enterCombat } from "../src/engine/combat";
 import { validateContent, effectSchema } from "../src/content/validate";
+import { heroes } from "../src/content/heroes";
 import { commandSchema } from "../src/shared/protocol";
 import type { Intent, Command } from "../src/shared/protocol";
 import type { RunState } from "../src/shared/model";
@@ -23,7 +24,7 @@ function dispatch(s: RunState, id: string, intent: Intent) {
 }
 describe("authoritative rules", () => {
   it("validates the entire content catalog and rejects unsupported effects", () => {
-    expect(validateContent().heroes).toBe(4);
+    expect(validateContent().heroes).toBe(heroes.length);
     expect(
       effectSchema.safeParse({
         kind: "status",

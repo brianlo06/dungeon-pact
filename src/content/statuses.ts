@@ -10,6 +10,19 @@ export const statuses: Record<
       "Direct attack power is reduced by 35% before Guard. Expires at round end.",
     max: 1,
   },
+  empowered: {
+    name: "Empowered",
+    icon: "↑",
+    description: "Direct attack power is increased by 30% before Guard.",
+    max: 1,
+  },
+  confused: {
+    name: "Confused",
+    icon: "↻",
+    description:
+      "This enemy's next action strikes its own side. Expires at round end.",
+    max: 1,
+  },
   guarded: {
     name: "Guarded",
     icon: "⛨",

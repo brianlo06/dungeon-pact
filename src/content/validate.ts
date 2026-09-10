@@ -17,6 +17,8 @@ const statusId = z.enum([
   "vulnerable",
   "poison",
   "weak",
+  "empowered",
+  "confused",
   "guarded",
   "interrupted",
 ]);
@@ -32,6 +34,8 @@ export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
         .enum(["physical", "fire", "lightning", "arcane"])
         .optional(),
       precision: z.boolean().optional(),
+      self: z.boolean().optional(),
+      pierce: z.boolean().optional(),
     }),
     z.object({
       kind: z.literal("heal"),
@@ -69,7 +73,7 @@ const abilitySchema = z.object({
   cost: nonnegative,
   speed: z.number().int(),
   cooldown: nonnegative,
-  target: z.enum(["enemy", "ally", "self", "enemyRow"]),
+  target: z.enum(["enemy", "ally", "self", "enemyRow", "allyRow"]),
   effects: z.array(effectSchema).min(1).max(20),
 });
 const itemSchema = z.object({
