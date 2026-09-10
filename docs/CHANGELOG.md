@@ -20,7 +20,8 @@
   Flask, Flashpowder. Each sells one thing a Vanguard or Warden would otherwise
   be the only source of, for one action and one payment.
 - Every exchange now closes with a consumables tray, sold by the case of two.
-  Equipment lots are unchanged in number.
+  The tray is the last of the three lots, so an exchange now runs two
+  equipment lots rather than three.
 - Supplies stack, never displace worn equipment, and are never seized.
 - The Vanguard gap falls from +17 to +11 and the Warden's from +21 to +17.
   Parties that field them are unchanged; every point of that came from lifting

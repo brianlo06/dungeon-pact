@@ -22,7 +22,7 @@ An 8-class cooperative roguelite over a 7-depth branching route. Guest lobby →
 hero choice → starting pact → route → chambers → boss → results.
 
 Chambers: combat, elite, exchange, veiled lot, event, mentor, camp, boss. An
-exchange runs three equipment lots and closes with a consumables tray. Clearing
+exchange runs two equipment lots and closes with a consumables tray. Clearing
 a fight opens a branch upgrade for every hero. A mentor teaches one class path.
 
 Both bosses fight for an objective and state it before the first round: the
