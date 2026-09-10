@@ -12,6 +12,7 @@ import {
   DungeonMap,
   EventRoom,
   Camp,
+  Mentor,
   Upgrade,
   Reward,
   Results,
@@ -208,6 +209,7 @@ export default function App() {
             {s.phase === "AUCTION" && <Auction {...props!} />}{" "}
             {s.phase === "EVENT" && <EventRoom {...props!} />}{" "}
             {s.phase === "CAMP" && <Camp {...props!} />}{" "}
+            {s.phase === "MENTOR" && <Mentor {...props!} />}{" "}
             {s.phase === "UPGRADE" && <Upgrade {...props!} />}{" "}
             {s.phase === "REWARD" && <Reward {...props!} />}{" "}
             {s.phase === "COMPLETE" && <Results s={s} onLeave={leave} />}

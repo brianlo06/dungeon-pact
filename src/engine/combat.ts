@@ -1,7 +1,8 @@
 import { chooseEncounter } from "../content/encounters";
 import type { RunState, Player, Enemy, Ability, Unit } from "../shared/model";
 import { enemies as definitions, enemyAbilities } from "../content/enemies";
-import { abilities, hero } from "../content/heroes";
+import { abilities } from "../content/heroes";
+import { resourceCap } from "../content/evolutions";
 import { upgradeOffer } from "../content/upgrades";
 import { pick } from "./rng";
 import {
@@ -142,7 +143,7 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
   }
   for (const p of s.players) {
     p.cooldowns = {};
-    p.resource = Math.min(hero(p.heroId).maxResource, p.resource + 2);
+    p.resource = Math.min(resourceCap(p), p.resource + 2);
   }
   startRound(s);
   log(
@@ -174,7 +175,7 @@ export function validatePlan(
 ): Ability {
   if (p.hp <= 0 || p.fallen)
     throw Error("Downed heroes can use spirit support");
-  const a = abilities(p.heroId, s.combatVersion, p.upgrades).find(
+  const a = abilities(p.heroId, s.combatVersion, p.upgrades, p.evolution).find(
     (a) => a.id === abilityId,
   );
   if (!a) throw Error("Unknown ability");
@@ -243,7 +244,7 @@ export function resolveRound(s: RunState) {
     .map((p) => ({
       p,
       plan: s.plans[p.id],
-      a: abilities(p.heroId, s.combatVersion, p.upgrades).find(
+      a: abilities(p.heroId, s.combatVersion, p.upgrades, p.evolution).find(
         (a) => a.id === s.plans[p.id]?.ability,
       )!,
     }))

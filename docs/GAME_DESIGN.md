@@ -8,13 +8,36 @@ A 2–4 friend cooperative roguelike: shared fate, selfish temptation, uncertain
 
 ## Implemented expedition
 
-Guild Hall entry → guest room → hero choice / ready → starting pact vote → branching map → tactical encounters and auctions/events → a branch upgrade after each cleared chamber → camp → final procurement → one of two Foundry bosses → results. Seven map depths; route choice changes content and economic risk. Eight hero definitions, eight normal enemies, two bosses, two elite traits, twelve equipment definitions, forty-eight ability branches, twelve statuses, two elemental/precision reactions, three events, and versioned tactical control skills. No automatic player combat and no bots in multiplayer.
+Guild Hall entry → guest room → hero choice / ready → starting pact vote → branching map → tactical encounters and auctions/events → a branch upgrade after each cleared chamber → camp → final procurement → one of two Foundry bosses → results. Seven map depths; route choice changes content and economic risk. Eight hero definitions with twenty-four class paths across three mentors, eight normal enemies, two bosses, two elite traits, twelve equipment definitions, forty-eight ability branches, twelve statuses, two elemental/precision reactions, three events, and versioned tactical control skills. No automatic player combat and no bots in multiplayer.
 
 Eight classes cover protection, elemental burst, precision, sustain, economy, buffs, blood-priced force and enemy subversion. Vanguard uses Resolve for interception and row damage in new runs. Arcanist uses Mana for water/fire/lightning. Ranger uses Focus and Mark/Precision. Warden uses Growth for healing, poison, and Wet support. Broker bills the shared treasury for damage and shields, and earns gold back by fighting. Herald empowers itself and an ally, shields whole rows and clears afflictions. Reaver pays HP for armour-piercing damage and drags back-row enemies to the front. Beguiler turns an enemy's next action against its own side and leaves what survives Vulnerable. Everyone can brace, change row, and pay for a revival. Resource recovery differs through basic abilities; resources persist between encounters with a modest refill.
 
 Players select simultaneously; all standing heroes must lock. Hero speed plus ability speed sets player order, then surviving enemies act by speed. Enemy intentions are selected by the server before planning. New-run windups explicitly show that they can be interrupted; fortification turns create opportunities to prepare or strip shields. Dead targets cause an explicit fizzle; there is no silent retargeting of hero commands. Enemy attacks retarget the next standing hero if their target falls. Position influences enemy targeting and row attacks; single-target hero attacks can currently reach either row.
 
 Wet + Lightning consumes Wet and chains 12 damage to other enemies. Mark + Precision consumes Mark for 20 bonus damage; setting up an Exploit costs a whole action, so the payoff has to beat attacking twice. Weak reduces a direct attack to 65% before Guard, which is what a party without a Vanguard uses in place of interception. Events and logs name both reactions. Repeated proc chains are bounded. No critical RNG or expanded damage/resistance table yet.
+
+## Class paths and mentors
+
+Three mentors sit on the route — the Whetstone, the Reliquary and the Cipher —
+each at a different depth, each teaching exactly one path to each of the eight
+classes. A route visits one node per depth, so a run can never reach all three,
+and which paths were even on offer differs between runs.
+
+A path is a role pivot, not a power-up. It swaps one signature ability, shifts
+stats in both directions, and a hero may take only one for the whole run. The
+Vanguard who becomes a Breaker gains four Power and loses two Guard, and trades
+Foundry slam for a harder Sunder; the Aegis Knight instead gains twenty-five HP
+and loses two Speed. Taking the first mentor means declining whatever the later
+ones would have taught.
+
+Tuition comes out of the shared treasury the moment a hero commits, and the
+purse will not stretch to everyone. Who trains is argued over the same gold as
+the auctions, and the party watches the treasury drain as each member decides.
+This is where the design differs from its inspiration: elsewhere a subclass is
+personal progression, here it is a contested purchase.
+
+A path swaps abilities by id, so ability branches, cooldowns and locked plans
+all survive the change. Existing saves never see a mentor.
 
 ## Branching ability upgrades
 

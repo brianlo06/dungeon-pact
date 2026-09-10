@@ -10,7 +10,7 @@ import type {
 } from "../shared/model";
 import { statuses } from "../content/statuses";
 import { items } from "../content/items";
-import { hero } from "../content/heroes";
+import { resourceCap } from "../content/evolutions";
 /** Mark + Precision bonus. Setting up an Exploit costs a whole action, so the
  * payoff has to beat simply attacking twice. */
 export const EXPLOIT = 20;
@@ -195,7 +195,7 @@ export function effects(
     if (e.kind === "resource" && isPlayer(actor))
       actor.resource = Math.max(
         0,
-        Math.min(hero(actor.heroId).maxResource, actor.resource + e.amount),
+        Math.min(resourceCap(actor), actor.resource + e.amount),
       );
     if (e.kind === "move") target.row = e.row;
     if (e.kind === "status") {

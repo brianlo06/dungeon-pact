@@ -31,7 +31,7 @@ The network script creates disposable two-player test rooms. Production deployme
 
 ## Implemented loop
 
-Guest lobby → 8 hero choices → starting pact → 7-depth Foundry route → combat/auction/event → a branch upgrade after each cleared chamber → camp → final auction → boss → results. One authoritative room, versioned state, seeded RNG, ordered combat, shared treasury, majority approval, down/revive, reconnect and deduplication.
+Guest lobby → 8 hero choices → starting pact → 7-depth Foundry route → combat/auction/event/mentor → a branch upgrade after each cleared chamber → camp → final auction → boss → results. One authoritative room, versioned state, seeded RNG, ordered combat, shared treasury, majority approval, down/revive, reconnect and deduplication.
 
 ## Documents
 
@@ -48,4 +48,4 @@ The current content and polish are intentionally smaller than the Phase 1 target
 
 ## Current direction
 
-Equipped-ability tactical roguelite: D&D-inspired party cooperation and Slay the Spire-inspired telegraphed threats, relic synergies and difficult resource decisions. New rooms use tactical v2 (interception, interruption, Weak, barrier stripping, authored enemy formations and branching ability upgrades — three lines per hero, one pick per cleared chamber, each trading force against guard). Old saves retain their legacy rules. Start a new pact to try the new combat. Pixel art and asset provenance are documented in [Art direction](docs/ART_DIRECTION.md).
+Equipped-ability tactical roguelite: D&D-inspired party cooperation and Slay the Spire-inspired telegraphed threats, relic synergies and difficult resource decisions. New rooms use tactical v2 (interception, interruption, Weak, barrier stripping, authored enemy formations, branching ability upgrades — three lines per hero, one pick per cleared chamber, each trading force against guard — and class paths taught by mentors met on the route, paid for out of the shared treasury). Old saves retain their legacy rules. Start a new pact to try the new combat. Pixel art and asset provenance are documented in [Art direction](docs/ART_DIRECTION.md).

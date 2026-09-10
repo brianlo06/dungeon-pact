@@ -8,6 +8,7 @@ import type {
 } from "../src/shared/model";
 import { abilities } from "../src/content/heroes";
 import { upgradeOffer } from "../src/content/upgrades";
+import { mentors, pathFor } from "../src/content/evolutions";
 import { items } from "../src/content/items";
 import { events } from "../src/content/events";
 import { EXPLOIT, WEAK, status } from "../src/engine/effects";
@@ -24,6 +25,7 @@ export interface Policy {
   vote(s: RunState, p: Player): string;
   plan(s: RunState, p: Player): { ability: string; target: string };
   upgrade(s: RunState, p: Player): string;
+  train(s: RunState, p: Player): boolean;
   interest(s: RunState, p: Player): boolean;
   bid(s: RunState, p: Player): boolean;
   approve(s: RunState, p: Player): boolean;
@@ -37,7 +39,7 @@ const price = (a: Ability) =>
     0,
   );
 const usable = (s: RunState, p: Player) =>
-  abilities(p.heroId, s.combatVersion, p.upgrades).filter(
+  abilities(p.heroId, s.combatVersion, p.upgrades, p.evolution).filter(
     (a) =>
       a.cost <= p.resource &&
       !(p.cooldowns[a.id] > 0) &&
@@ -81,9 +83,12 @@ function plannedDamage(s: RunState, target: Unit) {
   for (const [id, plan] of Object.entries(s.plans)) {
     const mate = s.players.find((x) => x.id === id);
     if (!mate) continue;
-    const a = abilities(mate.heroId, s.combatVersion, mate.upgrades).find(
-      (x) => x.id === plan.ability,
-    );
+    const a = abilities(
+      mate.heroId,
+      s.combatVersion,
+      mate.upgrades,
+      mate.evolution,
+    ).find((x) => x.id === plan.ability);
     if (!a) continue;
     const aim = unit(s, plan.target);
     if (!aim) continue;
@@ -219,6 +224,7 @@ export const attackPolicy: Policy = {
   upgrade(_s, p) {
     return upgradeOffer(p)[0]?.id ?? "none";
   },
+  train: () => false,
   interest(s, p) {
     return p.id === s.players[0].id && s.auction!.price < s.gold * 0.5;
   },
@@ -239,6 +245,10 @@ export const tacticalPolicy: Policy = {
       const open = availableNodes(s);
       const hurt = wounded(s) > 0.35;
       const rank = (t: string) => {
+        // Training is a permanent kit change, so it outranks a single fight
+        // whenever the purse can pay for it and still cover recovery.
+        if (t === "mentor")
+          return s.players.some((x) => !x.evolution) && s.gold >= 300 ? 6 : 1;
         if (t === "camp") return 5;
         if (t === "event") return hurt ? 4 : 1;
         if (t === "elite") return hurt ? 0 : 4;
@@ -459,7 +469,7 @@ export const tacticalPolicy: Policy = {
       s.players.some(
         (x) =>
           x.hp > 0 &&
-          abilities(x.heroId, s.combatVersion, x.upgrades).some(
+          abilities(x.heroId, s.combatVersion, x.upgrades, x.evolution).some(
             (a) => a.id === "storm",
           ),
       ) &&
@@ -555,6 +565,14 @@ export const tacticalPolicy: Policy = {
           ? "guard"
           : "force";
     return (offer.find((u) => u.kind === want) ?? offer[0]).id;
+  },
+  train(s, p) {
+    if (p.evolution) return false;
+    const teacher = mentors.find((m) => m.id === s.mentorId);
+    if (!teacher || !pathFor(teacher.id, p.heroId)) return false;
+    // Training competes with equipment and recovery for one purse, so only
+    // commit while the treasury still covers the reserve afterwards.
+    return s.gold - teacher.tuition >= reserve(s);
   },
   interest(s, p) {
     const a = s.auction!;

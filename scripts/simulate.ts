@@ -81,6 +81,9 @@ export function run(
         const fallback = { ability: "brace", target: p.id };
         send(p.id, { type: "plan", ...fallback });
       }
+    } else if (s.phase === "MENTOR") {
+      const p = s.players.find((p) => !(s.trained ?? []).includes(p.id))!;
+      send(p.id, { type: "train", accept: policy.train(s, p) });
     } else if (s.phase === "UPGRADE") {
       const p = s.players.find((p) => !s.votes[p.id])!;
       send(p.id, { type: "upgrade", choice: policy.upgrade(s, p) });

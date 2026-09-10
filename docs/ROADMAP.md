@@ -45,6 +45,18 @@ Phase 1 exit: two to four humans complete a 15–25 minute development expeditio
 
 No public hosted game, accounts/D1 progression, codex collection, achievements, run-history service, daily/weekly challenges, full Standard run, multiple regions, 250-item catalog, dedicated developer UI, adaptive music or animated character art. No placeholder navigation buttons suggest these exist. The first pixel art direction now has a generated character atlas, source-authored tavern scene, locally hosted font and compact game UI. Multi-frame character animation and unique item art remain pending; asset provenance is in the manifest.
 
+## 0.7 progress
+
+Class paths are implemented: three mentors on the route, 24 paths, tuition from
+the shared treasury, one path per hero per run. Tiers currently map to route
+depth; when additional regions land in Phase 4 a tier becomes a region with no
+rework, which is how the inspiration gates its subclasses.
+
+Still open and now better evidenced: the class gap is driven by base sustain
+rather than by any of the layered progression systems, so it needs a decision
+about Warden's baseline healing rather than more content. Boss objectives that
+change decisions remain the clearest ceiling on difficulty.
+
 ## 0.3 progress
 
 Branching ability upgrades are implemented, which was the top item of the combat

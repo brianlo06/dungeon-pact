@@ -1,5 +1,6 @@
 import type { Ability, HeroDef } from "../shared/model";
 import { chosenUpgrades } from "./upgrades";
+import { evolution } from "./evolutions";
 const a = (
   id: string,
   name: string,
@@ -585,15 +586,22 @@ export function abilities(
   id: string,
   combatVersion?: 2,
   chosen: string[] = [],
+  path?: string,
 ): Ability[] {
   const base = hero(id).abilities;
   const changes = combatVersion === 2 ? (tacticalSkills[id] ?? []) : [];
-  const list = [
+  let list = [
     ...base.filter((a) => !changes.some((b) => b.id === a.id)),
     ...changes,
     ...utility,
   ];
-  if (!chosen.length || combatVersion !== 2) return list;
+  if (combatVersion !== 2) return list;
+  // A class path swaps one signature ability, keeping its id so branches,
+  // cooldowns and locked plans still line up.
+  const taken = evolution(path);
+  if (taken && taken.heroId === id)
+    list = list.map((a) => (a.id === taken.replaces ? taken.ability : a));
+  if (!chosen.length) return list;
   const picked = chosenUpgrades(chosen);
   return list.map((a) =>
     picked

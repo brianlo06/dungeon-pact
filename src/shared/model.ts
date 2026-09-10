@@ -3,6 +3,7 @@ export type Phase =
   | "PACT"
   | "MAP"
   | "COMBAT"
+  | "MENTOR"
   | "UPGRADE"
   | "REWARD"
   | "AUCTION"
@@ -113,6 +114,8 @@ export interface Player extends Unit {
   ready: boolean;
   /** Chosen ability branches. Absent in saves written before upgrades existed. */
   upgrades?: string[];
+  /** Chosen class path. A hero evolves at most once per run. */
+  evolution?: string;
   resource: number;
   items: string[];
   cooldowns: Record<string, number>;
@@ -145,7 +148,15 @@ export interface MapNode {
   id: string;
   depth: number;
   lane: number;
-  type: "combat" | "elite" | "auction" | "mystery" | "event" | "camp" | "boss";
+  type:
+    | "combat"
+    | "elite"
+    | "auction"
+    | "mystery"
+    | "event"
+    | "camp"
+    | "mentor"
+    | "boss";
   name: string;
   next: string[];
   visited: boolean;
@@ -218,6 +229,9 @@ export interface RunState {
   round: number;
   auction: Auction | null;
   eventId: string | null;
+  /** Mentor currently teaching, and who has already answered them. */
+  mentorId?: string | null;
+  trained?: string[];
   logs: GameLog[];
   eventSeq: number;
   startedAt: number | null;

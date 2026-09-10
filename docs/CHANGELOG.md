@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7 class paths — 2026-09-10
+
+- Added class evolutions. Three mentors sit on the route at different depths — the Whetstone, the Reliquary and the Cipher — each teaching exactly one path to each of the eight classes, for 24 paths. A route visits one node per depth, so no run reaches all three and which paths were on offer differs between runs.
+- A path is a role pivot rather than a power-up: it swaps one signature ability, shifts stats in both directions, and a hero takes only one per run. Taking the first mentor means declining what the later ones would have taught.
+- Tuition is charged to the shared treasury the moment a hero commits, and the purse will not cover everyone. Who trains is fought over the same gold as the auctions — the inspiration treats a subclass as personal progression, here it is a contested purchase.
+- Paths swap abilities by id, so branches, cooldowns and locked plans survive the change. `abilities()` applies the path first and folds branches over the result, so no content variant is needed per combination.
+- Party size stopped mattering: 92/93/92 across two, three and four players, against 77/92/95 before. Flat per-hero tuition from one shared purse is self-balancing — a duo can evolve both heroes, a quartet cannot afford four. That was not designed; it fell out of pricing training per hero.
+- Mentors are the largest gold sink added so far. Mean final treasury fell from 381–463 to 268–325.
+- Recorded a finding the tuning attempts made clear: the class gap is driven by base sustain, not by paths. Softening the strongest path and helping the weakest class moved the aggregates by under a point each. Closing it means revisiting Warden's baseline healing, which BALANCE.md leaves open rather than fudging.
+- `resourceCap()` is now the single source of truth for a hero's maximum resource, since a path may raise it.
+
 ## 0.6 class art — 2026-09-10
 
 - Broker, Herald, Reaver and Beguiler have their own sprites. The palette-shifted placeholders they shipped with are gone, along with the `derived` map and the `.sprite-<class>` filters.

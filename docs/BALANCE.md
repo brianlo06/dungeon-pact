@@ -52,7 +52,53 @@ base damage; the Miser additionally adds floor(gold/70). From round 7 every
 enemy damage effect grows by 3 per further round. Mark + Precision pays 20;
 Weak cuts a direct attack to 65% before Guard.
 
-## Simulation evidence — eight classes, 486 compositions, 25 seeds each
+## Simulation evidence — class paths, 486 compositions, 25 seeds each
+
+12,150 runs under the control-aware policy, with mentors on the route.
+
+| Bracket   | win rate | mean final gold |
+| --------- | -------: | --------------: |
+| 2 players |      92% |             325 |
+| 3 players |      93% |             284 |
+| 4 players |      92% |             268 |
+
+**Party size stopped mattering.** The previous pass ran 77/92/95 across two,
+three and four players. A flat per-hero tuition drawn from one shared purse
+turns out to be self-balancing: a duo can afford to evolve both heroes, a
+quartet cannot afford four, so the smaller party converts its treasury into
+kit at a far better rate. That was not designed, it fell out of pricing
+training per hero rather than per party.
+
+Mentors are also the largest gold sink yet added. Mean final treasury fell from
+381–463 to 268–325 against roughly 1200 earned.
+
+Class effect, parties containing that class versus parties without:
+
+| Class    | with | without | delta |
+| -------- | ---: | ------: | ----: |
+| Warden   | 100% |     88% |   +12 |
+| Vanguard |  97% |     90% |    +7 |
+| Broker   |  93% |     92% |    +1 |
+| Herald   |  92% |     92% |     0 |
+| Beguiler |  92% |     92% |     0 |
+| Arcanist |  89% |     94% |    -5 |
+| Ranger   |  89% |     94% |    -5 |
+| Reaver   |  86% |     95% |    -9 |
+
+The spread widened from 14 points to 21. Two tunes aimed at the extremes —
+softening Lifebinder, which was strictly the best path in the game, and
+dropping the Butcher's Guard cost from the most fragile class — moved the
+aggregates by less than a point each. That is the finding: **the class gap is
+driven by base sustain, not by paths.** A Warden party wins because `mend`
+exists, and one swapped ability per run does not change that. Closing it means
+revisiting Warden's baseline healing against everyone else's, which is a larger
+decision than a path tweak and is deliberately not made here.
+
+The hardest cells are Reaver-heavy parties at 32–48%. The Reaver pays HP for
+damage and has no sustain until the Cipher's Bloodbound path, which sits at the
+deepest mentor and is often unreachable.
+
+## Earlier evidence — eight classes without paths, 486 compositions
 
 12,150 runs under the control-aware policy. `--matrix` prints aggregates and
 the tails; `--full` prints all 486 rows.

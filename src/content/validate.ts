@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Effect } from "../shared/model";
 import { heroes, abilities } from "./heroes";
 import { upgrades, lines, upgradeOffer } from "./upgrades";
+import { evolutions, mentors, pathFor } from "./evolutions";
 import { items } from "./items";
 import { enemies, enemyAbilities } from "./enemies";
 import { events } from "./events";
@@ -156,6 +157,29 @@ export function validateContent() {
     }
   }
   unique(upgrades, "upgrade");
+  unique(evolutions, "evolution");
+  unique(mentors, "mentor");
+  for (const e of evolutions) {
+    abilitySchema.parse(e.ability);
+    const base = heroes.find((h) => h.id === e.heroId);
+    if (!base) throw Error(`Evolution ${e.id} has no hero`);
+    // A path swaps an ability the hero owns, keeping its id so branches,
+    // cooldowns and locked plans still resolve.
+    if (!abilities(e.heroId, 2).some((a) => a.id === e.replaces))
+      throw Error(`Evolution ${e.id} replaces an unknown ability`);
+    if (e.ability.id !== e.replaces)
+      throw Error(`Evolution ${e.id} must keep the replaced ability's id`);
+    if (!mentors.some((m) => m.id === e.mentor))
+      throw Error(`Evolution ${e.id} has no mentor`);
+    if (e.ability.cost > base.maxResource + (e.stats.resource ?? 0))
+      throw Error(`Evolution ${e.id} is uncastable`);
+  }
+  // Every mentor must have something for every class, or reaching one is a
+  // dead node for part of the party.
+  for (const m of mentors)
+    for (const h of heroes)
+      if (!pathFor(m.id, h.id))
+        throw Error(`Mentor ${m.id} teaches ${h.id} nothing`);
   for (const i of items) itemSchema.parse(i);
   for (const e of enemies) {
     z.object({
@@ -185,5 +209,7 @@ export function validateContent() {
     events: events.length,
     statuses: statusId.options.length,
     upgrades: upgrades.length,
+    evolutions: evolutions.length,
+    mentors: mentors.length,
   };
 }

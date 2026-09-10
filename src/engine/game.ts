@@ -4,7 +4,7 @@ import { hero } from "../content/heroes";
 import { items } from "../content/items";
 import { events } from "../content/events";
 import { hashSeed, pick } from "./rng";
-import { generateMap, availableNodes } from "./map";
+import { generateMap, availableNodes, mentorTier } from "./map";
 import { log, spend, gain } from "./effects";
 import {
   enterCombat,
@@ -14,6 +14,7 @@ import {
   standing,
 } from "./combat";
 import { upgradeOffer } from "../content/upgrades";
+import { mentors, pathFor, resourceCap } from "../content/evolutions";
 import { enterAuction, nextLot, nominate, purchase } from "./auction";
 export function createRun(room: string, seed: string): RunState {
   return {
@@ -60,6 +61,7 @@ export function addPlayer(s: RunState, id: string, name: string) {
     heroId: h.id,
     ready: false,
     upgrades: [],
+    evolution: undefined,
     hp: h.hp,
     maxHp: h.hp,
     power: h.power,
@@ -135,6 +137,10 @@ function finishVote(s: RunState, result: string) {
     else if (n.type === "event") {
       s.eventId = pick(s, events).id;
       s.phase = "EVENT";
+    } else if (n.type === "mentor") {
+      s.mentorId = mentors[mentorTier(n.depth) - 1].id;
+      s.trained = [];
+      s.phase = "MENTOR";
     } else s.phase = "CAMP";
     return;
   }
@@ -204,6 +210,7 @@ export function reduce(
         row: h.id === "vanguard" ? "front" : "back",
         ready: false,
         upgrades: [],
+        evolution: undefined,
       });
       break;
     }
@@ -272,6 +279,35 @@ export function reduce(
         s.votes = {};
         s.phase = "REWARD";
         log(s, "New instincts settle in. The route waits.");
+      }
+      break;
+    }
+    case "train": {
+      requirePhase("MENTOR");
+      if ((s.trained ?? []).includes(p.id))
+        throw Error("You have already answered the mentor");
+      const teaching = mentors.find((m) => m.id === s.mentorId)!;
+      const path = pathFor(teaching.id, p.heroId);
+      if (intent.accept) {
+        if (p.evolution) throw Error("This hero has already taken a path");
+        if (!path) throw Error("This mentor teaches nothing for your class");
+        // Tuition leaves the shared purse the moment a hero commits, so the
+        // party watches it drain and argues over who goes next.
+        spend(s, teaching.tuition);
+        p.evolution = path.id;
+        p.maxHp += path.stats.hp ?? 0;
+        p.hp = Math.max(1, Math.min(p.maxHp, p.hp + (path.stats.hp ?? 0)));
+        p.power = Math.max(0, p.power + (path.stats.power ?? 0));
+        p.guard = Math.max(0, p.guard + (path.stats.guard ?? 0));
+        p.speed = Math.max(0, p.speed + (path.stats.speed ?? 0));
+        p.resource = Math.min(p.resource, resourceCap(p));
+        log(s, `${p.name} walks out a ${path.name}. ${path.title}`);
+      } else log(s, `${p.name} declines the ${teaching.name}.`);
+      s.trained = [...(s.trained ?? []), p.id];
+      if (s.players.every((x) => (s.trained ?? []).includes(x.id))) {
+        s.mentorId = null;
+        s.trained = [];
+        s.phase = "MAP";
       }
       break;
     }

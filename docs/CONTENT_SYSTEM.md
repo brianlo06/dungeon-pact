@@ -37,7 +37,7 @@ Server keeps the selected lot ID; `snapshot()` emits only rarity, slot, non-curs
 
 ## Inventory at this revision
 
-8 heroes; 33 class abilities in tactical v2 (26 legacy) plus 4 common actions; 48 ability branches; 12 items; 8 normal enemies and 2 bosses; 2 elite traits; 12 statuses; 2 reactions; 3 events; standard and mystery versions of one ascending auction rule. Content targets in the master brief are roadmap targets, not present inventory.
+8 heroes; 33 class abilities in tactical v2 (26 legacy) plus 4 common actions; 48 ability branches; 24 class paths across 3 mentors; 12 items; 8 normal enemies and 2 bosses; 2 elite traits; 12 statuses; 2 reactions; 3 events; standard and mystery versions of one ascending auction rule. Content targets in the master brief are roadmap targets, not present inventory.
 
 ## Tactical content extension
 
@@ -92,3 +92,28 @@ must check the ability's target, not just the presence of a heal effect.
 An ability that bills gold now requires the treasury to cover it. Previously a
 gold cost silently resolved at a discount when the purse was short, which only
 mattered once the Broker made treasury-funded abilities common.
+
+## Class paths
+
+`src/content/evolutions.ts` holds `MentorDef`s and `EvolutionDef`s. A mentor is
+an archetype with a tier and a tuition; an evolution is one hero's path through
+one mentor, carrying stat deltas and a replacement ability.
+
+Rules enforced by `validateContent()` at room boot:
+
+- Every mentor teaches every class something. A mentor with a gap would be a
+  dead node for part of the party.
+- A path's replacement ability keeps the id of the ability it replaces, so
+  branches, cooldowns and locked plans still resolve across the change.
+- The replaced ability must exist in the hero's tactical v2 kit.
+- The replacement stays castable within the hero's resource cap, including any
+  cap the path itself raises.
+
+Layering is deliberate: `abilities()` applies the path first, then folds chosen
+branches over the result. A branch therefore modifies whatever the path left in
+that slot, and content authors do not need a variant per combination.
+
+Stat deltas are applied once, when the hero trains, and may be negative — that
+is where a path's cost lives. `resourceCap()` is the single source of truth for
+a hero's maximum resource and must be used instead of `hero(id).maxResource`
+anywhere a path could apply.

@@ -6,6 +6,13 @@ import { heroes } from "../../content/heroes";
 import { events } from "../../content/events";
 import { items } from "../../content/items";
 import { upgradeOffer, lines } from "../../content/upgrades";
+import {
+  className,
+  evolution,
+  mentor,
+  pathFor,
+} from "../../content/evolutions";
+import { abilities, hero } from "../../content/heroes";
 type Props = { s: Snapshot; send: (i: Intent) => void; disabled: boolean };
 export function Lobby({ s, send, disabled }: Props) {
   const me = s.players.find((p) => p.id === s.you)!;
@@ -158,6 +165,7 @@ export function DungeonMap(props: Props) {
     mystery: "gem",
     event: "question",
     camp: "fire",
+    mentor: "leaf",
     boss: "crown",
   };
   return (
@@ -196,7 +204,9 @@ export function DungeonMap(props: Props) {
                       <small>
                         {n.type === "mystery"
                           ? "MYSTERY AUCTION"
-                          : n.type.toUpperCase()}
+                          : n.type === "mentor"
+                            ? "TRAINING"
+                            : n.type.toUpperCase()}
                       </small>
                       <strong>{n.name}</strong>
                     </div>
@@ -279,6 +289,120 @@ export function Camp(props: Props) {
         />
       </div>
     </section>
+  );
+}
+export function Mentor({ s, send, disabled }: Props) {
+  const me = s.players.find((p) => p.id === s.you)!;
+  const teacher = mentor(s.mentorId ?? "");
+  const path = teacher ? pathFor(teacher.id, me.heroId) : undefined;
+  const answered = (s.trained ?? []).includes(me.id);
+  const already = evolution(me.evolution);
+  const affordable = !!teacher && s.gold >= teacher.tuition;
+  const stat = (label: string, n?: number) =>
+    n ? `${label} ${n > 0 ? "+" : ""}${n}` : null;
+  return (
+    <>
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">
+            TRAINING GROUND · TIER {teacher?.tier ?? 1}
+          </span>
+          <h1>{teacher?.name}</h1>
+          <p>{teacher?.text}</p>
+        </div>
+        <span className="badge">
+          {(s.trained ?? []).length}/{s.players.length} answered
+        </span>
+      </div>
+      <div className="mentor-body">
+        <div className="mentor-offer">
+          {already ? (
+            <p>
+              You already walk the {already.name} path. A hero trains once per
+              expedition.
+            </p>
+          ) : !path ? (
+            <p>This mentor has nothing to teach a {hero(me.heroId).name}.</p>
+          ) : (
+            <>
+              <small>{hero(me.heroId).name} → </small>
+              <h2>{path.name}</h2>
+              <p className="lore">{path.title}</p>
+              <p>
+                <strong>{path.ability.name}</strong> replaces{" "}
+                {hero(me.heroId).name}’s{" "}
+                {abilities(me.heroId, 2).find((x) => x.id === path.replaces)
+                  ?.name ?? path.replaces}
+                .<br />
+                {path.ability.description}
+              </p>
+              <p className="mentor-stats">
+                {[
+                  stat("HP", path.stats.hp),
+                  stat("Power", path.stats.power),
+                  stat("Guard", path.stats.guard),
+                  stat("Speed", path.stats.speed),
+                  stat("Resource", path.stats.resource),
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || "No stat change"}
+              </p>
+            </>
+          )}
+        </div>
+        <div className="mentor-terms">
+          <span className="eyebrow">THE FEE</span>
+          <h3>{teacher?.tuition} gold</h3>
+          <p>
+            Paid from the shared treasury the moment you commit. {s.gold} gold
+            remains; the purse will not stretch to everyone.
+          </p>
+          <div className="bidder-list">
+            {s.players.map((p) => (
+              <div key={p.id}>
+                <span>
+                  {p.name} · {className(p)}
+                </span>
+                <strong>
+                  {(s.trained ?? []).includes(p.id)
+                    ? p.evolution
+                      ? "Trained"
+                      : "Passed"
+                    : "Deciding"}
+                </strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="auction-actions">
+        {answered ? (
+          <p>Your answer is given. Waiting for the rest of the pact.</p>
+        ) : (
+          <>
+            <button
+              className="primary"
+              disabled={disabled || !path || !!already || !affordable}
+              onClick={() => send({ type: "train", accept: true })}
+            >
+              {already
+                ? "Already trained"
+                : !path
+                  ? "Nothing on offer"
+                  : !affordable
+                    ? "Treasury cannot cover it"
+                    : `Train · ${teacher?.tuition} gold`}
+            </button>
+            <button
+              disabled={disabled}
+              onClick={() => send({ type: "train", accept: false })}
+            >
+              Walk on
+            </button>
+          </>
+        )}
+      </div>
+    </>
   );
 }
 export function Upgrade({ s, send, disabled }: Props) {

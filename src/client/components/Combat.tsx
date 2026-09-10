@@ -41,7 +41,7 @@ export function Combat({
       pop: shows && b.amount !== undefined ? `${sign}${b.amount}` : undefined,
     };
   };
-  const list = abilities(me.heroId, s.combatVersion, me.upgrades);
+  const list = abilities(me.heroId, s.combatVersion, me.upgrades, me.evolution);
   const [ability, setAbility] = useState(list[0].id);
   const [target, setTarget] = useState("");
   const chosen = list.find((a) => a.id === ability) ?? list[0];

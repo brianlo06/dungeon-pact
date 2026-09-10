@@ -1968,3 +1968,49 @@ small {
 :root[data-motion="reduced"] .combat-field.jolt {
   animation: none;
 }
+
+/* ── Mentor ────────────────────────────────────────────────────────────── */
+.mentor-body {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.mentor-offer,
+.mentor-terms {
+  background: var(--panel);
+  border: 3px solid var(--ink);
+  box-shadow:
+    inset 0 2px #645166,
+    4px 5px #17141e;
+  padding: 18px 20px;
+}
+.mentor-offer small {
+  font-family: var(--pixel);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--rust);
+}
+.mentor-offer h2 {
+  font-family: var(--pixel);
+  font-size: 20px;
+  margin: 6px 0 10px;
+  color: #f0d3a0;
+}
+.mentor-stats {
+  font-family: var(--pixel);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #8fd3b8;
+}
+.mentor-terms h3 {
+  font-family: var(--pixel);
+  font-size: 22px;
+  color: var(--gold);
+  margin: 6px 0 10px;
+}
+@media (max-width: 780px) {
+  .mentor-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
