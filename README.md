@@ -35,6 +35,9 @@ Guest lobby → 8 hero choices → starting pact → 7-depth Foundry route → c
 
 ## Documents
 
+Start with the [Handoff](docs/HANDOFF.md) for current state and what to do next.
+
+- [Handoff](docs/HANDOFF.md)
 - [Game design](docs/GAME_DESIGN.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Content system](docs/CONTENT_SYSTEM.md)
