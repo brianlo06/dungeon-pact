@@ -7,18 +7,28 @@ export function UnitCard({
   onClick,
   locked,
   connected = true,
+  hp,
+  impact,
+  pop,
+  acting,
 }: {
   unit: Unit;
   selected?: boolean;
   onClick?: () => void;
   locked?: boolean;
   connected?: boolean;
+  /** Replay health. Falls back to the settled value once a round has landed. */
+  hp?: number;
+  impact?: "damage" | "heal" | "block" | "combo" | "defeat" | null;
+  pop?: string;
+  acting?: boolean;
 }) {
   const player = "heroId" in unit ? (unit as Player) : null;
   const enemy = "definition" in unit ? (unit as Enemy) : null;
+  const shown = hp ?? unit.hp;
   return (
     <button
-      className={`unit ${selected ? "selected" : ""} ${unit.hp <= 0 ? "downed" : ""} ${player ? "hero-" + player.heroId : "enemy"}`}
+      className={`unit ${selected ? "selected" : ""} ${shown <= 0 ? "downed" : ""} ${player ? "hero-" + player.heroId : "enemy"} ${impact ? "impact impact-" + impact : ""} ${acting ? "acting" : ""}`}
       onClick={onClick}
       aria-pressed={selected}
     >
@@ -45,16 +55,23 @@ export function UnitCard({
         </small>
       )}
       <span className="health">
-        <span style={{ width: `${(unit.hp / unit.maxHp) * 100}%` }} />
+        <span
+          style={{ width: `${Math.max(0, (shown / unit.maxHp) * 100)}%` }}
+        />
       </span>
       <span className="hp-label">
-        {unit.hp} / {unit.maxHp} HP{" "}
+        {shown} / {unit.maxHp} HP{" "}
         {player && unit.hp <= 0
           ? player.fallen
             ? "· Spirit"
             : `· Downed ${player.downedRounds}`
           : ""}
       </span>
+      {pop && (
+        <span className={`pop pop-${impact ?? "damage"}`} aria-hidden="true">
+          {pop}
+        </span>
+      )}
       <span className="status-list">
         {unit.statuses.map((s) => (
           <span

@@ -283,7 +283,12 @@ export function resolveRound(s: RunState) {
         : a.target === "allyRow"
           ? standing(s).filter((x) => x.row === target.row)
           : [target];
-    log(s, `${p.name} casts ${a.name}.`);
+    log(s, `${p.name} casts ${a.name}.`, "info", {
+      kind: "cast",
+      actor: p.id,
+      target: plan.target,
+      label: a.name,
+    });
     for (const t of targets) {
       effects(s, p, t, cast.effects);
       if (a.effects.some((e) => e.kind === "damage"))
@@ -318,7 +323,12 @@ export function resolveRound(s: RunState) {
         continue;
       }
       t = side[0];
-      log(s, `${e.name} turns its ${a.name} on its own side!`, "combo");
+      log(s, `${e.name} turns its ${a.name} on its own side!`, "combo", {
+        kind: "combo",
+        label: "BEGUILED",
+        actor: e.id,
+        target: t.id,
+      });
     }
     if (!t) continue;
     const pool = turned
@@ -330,7 +340,12 @@ export function resolveRound(s: RunState) {
         : standing(s);
     const targets =
       a.target === "enemyRow" ? pool.filter((p) => p.row === t!.row) : [t];
-    log(s, `${e.name}: ${a.name}.`);
+    log(s, `${e.name}: ${a.name}.`, "info", {
+      kind: "cast",
+      actor: e.id,
+      target: t.id,
+      label: a.name,
+    });
     for (const target of targets) {
       const before = target.hp;
       effects(s, e, target, a.effects);

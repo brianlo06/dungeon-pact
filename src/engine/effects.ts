@@ -1,4 +1,5 @@
 import type {
+  Beat,
   RunState,
   Unit,
   Player,
@@ -22,8 +23,9 @@ export function log(
   s: RunState,
   text: string,
   kind: RunState["logs"][number]["kind"] = "info",
+  beat?: Beat,
 ) {
-  s.logs.push({ seq: ++s.eventSeq, text, kind });
+  s.logs.push({ seq: ++s.eventSeq, text, kind, ...(beat ? { beat } : {}) });
   s.logs = s.logs.slice(-100);
 }
 export function spend(s: RunState, amount: number) {
@@ -79,14 +81,32 @@ function hurt(
     barrier.stacks -= blocked;
     n -= blocked;
     target.statuses = target.statuses.filter((x) => x.stacks > 0);
-    if (blocked) log(s, `${target.name} blocks ${blocked}.`);
+    if (blocked)
+      log(s, `${target.name} blocks ${blocked}.`, "info", {
+        kind: "block",
+        actor: source.id,
+        target: target.id,
+        amount: blocked,
+        hp: target.hp,
+      });
   }
   const actual = Math.min(target.hp, n);
   target.hp -= actual;
   if (isPlayer(source)) source.damage += actual;
-  log(s, `${source.name} → ${target.name}: ${actual} damage`, "damage");
+  log(s, `${source.name} → ${target.name}: ${actual} damage`, "damage", {
+    kind: "damage",
+    actor: source.id,
+    target: target.id,
+    amount: actual,
+    hp: target.hp,
+  });
   if (target.hp === 0) {
-    log(s, `${target.name} is ${isPlayer(target) ? "downed" : "defeated"}.`);
+    log(
+      s,
+      `${target.name} is ${isPlayer(target) ? "downed" : "defeated"}.`,
+      "info",
+      { kind: "defeat", target: target.id, hp: 0 },
+    );
     if (isPlayer(target)) target.downedRounds = 3;
     else if (isPlayer(source)) trigger(s, source, target, "onKill", depth + 1);
   }
@@ -160,6 +180,12 @@ export function effects(
         s,
         `${actor.name} breaks ${target.name}’s ${target.intent.ability.name}!`,
         "combo",
+        {
+          kind: "combo",
+          label: "INTERRUPTED",
+          actor: actor.id,
+          target: target.id,
+        },
       );
     }
     if (e.kind === "gold") {
@@ -193,7 +219,13 @@ export function effects(
         if (isPlayer(actor) && actor.id !== patient.id) actor.revives++;
         log(s, `${patient.name} returns to the pact!`);
       }
-      log(s, `${actor.name} heals ${patient.name} for ${healed}.`, "heal");
+      log(s, `${actor.name} heals ${patient.name} for ${healed}.`, "heal", {
+        kind: "heal",
+        actor: actor.id,
+        target: patient.id,
+        amount: healed,
+        hp: patient.hp,
+      });
     }
     // A blood cost is paid flat: no power scaling, no armour, no combos.
     if (e.kind === "damage" && e.self) {
@@ -221,6 +253,12 @@ export function effects(
             s,
             `${protector.name} intercepts the hit meant for ${target.name}!`,
             "combo",
+            {
+              kind: "combo",
+              label: "INTERCEPT",
+              actor: protector.id,
+              target: target.id,
+            },
           );
         }
       }
@@ -234,12 +272,22 @@ export function effects(
       if (e.precision && status(victim, "marked")) {
         amount += EXPLOIT;
         victim.statuses = victim.statuses.filter((x) => x.id !== "marked");
-        log(s, "EXPLOIT · Mark + Precision", "combo");
+        log(s, "EXPLOIT · Mark + Precision", "combo", {
+          kind: "combo",
+          label: "EXPLOIT",
+          actor: actor.id,
+          target: victim.id,
+        });
       }
       const chain = e.damageType === "lightning" && status(victim, "wet");
       if (chain) {
         victim.statuses = victim.statuses.filter((x) => x.id !== "wet");
-        log(s, "CHAIN SHOCK · Wet + Lightning", "combo");
+        log(s, "CHAIN SHOCK · Wet + Lightning", "combo", {
+          kind: "combo",
+          label: "CHAIN SHOCK",
+          actor: actor.id,
+          target: victim.id,
+        });
       }
       hurt(s, actor, victim, Math.max(1, amount), depth);
       if (chain) {

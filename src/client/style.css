@@ -156,8 +156,8 @@ small {
   flex-shrink: 0;
   width: 128px;
   height: 128px;
-  background-image: url("/art/characters-v1.png");
-  background-size: 400% 400%;
+  background-image: var(--sprite-atlas, url("/art/characters-v1.png"));
+  background-size: var(--sprite-size, 400% 400%);
   background-position: var(--sprite-x) var(--sprite-y);
   background-repeat: no-repeat;
   image-rendering: pixelated;
@@ -1767,16 +1767,221 @@ small {
    borrowed atlas cell; replacing them with real cells removes these rules. */
 /* Normalising through sepia first keeps the shift predictable: a plain
    hue-rotate drags the atlas's reds into magenta. */
-.sprite-reaver {
+.sprite-borrowed.sprite-reaver {
   filter: sepia(0.4) saturate(3.2) hue-rotate(-24deg) brightness(0.92)
     contrast(1.08);
 }
-.sprite-herald {
+.sprite-borrowed.sprite-herald {
   filter: sepia(0.45) saturate(2) hue-rotate(2deg) brightness(1.12);
 }
-.sprite-beguiler {
+.sprite-borrowed.sprite-beguiler {
   filter: hue-rotate(72deg) saturate(1.3);
 }
-.sprite-broker {
+.sprite-borrowed.sprite-broker {
   filter: sepia(0.6) saturate(2.4) hue-rotate(-14deg) brightness(1.06);
+}
+
+/* ── Round playback ────────────────────────────────────────────────────────
+   A resolved round arrives from the server all at once. These rules give it
+   beats: the actor is spotlit, the move announces itself, the target reacts.
+   Everything is short and overshoots slightly; nothing lingers. All of it is
+   disabled under reduced motion, where playback is skipped entirely. */
+.combat-field {
+  position: relative;
+}
+.combat-field.replaying .unit {
+  transition:
+    filter 0.12s steps(2, end),
+    opacity 0.12s steps(2, end);
+}
+.combat-field.replaying .unit:not(.acting):not(.impact) {
+  filter: brightness(0.62) saturate(0.7);
+}
+.combat-field.jolt {
+  animation: jolt 0.22s steps(3, end);
+}
+@keyframes jolt {
+  0% {
+    transform: translate(0, 0);
+  }
+  30% {
+    transform: translate(-5px, 3px);
+  }
+  60% {
+    transform: translate(4px, -2px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+.beat-layer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 5;
+}
+.callout {
+  text-align: left;
+  padding: 10px 22px 10px 16px;
+  background: var(--ink);
+  border: 3px solid var(--gold);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.55);
+  transform: skewX(-8deg);
+  animation: callout-in 0.5s steps(4, end);
+}
+.callout small {
+  display: block;
+  font-family: var(--pixel);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--rust);
+}
+.callout strong {
+  display: block;
+  font-family: var(--pixel);
+  font-size: 19px;
+  letter-spacing: 1px;
+  color: var(--cream);
+  text-shadow: 3px 3px 0 #000;
+}
+@keyframes callout-in {
+  0% {
+    opacity: 0;
+    transform: skewX(-8deg) translateX(-70px) scale(0.85);
+  }
+  35% {
+    opacity: 1;
+    transform: skewX(-8deg) translateX(8px) scale(1.06);
+  }
+  70% {
+    opacity: 1;
+    transform: skewX(-8deg) translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: skewX(-8deg) translateX(24px) scale(1);
+  }
+}
+.combo-banner {
+  font-family: var(--pixel);
+  font-size: 24px;
+  letter-spacing: 3px;
+  color: var(--ink);
+  background: var(--gold);
+  padding: 8px 26px;
+  border: 3px solid var(--ink);
+  transform: skewX(-10deg);
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.6);
+  animation: banner-in 0.6s steps(5, end);
+}
+.combo-banner.defeat {
+  background: var(--rust);
+  color: var(--cream);
+}
+@keyframes banner-in {
+  0% {
+    opacity: 0;
+    transform: skewX(-10deg) scale(0.4);
+  }
+  30% {
+    opacity: 1;
+    transform: skewX(-10deg) scale(1.18);
+  }
+  65% {
+    transform: skewX(-10deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: skewX(-10deg) scale(1.05);
+  }
+}
+.unit.acting {
+  filter: brightness(1.2);
+  outline: 2px solid var(--gold);
+  outline-offset: -2px;
+}
+.unit.impact {
+  animation: impact-shake 0.24s steps(3, end);
+}
+.unit.impact-damage {
+  background-image: linear-gradient(
+    rgba(199, 108, 80, 0.45),
+    rgba(199, 108, 80, 0)
+  );
+}
+.unit.impact-heal {
+  background-image: linear-gradient(
+    rgba(127, 176, 166, 0.45),
+    rgba(127, 176, 166, 0)
+  );
+}
+.unit.impact-block,
+.unit.impact-combo {
+  background-image: linear-gradient(
+    rgba(238, 184, 96, 0.45),
+    rgba(238, 184, 96, 0)
+  );
+}
+@keyframes impact-shake {
+  0% {
+    transform: translateX(0);
+  }
+  33% {
+    transform: translateX(-4px);
+  }
+  66% {
+    transform: translateX(3px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+.pop {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-family: var(--pixel);
+  font-size: 17px;
+  color: var(--rust);
+  text-shadow: 2px 2px 0 #000;
+  animation: pop-up 0.5s steps(4, end);
+  pointer-events: none;
+}
+.pop-heal {
+  color: #8fd3b8;
+}
+.pop-block {
+  color: var(--gold);
+}
+@keyframes pop-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.7);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.25);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-22px) scale(1);
+  }
+}
+.skip-replay {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 6;
+  font-family: var(--pixel);
+  font-size: 9px;
+  padding: 6px 10px;
+}
+:root[data-motion="reduced"] .callout,
+:root[data-motion="reduced"] .combo-banner,
+:root[data-motion="reduced"] .pop,
+:root[data-motion="reduced"] .unit.impact,
+:root[data-motion="reduced"] .combat-field.jolt {
+  animation: none;
 }

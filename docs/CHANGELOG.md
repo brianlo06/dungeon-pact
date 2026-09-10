@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5 combat presentation — 2026-09-10
+
+- Added round playback. The engine resolved a whole round in one message and the client snapped to the aftermath, so a fight had no moments in it. Rounds now replay as timed beats: the acting unit is spotlit while the board dims, the move announces itself as a skewed callout, targets flash and shake, floating numbers rise off them, and reactions get a full-width banner.
+- Added structured `beat` data to the chronicle — actor, target, label, amount and resulting health — so playback animates accurately instead of parsing prose. Tests assert beats name real units and settle on the health the round actually reached.
+- Long rounds scale their step timing down so replay never exceeds about four seconds, and a Skip control is always available. Reduced motion disables replay entirely; the chronicle still carries every event in text, so animation is never load-bearing for information.
+- Impacts layer a filtered noise burst under the tone cue. A pure oscillator read as beeping rather than hitting.
+- Influences taken from Persona's turn presentation — typography, layout, colour and animation carrying the theme rather than new mechanics, every action on its own button with no scrolling — expressed in this game's pixel palette.
+- `Sprite.tsx` now supports a second atlas. Producing `public/art/characters-v2.png` and filling in one constant is the whole integration for real class art; the borrowed cells and palette filters then stop being used automatically. ART_DIRECTION.md carries the exact cell manifest and style constraints to generate against.
+
 ## 0.4 eight classes — 2026-09-10
 
 - Added four classes, doubling the roster. **Broker** bills the shared treasury for damage and shields and earns gold back by fighting; **Herald** empowers itself and an ally, shields whole rows and clears afflictions; **Reaver** pays HP for armour-piercing damage and drags back-row enemies to the front; **Beguiler** turns an enemy's next action against its own side.

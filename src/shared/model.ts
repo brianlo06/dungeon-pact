@@ -172,10 +172,25 @@ export interface Auction {
    * Never sent to clients: it would name a concealed lot. */
   offered?: string[];
 }
+/**
+ * A structured moment inside a resolved round. The chronicle already narrated
+ * combat in prose; beats let the client replay it as timed animation with
+ * accurate health, instead of snapping straight to the settled state.
+ */
+export interface Beat {
+  kind: "cast" | "damage" | "heal" | "block" | "combo" | "defeat";
+  actor?: string;
+  target?: string;
+  label?: string;
+  amount?: number;
+  /** The target's health after this beat, so playback can animate bars. */
+  hp?: number;
+}
 export interface GameLog {
   seq: number;
   text: string;
   kind: "info" | "damage" | "heal" | "combo" | "gold";
+  beat?: Beat;
 }
 export interface RunState {
   /** Missing means legacy random formations; new rooms use authored v2 packs. */

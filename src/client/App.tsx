@@ -198,7 +198,13 @@ export default function App() {
             {s.phase === "LOBBY" && <Lobby {...props!} />}{" "}
             {s.phase === "PACT" && <Pact {...props!} />}{" "}
             {s.phase === "MAP" && <DungeonMap {...props!} />}{" "}
-            {s.phase === "COMBAT" && <Combat key={s.currentNode} {...props!} />}{" "}
+            {s.phase === "COMBAT" && (
+              <Combat
+                key={s.currentNode}
+                {...props!}
+                reducedMotion={settings.reducedMotion}
+              />
+            )}{" "}
             {s.phase === "AUCTION" && <Auction {...props!} />}{" "}
             {s.phase === "EVENT" && <EventRoom {...props!} />}{" "}
             {s.phase === "CAMP" && <Camp {...props!} />}{" "}
