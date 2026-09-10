@@ -105,3 +105,42 @@ it("keeps paths out of legacy saves", () => {
   const kit = abilities("vanguard", undefined, [], "van-breaker");
   expect(kit.find((a) => a.id === "slam")!.name).toBe("Foundry slam");
 });
+
+/**
+ * The route used to link every node to every node on the next layer, so a
+ * choice never closed anything off and the map drew as a solid mesh.
+ */
+it("branches the route instead of linking every node to every node", () => {
+  for (const seed of ["route-a", "route-b", "route-c"]) {
+    const map = generateMap(createRun("MAP", seed));
+    const byDepth = (d: number) => map.filter((n) => n.depth === d);
+    for (let d = 0; d < 6; d++) {
+      const row = byDepth(d);
+      const below = byDepth(d + 1);
+      // Nobody dead-ends, and every chamber below is reachable from some
+      // chamber above.
+      for (const n of row) expect(n.next.length).toBeGreaterThan(0);
+      const reached = new Set(row.flatMap((n) => n.next));
+      expect(reached.size).toBe(below.length);
+      // Links never cross: a node's targets are a contiguous run of lanes.
+      for (const n of row) {
+        const lanes = n.next.map((id) => below.findIndex((x) => x.id === id));
+        expect(Math.max(...lanes) - Math.min(...lanes)).toBe(lanes.length - 1);
+      }
+    }
+    // Somewhere a choice must actually close something off.
+    expect(map.some((n) => n.next.length < byDepth(n.depth + 1).length)).toBe(
+      true,
+    );
+  }
+});
+
+it("never names two chambers on one route the same thing", () => {
+  for (const seed of ["names-a", "names-b", "names-c"]) {
+    const map = generateMap(createRun("MAP", seed));
+    for (const type of ["combat", "elite", "event"]) {
+      const names = map.filter((n) => n.type === type).map((n) => n.name);
+      expect(new Set(names).size).toBe(names.length);
+    }
+  }
+});

@@ -158,16 +158,45 @@ export function Pact(props: Props) {
 export function DungeonMap(props: Props) {
   const { s } = props;
   const current = s.map.find((n) => n.id === s.currentNode);
-  const icons = {
+  const icons: Record<string, string> = {
     combat: "sword",
     elite: "skull",
     auction: "gavel",
     mystery: "gem",
     event: "question",
     camp: "fire",
-    mentor: "leaf",
+    mentor: "book",
     boss: "crown",
   };
+  const label: Record<string, string> = {
+    mystery: "VEILED LOT",
+    mentor: "TRAINING",
+    auction: "EXCHANGE",
+  };
+  const depth = Math.max(0, ...s.map.map((n) => n.depth)) + 1;
+  const rows = Array.from({ length: depth }, (_, d) =>
+    s.map.filter((n) => n.depth === d),
+  );
+  /** Route geometry in percentages, so the links line up with the grid. */
+  const at = (id: string) => {
+    const node = s.map.find((n) => n.id === id)!;
+    const row = rows[node.depth];
+    const lane = row.findIndex((x) => x.id === id);
+    return {
+      x: ((lane + 0.5) / row.length) * 100,
+      y: ((node.depth + 0.5) / depth) * 100,
+    };
+  };
+  const links = s.map.flatMap((n) =>
+    n.next.map((id) => ({
+      key: `${n.id}>${id}`,
+      from: at(n.id),
+      to: at(id),
+      // Before the first move the entry chamber is where the party stands.
+      live: current ? current.id === n.id : n.depth === 0,
+      walked: n.visited && s.map.find((x) => x.id === id)!.visited,
+    })),
+  );
   return (
     <>
       <div className="section-heading">
@@ -177,57 +206,64 @@ export function DungeonMap(props: Props) {
           <p>The furnace still burns. Choose your next chamber together.</p>
         </div>
         <span className="badge">
-          {s.map.filter((n) => n.visited).length} / 7 chambers
+          {s.map.filter((n) => n.visited).length} / {depth} chambers
         </span>
       </div>
-      <div className="map-trail">
-        {Array.from({ length: 7 }, (_, depth) => (
-          <div className="map-layer" key={depth}>
-            <small className="map-depth">
-              {String(depth + 1).padStart(2, "0")}
-            </small>
-            {s.map
-              .filter((n) => n.depth === depth)
-              .map((n) => {
-                const available = current
-                  ? current.next.includes(n.id)
-                  : depth === 0;
+      <div className="map-route">
+        <svg
+          className="map-links"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          {links.map((l) => (
+            <line
+              key={l.key}
+              x1={l.from.x}
+              y1={l.from.y}
+              x2={l.to.x}
+              y2={l.to.y}
+              vectorEffect="non-scaling-stroke"
+              className={l.live ? "live" : l.walked ? "walked" : ""}
+            />
+          ))}
+        </svg>
+        <div className="map-grid">
+          {rows.map((row, d) => (
+            <div className="map-row" key={d}>
+              <small className="map-depth">
+                {String(d + 1).padStart(2, "0")}
+              </small>
+              {row.map((n) => {
+                const open = current ? current.next.includes(n.id) : d === 0;
+                const here = current?.id === n.id;
+                const votes = Object.values(s.votes).filter(
+                  (v) => v === n.id,
+                ).length;
                 return (
                   <button
-                    className={`map-node ${available ? "available" : ""} ${n.visited ? "visited" : ""} ${s.votes[s.you] === n.id ? "selected" : ""}`}
-                    disabled={!available || props.disabled || !!s.votes[s.you]}
+                    className={`map-node type-${n.type} ${open ? "open" : ""} ${n.visited ? "walked" : ""} ${here ? "here" : ""} ${s.votes[s.you] === n.id ? "picked" : ""}`}
+                    disabled={!open || props.disabled || !!s.votes[s.you]}
                     key={n.id}
                     onClick={() => props.send({ type: "vote", choice: n.id })}
                   >
-                    <PixelIcon name={icons[n.type]} />
-                    <div>
-                      <small>
-                        {n.type === "mystery"
-                          ? "MYSTERY AUCTION"
-                          : n.type === "mentor"
-                            ? "TRAINING"
-                            : n.type.toUpperCase()}
-                      </small>
-                      <strong>{n.name}</strong>
-                    </div>
-                    {n.visited ? (
-                      <em>✓</em>
-                    ) : available ? (
-                      <em>
-                        {
-                          Object.values(s.votes).filter((v) => v === n.id)
-                            .length
-                        }{" "}
-                        votes →
-                      </em>
-                    ) : (
-                      <em>◇</em>
+                    <span className="map-glyph">
+                      <PixelIcon name={here ? "pin" : icons[n.type]} />
+                    </span>
+                    <small>{label[n.type] ?? n.type.toUpperCase()}</small>
+                    <strong>{n.name}</strong>
+                    {votes > 0 && (
+                      <span className="map-votes">
+                        {"●".repeat(votes)}
+                        <em>{votes} for this</em>
+                      </span>
                     )}
                   </button>
                 );
               })}
-          </div>
-        ))}
+            </div>
+          ))}
+        </div>
       </div>
     </>
   );

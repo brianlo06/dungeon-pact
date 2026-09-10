@@ -9,6 +9,10 @@ const shapes: Record<string, string> = {
   question: "M3 1h8v2h2v6H9v2H7V7h4V3H5v2H3zM7 13h2v2H7z",
   gavel: "M7 1h6v2h2v4h-2v2H7V7H5V3h2zM5 7h2v4H5v2H3v2H1v-4h2V9h2z",
   leaf: "M9 1h6v6h-2v4H9v2H5v2H1v-2h2V9h2V5h4zM5 9h2V7h2V5h2v2H9v2H7v2H5z",
+  // Training: a book, so a mentor node cannot be mistaken for a fight.
+  book: "M1 2h6v1h2V2h6v11h-6v1H7v-1H1zM3 4v7h4V4zM9 4v7h4V4z",
+  // The party's position on the route.
+  pin: "M5 1h6v2h2v6h-2v2H9v4H7v-4H5V9H3V3h2zM7 4v4h2V4z",
 };
 export function PixelIcon({
   name,

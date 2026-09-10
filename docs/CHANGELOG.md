@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8 the route — 2026-09-10
+
+- Rebuilt the dungeon map. It was a stacked list of wide rows with one dashed line down the middle that connected nothing; it now draws as a branching descent with links stroked between the chambers they actually join, reachable chambers lit while the rest recede, a pin on the party's position, and the whole route on one screen ending at the vault.
+- Fixed the underlying reason it never read as a map: every chamber linked to every chamber on the next layer, so a route choice closed nothing off. Each chamber now feeds a contiguous span of the layer below — taking the Gilded Exchange can put the Whetstone out of reach for the run. Every chamber stays reachable by some route and none dead-ends, both asserted by regression.
+- Gave mentors their own icon. Training, combat and the veiled lot were all rendering as near-identical shapes.
+- Chamber names are drawn without replacement, so one route no longer contains two Wounded Smiths, and the auction, elite and camp pools gained more names.
+
 ## 0.7 class paths — 2026-09-10
 
 - Added class evolutions. Three mentors sit on the route at different depths — the Whetstone, the Reliquary and the Cipher — each teaching exactly one path to each of the eight classes, for 24 paths. A route visits one node per depth, so no run reaches all three and which paths were on offer differs between runs.
