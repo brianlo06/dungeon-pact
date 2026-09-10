@@ -6,11 +6,13 @@ Updated 2026-09-10
 
 POST `/api/rooms` returns an eight-character room code. POST `/api/rooms/:code/join` with `{name}` returns `{room,player,token}`. Guests need no signup. Names trim and validate at 1–24 characters. Room capacity is four, joining is lobby-only. The token is a 256-bit bearer; store on the device, do not share in invite links. Invite URL contains only the room code.
 
-Connect to `/api/rooms/:code/socket` with subprotocols `['pact-v1', token]`. Server selects `pact-v1`. Same-origin is enforced. Connection replacement uses close 4001; old tabs must stop retrying. Normal disconnects retry with exponential backoff capped at ten seconds. `ping` → `pong` uses the platform's hibernation auto-response every 20 seconds. Heartbeat timeout detection still needs implementation.
+Connect to `/api/rooms/:code/socket` with subprotocols `['pact-v1', token]`. Server selects `pact-v1`. Same-origin is enforced. Connection replacement uses close 4001; old tabs must stop retrying. Normal disconnects retry with exponential backoff capped at ten seconds. `ping` → `pong` uses the platform's hibernation auto-response every 20 seconds, so a tab left open never wakes the room; liveness is therefore judged by commands, not by pings. A socket that has issued no command for 45 minutes is closed with 4002 and may reconnect immediately.
 
 ## Client commands
 
-`{version:1,id:UUID,revision:integer,intent:{type,...}}`
+`{version:1,id:UUID,revision:integer,epoch:string,intent:{type,...}}`
+
+`epoch` is the decision context the command was chosen in, derived by `epoch()` in `src/shared/protocol.ts` from facts both sides can see: phase, current node, combat round, auction lot/stage/round, event and mentor. `revision` is still carried and still acknowledged; it is no longer what decides acceptance.
 
 Intent union in `src/shared/protocol.ts`:
 
@@ -33,9 +35,19 @@ Log events have their own monotonic sequence IDs independent of room revisions. 
 
 ## Concurrency semantics
 
-Commands require exact current revision. Two commands racing on the same revision yield one accepted command and one STALE rejection, even if both would be semantically independent. This conservative initial rule prevents old clicks affecting a newly entered phase. The rejected player reviews and retries; the client does not blindly replay on the new revision. Later allow commuting actions using explicit phase/round epochs, while retaining strict auction settlement revision checks.
+A command is accepted when its `epoch` matches the room's. An epoch changes only when the thing being decided changes: the round resolves, the lot or its stage moves on, the phase ends. Two heroes locking plans in the same round, or answering the same vote at the same instant, are deciding about the same moment, so both are accepted.
 
-Duplicate accepted IDs return the original acknowledgement and latest snapshot. They do not reapply effects. State and receipt share one SQLite transaction. Duplicate handling occurs before revision validation. Receipts are per-player, so a second player cannot hijack the first player's request ID.
+This replaces exact-revision matching, which treated every accepted command as invalidating every other. Under that rule the second of two simultaneous lock-ins was rejected as stale and had to be re-sent, which is the single most likely thing to frustrate a table playing together.
+
+Safety does not come from the epoch. Every handler in `reduce` guards its own idempotency — a vote already cast, a plan already locked, a lot already revealed, a mentor already answered are each refused on their own terms — so a duplicate or racing command cannot double-spend even when its epoch is current. The epoch's only job is to refuse a decision made about a moment that has passed.
+
+Duplicate accepted IDs return the original acknowledgement and latest snapshot. They do not reapply effects. State and receipt share one SQLite transaction. Duplicate handling occurs before epoch validation. Receipts are per-player, so a second player cannot hijack the first player's request ID.
+
+## Retention and limits
+
+A room is a scratch space, not an archive: it holds guest names and one run, and expiry deletes rather than archives. The room wakes on a half-hourly alarm and enforces three timers — sockets idle 45 minutes are closed, a finished run is deleted two hours after it ends, and any room untouched for 24 hours is deleted outright. Deletion drops the run, the sessions and the receipts together; nothing is kept.
+
+Room creation is limited to twelve per address per hour, counted by a limiter instance addressed as `limiter:<ip>` — a name no room code can take, since codes are eight characters from a fixed alphabet. Callers over the limit get 429. Behind a proxy that does not set `cf-connecting-ip` the whole origin shares one bucket.
 
 ## Information boundary
 
@@ -43,7 +55,7 @@ Snapshot omits seed until results, RNG state, selected concealed item ID and oth
 
 ## Verified and pending
 
-Real local WebSockets verify two-player create/join/start, concurrent stale rejection, duplicate receipt acknowledgement, resync and reconnect. Additional release gates: four physical devices, Worker restart smoke, network interruption duration, long session soak, schema fuzzing, room retention and public creation rate limits.
+Real local WebSockets verify two-player create/join/start, simultaneous decisions being accepted where they once collided, a passed moment still being refused, duplicate receipt acknowledgement, resync and reconnect. Room retention, idle disconnection and creation limits are implemented but are **verified only by their unit-level rules** — none of the three timers has been watched fire against a live Worker, because each is measured in hours. Remaining release gates: four physical devices, Worker restart smoke, network interruption duration, long session soak, schema fuzzing, and observing the retention alarms actually run.
 
 Browser QA also verified duplicate-tab takeover: the replacement tab recovered combat round 2 and the original displayed its superseded-connection overlay.
 

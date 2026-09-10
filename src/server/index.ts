@@ -1,10 +1,25 @@
 import { DurableObject } from "cloudflare:workers";
 import { validateContent } from "../content/validate";
 validateContent();
-import { commandSchema, joinSchema } from "../shared/protocol";
+import { commandSchema, joinSchema, epoch } from "../shared/protocol";
 import type { RunState } from "../shared/model";
 import { createRun, addPlayer, reduce, snapshot } from "../engine/game";
 type Session = { player: string; hash: string; connection: string };
+/**
+ * Retention. A room is a scratch space, not an archive: it holds guest names
+ * and a run, and both are deleted rather than kept. A finished run is cleared
+ * soon after the results screen; an unfinished one survives long enough to
+ * pick up the next day and no longer.
+ */
+const FINISHED_TTL = 2 * 60 * 60 * 1000;
+const ABANDONED_TTL = 24 * 60 * 60 * 1000;
+/** A socket that has issued no command for this long is closed and may reconnect. */
+const IDLE_TTL = 45 * 60 * 1000;
+/** How often the room wakes to enforce the three timers above. */
+const SWEEP = 30 * 60 * 1000;
+/** New rooms allowed from one address per hour. */
+const CREATION_LIMIT = 12;
+const CREATION_WINDOW = 60 * 60 * 1000;
 interface Attachment {
   player: string;
   connection: string;
@@ -36,6 +51,14 @@ export class PactRoom extends DurableObject<Env> {
     ctx.storage.sql.exec(
       "CREATE TABLE IF NOT EXISTS receipts (player TEXT, id TEXT, revision INTEGER, PRIMARY KEY(player,id))",
     );
+    ctx.storage.sql.exec(
+      "CREATE TABLE IF NOT EXISTS meta (id INTEGER PRIMARY KEY CHECK(id=1), touched INTEGER NOT NULL)",
+    );
+    ctx.storage.sql.exec(
+      "CREATE TABLE IF NOT EXISTS admissions (at INTEGER NOT NULL)",
+    );
+    // Keepalive is answered without waking the room, so liveness is judged by
+    // commands rather than by pings: a tab left open costs the room nothing.
     ctx.setWebSocketAutoResponse(
       new WebSocketRequestResponsePair("ping", "pong"),
     );
@@ -55,6 +78,68 @@ export class PactRoom extends DurableObject<Env> {
       "INSERT INTO run(id,state) VALUES(1,?) ON CONFLICT(id) DO UPDATE SET state=excluded.state",
       JSON.stringify(s),
     );
+  }
+  /** Records that the room is in use and makes sure the sweep is scheduled. */
+  private async touch() {
+    this.ctx.storage.sql.exec(
+      "INSERT INTO meta(id,touched) VALUES(1,?) ON CONFLICT(id) DO UPDATE SET touched=excluded.touched",
+      Date.now(),
+    );
+    if ((await this.ctx.storage.getAlarm()) === null)
+      await this.ctx.storage.setAlarm(Date.now() + SWEEP);
+  }
+  private touched() {
+    return (
+      this.ctx.storage.sql
+        .exec<{ touched: number }>("SELECT touched FROM meta WHERE id=1")
+        .toArray()[0]?.touched ?? 0
+    );
+  }
+  /**
+   * Closes idle sockets, and deletes the room once it is finished or
+   * abandoned. Everything a room holds is guest data with no home anywhere
+   * else, so expiry is a delete rather than an archive.
+   */
+  async alarm() {
+    const now = Date.now();
+    for (const ws of this.ctx.getWebSockets()) {
+      const a = ws.deserializeAttachment() as Attachment;
+      if (now - a.window > IDLE_TTL)
+        ws.close(4002, "Idle. Reconnect to rejoin.");
+    }
+    let state: RunState | null = null;
+    try {
+      state = this.read();
+    } catch {
+      state = null;
+    }
+    const idle = now - this.touched();
+    const done = state?.phase === "COMPLETE";
+    if (!state || idle > ABANDONED_TTL || (done && idle > FINISHED_TTL)) {
+      for (const ws of this.ctx.getWebSockets())
+        ws.close(4003, "This room has expired.");
+      await this.ctx.storage.deleteAll();
+      return;
+    }
+    await this.ctx.storage.setAlarm(now + SWEEP);
+  }
+  /**
+   * Room creation, rate limited per address. Called on a limiter instance
+   * rather than a room, so one caller cannot fill the namespace with rooms
+   * nobody ever joins.
+   */
+  async admit() {
+    const now = Date.now();
+    this.ctx.storage.sql.exec(
+      "DELETE FROM admissions WHERE at < ?",
+      now - CREATION_WINDOW,
+    );
+    const used = this.ctx.storage.sql
+      .exec<{ n: number }>("SELECT COUNT(*) AS n FROM admissions")
+      .toArray()[0].n;
+    if (used >= CREATION_LIMIT) return false;
+    this.ctx.storage.sql.exec("INSERT INTO admissions(at) VALUES(?)", now);
+    return true;
   }
   private connected() {
     return [
@@ -85,6 +170,7 @@ export class PactRoom extends DurableObject<Env> {
     if (this.ctx.storage.sql.exec("SELECT id FROM run").toArray().length)
       return false;
     this.save(createRun(room, token()));
+    await this.touch();
     return true;
   }
   async join(name: string) {
@@ -102,6 +188,7 @@ export class PactRoom extends DurableObject<Env> {
         "",
       );
     });
+    await this.touch();
     this.publish(s);
     return { player: id, token: bearer, room: s.room };
   }
@@ -194,11 +281,12 @@ export class PactRoom extends DurableObject<Env> {
         );
         return;
       }
-      if (cmd.revision !== s.revision) {
+      if (cmd.epoch !== epoch(s)) {
         ws.send(
           JSON.stringify({
             type: "error",
-            message: "The room changed. Review the latest state and try again.",
+            message:
+              "The room moved on. Review the latest state and try again.",
             code: "STALE",
           }),
         );
@@ -228,6 +316,7 @@ export class PactRoom extends DurableObject<Env> {
         JSON.stringify({ type: "ack", id: cmd.id, revision: next.revision }),
       );
       this.publish(next);
+      void this.touch();
     } catch (e) {
       ws.send(
         JSON.stringify({
@@ -254,6 +343,13 @@ export default {
       return new Response("Origin rejected", { status: 403 });
     try {
       if (url.pathname === "/api/rooms" && request.method === "POST") {
+        // One limiter instance per address, addressed by a name no room code
+        // can take: room codes are eight characters from a fixed alphabet.
+        const caller = request.headers.get("cf-connecting-ip") ?? "local";
+        if (!(await env.ROOMS.getByName(`limiter:${caller}`).admit()))
+          return new Response("Too many rooms from this address.", {
+            status: 429,
+          });
         const code = Array.from(
           crypto.getRandomValues(new Uint8Array(8)),
           (b) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 32],

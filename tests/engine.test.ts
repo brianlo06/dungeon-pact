@@ -232,6 +232,7 @@ describe("authoritative rules", () => {
       version: 1,
       id: crypto.randomUUID(),
       revision: 0,
+      epoch: "LOBBY||0|||",
       intent: { type: "ready", ready: true },
     };
     expect(commandSchema.safeParse(command).success).toBe(true);

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import WebSocket from "ws";
 import type { Snapshot } from "../src/shared/model";
+import { epoch } from "../src/shared/protocol";
 import type { Intent, Command } from "../src/shared/protocol";
 import { abilities } from "../src/content/heroes";
 import { upgradeOffer } from "../src/content/upgrades";
@@ -51,6 +52,7 @@ class Client {
       version: 1,
       id: crypto.randomUUID(),
       revision,
+      epoch: epoch(this.state),
       intent,
     };
     this.ws.send(JSON.stringify(cmd));
@@ -81,24 +83,39 @@ try {
   await a.wait(() => a.state.revision === b.state.revision);
   await a.send({ type: "start" });
   await b.wait(() => b.state.phase === "PACT");
+  // Both heroes answer the same question at the same instant. Under exact
+  // revision matching the second was rejected as stale and had to re-send;
+  // under decision epochs both are decisions about the same moment, so both
+  // land and the pact is chosen in one exchange.
   const rev = a.state.revision;
+  const moment = epoch(a.state);
   for (const c of [a, b])
     c.ws.send(
       JSON.stringify({
         version: 1,
         id: crypto.randomUUID(),
         revision: rev,
+        epoch: moment,
         intent: { type: "vote", choice: "wealth" },
       }),
     );
-  await a.wait(() =>
-    [...a.messages, ...b.messages].some((m) => m.code === "STALE"),
-  );
-  assert.equal(a.state.revision, rev + 1);
-  const missing = a.state.votes[one.player] ? b : a;
-  await missing.wait(() => missing.state.revision === rev + 1);
-  await missing.send({ type: "vote", choice: "wealth" });
   await a.wait(() => a.state.phase === "MAP");
+  assert.equal(a.state.revision, rev + 2);
+  assert.ok(
+    ![...a.messages, ...b.messages].some((m) => m.code === "STALE"),
+    "simultaneous decisions in one moment must not collide",
+  );
+  // A decision made against a moment that has passed is still refused.
+  a.ws.send(
+    JSON.stringify({
+      version: 1,
+      id: crypto.randomUUID(),
+      revision: a.state.revision,
+      epoch: moment,
+      intent: { type: "vote", choice: "wealth" },
+    }),
+  );
+  await a.wait(() => a.messages.some((m) => m.code === "STALE"));
   const before = a.state;
   a.ws.close();
   resumed = new Client(one.token);
@@ -197,7 +214,7 @@ try {
         "authenticated snapshots",
         "ready/start",
         "duplicate command receipts",
-        "concurrent stale rejection",
+        "simultaneous decisions accepted, passed moment refused",
         "resync",
         "reconnect restores hero/gold/phase",
         "tactical encounter entry",
