@@ -326,15 +326,16 @@ export const evolutions: EvolutionDef[] = [
     ability: a(
       "mend",
       "Lifebind",
-      "Restore 30 HP, apply strong Regeneration and 10 Barrier.",
+      "Restore 36 HP, apply strong Regeneration and 10 Barrier. Once every other round.",
       "ally",
       [
-        { kind: "heal", amount: 30 },
+        { kind: "heal", amount: 36 },
         { kind: "status", status: "regen", stacks: 5, duration: 3 },
         { kind: "status", status: "barrier", stacks: 10, duration: 2 },
       ],
       2,
       3,
+      1,
     ),
   },
   {

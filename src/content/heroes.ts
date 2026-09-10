@@ -21,13 +21,17 @@ const a = (
   cooldown,
 });
 export const utility: Ability[] = [
+  // Every class can steady itself. Without this, scarce healing made the one
+  // healer more valuable rather than less, because nobody else had a substitute
+  // at all. It still costs the whole action, so defending stays a real choice.
   a(
     "brace",
     "Brace",
-    "Gain 14 Barrier and recover 2 resource.",
+    "Gain 14 Barrier, heal 8 and recover 2 resource.",
     "self",
     [
       { kind: "status", status: "barrier", stacks: 14, duration: 2 },
+      { kind: "heal", amount: 8, self: true },
       { kind: "resource", amount: 2 },
     ],
     0,
@@ -228,17 +232,21 @@ export const heroes: HeroDef[] = [
         { kind: "damage", amount: 14 },
         { kind: "resource", amount: 1 },
       ]),
+      // Mend had no cooldown, so a Warden healed every single round and
+      // sustain compositions were simply not killable. It now heals harder but
+      // leaves a gap the party has to survive.
       a(
         "mend",
         "Mending roots",
-        "Restore 26 HP and apply Regeneration.",
+        "Restore 32 HP and apply Regeneration. Once every other round.",
         "ally",
         [
-          { kind: "heal", amount: 26 },
+          { kind: "heal", amount: 32 },
           { kind: "status", status: "regen", stacks: 4, duration: 3 },
         ],
         2,
         3,
+        1,
       ),
       a(
         "dew",

@@ -244,6 +244,29 @@ export const tacticalPolicy: Policy = {
     if (s.phase === "MAP") {
       const open = availableNodes(s);
       const hurt = wounded(s) > 0.35;
+      // Routes now close options off, so a mentor several chambers away has to
+      // be steered toward. Without this lookahead the bot takes the nearest
+      // good node and never trains, which hides evolutions from the matrix.
+      const mentorsAhead = (id: string) => {
+        const seen = new Set([id]);
+        const queue = [id];
+        let found = 0;
+        while (queue.length) {
+          // Shift once: calling it inside a find predicate drains the queue.
+          const id = queue.shift()!;
+          const node = s.map.find((x) => x.id === id);
+          if (!node) continue;
+          if (node.type === "mentor" && !node.visited) found++;
+          for (const next of node.next)
+            if (!seen.has(next)) {
+              seen.add(next);
+              queue.push(next);
+            }
+        }
+        return found;
+      };
+      const wantsTraining =
+        s.players.some((x) => !x.evolution) && s.gold >= 300;
       const rank = (t: string) => {
         // Training is a permanent kit change, so it outranks a single fight
         // whenever the purse can pay for it and still cover recovery.
@@ -256,8 +279,10 @@ export const tacticalPolicy: Policy = {
         if (t === "mystery") return s.gold > 420 ? 3 : 2;
         return hurt ? 1 : 3;
       };
+      const score = (n: (typeof open)[number]) =>
+        rank(n.type) + (wantsTraining ? mentorsAhead(n.id) * 2 : 0);
       return [...open].sort(
-        (a, b) => rank(b.type) - rank(a.type) || a.id.localeCompare(b.id),
+        (a, b) => score(b) - score(a) || a.id.localeCompare(b.id),
       )[0].id;
     }
     if (s.phase === "CAMP") {
@@ -308,10 +333,12 @@ export const tacticalPolicy: Policy = {
     // 2. Recovery before it is wasted on a corpse.
     // Only abilities that can be aimed at a wounded ally count as recovery: a
     // self-siphoning attack carries a heal effect but still targets an enemy.
+    // Only abilities aimed at a wounded ally count as recovery here. Bracing
+    // heals its own user and is handled by the self-preservation rule below.
     const heals = opts.filter(
       (a) =>
         a.id !== "revive" &&
-        (a.target === "ally" || a.target === "self") &&
+        a.target === "ally" &&
         a.effects.some((e) => e.kind === "heal" && !e.self),
     );
     if (heals.length) {

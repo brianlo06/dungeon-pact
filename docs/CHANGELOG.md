@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9 scarce healing — 2026-09-10
+
+- Mending roots had no cooldown, so a Warden healed every round and sustain compositions were not killable. It now heals 32 on a one-round cooldown, leaving a gap the party has to survive. Three- and four-player win rates fell from 93/92% to 81/85%.
+- That alone moved the class gap the wrong way: Warden went from +12 to +22, because scarce healing raises the value of the only class that supplies it. Brace now heals 8 alongside its Barrier — free, available to every class every round, and still costing the whole action. The gap came back to +15 while the difficulty stayed.
+- Recorded in BALANCE.md what is left: Vanguard and Warden both sit near +15, which is the tank-and-healer pattern rather than a defect, and closing it means changing what those classes are for.
+- Fixed a measurement trap the route change introduced. Branching the route meant mentors had to be steered toward several chambers ahead, the greedy policy stopped reaching them, and the matrix quietly reverted to pre-evolution numbers as though evolutions did nothing. The policy now searches forward for reachable training.
+
 ## 0.8 the route — 2026-09-10
 
 - Rebuilt the dungeon map. It was a stacked list of wide rows with one dashed line down the middle that connected nothing; it now draws as a branching descent with links stroked between the chambers they actually join, reachable chambers lit while the rest recede, a pin on the party's position, and the whole route on one screen ending at the vault.

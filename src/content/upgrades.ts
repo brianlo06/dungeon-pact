@@ -308,8 +308,9 @@ export const upgrades: UpgradeDef[] = [
     ability: "mend",
     kind: "force",
     name: "Mending roots · Deep",
-    description: "Restore 38 HP and apply Regeneration.",
-    apply: (a) => heal(a, 38),
+    description:
+      "Restore 44 HP and apply Regeneration. Once every other round.",
+    apply: (a) => heal(a, 44),
   }),
   make({
     id: "war-mend-warding",
@@ -318,7 +319,8 @@ export const upgrades: UpgradeDef[] = [
     ability: "mend",
     kind: "guard",
     name: "Mending roots · Warding",
-    description: "Restore 26 HP, apply Regeneration and grant 16 Barrier.",
+    description:
+      "Restore 32 HP, apply Regeneration and grant 16 Barrier. Once every other round.",
     apply: (a) =>
       after(a, { kind: "status", status: "barrier", stacks: 16, duration: 2 }),
   }),

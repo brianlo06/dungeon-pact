@@ -52,7 +52,64 @@ base damage; the Miser additionally adds floor(gold/70). From round 7 every
 enemy damage effect grows by 3 per further round. Mark + Precision pays 20;
 Weak cuts a direct attack to 65% before Guard.
 
-## Simulation evidence — class paths, 486 compositions, 25 seeds each
+## Simulation evidence — scarce healing, 486 compositions, 25 seeds each
+
+12,150 runs under the control-aware policy.
+
+| Bracket   | win rate | mean final gold |
+| --------- | -------: | --------------: |
+| 2 players |      72% |             242 |
+| 3 players |      88% |             266 |
+| 4 players |      91% |             268 |
+
+| Class    | with | without | delta |
+| -------- | ---: | ------: | ----: |
+| Warden   |  99% |     84% |   +15 |
+| Vanguard |  98% |     84% |   +14 |
+| Reaver   |  91% |     88% |    +3 |
+| Arcanist |  90% |     88% |    +2 |
+| Ranger   |  88% |     89% |    -1 |
+| Beguiler |  87% |     90% |    -3 |
+| Herald   |  85% |     91% |    -6 |
+| Broker   |  85% |     91% |    -6 |
+
+### Nerfing the healer made the healer more valuable
+
+The obvious lever for Warden dominance was `mend`, which had no cooldown at all
+— a Warden healed every single round, and sustain compositions were simply not
+killable. Putting it on a one-round cooldown (and healing harder per cast to
+compensate) worked as difficulty: three- and four-player win rates fell from
+93/92% to 81/85%.
+
+It moved the class gap the wrong way. Warden went from +12 to **+22**. Scarce
+healing raises the value of the only class that supplies it, because nobody
+else had a substitute at all — the self-heal branches are a pick competing with
+damage, not a floor.
+
+The fix was to give every class a floor rather than to give the Warden less:
+Brace now heals 8 alongside its Barrier. It is free, available to all eight
+classes every round, and still costs the entire action, so defending stays a
+real decision. That recovered most of the gap (+22 back to +15) while keeping
+the difficulty the cooldown bought.
+
+What remains is Vanguard and Warden both at roughly +15, which is the tank-and-
+healer pattern rather than a bug: in a game where the run ends when the party
+dies, the two classes that stop people dying are worth the most. Parties
+without either are clearly viable at 84%. Closing it further means changing
+what those two classes are _for_, which is a design decision and not a tuning
+one, and is deliberately not made here.
+
+### A measurement trap worth remembering
+
+Branching the route (0.8) silently hid evolutions from the matrix. Mentors now
+have to be steered toward several chambers ahead, and the policy chose greedily
+one step at a time, so it stopped reaching them — the aggregates quietly
+reverted to their pre-evolution values and looked like a balance regression.
+The policy now does a forward reachability search when the party still wants
+training. Any future change to route shape needs the same check: an instrument
+that cannot reach a system reports that the system does nothing.
+
+## Earlier evidence — class paths, 486 compositions, 25 seeds each
 
 12,150 runs under the control-aware policy, with mentors on the route.
 
