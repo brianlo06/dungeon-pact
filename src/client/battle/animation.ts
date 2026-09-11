@@ -101,13 +101,54 @@ export function poseToTransform(p: Required<Omit<Pose, "at">>) {
   );
 }
 
+type Sampled = Required<Omit<Pose, "at">>;
+const REST: Sampled = { x: 0, y: 0, scale: 1, rotate: 0, squash: 1, flash: 0 };
+
 interface Playing {
   clip: Clip;
   name: ClipName;
   start: number;
-  /** Where to go when a one-shot finishes. */
-  then: ClipName;
+  /**
+   * Where to go when a one-shot finishes. Null means the unit's rest clip,
+   * resolved when the one-shot ends rather than when it began, so a flinch
+   * taken mid-windup goes back to the held windup — and one taken after the
+   * windup was spent goes back to idle.
+   */
+  then: ClipName | null;
 }
+
+/**
+ * How long a change of clip eases over, in unscaled milliseconds.
+ *
+ * A clip starts wherever its first pose is, so without this a figure jumps
+ * whenever the new clip does not begin where the old one left it — most
+ * visibly when a boss raises its key into a held windup, which would otherwise
+ * snap up in one frame. Entering a loop takes its time; entering a one-shot
+ * takes a fraction of it, so a flinch still lands on the frame it was asked
+ * for. Flash is never eased: a hit is bright at once.
+ */
+const BLEND_INTO_LOOP = 260;
+const BLEND_INTO_ONESHOT = 120;
+const blendFor = (clip: Clip) =>
+  clip.loop
+    ? BLEND_INTO_LOOP
+    : Math.min(BLEND_INTO_ONESHOT, clip.duration * 0.2);
+
+interface Blend {
+  root: Sampled;
+  parts: Map<string, Sampled>;
+  start: number;
+  length: number;
+}
+
+const mix = (a: Sampled, b: Sampled, k: number): Sampled => ({
+  x: lerp(a.x, b.x, k),
+  y: lerp(a.y, b.y, k),
+  scale: lerp(a.scale, b.scale, k),
+  rotate: lerp(a.rotate, b.rotate, k),
+  squash: lerp(a.squash, b.squash, k),
+  flash: b.flash,
+});
 
 /**
  * One combatant's animation state. Created per unit, ticked by the stage's
@@ -121,11 +162,53 @@ export class Animator {
   /** Every unit starts its idle at a different point so no line breathes in sync. */
   private phase: number;
   private speed = 1;
+  /**
+   * The loop this unit returns to between actions: `idle`, or a held
+   * `windup` while it has an interruptible move announced. Stored as asked
+   * for and resolved against the rig on use, because a rig can arrive after
+   * the request does.
+   */
+  private rest: ClipName = "idle";
+  /** The last pose written, so a change of clip can ease out of it. */
+  private last: { root: Sampled; parts: Map<string, Sampled> } | null = null;
+  private blend: Blend | null = null;
 
   constructor(rig: Rig, phase = Math.random()) {
     this.rig = rig;
     this.phase = phase;
     this.play("idle");
+  }
+
+  /**
+   * What a request for a clip actually plays on this rig.
+   *
+   * Most missing clips fall back to the generic rig. Two do not. A `windup`
+   * is authored or it does not exist: the generic one is a pulse, and every
+   * ordinary enemy pulsing whenever it announced a wind-up would be noise, so
+   * a creature without one keeps its idle. A `signature` without one is the
+   * creature's ordinary `attack` — its own strike, not the generic lunge.
+   */
+  private resolve(name: ClipName): { name: ClipName; clip: Clip } {
+    const own = this.rig[name];
+    if (own) return { name, clip: own };
+    if (name === "windup") return this.resolve("idle");
+    if (name === "signature") return this.resolve("attack");
+    const generic = GENERIC[name];
+    if (generic) return { name, clip: generic };
+    return { name: "idle", clip: this.rig.idle ?? GENERIC.idle! };
+  }
+
+  /** Begin a clip, easing out of whatever was last on screen. */
+  private begin(name: ClipName, clip: Clip, then: ClipName | null) {
+    const now = performance.now();
+    if (this.last && this.playing)
+      this.blend = {
+        root: this.last.root,
+        parts: new Map(this.last.parts),
+        start: now,
+        length: blendFor(clip),
+      };
+    this.playing = { clip, name, start: now, then };
   }
 
   attach(node: HTMLElement | null) {
@@ -144,12 +227,16 @@ export class Animator {
     // without this the unit keeps playing the generic clip it started on.
     const state = this.playing;
     if (state) {
-      const replacement = rig[state.name] ?? GENERIC[state.name];
-      if (replacement && replacement !== state.clip) {
-        state.clip = replacement;
+      // The rest loop is re-resolved from what was asked for, so a windup
+      // requested before the rig arrived is taken up once it does.
+      const asked = state.clip.loop ? this.rest : state.name;
+      const replacement = this.resolve(asked);
+      if (replacement.clip !== state.clip) {
+        state.clip = replacement.clip;
+        state.name = replacement.name;
         // Looping clips keep their phase; one-shots restart so they are not
         // resumed halfway through a different animation.
-        if (!replacement.loop) state.start = performance.now();
+        if (!replacement.clip.loop) state.start = performance.now();
       }
     }
   }
@@ -158,31 +245,49 @@ export class Animator {
   }
 
   /**
-   * Ask for a clip. A missing clip falls back to a generic one rather than
-   * throwing, so content can be upgraded a clip at a time and a typo never
-   * takes the fight down.
+   * Choose the loop this unit returns to between actions. A looping clip on
+   * screen changes over at once; a one-shot in progress is left to finish and
+   * hands over to the new rest when it does. A fall that is holding its last
+   * pose is never disturbed.
    */
-  play(name: ClipName, then: ClipName = "idle") {
-    const clip = this.rig[name] ?? GENERIC[name] ?? GENERIC.idle!;
+  setRest(name: ClipName) {
+    this.rest = name;
+    const current = this.playing;
+    if (!current || !current.clip.loop) return;
+    const next = this.resolve(name);
+    if (next.clip === current.clip) return;
+    this.begin(next.name, next.clip, null);
+  }
+
+  /**
+   * Ask for a clip. A missing clip falls back rather than throwing, so content
+   * can be upgraded a clip at a time and a typo never takes the fight down.
+   * Without `then`, a one-shot hands back to the unit's rest loop.
+   */
+  play(name: ClipName, then?: ClipName) {
+    const { name: resolved, clip } = this.resolve(name);
     const current = this.playing;
     // A clip that ends by holding its last pose — a fall — is not restarted
     // by being asked for again; the fallen do not get up to fall twice.
-    if (current && current.name === name && current.then === name && !clip.loop)
+    if (
+      current &&
+      current.name === resolved &&
+      current.then === resolved &&
+      !clip.loop
+    )
       return;
-    // A one-shot in progress is not interrupted by an idle request.
+    // A one-shot in progress is not interrupted by a request for a loop —
+    // idle or a held windup. It hands over to the rest loop when it ends.
     if (
       current &&
       !current.clip.loop &&
-      name === "idle" &&
-      performance.now() - current.start < current.clip.duration
+      clip.loop &&
+      performance.now() - current.start < current.clip.duration / this.speed
     )
       return;
-    this.playing = {
-      clip,
-      name,
-      start: performance.now(),
-      then,
-    };
+    // Asking for the loop already playing does not restart it.
+    if (current && clip.loop && current.clip === clip) return;
+    this.begin(resolved, clip, then ?? null);
   }
 
   get current(): ClipName | null {
@@ -198,25 +303,63 @@ export class Animator {
     if (state.clip.loop) t = (((t + this.phase) % 1) + 1) % 1;
     else if (t >= 1) {
       t = 1;
-      // One-shots hand back to whatever should follow them.
-      if (state.then !== state.name) {
-        this.play(state.then);
-        return this.tick(now);
+      // One-shots hand back to whatever should follow them: a named clip, or
+      // whichever loop the unit is resting in by now.
+      const next = state.then ?? this.rest;
+      if (next !== state.name) {
+        this.play(next);
+        if (this.playing !== state) return this.tick(now);
       }
     }
     const clamped = Math.max(0, Math.min(1, t));
-    const pose = sample(state.clip, clamped);
+    // Ease out of the previous clip, if one just ended.
+    const blend = this.blend;
+    const k = blend
+      ? Math.min(1, (now - blend.start) / (blend.length / this.speed))
+      : 1;
+    if (blend && k >= 1) this.blend = null;
+    const eased = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+    const ease = (from: Sampled | undefined, to: Sampled) =>
+      blend && k < 1 ? mix(from ?? REST, to, eased) : to;
+    const pose = ease(blend?.root, sample(state.clip, clamped));
+    const written = new Map<string, Sampled>();
+    // A held pose is held through anything that does not move it. While a
+    // one-shot plays over a held windup, the parts it has no track for keep
+    // doing what the windup does — a boss flinches without lowering its key.
+    // Over plain idle they return to rest as before; idle is not a pose.
+    const held =
+      !state.clip.loop && state.then === null && this.rest !== "idle"
+        ? this.resolve(this.rest)
+        : null;
+    const under =
+      held && held.name !== "idle" && held.clip.parts
+        ? {
+            parts: held.clip.parts,
+            t:
+              (((now / (held.clip.duration / this.speed) + this.phase) % 1) +
+                1) %
+              1,
+          }
+        : null;
     // Cutout parts. A part with no track in this clip returns to rest rather
     // than holding whatever the previous clip left it at.
     if (this.parts.size) {
       for (const [name, node] of this.parts) {
         const track = state.clip.parts?.[name];
-        const p = track
-          ? sampleTrack(track, clamped)
-          : { x: 0, y: 0, scale: 1, rotate: 0, squash: 1, flash: 0 };
+        const below = under?.parts[name];
+        const p = ease(
+          blend?.parts.get(name),
+          track
+            ? sampleTrack(track, clamped)
+            : below
+              ? sampleTrack(below, under!.t)
+              : REST,
+        );
+        written.set(name, p);
         node.style.transform = poseToTransform(p);
       }
     }
+    this.last = { root: pose, parts: written };
     if (this.node) {
       this.node.style.transform = poseToTransform(pose);
       this.node.style.filter = pose.flash
@@ -228,6 +371,8 @@ export class Animator {
 
   dispose() {
     this.playing = null;
+    this.last = null;
+    this.blend = null;
     this.node = null;
     this.parts.clear();
   }
@@ -311,15 +456,8 @@ export const GENERIC: Rig = {
       { at: 1, rotate: 0, y: 0, squash: 1, flash: 0 },
     ],
   },
-  windup: {
-    duration: 900,
-    loop: true,
-    poses: [
-      { at: 0, scale: 1, flash: 0 },
-      { at: 0.5, scale: 1.05, flash: 0.25, y: -0.02 },
-      { at: 1, scale: 1, flash: 0 },
-    ],
-  },
+  // No `windup` and no `signature`, deliberately: both are a creature's own
+  // or nothing. See `Animator.resolve`.
   defeat: {
     duration: 700,
     poses: [

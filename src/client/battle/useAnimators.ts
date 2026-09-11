@@ -26,6 +26,11 @@ export interface Animators {
     node: SVGElement | HTMLElement | null,
   ) => void;
   play: (id: string, clip: ClipName, then?: ClipName) => void;
+  /**
+   * The loop a unit returns to between actions — `windup` while it holds an
+   * announced wind-up, otherwise `idle`. A rig without the clip keeps idling.
+   */
+  setRest: (id: string, clip: ClipName) => void;
   /** Slow everything down together, for capture and inspection. */
   setSpeed: (n: number) => void;
   current: (id: string) => ClipName | null;
@@ -103,6 +108,10 @@ export function useAnimators(paused = false): Animators {
     units.current.get(id)?.play(clip, then);
   }, []);
 
+  const setRest = useCallback((id: string, clip: ClipName) => {
+    units.current.get(id)?.setRest(clip);
+  }, []);
+
   const setSpeed = useCallback((n: number) => {
     speed.current = n;
     for (const animator of units.current.values()) animator.setSpeed(n);
@@ -114,7 +123,7 @@ export function useAnimators(paused = false): Animators {
   );
 
   return useMemo(
-    () => ({ register, attach, attachPart, play, setSpeed, current }),
-    [register, attach, attachPart, play, setSpeed, current],
+    () => ({ register, attach, attachPart, play, setRest, setSpeed, current }),
+    [register, attach, attachPart, play, setRest, setSpeed, current],
   );
 }

@@ -46,6 +46,7 @@ export function Combat({
   const replay = useDirector(s, reducedMotion, {
     onShake: camera.shake,
     onClip: animators.play,
+    onRest: animators.setRest,
     onSound: (name) => mixer.play(name),
   });
   const b = replay.beat;

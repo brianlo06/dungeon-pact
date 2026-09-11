@@ -74,25 +74,52 @@ const collector: Rig = {
       ],
     },
   },
+  /**
+   * Close the account, held. The key comes up and hangs there — cocked back
+   * over the shoulder, trembling rather than swinging — while the body leans
+   * away from the party and the head stays down on it. The threat is the held
+   * pose: nothing here returns to rest, so the loop never reads as a pulse.
+   * The animator eases into it from wherever the figure was.
+   */
   windup: {
-    duration: 1100,
+    duration: 1600,
     loop: true,
     poses: [
-      { at: 0, scale: 1, flash: 0, rotate: 0 },
-      { at: 0.45, scale: 1.05, flash: 0.3, rotate: 2, y: -0.02 },
-      { at: 1, scale: 1, flash: 0, rotate: 0 },
+      { at: 0, x: 0.02, y: -0.01, rotate: 2.6, scale: 1.02, flash: 0.08 },
+      { at: 0.5, x: 0.024, y: -0.014, rotate: 3.2, scale: 1.024, flash: 0.18 },
+      { at: 1, x: 0.02, y: -0.01, rotate: 2.6, scale: 1.02, flash: 0.08 },
     ],
     parts: {
-      // The key comes up and hangs there. The threat is the held pose.
+      // Lifted clear of the head rather than swung across it: tilted back
+      // any further, the bow disappears behind the hood and the silhouette
+      // loses the one shape that says what this is.
       key: [
-        { at: 0, rotate: 0 },
-        { at: 0.45, rotate: 22, y: -0.04 },
-        { at: 1, rotate: 0 },
+        { at: 0, rotate: 12, y: -0.085 },
+        { at: 0.25, rotate: 14, y: -0.092 },
+        { at: 0.5, rotate: 12.5, y: -0.087 },
+        { at: 0.75, rotate: 14.5, y: -0.094 },
+        { at: 1, rotate: 12, y: -0.085 },
       ],
+      head: [
+        { at: 0, rotate: -3 },
+        { at: 0.5, rotate: -4.2 },
+        { at: 1, rotate: -3 },
+      ],
+      // Everything hanging still lags, just on a tighter chain.
       chains: [
-        { at: 0, rotate: 0 },
-        { at: 0.5, rotate: -4 },
-        { at: 1, rotate: 0 },
+        { at: 0, rotate: -4 },
+        { at: 0.55, rotate: -6.5 },
+        { at: 1, rotate: -4 },
+      ],
+      seals: [
+        { at: 0, rotate: 3 },
+        { at: 0.6, rotate: -1.5 },
+        { at: 1, rotate: 3 },
+      ],
+      ledger: [
+        { at: 0, rotate: -3 },
+        { at: 0.6, rotate: 1.5 },
+        { at: 1, rotate: -3 },
       ],
     },
   },

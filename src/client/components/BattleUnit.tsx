@@ -9,6 +9,7 @@ import { Miser } from "./Miser";
 import { CREATURES } from "./creatures";
 import { statuses } from "../../content/statuses";
 import { items } from "../../content/items";
+import { holdsWindup } from "../battle/hero-clips";
 
 export type Impact = "damage" | "heal" | "block" | "combo" | "defeat" | null;
 
@@ -37,6 +38,7 @@ export function BattleUnit({
   intent,
   owners,
   animators,
+  replaying,
   treasury,
 }: {
   unit: Unit;
@@ -55,6 +57,8 @@ export function BattleUnit({
   intent?: ReactNode;
   owners?: Player[];
   animators?: Animators;
+  /** A round is being replayed, so the board is not yet the one shown. */
+  replaying?: boolean;
   /** The pact's gold, for the Miser, which is armoured in it. */
   treasury?: number;
 }) {
@@ -86,6 +90,20 @@ export function BattleUnit({
     }, 60);
     return () => clearTimeout(settle);
   }, [down, player, animators, unit.id]);
+  // An enemy with a wind-up announced holds its `windup` pose through the
+  // planning phase: the threat is the held pose. This follows the settled
+  // board only. During a replay the board already shows next round's intents
+  // while the round being replayed is still the old one, so the director owns
+  // the rest loop until it finishes — it knows when a held move lands or is
+  // broken. `replaying` is already true on the render a new round arrives
+  // in, so this needs no timer to wait the replay out; a timer is not a
+  // guard on a loaded machine, where the render that starts the replay can
+  // come a quarter of a second late. A rig with no `windup` keeps idling.
+  const winding = !!enemy && holdsWindup(enemy);
+  useEffect(() => {
+    if (!animators || replaying) return;
+    animators.setRest(unit.id, winding ? "windup" : "idle");
+  }, [winding, replaying, animators, unit.id]);
   const share = Math.max(0, Math.min(1, shown / unit.maxHp));
   const barrier = unit.statuses.find((s) => s.id === "barrier")?.stacks ?? 0;
   const held = enemy?.holding ?? [];
