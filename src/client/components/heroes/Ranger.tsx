@@ -3,8 +3,6 @@ import {
   at,
   BODY,
   DETAIL,
-  Eyes,
-  HEAD_PATH,
   HeroFrame,
   INK,
   LINE,
@@ -41,6 +39,14 @@ const PARTS = [
   "arrow",
 ] as const;
 
+/**
+ * The youngest face in the party: a round cranium, full cheeks and a small
+ * pointed chin, with the features set low and the eyes large, so it reads as
+ * a kid before it reads as anything else.
+ */
+const FACE =
+  "M48 14 C58.5 14 64.5 20.5 64.5 29.5 C64.5 36.5 61.5 41.5 56.5 43.8 C53 45.3 49 45.2 45.5 44.3 C37.5 42.5 33 37.5 33 29.5 C33 20.5 38 14 48 14 Z";
+
 export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
   const hold = useRigParts(unitId, animators, PARTS);
   const g = useShades("rng");
@@ -58,7 +64,7 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
         <Shade id={g.id("cloak")} ramp={RAMP.sage} />
         <Shade id={g.id("leather")} ramp={RAMP.leather} />
         <Shade id={g.id("wood")} ramp={RAMP.wood} />
-        <Shade id={g.id("skin")} ramp={RAMP.skin} />
+        <Shade id={g.id("skin")} ramp={RAMP.skinFair} />
       </defs>
 
       {/* ---- cloak: hangs behind and trails back ---- */}
@@ -185,7 +191,7 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
         />
       </g>
 
-      {/* ---- head: freckled face, auburn fringe, a hood with a trailing point ---- */}
+      {/* ---- head: a freckled kid's face, auburn fringe, a hood with a trailing point ---- */}
       <g ref={hold("head")} data-part="head" style={at(...BODY.neck)}>
         {/* hood tail, behind */}
         <path
@@ -195,33 +201,78 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={LINE}
           strokeLinejoin="round"
         />
+        {/* a young face: full in the cheek, small in the chin */}
         <path
-          d={HEAD_PATH}
+          d={FACE}
           fill={g.url("skin")}
           stroke={INK}
           strokeWidth={LINE}
+          strokeLinejoin="round"
         />
-        {/* auburn fringe spilling out of the hood */}
+        {/* a sunburnt blush, and a band of freckles over the nose */}
+        <g fill="#ee8b76" opacity={0.4}>
+          <ellipse cx={52} cy={36.4} rx={2.8} ry={1.6} />
+          <ellipse cx={60.5} cy={36.2} rx={2} ry={1.4} />
+        </g>
+        <g fill="#b9573a">
+          {[
+            [49.6, 35.2],
+            [51.4, 36.6],
+            [53.2, 35.1],
+            [55.2, 36.2],
+            [57.2, 35],
+            [59.2, 36.4],
+            [61, 35.1],
+          ].map(([x, y]) => (
+            <circle key={x} cx={x} cy={y} r={0.75} />
+          ))}
+        </g>
+        {/* a swept auburn fringe, spilling out of the hood */}
         <path
-          d="M40 20 C46 18 54 18 61 22 L60 27 L56.5 24.5 L55 28.5 L51.5 25 L49 29 L46 25 L42 28 Z"
+          d="M39.5 21 C45 17.5 55 17.2 62 21.5 C59.5 21.8 57.5 23 56 24.6 L55.2 22.6 C52.5 24.4 49.5 25.3 46 25.4 L47.2 23.2 C44.5 24.3 42 26.4 40.4 29 Z"
           fill="#b5552e"
           stroke={INK}
           strokeWidth={DETAIL}
           strokeLinejoin="round"
         />
-        <Eyes x={52.5} y={32.5} />
+        {/* brows up: something moved out there */}
         <path
-          d="M52 38.5 Q55 40 58 38.5"
-          stroke={INK}
-          strokeWidth={1.1}
+          d="M50.4 26.9 Q53 25.1 55.6 26.5 M57.9 26.2 Q60.3 24.8 62.5 26.3"
+          stroke="#7a2e18"
+          strokeWidth={1.4}
           fill="none"
           strokeLinecap="round"
         />
-        <g fill="#b56a4c" opacity={0.8}>
-          <circle cx={50} cy={36} r={0.6} />
-          <circle cx={52} cy={36.8} r={0.6} />
-          <circle cx={58} cy={36} r={0.6} />
+        {/*
+          Big dark eyes, wide open, with a lot of light in them. Not whites:
+          at portrait size a white ring round each eye reads as spectacles,
+          and spectacles are the Broker's.
+        */}
+        <ellipse cx={53.3} cy={31.6} rx={2.2} ry={2.9} fill={INK} />
+        <ellipse cx={60.3} cy={31.4} rx={1.95} ry={2.65} fill={INK} />
+        <g fill="#fff6e2">
+          <circle cx={52.6} cy={30.5} r={0.95} />
+          <circle cx={59.7} cy={30.4} r={0.85} />
+          <circle cx={54} cy={33} r={0.45} />
+          <circle cx={60.9} cy={32.7} r={0.4} />
         </g>
+        {/* a button nose, turned up, just past the cheek */}
+        <path
+          d="M62.4 33.2 C64.6 32.6 66 34.6 64.6 35.9 C63.8 36.6 62.6 36.4 62 35.8"
+          fill={RAMP.skinFair[0]}
+          stroke={INK}
+          strokeWidth={DETAIL}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* lips parted, about to say so */}
+        <path
+          d="M55.4 39.3 Q58.4 42.4 61.2 38.8 Q58.2 39.9 55.4 39.3 Z"
+          fill="#7a2b2a"
+          stroke={INK}
+          strokeWidth={1}
+          strokeLinejoin="round"
+        />
         {/* the hood itself, framing the face */}
         <path
           d="M47 11.5 C57 11.5 65 18 65.5 27 C63 22 58 19.5 51 19.5 C43 19.5 39 24 38 33 C38 38 40 42 43 45 L35 45 C32 40 31 34 32 27 C33 17 38.5 11.5 47 11.5 Z"

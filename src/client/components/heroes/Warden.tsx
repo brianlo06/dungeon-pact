@@ -3,8 +3,6 @@ import {
   at,
   BODY,
   DETAIL,
-  Eyes,
-  HEAD_PATH,
   HeroFrame,
   INK,
   LINE,
@@ -31,6 +29,13 @@ import {
  * spreads wide and torn. Nothing else carries a light.
  */
 const PARTS = ["staff", "lantern", "legs", "body", "head", "hand"] as const;
+
+/**
+ * The oldest face in the party: longer than anyone's, the chin running down
+ * out of the hood, so there is room for a beard to hang off it.
+ */
+const FACE =
+  "M48 12.5 C58 12.5 64 19 64.2 28.5 C64.5 36 63 43 58.5 47 C55.5 49.5 50 49.5 46 48 C38 45.5 33 39 33 29 C33 19.5 38.5 12.5 48 12.5 Z";
 
 /** A pointed leaf, `r` half its length, in local space. */
 const leafD = (r: number) =>
@@ -77,7 +82,8 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
         <Shade id={g.id("mantle")} ramp={RAMP.bone} />
         <Shade id={g.id("robe")} ramp={RAMP.moss} />
         <Shade id={g.id("wood")} ramp={RAMP.wood} />
-        <Shade id={g.id("skin")} ramp={RAMP.skin} />
+        <Shade id={g.id("skin")} ramp={RAMP.skinUmber} />
+        <Shade id={g.id("beard")} ramp={RAMP.silver} />
         <radialGradient id={g.id("lamp")}>
           <stop offset="0" stopColor="#fff4c4" />
           <stop offset="0.5" stopColor="#ffc15a" />
@@ -214,7 +220,7 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
         />
       </g>
 
-      {/* ---- head: antlers up through the hood, eyes closed ---- */}
+      {/* ---- head: antlers up through the hood, an old face at peace ---- */}
       <g ref={hold("head")} data-part="head" style={at(...BODY.neck)}>
         {/* antlers, behind the hood */}
         {[
@@ -242,26 +248,86 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
             />
           </g>
         ))}
+        {/* a long, weathered face, the jaw running down into the beard */}
         <path
-          d={HEAD_PATH}
+          d={FACE}
           fill={g.url("skin")}
           stroke={INK}
           strokeWidth={LINE}
+          strokeLinejoin="round"
         />
-        <Eyes x={52.5} y={33} lids />
+        {/* lines: across the brow, off the eyes, down the cheek */}
+        <g
+          stroke={RAMP.skinUmber[2]}
+          strokeWidth={0.9}
+          fill="none"
+          strokeLinecap="round"
+        >
+          <path d="M47 23.6 Q52 22.6 57.5 23.5 M48.5 25.4 Q52.5 24.7 56 25.3" />
+          <path d="M49.3 31.2 l-2 -0.9 M49.3 32 l-2.2 0.3 M49.6 32.8 l-1.8 1.3" />
+          <path d="M51 34.4 Q53.2 35.4 55.4 34.3 M58.6 34.2 Q60.2 35 61.8 34.1" />
+        </g>
+        {/* eyes closed, the lids heavy and at rest */}
         <path
-          d="M53 38.5 Q55.5 39.5 58 38.5"
+          d="M50.3 31.3 Q53 33.8 55.8 31.2 M58.2 31 Q60.1 33.2 62 31"
           stroke={INK}
-          strokeWidth={1}
+          strokeWidth={1.5}
           fill="none"
           strokeLinecap="round"
         />
         {/* a leaf marked on the cheek */}
         <path
           d={leafD(1.6)}
-          transform={place(58, 35.5, 57)}
-          fill={RAMP.moss[1]}
-          opacity={0.85}
+          transform={place(52, 36.4, 20)}
+          fill={RAMP.moss[0]}
+          opacity={0.9}
+        />
+        {/* the beard, silver and long, tapering forward onto the mantle */}
+        <path
+          d="M43.5 36 C46 40.5 50 41.8 53.5 40.8 C56.5 40 59.5 40.6 61.8 39.6 C62.9 39.1 63.6 38.1 64.1 37 C65 42 64 47 61.5 51.5 C59.5 55 57 58 54 60.5 C53 57 50.5 54.5 47.5 52.5 C44 50 42 46 42 41 Z"
+          fill={g.url("beard")}
+          stroke={INK}
+          strokeWidth={LINE}
+          strokeLinejoin="round"
+        />
+        <path
+          d="M49.5 44.5 C51 48.5 52.5 52.5 53.5 56.5 M55.5 43.5 C56.8 47.5 56.6 51.5 55.6 55 M60.5 43 C61 46 60.5 49 59.3 51.5"
+          stroke={RAMP.silver[2]}
+          strokeWidth={DETAIL}
+          fill="none"
+          strokeLinecap="round"
+        />
+        {/* a drooping moustache, and a small smile under it */}
+        <path
+          d="M54.5 39.5 C56.5 37.3 60.5 37 63.6 37.8 C64.6 39 64.4 41 63 42.4 C62 40.6 59.5 39.8 57.3 40.6 C56.3 41 55.2 40.8 54.5 39.5 Z"
+          fill={RAMP.silver[0]}
+          stroke={INK}
+          strokeWidth={DETAIL}
+          strokeLinejoin="round"
+        />
+        <path
+          d="M57.5 42.6 Q59.6 43.6 61.6 42.4"
+          stroke={INK}
+          strokeWidth={1}
+          fill="none"
+          strokeLinecap="round"
+        />
+        {/* a long straight nose, past the line of the cheek */}
+        <path
+          d="M62.4 29.8 C63.4 32 65.6 33.6 66.4 35.6 C66.8 37.2 65.2 38 63.6 37.4 C62.8 37.8 61.9 37.5 61.6 36.8"
+          fill={g.url("skin")}
+          stroke={INK}
+          strokeWidth={DETAIL + 0.2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* white brows, bushy, drooping at the ends */}
+        <path
+          d="M49 29 C50.2 26.6 54 26 56.3 27.4 C54.8 27.9 53 28 51.6 28.7 C50.6 29.2 49.6 29.6 49 29 Z M58 27.3 C59.6 26 62.3 26.2 63.6 28 C62.2 28 60.4 28.2 59 28.8 C58.3 28.7 57.9 28 58 27.3 Z"
+          fill={RAMP.silver[0]}
+          stroke={INK}
+          strokeWidth={DETAIL}
+          strokeLinejoin="round"
         />
         {/* the hood */}
         <path

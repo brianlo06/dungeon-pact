@@ -3,7 +3,6 @@ import {
   at,
   BODY,
   DETAIL,
-  HEAD_PATH,
   HeroFrame,
   INK,
   LINE,
@@ -38,6 +37,16 @@ const PARTS = [
   "ledger",
 ] as const;
 
+/**
+ * The heaviest face in the party, and the only one wider at the chin than at
+ * the temple: the jowls bulge past the cheek line on both sides and the second
+ * chin sits straight on the collar, with no neck in between. Kept Dickensian —
+ * whiskers, spectacles and a round red nose — and well away from any hooked,
+ * money-counting caricature, for the same reason the Miser became a toad.
+ */
+const FACE =
+  "M48 14 C56.5 14 62 17.5 63.3 23.5 C64.5 27 65.5 31 66 35 C67.3 39.5 66 44 61.5 46.5 C57 48.8 50 48.8 44.5 47.5 C38 46.2 33.5 43.5 32.5 38.5 C31.8 34 32.3 28 33.5 24 C35 17.5 40.5 14 48 14 Z";
+
 export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
   const hold = useRigParts(unitId, animators, PARTS);
   const g = useShades("brk");
@@ -71,7 +80,9 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
       <defs>
         <Shade id={g.id("coat")} ramp={RAMP.violet} />
         <Shade id={g.id("gold")} ramp={RAMP.gold} />
-        <Shade id={g.id("skin")} ramp={RAMP.skin} />
+        <Shade id={g.id("skin")} ramp={RAMP.skinRuddy} />
+        <Shade id={g.id("whisker")} ramp={RAMP.silver} />
+        <Shade id={g.id("nose")} ramp={["#f6b9a4", "#e2877a", "#a8514b"]} />
         <Shade id={g.id("leather")} ramp={RAMP.leather} />
       </defs>
 
@@ -173,63 +184,127 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
         <circle cx={43} cy={79} r={1.2} fill="#fff1c2" opacity={0.8} />
       </g>
 
-      {/* ---- head: flat cap with a quill, spectacles, mutton chops ---- */}
+      {/* ---- head: flat cap with a quill, spectacles, jowls, mutton chops ---- */}
       <g ref={hold("head")} data-part="head" style={at(...BODY.neck)}>
+        {/* a pear of a head: narrow at the temple, all jowl at the bottom */}
         <path
-          d={HEAD_PATH}
+          d={FACE}
           fill={g.url("skin")}
           stroke={INK}
           strokeWidth={LINE}
+          strokeLinejoin="round"
         />
-        {/* grey side-whiskers */}
+        {/* jowl creases and the second chin, sitting on the collar */}
         <path
-          d="M34 28 C33 34 35 40 40 43 C41 38 40 33 38 29 Z"
-          fill="#c9c3cf"
+          d="M48.5 45.6 Q56 48 62.5 44.4 M62.8 39.6 Q64.6 42 63.6 44.2"
+          stroke={RAMP.skinRuddy[2]}
+          strokeWidth={1.1}
+          fill="none"
+          strokeLinecap="round"
+        />
+        {/* the port-wine flush on the cheek */}
+        <ellipse
+          cx={54}
+          cy={38}
+          rx={3.2}
+          ry={2.1}
+          fill="#df6f5e"
+          opacity={0.38}
+        />
+        {/* what is left of the hair, grey, under the back of the cap */}
+        <path
+          d="M34 24.2 C31.8 28 31.6 33.4 33.4 37.2 C35.2 36.4 36.3 34 36.6 31 C36.5 28.4 35.7 26 34 24.2 Z"
+          fill={g.url("whisker")}
           stroke={INK}
           strokeWidth={DETAIL}
           strokeLinejoin="round"
         />
         {/* ear */}
         <path
-          d="M40 30 C37 30 37 35 40 35.5"
-          fill={RAMP.skin[1]}
+          d="M40.8 27.2 C36.8 26.6 35.8 33 39.6 34.4 C40.8 32.8 41.2 30 40.8 27.2 Z"
+          fill={g.url("skin")}
           stroke={INK}
           strokeWidth={DETAIL}
+          strokeLinejoin="round"
         />
-        {/* a nose with some opinions */}
+        {/* mutton chops: tufted, down from the ear and out over the jowl */}
         <path
-          d="M61.5 32 C66 32 67 36.5 62.5 37.5"
-          fill={RAMP.skin[0]}
+          d="M41.2 26.6 C43 28.6 44 30.6 44.6 32.6 C45.6 32.8 46 34 45.4 35 C46.8 35.6 47.2 37 46.4 38 C48 38.6 48.6 40.2 47.8 41.4 C49.4 42.2 49.6 44 48.4 45 C47.4 46.6 45.4 46.8 44.2 45.8 C43 47.2 40.6 47.2 39.6 45.8 C38.2 46.6 36 46 35.6 44.4 C34 44.2 33 42.6 33.6 41.2 C32.6 40.4 32.8 39 33.8 38.4 C36.6 37.4 38.6 36 39.8 34.2 C41 32 41.4 29.4 41.2 26.6 Z"
+          fill={g.url("whisker")}
           stroke={INK}
           strokeWidth={DETAIL + 0.3}
+          strokeLinejoin="round"
         />
-        {/* spectacles */}
+        <path
+          d="M42.4 31 l1 2 M41.4 36.4 l1.8 1.8 M44.2 39.4 l1.6 1.6 M38 40.6 l2 1.2 M41.6 42.6 l1.8 1.4"
+          stroke={RAMP.silver[2]}
+          strokeWidth={DETAIL - 0.2}
+          strokeLinecap="round"
+        />
+        {/* spectacles, and small eyes behind them, lids half down */}
         <g stroke={INK} strokeWidth={1.3}>
-          <circle cx={51.5} cy={31} r={3.6} fill="#e8f2ff" fillOpacity={0.35} />
-          <circle cx={59.5} cy={31} r={3.2} fill="#e8f2ff" fillOpacity={0.35} />
-          <path d="M55 31 H56.5 M48 30.5 L41 29.5" fill="none" />
+          <circle
+            cx={51.5}
+            cy={31.6}
+            r={3.5}
+            fill="#e8f2ff"
+            fillOpacity={0.35}
+          />
+          <circle
+            cx={59.3}
+            cy={31.6}
+            r={3.1}
+            fill="#e8f2ff"
+            fillOpacity={0.35}
+          />
+          <path d="M55 31.4 H56.2 M48 31 L40.8 29.8" fill="none" />
         </g>
-        <circle cx={51.5} cy={31.3} r={1.2} fill={INK} />
-        <circle cx={59.5} cy={31.3} r={1.1} fill={INK} />
+        <circle cx={52} cy={32.2} r={1.15} fill={INK} />
+        <circle cx={59.8} cy={32.2} r={1} fill={INK} />
         <path
-          className="ph-brk-glint"
-          d="M49.5 29.5 l2 -1.8 M57.8 29.6 l1.7 -1.5"
-          stroke="#ffffff"
-          strokeWidth={1}
-        />
-        {/* a satisfied mouth and a second chin */}
-        <path
-          d="M54 39.5 Q57 40.5 59.5 38.8"
+          d="M49.8 31.3 Q52 30.2 54 31.2 M57.9 31.3 Q59.8 30.3 61.6 31.2"
           stroke={INK}
-          strokeWidth={1.1}
+          strokeWidth={1}
           fill="none"
           strokeLinecap="round"
         />
         <path
-          d="M47 43.5 Q53 45.5 59 42.5"
-          stroke={RAMP.skin[2]}
+          className="ph-brk-glint"
+          d="M49.4 30.1 l2 -1.8 M57.6 30.2 l1.7 -1.5"
+          stroke="#ffffff"
           strokeWidth={1}
+        />
+        {/* a nose with opinions: a round, red, upturned bulb */}
+        <path
+          d="M58.8 33.6 C60.6 33 62.4 33.3 63.6 33.8 C65.8 32.6 69.4 33.8 69.4 36.8 C69.4 39.6 66.4 40.8 64 39.8 C62.4 40.6 60 40.1 59.5 38.6 C59 37 59.6 35.4 58.8 33.6 Z"
+          fill={g.url("nose")}
+          stroke={INK}
+          strokeWidth={DETAIL + 0.3}
+          strokeLinejoin="round"
+        />
+        <path
+          d="M61.2 38.2 C62 39.2 63.1 39.4 64 38.9"
+          stroke={RAMP.skinRuddy[2]}
+          strokeWidth={0.9}
           fill="none"
+          strokeLinecap="round"
+        />
+        <circle cx={66.2} cy={35.2} r={0.9} fill="#fff3dc" opacity={0.7} />
+        {/* a small mouth pursed under it, very pleased with the deal */}
+        <path
+          d="M57.2 42.6 Q59.7 43.8 62.1 41.9"
+          stroke={INK}
+          strokeWidth={1.2}
+          fill="none"
+          strokeLinecap="round"
+        />
+        {/* bushy grey brows, just under the brim, over the rims */}
+        <path
+          d="M48.4 28 C49.8 26 53.6 25.8 55.2 27.4 C53.6 27.6 51 28 48.4 28 Z M57 27.2 C58.6 25.8 61.8 26 63.2 27.7 C61.2 27.6 59 27.7 57 27.2 Z"
+          fill={RAMP.silver[0]}
+          stroke={INK}
+          strokeWidth={DETAIL}
+          strokeLinejoin="round"
         />
         {/* flat cap, brim to the front, quill tucked in the band */}
         <path
