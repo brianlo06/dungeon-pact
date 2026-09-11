@@ -27,7 +27,12 @@ const mend: Ability = {
 };
 export const enemies: EnemyDef[] = [
   {
-    presentation: { footprint: "small", theme: "foundry", idlePeriod: 3.1 },
+    presentation: {
+      spriteSet: "stoker",
+      footprint: "small",
+      theme: "foundry",
+      idlePeriod: 3.1,
+    },
     id: "stoker",
     name: "Cinder Stoker",
     glyph: "♟",
@@ -57,7 +62,12 @@ export const enemies: EnemyDef[] = [
     abilities: [attack("ram", "Shield ram", 15)],
   },
   {
-    presentation: { footprint: "small", theme: "arcane", idlePeriod: 2.9 },
+    presentation: {
+      spriteSet: "acolyte",
+      footprint: "small",
+      theme: "arcane",
+      idlePeriod: 2.9,
+    },
     id: "acolyte",
     name: "Ash Acolyte",
     glyph: "♝",
@@ -90,7 +100,12 @@ export const enemies: EnemyDef[] = [
     abilities: [mend, attack("wrench", "Wrench", 9)],
   },
   {
-    presentation: { footprint: "person", theme: "blood", idlePeriod: 2.2 },
+    presentation: {
+      spriteSet: "hound",
+      footprint: "person",
+      theme: "blood",
+      idlePeriod: 2.2,
+    },
     id: "hound",
     name: "Slag Hound",
     glyph: "♞",
@@ -130,7 +145,12 @@ export const enemies: EnemyDef[] = [
     ],
   },
   {
-    presentation: { footprint: "heavy", theme: "foundry", idlePeriod: 5.2 },
+    presentation: {
+      spriteSet: "bellows",
+      footprint: "heavy",
+      theme: "foundry",
+      idlePeriod: 5.2,
+    },
     id: "bellows",
     name: "Living Bellows",
     glyph: "♜",

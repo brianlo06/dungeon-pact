@@ -1,5 +1,6 @@
 import type { Rig } from "./animation";
 import { GENERIC } from "./animation";
+import { FORGE_RIGS } from "./rigs-forge";
 
 /**
  * Character rigs.
@@ -691,6 +692,7 @@ const RIGS: Record<string, Rig> = {
   bulwark,
   mender,
   strongbox,
+  ...FORGE_RIGS,
 };
 
 /** The rig for a unit, falling back to the generic one. */

@@ -1,0 +1,204 @@
+/* ------------------------------------------ forge creatures: stoker, acolyte,
+ * bellows, hound. Authored SVG cutout rigs; each part is a <g> the animator
+ * transforms, so every group needs the view box as its transform box or the
+ * rotations would pivot around the group's own bounds rather than the joint.
+ */
+
+.forge-creature {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.forge-creature g {
+  transform-box: view-box;
+}
+.forge-creature > g {
+  will-change: transform;
+}
+
+/* Non-part decoration animated by CSS. Never put a CSS animation on a part:
+ * an animation outranks the inline transform the animator writes. */
+
+/* Stoker: embers in the coal heap, the coal in the tongs, goggle glow. */
+.stk-ember {
+  fill: #ff9a42;
+  animation: frg-glint 2.3s ease-in-out infinite;
+}
+.stk-ember-b {
+  animation-duration: 3.1s;
+  animation-delay: -1.2s;
+}
+.stk-ember-c {
+  animation-duration: 1.7s;
+  animation-delay: -0.5s;
+}
+.stk-coal {
+  fill: #ff8a3a;
+  filter: drop-shadow(0 0 3px #ff7a2e);
+  animation: frg-glow 1.9s ease-in-out infinite;
+}
+.stk-lens {
+  fill: #ffcf6a;
+  filter: drop-shadow(0 0 2px #ffb257);
+}
+
+/* Acolyte: the fire it has for a head, the ember in its palm, the ash. */
+.aco-flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: frg-flicker 0.9s steps(3, jump-none) infinite;
+}
+.aco-core {
+  fill: #ffcf6a;
+  filter: drop-shadow(0 0 3px #ff9a42);
+}
+.aco-halo {
+  fill: #ff9a42;
+  opacity: 0.25;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: frg-halo 1.6s ease-in-out infinite;
+}
+.aco-censer {
+  fill: #ffb35e;
+  animation: frg-glint 2.6s ease-in-out infinite;
+}
+.aco-ash {
+  animation: frg-ash 3.2s linear infinite;
+}
+.aco-ash-b {
+  animation-delay: -0.8s;
+  animation-duration: 2.7s;
+}
+.aco-ash-c {
+  animation-delay: -1.9s;
+}
+.aco-ash-d {
+  animation-delay: -2.4s;
+  animation-duration: 3.6s;
+}
+
+/* Bellows: the grate, the horn's mouth, the eyes, the fold glow. */
+.bel-grate {
+  fill: #ff9a42;
+  filter: drop-shadow(0 0 2px #ff7a2e);
+  animation: frg-glow 5.4s ease-in-out infinite;
+}
+.bel-mouth {
+  fill: #ffb35e;
+  filter: drop-shadow(0 0 4px #ff7a2e);
+  animation: frg-glow 5.4s ease-in-out infinite;
+}
+.bel-eye {
+  fill: #ffcf6a;
+  filter: drop-shadow(0 0 2px #ff9a42);
+}
+.bel-folds {
+  opacity: 0.35;
+  animation: frg-glint 5.4s ease-in-out infinite;
+}
+
+/* Hound: cracks that are still molten, the maw, the eye. */
+.hnd-crack {
+  animation: frg-glow 1.3s ease-in-out infinite;
+}
+.hnd-hot {
+  animation: frg-glint 1.1s ease-in-out infinite;
+}
+.hnd-maw {
+  fill: #ff6a3a;
+  filter: drop-shadow(0 0 3px #d8342a);
+}
+.hnd-eye {
+  stroke: #ffdf8a;
+  filter: drop-shadow(0 0 2px #ffb257);
+}
+.hnd-drip {
+  animation: frg-drip 1.4s ease-in infinite;
+}
+
+@keyframes frg-glow {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes frg-glint {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  45% {
+    opacity: 1;
+  }
+}
+@keyframes frg-flicker {
+  0% {
+    transform: scale(1, 1);
+  }
+  33% {
+    transform: scale(0.95, 1.05);
+  }
+  66% {
+    transform: scale(1.04, 0.93);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+@keyframes frg-halo {
+  0%,
+  100% {
+    transform: scale(0.85);
+    opacity: 0.18;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.38;
+  }
+}
+@keyframes frg-ash {
+  0% {
+    transform: translate(0, -6px);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-3px, 3px);
+    opacity: 0;
+  }
+}
+@keyframes frg-drip {
+  0% {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+:root[data-motion="reduced"] .stk-ember,
+:root[data-motion="reduced"] .stk-coal,
+:root[data-motion="reduced"] .aco-flame,
+:root[data-motion="reduced"] .aco-halo,
+:root[data-motion="reduced"] .aco-censer,
+:root[data-motion="reduced"] .aco-ash,
+:root[data-motion="reduced"] .bel-grate,
+:root[data-motion="reduced"] .bel-mouth,
+:root[data-motion="reduced"] .bel-folds,
+:root[data-motion="reduced"] .hnd-crack,
+:root[data-motion="reduced"] .hnd-hot,
+:root[data-motion="reduced"] .hnd-drip {
+  animation: none;
+}
