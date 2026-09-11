@@ -1,6 +1,6 @@
 # Handoff
 
-Updated 2026-09-10 · branch `boss-objectives`, 3 commits ahead of `main`
+Updated 2026-09-11 · branch `boss-objectives`, 23 commits ahead of `main`
 
 **Read this first, then `BALANCE.md`.** Everything below is current as of the
 last commit. Counts come from `validateContent()`, not memory.
@@ -33,13 +33,42 @@ Content: 8 heroes, 24 class paths across 3 mentors, 48 ability branches, 12
 items and 5 supplies, 8 normal enemies, 2 bosses, 1 container, 2 elite traits,
 12 statuses, 3 events.
 
-Verified at the last commit: production build, 95 automated tests across 13
-files, and 12 real-WebSocket checks against a live Worker. **Neither the boss
+Every combatant is now drawn: all eight heroes and every enemy are authored
+SVG cutout rigs with named moving parts. Only the auctioneer and the reward
+chest still come from the generated atlas. `ART_DIRECTION.md` has the direction
+for each figure and why the medium changed.
+
+Verified at the last commit: 201 unit tests across 18 files and 232 browser
+checks across four resolutions (58 per resolution). The 12 real-WebSocket
+checks were last run before the art pass, which touched no server code. **Neither the boss
 objectives nor the supplies have been driven in a browser by this session** —
 reaching a boss by hand takes a full run. Codex's preview harness exists
 precisely to make that cheap; use it.
 
 ## What is worth doing next
+
+### 0. Finish wiring the art that exists
+
+The drawing is done; a few things it can do are not yet asked for.
+
+- **The bosses' `windup` and `signature` clips never play.** The Collector's
+  held key and the Miser's rake are authored, and nothing in the director
+  requests either. Windup belongs on an interruptible intent — the threat is
+  the held pose — and signature on the objective strike.
+- **Frame rate on real hardware.** A full boss stage measures 60fps median in
+  headless Chromium but drops to 30 on about one frame in twenty, worst 50ms.
+  That is software rendering and pessimistic; measure on the four physical
+  devices from item 4 before optimising. The likely cost is the `drop-shadow`
+  filters on the glows.
+- **Heroes go half-transparent while an enemy target is picked.** A global
+  `button:disabled` opacity rule catches every combatant that is not a legal
+  target. It predates the art, but ghostly heroes read far worse now they are
+  drawn. A UX call, not a bug.
+- **Weak figures, candidly:** the Ash Acolyte at back-row size, the Miser's
+  black silhouette next to the Collector's key, the Coin Leech (tidy rather
+  than menacing), and five heroes sharing one round face.
+- **The Battle Lab applies tempo late**, after the animators have registered,
+  so slowed captures are sometimes at full speed. Capture only.
 
 ### 1. The Vanguard/Warden gap is now a ceiling problem
 
@@ -105,12 +134,19 @@ prize. Gold actually in hand at the boss is 50–95.
 nobody, so its absolute win rates are low and mean nothing alone. It exists to
 be compared against itself across two builds.
 
-**`scripts/generate-sprites.ts` has never been run end to end.** The API key
+**`scripts/generate-sprites.ts` has never been run end to end**, and now only
+matters for the auctioneer and the chest. The API key
 works but the account has no prepay credits. Its request shape is confirmed by a
 billing rejection, not an inspected image.
 
-**Class art is generated, not commissioned.** Do not describe it as
-hand-painted. The Strongbox has no art and falls back to the chest cell.
+**Character art is drawn in source, not commissioned.** Every combatant is SVG
+written by Claude sessions; the remaining atlas cells were generated. Do not
+describe either as hand-painted or commissioned.
+
+**Rig motion is in screen space, in the creature's own facing.** The animator
+knows nothing about sides, so an enemy's strike travels towards negative x.
+The first three creatures got this backwards and lunged away from the party;
+a test now holds every rig to its side.
 
 **Save compatibility is deliberate.** Rooms without `combatVersion: 2` keep
 legacy skills, intentions, generation, flat revival prices and unbounded combat,
@@ -125,7 +161,12 @@ npm test
 npm run simulate -- 25 --matrix                         # all 486 combinations
 npm run simulate -- 25 --matrix --policy=tactical,hoard  # ...and the hoarder
 npm run dev:server                                       # then npm run test:network
+npm run test:browser                                     # PW_PORT=… to run two checkouts at once
 ```
+
+The Battle Lab (`/dev/bosses.html`) stages any fight by URL: `boss=collector`
+or `boss=miser`, or `encounter=<id>` for any ordinary encounter, with
+`party=2|3|4`, `heroes=a,b,c,d`, `stage=` and `motion=1&tempo=0.25`.
 
 To compare a change against a previous commit, put a worktree beside the repo,
 symlink `node_modules`, and copy `scripts/policy.ts` across so both builds are
