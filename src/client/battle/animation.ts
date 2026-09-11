@@ -165,6 +165,10 @@ export class Animator {
   play(name: ClipName, then: ClipName = "idle") {
     const clip = this.rig[name] ?? GENERIC[name] ?? GENERIC.idle!;
     const current = this.playing;
+    // A clip that ends by holding its last pose — a fall — is not restarted
+    // by being asked for again; the fallen do not get up to fall twice.
+    if (current && current.name === name && current.then === name && !clip.loop)
+      return;
     // A one-shot in progress is not interrupted by an idle request.
     if (
       current &&

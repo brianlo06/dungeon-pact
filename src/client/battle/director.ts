@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Beat, Snapshot } from "../../shared/model";
 import type { ClipName, SfxName } from "../../shared/presentation";
 import { tempo } from "./tempo";
+import { castClip } from "./hero-clips";
 
 /**
  * The presentation director.
@@ -127,6 +128,8 @@ export function useDirector(
   pausedRef.current = paused;
   const hooksRef = useRef(hooks);
   hooksRef.current = hooks;
+  const snap = useRef(s);
+  snap.current = s;
 
   const finish = useCallback((snapshot: Snapshot) => {
     queue.current = [];
@@ -167,7 +170,8 @@ export function useDirector(
     switch (beat.kind) {
       case "cast":
         next.title = { text: beat.label ?? "", actor: beat.actor };
-        if (beat.actor) hooksRef.current.onClip?.(beat.actor, "attack");
+        if (beat.actor)
+          hooksRef.current.onClip?.(beat.actor, castClip(snap.current, beat));
         add({ kind: "cast", from: beat.actor, life: 420 });
         if (beat.actor && beat.target && beat.actor !== beat.target)
           add({

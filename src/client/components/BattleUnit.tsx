@@ -66,6 +66,22 @@ export function BattleUnit({
   }, [animators, unit.id, look.spriteSet]);
   const shown = hp ?? unit.hp;
   const down = shown <= 0;
+  // A hero lies down while downed and gets up when revived, whether or not a
+  // round was replayed to get there. The fall is `defeat`, the same clip the
+  // director asks for on the killing blow, so the two never play it twice.
+  // It waits a moment before acting: a new round renders once with settled
+  // health before the director rewinds it for replay, and reacting to that
+  // one frame would stand a downed hero up only to knock it straight over.
+  const wasDown = useRef(down);
+  useEffect(() => {
+    if (!player || !animators) return;
+    const settle = setTimeout(() => {
+      if (down) animators.play(unit.id, "defeat", "defeat");
+      else if (wasDown.current) animators.play(unit.id, "revive");
+      wasDown.current = down;
+    }, 60);
+    return () => clearTimeout(settle);
+  }, [down, player, animators, unit.id]);
   const share = Math.max(0, Math.min(1, shown / unit.maxHp));
   const barrier = unit.statuses.find((s) => s.id === "barrier")?.stacks ?? 0;
   const held = enemy?.holding ?? [];
