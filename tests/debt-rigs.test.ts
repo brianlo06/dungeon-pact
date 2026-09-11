@@ -82,12 +82,12 @@ it("carries every clip the director and the boss presentation ask for", () => {
 
 it("rakes the Miser's hand out past its held wind-up when the levy lands", () => {
   // Where the palm is, in view-box units, for a sampled hand pose and root.
-  // The arm pivots at the shoulder (44, 50); the palm sits at (16, 65). Part
+  // The arm pivots at the shoulder (44, 50); the palm sits at (16, 61). Part
   // and root translations are fractions of the 100-unit box.
   type Sampled = ReturnType<typeof sampleTrack>;
   const palmX = (hand: Sampled, root: Sampled) => {
     const a = (hand.rotate * Math.PI) / 180;
-    const [dx, dy] = [16 - 44, 65 - 50];
+    const [dx, dy] = [16 - 44, 61 - 50];
     return 44 + dx * Math.cos(a) - dy * Math.sin(a) + (hand.x + root.x) * 100;
   };
   const reach = (clip: Clip) => {

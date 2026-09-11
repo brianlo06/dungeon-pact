@@ -21,7 +21,7 @@ import type { Rig } from "./animation";
  *
  * The arm pivots at the shoulder with the hand below and in front of it, so a
  * *positive* rotation of `hand` swings it forward and up towards the party;
- * past about 100 degrees it is overhead, behind the eyes.
+ * past about 100 degrees it is overhead, behind the eye.
  */
 const miser: Rig = {
   idle: {
@@ -162,8 +162,10 @@ const miser: Rig = {
    * Crushing levy held in the air: the hand goes up over its head, fingers
    * spread, and stays there, flexing, while the head glares down at the party
    * and the jaw works. The threat is the held pose, as the Collector's. The
-   * hand rises behind the head rather than in front of it, so the face stays
-   * readable for as long as the wind-up is held.
+   * hand is lifted clear above the head with daylight under the fingers, and
+   * held a little forward so the palm does not sit on the coin crest either:
+   * filled black, the raised hand, the eye and the crest are three separate
+   * shapes rather than one knot, for as long as the wind-up is held.
    */
   windup: {
     duration: 1300,
@@ -175,14 +177,14 @@ const miser: Rig = {
     ],
     parts: {
       hand: [
-        { at: 0, rotate: 110, x: 0.004, y: -0.05 },
-        { at: 0.5, rotate: 117, x: 0.008, y: -0.06 },
-        { at: 1, rotate: 110, x: 0.004, y: -0.05 },
+        { at: 0, rotate: 110, x: -0.02, y: -0.11 },
+        { at: 0.5, rotate: 116, x: -0.016, y: -0.12 },
+        { at: 1, rotate: 110, x: -0.02, y: -0.11 },
       ],
       head: [
-        { at: 0, rotate: -5, x: -0.006 },
-        { at: 0.5, rotate: -7, x: -0.01 },
-        { at: 1, rotate: -5, x: -0.006 },
+        { at: 0, rotate: -7, x: -0.01 },
+        { at: 0.5, rotate: -9, x: -0.014 },
+        { at: 1, rotate: -7, x: -0.01 },
       ],
       jaw: [
         { at: 0, rotate: -3 },
@@ -241,9 +243,9 @@ const miser: Rig = {
     ],
     parts: {
       hand: [
-        { at: 0, rotate: 113, x: 0.006, y: -0.055 },
-        { at: 0.24, rotate: 124, x: 0.012, y: -0.07 },
-        { at: 0.38, rotate: 130, x: 0.014, y: -0.075 },
+        { at: 0, rotate: 113, x: -0.018, y: -0.115 },
+        { at: 0.24, rotate: 124, x: 0.012, y: -0.13 },
+        { at: 0.38, rotate: 130, x: 0.014, y: -0.135 },
         // Over the top and out: the rake lands at full reach.
         { at: 0.5, rotate: 16, x: -0.07, y: 0.005 },
         { at: 0.6, rotate: 8, x: -0.07, y: 0.02 },
@@ -260,7 +262,7 @@ const miser: Rig = {
       // The head goes back as the hand goes up, and the gape follows the
       // hand out, high enough that the arm passes under the jaw.
       head: [
-        { at: 0, rotate: -6, x: -0.008 },
+        { at: 0, rotate: -8, x: -0.012 },
         { at: 0.3, rotate: 6, x: 0.004 },
         { at: 0.5, rotate: 2, x: -0.02, y: -0.012 },
         { at: 0.7, rotate: -1, x: -0.01 },
