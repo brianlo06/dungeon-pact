@@ -1,5 +1,59 @@
 # Changelog
 
+## 0.12 reliability — 2026-09-10
+
+- Commands carry a decision epoch instead of matching an exact revision. Two
+  heroes locking plans in the same round, or voting at the same instant, are
+  both accepted; a decision made about a moment that has passed is still
+  refused. Safety comes from the per-handler idempotency guards, which were
+  already there.
+- Rooms expire: idle sockets close after 45 minutes, a finished run is deleted
+  two hours after it ends, and an untouched room is deleted after 24 hours.
+  Expiry deletes the run, the sessions and the receipts together.
+- Room creation is limited to twelve per address per hour.
+- The live smoke harness now asserts the new concurrency rule in both
+  directions.
+
+## 0.11 supplies — 2026-09-10
+
+- Five consumables: Ward-iron Flask, Field Dressing, Clear Draught, Solvent
+  Flask, Flashpowder. Each sells one thing a Vanguard or Warden would otherwise
+  be the only source of, for one action and one payment.
+- Every exchange now closes with a consumables tray, sold by the case of two.
+  The tray is the last of the three lots, so an exchange now runs two
+  equipment lots rather than three.
+- Supplies stack, never displace worn equipment, and are never seized.
+- The Vanguard gap falls from +17 to +11 and the Warden's from +21 to +17.
+  Parties that field them are unchanged; every point of that came from lifting
+  the parties that do not.
+- The Strongbox is priced against a party's actions rather than its headcount,
+  so opening it costs a duo and a quartet the same share of a round.
+- The simulation runner records why a plan was rejected, and counts supplies
+  bought and used. A rejection count with no reason cannot be chased, and the
+  chronicle is capped at 100 entries so it cannot be asked what happened.
+- The policy picks interrupts by effect as well as Barrier strips, so a bought
+  Flashpowder counts as counterplay alongside the Arcanist's Counterspell.
+
+## 0.10 boss objectives — 2026-09-10
+
+- Both bosses now fight for something and say so before the first round.
+- The Collector's Repossess seizes the dearest item carried by each hero in the
+  row it hits into a Strongbox. Its owners lose those items' triggers until the
+  container is broken open, which returns everything and ends the seizures. The
+  Strongbox never blocks a victory: opening it is a choice, not a chore.
+- The Miser's Weight of wealth shields it for one Barrier per twelve gold the
+  treasury holds above 160. Spending is the counterplay; hoarding is the
+  expensive way to arrive.
+- Three new content primitives — `seize`, `bank`, and `EnemyDef.object` — plus
+  `EnemyDef.objective` for the stated goal. No enemy gained health.
+- Difficulty moved on the strength of the objectives alone: three and four
+  players from 88–91% to 81–86%, two players from 72% to 63%.
+- The balance policy now picks a Barrier strip by effect rather than by name, so
+  the Broker's Liquidate and two upgraded branches count as counterplay instead
+  of only the Warden's Unravel.
+- New `hoard` simulation policy, written to reach a system the tactical bot
+  cannot: it never spends, so a treasury-scaled shield has something to measure.
+
 ## 0.9 scarce healing — 2026-09-10
 
 - Mending roots had no cooldown, so a Warden healed every round and sustain compositions were not killable. It now heals 32 on a one-round cooldown, leaving a gap the party has to survive. Three- and four-player win rates fell from 93/92% to 81/85%.

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Snapshot } from "../shared/model";
-import type { Intent } from "../shared/protocol";
+import { epoch, type Intent } from "../shared/protocol";
 import { audio } from "./audio";
 export interface Credentials {
   room: string;
@@ -108,6 +108,7 @@ export function useRoom(credentials: Credentials | null) {
         version: 1,
         id: crypto.randomUUID(),
         revision: current.current.revision,
+        epoch: epoch(current.current),
         intent,
       }),
     );

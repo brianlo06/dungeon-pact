@@ -1,7 +1,11 @@
 import { chooseEncounter } from "../content/encounters";
 import type { RunState, Player, Enemy, Ability, Unit } from "../shared/model";
-import { enemies as definitions, enemyAbilities } from "../content/enemies";
-import { abilities } from "../content/heroes";
+import {
+  enemies as definitions,
+  enemyAbilities,
+  isObject,
+} from "../content/enemies";
+import { abilities, supplyFor } from "../content/heroes";
 import { resourceCap } from "../content/evolutions";
 import { upgradeOffer } from "../content/upgrades";
 import { pick } from "./rng";
@@ -12,10 +16,19 @@ import {
   log,
   isPlayer,
   gain,
+  release,
   status,
 } from "./effects";
 export function standing(s: RunState) {
   return s.players.filter((p) => p.hp > 0 && !p.fallen);
+}
+/**
+ * Enemies that must be cleared for a chamber to fall silent. A strongbox is
+ * not one of them: leaving it standing has to be a losable choice, not a chore
+ * the party is forced through before the fight can end.
+ */
+export function combatants(s: RunState) {
+  return s.enemies.filter((e) => !isObject(e.definition));
 }
 /** Rounds an encounter tolerates before it starts escalating. */
 export const PATIENCE = 6;
@@ -90,7 +103,7 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
   s.plans = {};
   s.enemies = [];
   const count = boss ? 1 : Math.min(4, s.players.length);
-  const pool = definitions.filter((d) => !!d.boss === boss);
+  const pool = definitions.filter((d) => !!d.boss === boss && !d.object);
   const encounter =
     !boss && s.encounterVersion === 2 ? chooseEncounter(s) : undefined;
   const formation = encounter?.formations[s.players.length as 2 | 3 | 4];
@@ -152,6 +165,14 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
       ? "The vault closes. Your final debt is due."
       : "Enemy intentions revealed. Plan together.",
   );
+  // A boss that only hits harder needs no briefing. One with an objective does.
+  if (boss && s.combatVersion === 2)
+    for (const e of s.enemies) {
+      const objective = definitions.find(
+        (d) => d.id === e.definition,
+      )?.objective;
+      if (objective) log(s, `${e.name}: ${objective}`, "combo");
+    }
 }
 function startRound(s: RunState) {
   for (const p of standing(s)) trigger(s, p, p, "roundStart");
@@ -175,9 +196,13 @@ export function validatePlan(
 ): Ability {
   if (p.hp <= 0 || p.fallen)
     throw Error("Downed heroes can use spirit support");
-  const a = abilities(p.heroId, s.combatVersion, p.upgrades, p.evolution).find(
-    (a) => a.id === abilityId,
-  );
+  const a = abilities(
+    p.heroId,
+    s.combatVersion,
+    p.upgrades,
+    p.evolution,
+    p.items,
+  ).find((a) => a.id === abilityId);
   if (!a) throw Error("Unknown ability");
   if ((p.cooldowns[a.id] ?? 0) > 0 || p.resource < a.cost)
     throw Error("Ability is unavailable");
@@ -244,9 +269,13 @@ export function resolveRound(s: RunState) {
     .map((p) => ({
       p,
       plan: s.plans[p.id],
-      a: abilities(p.heroId, s.combatVersion, p.upgrades, p.evolution).find(
-        (a) => a.id === s.plans[p.id]?.ability,
-      )!,
+      a: abilities(
+        p.heroId,
+        s.combatVersion,
+        p.upgrades,
+        p.evolution,
+        p.items,
+      ).find((a) => a.id === s.plans[p.id]?.ability)!,
     }))
     .filter((x) => x.a)
     .sort(
@@ -267,6 +296,14 @@ export function resolveRound(s: RunState) {
     )!;
     p.resource -= a.cost;
     p.cooldowns[a.id] = a.cooldown + 1;
+    // A supply is spent by being used. One copy leaves the pack before the
+    // action resolves, so nothing it does can hand it back.
+    const spent = supplyFor(a.id);
+    if (spent) {
+      const at = p.items.indexOf(spent.id);
+      if (at >= 0) p.items.splice(at, 1);
+      log(s, `${p.name} uses up the ${spent.name}.`);
+    }
     // Content objects are shared, so price the rising revival on a copy.
     let cast = a;
     if (a.id === "revive") {
@@ -302,6 +339,9 @@ export function resolveRound(s: RunState) {
     .filter((e) => e.hp > 0)
     .sort((a, b) => b.speed - a.speed)) {
     if (!standing(s).length) break;
+    // Once the last real enemy falls the chamber is decided; a container should
+    // not go on sealing itself over the body of the boss that filled it.
+    if (!combatants(s).some((x) => x.hp > 0)) break;
     if (e.hp <= 0) continue;
     if (status(e, "interrupted")) {
       log(s, `${e.name} loses its ${e.intent.ability.name}: interrupted.`);
@@ -374,7 +414,8 @@ export function resolveRound(s: RunState) {
     log(s, "The pact is broken. The dungeon keeps its price.");
     return;
   }
-  if (s.enemies.every((e) => e.hp <= 0)) {
+  if (combatants(s).every((e) => e.hp <= 0)) {
+    for (const e of s.enemies) if (e.holding?.length) release(s, e);
     const node = s.map.find((n) => n.id === s.currentNode)!;
     s.reward = node.type === "boss" ? 240 : node.type === "elite" ? 180 : 110;
     gain(s, s.reward);

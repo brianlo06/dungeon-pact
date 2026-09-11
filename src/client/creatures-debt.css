@@ -1,0 +1,255 @@
+/*
+ * The Miser, the Rivet Sniper and the Coin Leech.
+ *
+ * Kept out of battle.css so creatures drawn in parallel do not collide. Every
+ * class here is prefixed by its creature: msr-, snp-, lch-.
+ */
+
+.miser,
+.sniper,
+.leech {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+/* Parts are moved by the animator; they need their own transform box or the
+ * rotations would pivot around the whole SVG rather than the joint. */
+.miser > g,
+.sniper > g,
+.leech > g,
+.msr-jaw {
+  transform-box: view-box;
+}
+
+/* ---------------------------------------------------------------- miser -- */
+
+/* An empty setting: a ring of thread where a coin would be. */
+.msr-coin-face {
+  fill: #2a1c1f;
+  stroke: #6b5140;
+  stroke-width: 0.7;
+  stroke-dasharray: 1.2 0.9;
+  transition:
+    fill 0.3s,
+    stroke 0.3s;
+}
+.msr-coin-rim {
+  fill: none;
+  stroke: #3a2a26;
+  stroke-width: 0.5;
+}
+/* A set coin: the pact's gold, armouring the thing that counts it. */
+.msr-coin[data-lit] .msr-coin-face {
+  fill: url(#msr-gold);
+  stroke: #3a2610;
+  stroke-width: 0.8;
+  stroke-dasharray: none;
+}
+.msr-coin[data-lit] .msr-coin-rim {
+  stroke: #8e6122;
+  stroke-width: 0.6;
+}
+/* Holding banked Barrier right now: the set coins run hot. The glow is a
+ * group of soft gradient discs behind them, pulsed by opacity as one layer —
+ * a drop-shadow on twenty animated coins was the single most expensive thing
+ * on the Counting House stage. */
+.msr-halos {
+  display: none;
+}
+.miser[data-banked] .msr-halos {
+  display: inline;
+  animation: msr-banked 2.4s ease-in-out infinite;
+}
+.miser[data-banked] .msr-coin[data-lit] .msr-coin-face {
+  stroke: #ffe7a3;
+}
+/* The gold takes the hit. */
+.combatant[data-impact="block"] .msr-halos {
+  display: inline;
+  opacity: 1;
+  animation: none;
+}
+.combatant[data-impact="block"] .msr-coin[data-lit] .msr-coin-face {
+  stroke: #fff4c8;
+}
+@keyframes msr-banked {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.msr-lens {
+  fill: #e6f6b4;
+  animation: msr-lens 3.7s ease-in-out infinite;
+}
+.msr-lens-glow {
+  fill: url(#msr-lens-glow);
+}
+@keyframes msr-lens {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  40% {
+    opacity: 1;
+  }
+  44% {
+    opacity: 0.45;
+  }
+}
+/* Phase two: the lens goes hot. */
+.combatant[data-phase="2"] .msr-lens {
+  fill: #ff9a5a;
+  animation-duration: 1.3s;
+}
+.combatant[data-phase="2"] .msr-lens-glow {
+  fill: url(#msr-lens-hot);
+}
+
+:root[data-motion="reduced"] .miser[data-banked] .msr-halos,
+:root[data-motion="reduced"] .msr-lens {
+  animation: none;
+}
+
+/* --------------------------------------------------------------- sniper -- */
+
+.sniper ellipse,
+.sniper circle {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+/* Red lenses: the one thing on the back row that is looking at you. */
+.snp-lens {
+  fill: #ff5a3c;
+  filter: drop-shadow(0 0 2px #ff3a1e) var(--tone,);
+  animation: snp-lens 3.1s ease-in-out infinite;
+}
+@keyframes snp-lens {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.snp-sight {
+  fill: #ff7a52;
+  opacity: 0.9;
+}
+/* Rivets heating in the brazier and riding the belt, glowing. */
+.snp-coals,
+.snp-rivet {
+  fill: #ff9a42;
+  filter: drop-shadow(0 0 2px #ff6a1e) var(--tone,);
+  animation: seam 1.7s ease-in-out infinite;
+}
+.snp-rivet:nth-child(odd) {
+  animation-delay: -0.6s;
+}
+.snp-smoke {
+  fill: #b7a9a0;
+  opacity: 0.25;
+  animation: snp-smoke 3.4s ease-out infinite;
+}
+@keyframes snp-smoke {
+  0% {
+    opacity: 0.35;
+    transform: translate(0, 0) scale(0.7);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(10%, -14%) scale(1.6);
+  }
+}
+/* The muzzle only lights when it fires. */
+.snp-muzzle {
+  fill: #ffe0a0;
+  opacity: 0;
+}
+.combatant[data-acting] .snp-muzzle {
+  animation: snp-fire 0.42s ease-out 0.24s both;
+}
+@keyframes snp-fire {
+  0% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(3.4, 1.8);
+    /* Tone first, so this interpolates from the tone the muzzle rests in. */
+    filter: var(--tone,) drop-shadow(0 0 4px #ffb24a);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+/* Taking aim: the lenses go hard and steady. */
+.combatant[data-phase="2"] .snp-lens {
+  animation-duration: 0.9s;
+}
+
+/* ---------------------------------------------------------------- leech -- */
+
+/* It is wet: an oily sheen, cold against the bruise-dark hide. */
+.lch-sheen {
+  fill: none;
+  stroke: #a597c4;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.lch-stripe {
+  fill: none;
+  stroke: #c4561f;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+.lch-coin {
+  fill: url(#lch-gold);
+  stroke: #5a3a14;
+  stroke-width: 0.6;
+  opacity: 0.9;
+}
+/* Eye-spots: small, red and hard. Lit by colour, not by a filter. */
+.lch-eye {
+  fill: #ff5a3a;
+  stroke: #171420;
+  stroke-width: 0.5;
+  animation: lch-eye 2.3s ease-in-out infinite;
+}
+.lch-eye:nth-of-type(even) {
+  animation-delay: -1.1s;
+}
+@keyframes lch-eye {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.lch-throat {
+  fill: #a07a30;
+}
+/* Feeding: the coin in the throat flashes as it goes down. */
+.combatant[data-acting] .lch-throat {
+  fill: #ffe08a;
+}
+
+:root[data-motion="reduced"] .lch-eye,
+:root[data-motion="reduced"] .snp-lens,
+:root[data-motion="reduced"] .snp-coals,
+:root[data-motion="reduced"] .snp-rivet,
+:root[data-motion="reduced"] .snp-smoke,
+:root[data-motion="reduced"] .combatant[data-acting] .snp-muzzle {
+  animation: none;
+}

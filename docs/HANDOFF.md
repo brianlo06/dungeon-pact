@@ -1,128 +1,241 @@
 # Handoff
 
-Updated 2026-09-10 · branch `balance-and-upgrades`, 9 commits ahead of `main`
+Updated 2026-09-11 · branch `boss-objectives`, 37 commits ahead of `main`
 
 **Read this first, then `BALANCE.md`.** Everything below is current as of the
 last commit. Counts come from `validateContent()`, not memory.
 
 ## Where the work lives
 
-All of this session's work is on **`balance-and-upgrades`, not merged**. `main`
-still points at the 0.2 art-and-tactical-combat commit. Nothing is pushed to a
-remote. Merge or rebase when you are happy with it; the branch is linear and
-each commit is self-contained.
+The route/upgrade/healing work is merged into `main`. Boss objectives,
+supplies and the reliability pass sit on **`boss-objectives`**, not merged.
+The repository is on GitHub as a private repo, `brianlo06/dungeon-pact`, with
+`main`, `balance-and-upgrades` and `boss-objectives` pushed. `main` is the
+default branch and does not yet have this work.
+
+Codex is working in the same tree on presentation. Its boss preview harness
+(`src/dev/`, `dev/bosses.html`, `docs/BOSS_PREVIEW.md`) is committed alongside
+this work at the user's direction and has grown into the Battle Lab the browser
+tests run against. The `BossObjective` component it added was removed when
+combat moved onto one battlefield; the objective now sits in the combat strip.
+`npm run build` excludes the preview from production.
 
 ## What the game is now
 
 An 8-class cooperative roguelite over a 7-depth branching route. Guest lobby →
 hero choice → starting pact → route → chambers → boss → results.
 
-Chambers: combat, elite, exchange (three lots each), veiled lot, event, mentor,
-camp, boss. Clearing a fight opens a branch upgrade for every hero. A mentor
-teaches one class path per hero, paid from the shared treasury.
+Chambers: combat, elite, exchange, veiled lot, event, mentor, camp, boss. An
+exchange runs two equipment lots and closes with a consumables tray. Clearing
+a fight opens a branch upgrade for every hero. A mentor teaches one class path.
+
+Both bosses fight for an objective and state it before the first round: the
+Collector seizes equipment into a breakable Strongbox, the Miser shields itself
+with treasury the party never spent.
 
 Content: 8 heroes, 24 class paths across 3 mentors, 48 ability branches, 12
-items, 8 normal enemies, 2 bosses, 2 elite traits, 12 statuses, 3 events.
+items and 5 supplies, 8 normal enemies, 2 bosses, 1 container, 2 elite traits,
+12 statuses, 3 events.
 
-Verified at the last commit: production build, 66 automated tests across 8
-files, 12 real-WebSocket checks. The route map, mentor screen, upgrade screen
-and round playback were each checked in a browser against a live room.
+Every combatant is now drawn: all eight heroes and every enemy are authored
+SVG cutout rigs with named moving parts. Only the auctioneer and the reward
+chest still come from the generated atlas. `ART_DIRECTION.md` has the direction
+for each figure and why the medium changed.
+
+Verified at the last commit: 233 unit tests across 21 files, 373 browser
+checks across four resolutions (plus three informational frame-time checks
+that run only at 1920×1080), a production build, and 13 real-WebSocket checks
+against a local Worker. The thirteenth is new: the room server threw on every
+ordinary socket close and never told the party someone had left, which the old
+twelve could not see. Both boss fights have
+been driven in a browser many times over through the Battle Lab, which stages
+any fight by URL. **Supplies have not been driven in a browser** — buying one
+happens at an exchange, which the lab does not stage — only by the simulation
+and unit tests.
 
 ## What is worth doing next
 
-### 1. Boss objectives that change decisions
+### 0. Presentation loose ends
 
-This is the clearest remaining ceiling on difficulty and has been the top
-open item for three passes. Both bosses still only hit harder as they lose
-health. Every loss in the balance tails happens at the boss, so the boss is
-already where runs are decided — it just decides them with numbers.
+The art pass is finished and its first round of fixes is in: the bosses hold
+their wind-ups and land signatures, targeting marks legal targets instead of
+fading everyone else, intent chips no longer cover name plates, the three
+weakest enemies were redrawn, and five heroes got faces of their own. One real bug turned up on the way:
+the stage was a scroll container, so keyboard focus near its edge could slide
+the whole battlefield out of view. It now uses `overflow: clip`.
 
-The engine can support real objectives without new primitives. Enemies can
-target their own side, apply statuses, gain Barrier that scales off state, and
-`confused` already flips an action onto an enemy's own allies. A boss that
-seizes equipment into a destructible strongbox, or one whose shields scale off
-the treasury so hoarding becomes dangerous, both fall out of what exists.
+Frame rate was profiled rather than guessed at, and the cause was not the glow
+filters everyone suspected. Headless, the compositor was saturated by three
+things: a screen-blend lighting layer that was never lit but forced the whole
+stage offscreen every frame, a depth filter on every combatant, and health bars
+easing their `width`, which re-laid out the grid on every hit. All three are
+gone (the depth tone now sits on each shape, baked into its part's layer).
+Boss replays at 1920×1080 went from about 7% dropped frames to 0–0.3%
+headless. On a MacBook Air M2 with real GPU rendering there were no dropped
+frames before or after — the gain there is about a fifth less GPU and raster
+work — at a cost of 10–25ms/s more main-thread time. Safari, which does not
+layer SVG parts the same way, has not been measured. `tests/perf-css.test.ts`
+and `tests-browser/perf.spec.ts` hold the rules that made the difference.
+What is left, all presentation and none of it blocking:
 
-Prefer this over raising any enemy's health. An optimal bot wins 91% at four
-players; a bigger health pool moves that number without making the fight more
-interesting.
+- **The action fan covers heroes.** The ability slips that open from your hero
+  sit over the hero and the ally below. The user saw it and asked for it to be
+  left for now; it is the next thing they will want.
+- **Bodies still cover name plates.** Chips are laid out, units are not: at
+  three heroes Bram's hat covers the Collector's and the Stoker's plates, and
+  the front-row Collector covers the Kiln Mender's. That is unit placement in
+  `layout.ts`.
+- **Back-row hero plates clip at the bottom of the stage** whenever the camera
+  zooms in.
+- **A replay runs about ten seconds**, not the four `ART_DIRECTION.md` claims.
+  Either the step-duration cap is not doing its job or the claim is stale.
+- **Chips can sit on their own creature's art.** Placement keeps chips clear of
+  name plates and each other, not of bodies — the Collector's key crosses its
+  own chip.
+- **At 1280×720 three-line WINDUP chips on back-row enemies** drop 14–20px onto
+  their own creature so they stay on screen at the tightest camera framing.
+- **Reduced motion still animates held poses.** It turns off replay; idles and
+  the held windup still loop.
+- **The downed-hero fall still waits on a 60ms timer.** The same approach failed
+  under load for the windup and was replaced there; the fall probably no longer
+  needs it.
+- **The Battle Lab applies tempo late**, after animators register, so slowed
+  captures are sometimes at full speed. Capture only.
+- **Two browser tests read clips through React's fiber internals**, which will
+  break if React changes how it stores props.
+- **Weakest figures now:** the Miser in flat black (better, not yet as iconic as
+  the Collector's key) and the Acolyte, still the smallest thing on the field.
 
-### 2. Decide what Vanguard and Warden are for
+### 1. The Vanguard/Warden gap is now a ceiling problem
 
-Both sit near +15 (parties containing them win ~98%, parties without ~84%).
-That is the tank-and-healer pattern, not a bug, and parties without either are
-clearly viable. But it will not move by tuning, and this session proved that
-the hard way: nerfing the healer raised the healer's value, because scarce
-healing makes the only supplier of it more important.
+Supplies took the Vanguard gap from +17 to +11 and the Warden's from +21 to
++17, and every point came from lifting parties that field neither: parties with
+one did not move at all. That is the mechanism working. It stops there for a
+reason worth understanding before touching it again — Warden parties sit at
+**98%**, so nothing that lifts a floor can close the gap further. Closing it
+means making Warden parties lose more, and the healing pass already established
+what happens then.
 
-This is a design decision, not a balance one. Either accept that the two
-survivability classes are the strongest picks, or change what they do — for
-instance by moving some protection into equipment or consumables so a party can
-buy what a Vanguard provides. Do not attempt it as a numbers pass.
+If it is worth another pass, the lever is the ceiling, not the floor, and the
+lever is not healing. Consider whether the boss layer should have an objective
+that a healer specifically cannot answer, the way the Strongbox is one that a
+tank cannot.
 
-### 3. The Reaver is the weakest class and the weakest tails
+### 2. Two-hero parties still trail, and the container was not why
 
-Reaver-heavy parties are the bottom of the matrix. It pays HP for damage and
-has no sustain until the Cipher's Bloodbound path, which sits at the deepest
-mentor and is often unreachable. Either give it a reliable sustain line earlier
-or accept it as the high-risk pick and say so in its description.
+Duos sit at 67% against 89% at four. Pricing the Strongbox against party
+actions rather than headcount — the fix the last handoff proposed — was worth
+**one point**, measured on its own. It was the right shape and it was not the
+cause. Whatever is hurting duos is somewhere else, and the next person should
+measure before designing. Start by splitting duo losses by chamber type rather
+than assuming the boss.
 
-### 4. Economy, if you want the treasury tighter still
+### 3. Economy
 
-Parties finish holding 242–268 gold against roughly 1200 earned, down from
-660–790 earlier in the session. Multi-lot exchanges, mentor tuition, priced
-camp training and escalating revivals did most of that. Consumables and healing
-alternatives are the remaining Economy-gate content; they would also give
-non-Warden parties something to buy instead of a class.
+Supplies are the gold sink the notebook wanted, and mean final treasury fell
+from 253 to 245 — barely. Parties still reach the boss with 50–95 gold in hand.
+A party still has no way to spend gold down deliberately before the Counting
+House, so the Miser's shield remains a penalty on hoarding rather than a
+decision on the route. A supply seller somewhere other than an exchange would
+fix both.
 
-### 5. Reliability, before anyone outside your group plays it
+### 4. Reliability, continued
 
-Unchanged and still real: strict room-revision validation makes simultaneous
-commands produce stale rejections — migrate to phase/round epochs. No heartbeat
-timeout, AFK handling, room expiry, creation limits or retention policy. These
-should land before any public access.
+The concurrency model, room expiry, idle disconnection and creation limits are
+done and documented in `NETWORK_PROTOCOL.md`. What is left before strangers
+play: four physical devices, Worker restart smoke, network-interruption
+behaviour, a long session soak, schema fuzzing — and watching the retention
+alarms actually fire, which none of the tests do because every timer is
+measured in hours.
+
+There is still no AFK _handling_ in the game sense. A player who stops
+answering blocks a phase indefinitely; only their socket times out, not their
+turn. That is a design decision — auto-pass, or a party vote to proceed — and
+it is the last thing between this and a public room.
 
 ## Things that are true but easy to misread
 
-**`scripts/generate-sprites.ts` has never been run end to end.** The API key
-works but the account has no prepay credits, which blocks text and image models
-alike. Its request shape is confirmed by a billing rejection, not by an
-inspected image. The class art in `characters-v2.png` came through the browser
-instead. Treat the first real run as a review step.
+**Supplies narrow the survivability gap; they do not close it.** One action
+bought is not one action every round. A Warden heals seven or eight times in a
+boss fight; a party carries two or three Field Dressings. This was always going
+to be a narrowing.
 
-**Class art is generated, not commissioned.** `ASSET_LICENSES.md` records the
-provenance of both atlases. Do not describe either as hand-painted.
+**"Leftover gold" figures include the boss reward.** Mean final treasury is
+counted after the 240 prize lands, so most of what looks like leftover is the
+prize. Gold actually in hand at the boss is 50–95.
 
-**Multi-frame animation is still not implemented.** Round playback knows when a
-unit acts, is hit, heals or falls, so an idle/attack/hurt sheet has somewhere
-to plug in, but no such sheet exists and the sprites are single-cell.
+**The Miser's shield is a penalty, not yet a decision.** See economy above.
+
+**The `hoard` policy is deliberately a bad bot.** It buys nothing and trains
+nobody, so its absolute win rates are low and mean nothing alone. It exists to
+be compared against itself across two builds.
+
+**`scripts/generate-sprites.ts` has never been run end to end**, and now only
+matters for the auctioneer and the chest. The API key
+works but the account has no prepay credits. Its request shape is confirmed by a
+billing rejection, not an inspected image.
+
+**Character art is drawn in source, not commissioned.** Every combatant is SVG
+written by Claude sessions; the remaining atlas cells were generated. Do not
+describe either as hand-painted or commissioned.
+
+**Rig motion is in screen space, in the creature's own facing.** The animator
+knows nothing about sides, so an enemy's strike travels towards negative x.
+The first three creatures got this backwards and lunged away from the party;
+a test now holds every rig to its side.
 
 **Save compatibility is deliberate.** Rooms without `combatVersion: 2` keep
-legacy skills, intentions, generation, flat revival prices and unbounded
-combat, and never see the upgrade or mentor phases. Schema and content versions
-remain 1; every field added this session is optional. Start a new pact to see
-current rules.
+legacy skills, intentions, generation, flat revival prices and unbounded combat,
+never see the upgrade or mentor phases, get bosses with no objectives, and are
+never granted a supply action. Schema and content versions remain 1.
 
 ## How to check anything
 
 ```sh
 npm run build
 npm test
-npm run simulate -- 25 --matrix        # all 486 class combinations
-npm run simulate -- 25 --matrix --full # ...with every row
-npm run dev:server                     # then npm run test:network
+npm run simulate -- 25 --matrix                         # all 486 combinations
+npm run simulate -- 25 --matrix --policy=tactical,hoard  # ...and the hoarder
+npm run dev:server                                       # then npm run test:network
+npm run test:browser                                     # PW_PORT=… to run two checkouts at once
 ```
 
-`--matrix` prints aggregates and tails; `--policy=attack` reproduces the older,
-deliberately naive bot for comparison. The runner counts plans the server
-rejected and the tests assert that count is zero — a non-zero count means the
-policy is proposing illegal actions and every balance number from that run is
-worthless.
+The Battle Lab (`/dev/bosses.html`) stages any fight by URL: `boss=collector`
+or `boss=miser`, or `encounter=<id>` for any ordinary encounter, with
+`party=2|3|4`, `heroes=a,b,c,d`, `stage=` and `motion=1&tempo=0.25`.
 
-**One trap, recorded because it cost real time.** Branching the route hid
-evolutions from the matrix: mentors need steering toward several chambers
-ahead, the greedy policy stopped reaching them, and the aggregates reverted to
-their pre-evolution values, looking exactly like a regression from an unrelated
-change. If you change route shape, node types or phase flow, confirm the policy
-can still reach what you are measuring. An instrument that cannot reach a
-system reports that the system does nothing.
+To compare a change against a previous commit, put a worktree beside the repo,
+symlink `node_modules`, and copy `scripts/policy.ts` across so both builds are
+measured by the _same_ bot. A policy improvement otherwise reads as a balance
+change — and this session changed the policy three times.
+
+The runner counts plans the server rejected, and now records **why**. A non-zero
+count means the policy proposed something illegal and braced instead, and every
+number from that run is worthless. It also counts supplies bought and used.
+
+### Four traps, recorded because each one cost real time
+
+**An instrument that cannot reach a system reports that the system does
+nothing.** This has now happened four times: the route branching hid evolutions;
+the tactical bot arrives broke, so a treasury-scaled shield read as inert until
+the `hoard` policy was written; the bot knew only the Warden's Unravel by name,
+so the Broker's Liquidate did not count as counterplay; and supplies mixed into
+the general lot pool were bought once a run and moved nothing until the tray and
+the case made them reachable. Whenever a new system measures as doing nothing,
+suspect the instrument first.
+
+**Never read a fight's history out of `s.logs`.** The chronicle is capped at 100
+entries, so any question of the form "did this happen in this run" silently gets
+"not in a long fight". This produced confidently wrong answers twice in one
+session — once attributing boss difficulty to the wrong boss, once reporting
+supply usage as near zero. Read the end state, or count it in the runner.
+
+**A rotation slot that deals no damage is a free round.** Giving each boss a new
+intention for its objective softened both. Both were rebuilt to ride an attack
+the boss already had.
+
+**Difficulty and the survivability gap move together.** Every honest attempt to
+make the game harder widened the Vanguard/Warden gap; trimming supply potency to
+claw difficulty back bought one point and cost three points of gap. Decide which
+one you are buying before you touch a number, because you cannot have both from
+the same lever.

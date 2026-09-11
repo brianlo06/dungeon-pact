@@ -19,11 +19,49 @@ export const intentSchema = z.discriminatedUnion("type", [
     message: z.enum(["Save gold", "Buy this", "Need healing", "Focus target"]),
   }),
 ]);
+/**
+ * The decision context a command was chosen in. Both `RunState` and `Snapshot`
+ * satisfy it, so client and server derive the same string from the same facts.
+ */
+export interface Decision {
+  phase: string;
+  round: number;
+  currentNode: string | null;
+  eventId?: string | null;
+  mentorId?: string | null;
+  auction: { lot?: number; stage: string; round: number } | null;
+}
+/**
+ * What a command was decided against. This replaces an exact-revision match,
+ * which treated every accepted command as invalidating every other: two heroes
+ * locking plans in the same round were not in conflict, but the second was
+ * rejected as stale and had to re-send. An epoch changes only when the thing
+ * being decided changes — the round resolves, the lot moves on, the phase ends
+ * — so simultaneous decisions inside one moment all stand, and a decision made
+ * against a moment that has passed still does not.
+ *
+ * Duplicate and racing commands stay safe because every handler in `reduce`
+ * guards its own idempotency: a vote already cast, a lot already revealed and a
+ * plan already locked are each refused on their own terms, not by the epoch.
+ */
+export function epoch(s: Decision): string {
+  return [
+    s.phase,
+    s.currentNode ?? "",
+    s.round,
+    s.auction
+      ? `${s.auction.lot ?? 1}.${s.auction.stage}.${s.auction.round}`
+      : "",
+    s.eventId ?? "",
+    s.mentorId ?? "",
+  ].join("|");
+}
 export const commandSchema = z
   .object({
     version: z.literal(1),
     id: z.string().uuid(),
     revision: z.number().int().nonnegative(),
+    epoch: z.string().min(1).max(200),
     intent: intentSchema,
   })
   .strict();

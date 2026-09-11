@@ -11,3 +11,25 @@
 | Small status glyphs                    | Platform font rendering                                                                                                                                                         | Text symbols only; hero/enemy glyph placeholders have been replaced                                                                                       |
 
 Removed the Cormorant Garamond / DM Sans remote imports. No music, ambience or third-party sound pack is included. Music/ambient controls remain hidden until tracks exist.
+
+## Audio
+
+**All combat sound is synthesised at runtime.** There are no audio files in this
+repository and none are downloaded at build or run time.
+
+`src/client/audio/engine.ts` builds every sound from oscillators and shaped
+noise through the Web Audio API. Authorship is unambiguous and there is nothing
+to licence. This was a deliberate choice: the project's rule is that no asset
+ships without a known licence, and sourcing sound effects of uncertain
+provenance would have broken it.
+
+These are development-grade sounds with a production shape. When recorded
+assets are commissioned they replace the `render` function for a given name;
+the mixer, the bus structure and every call site stay as they are. Any such
+asset must be listed here with source, author, licence, URL and whether it was
+modified, before it is committed.
+
+## Vector art
+
+`Strongbox.tsx`, `Foundry.tsx` and `BossIntro.tsx` are original SVG authored
+directly in this repository. No third-party vector assets are used.

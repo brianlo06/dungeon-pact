@@ -10,6 +10,7 @@ export type Phase =
   | "EVENT"
   | "CAMP"
   | "COMPLETE";
+import type { AbilityPresentation, UnitPresentation } from "./presentation";
 export type Row = "front" | "back";
 export type StatusId =
   | "burn"
@@ -25,7 +26,13 @@ export type StatusId =
   | "guarded"
   | "interrupted";
 export type Trigger =
-  "roundStart" | "afterAttack" | "afterHeal" | "onHurt" | "onKill";
+  | "roundStart"
+  | "afterAttack"
+  | "afterHeal"
+  | "onHurt"
+  | "onKill"
+  /** Never fired by the trigger loop: a supply is spent by being used. */
+  | "use";
 export type Effect =
   | {
       kind: "damage";
@@ -52,8 +59,21 @@ export type Effect =
   | { kind: "resource"; amount: number }
   | { kind: "move"; row: Row }
   | { kind: "gold"; amount: number }
+  /**
+   * Takes carried equipment off the target and banks it in a strongbox. The
+   * owner loses the item's triggers until the strongbox is broken open.
+   */
+  | { kind: "seize"; count: number }
+  /**
+   * Barrier for the actor worth one point per `per` gold the treasury holds
+   * above `free`. The allowance matters: a party that spent its money is
+   * carrying a working balance, not a hoard, and should not be taxed for it.
+   */
+  | { kind: "bank"; per: number; free: number }
   | { kind: "conditional"; status: StatusId; effects: Effect[] };
 export interface Ability {
+  /** How this action looks. Never how it resolves. */
+  presentation?: AbilityPresentation;
   interruptible?: boolean;
   id: string;
   name: string;
@@ -65,6 +85,7 @@ export interface Ability {
   cooldown: number;
 }
 export interface HeroDef {
+  presentation?: UnitPresentation;
   id: string;
   name: string;
   title: string;
@@ -82,13 +103,20 @@ export interface ItemDef {
   id: string;
   name: string;
   rarity: "Common" | "Rare" | "Epic" | "Legendary";
-  slot: "weapon" | "armor" | "relic";
+  /**
+   * A supply is carried rather than worn: several fit at once, none replaces
+   * anything, and using one spends it. Everything else occupies its slot.
+   */
+  slot: "weapon" | "armor" | "relic" | "supply";
   tags: string[];
   description: string;
   clue: string;
   cursed: boolean;
   trigger: Trigger;
+  /** Passive effects fired by `trigger`. Empty for a supply. */
   effects: Effect[];
+  /** The action carrying a supply grants. Absent on worn equipment. */
+  use?: Ability;
   target: "self" | "target";
   price: number;
 }
@@ -131,6 +159,8 @@ export interface Enemy extends Unit {
   intent: { ability: Ability; target: string };
   elite?: "greedy" | "vampiric";
   phase: number;
+  /** Equipment this unit is holding hostage, returned when it is destroyed. */
+  holding?: { playerId: string; itemId: string }[];
 }
 export interface EnemyDef {
   id: string;
@@ -143,6 +173,21 @@ export interface EnemyDef {
   row: Row;
   abilities: Ability[];
   boss?: boolean;
+  /**
+   * A container, not a combatant: never drawn into an encounter, and standing
+   * one does not keep a chamber from falling silent. Breaking it is a choice.
+   */
+  object?: boolean;
+  /** The boss's stated objective, shown before the first round. */
+  objective?: string;
+  /** Title-card subtitle. Flavour; nothing reads it but the entrance. */
+  epithet?: string;
+  /**
+   * How this creature looks and moves. The presentation layer must learn size,
+   * rig and effect family from here rather than from the id — "large because
+   * its id is collector" is exactly the coupling this removes.
+   */
+  presentation?: UnitPresentation;
 }
 export interface MapNode {
   id: string;

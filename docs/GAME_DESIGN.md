@@ -75,11 +75,13 @@ the old unbounded rules.
 
 Start with 420 gold. Unbroken grants 10 maximum HP; Gilded grants 160 gold and sacrifices 12 maximum HP per hero. Combat rewards 110, elites 180, bosses 240. Auction asking prices start at 65% of content reference value rounded down to tens. Each bidding round raises by 30 only after all remaining bidders hold. A withdrawal that leaves one bidder nominates that bidder immediately. If everyone withdraws, no sale. If everyone holds past affordability, withdraw the lot rather than arbitrarily allocating it.
 
-Purchases at or above 30% of remaining treasury require strictly more than half of all party members to approve, including the purchaser. Approval ties reject. Information costs 35 and reveals the lot to everyone. Information purchases are currently direct small spends. Equipment immediately replaces the same slot and surrenders the old item; comparison text explicitly discloses this. Weapon, armor and relic slots are implemented. Expanded inventory/trading/consumables remain planned.
+Purchases at or above 30% of remaining treasury require strictly more than half of all party members to approve, including the purchaser. Approval ties reject. Information costs 35 and reveals the lot to everyone. Information purchases are currently direct small spends. Equipment immediately replaces the same slot and surrenders the old item; comparison text explicitly discloses this. Weapon, armor and relic slots are implemented, and every exchange closes with a consumables tray sold by the case of two, as the last of its three lots. Expanded inventory and trading remain planned.
+
+**Supplies exist to make a party's floor purchasable rather than rostered.** Each sells, for one action and one payment, a single thing the Vanguard or the Warden would otherwise be the only source of: a shield, a heal, a cleanse, a Barrier strip, an interrupt. A party that fielded neither protector can decide to buy protection; a party that fielded both gains nothing it did not already have, which is exactly what the measurements show. Supplies stack, never displace worn equipment, and are never seized — an appraiser takes what is worn. They are deliberately not a substitute for a class: one action bought is not one action every round, and the notebook records how far that closes the gap and where it stops.
 
 ## Social and failure rules
 
-No host owns the room. Any ready player can start once 2–4 players are ready. Route, event, camp and starting-pact votes use an early strict majority; otherwise await all votes, then rotate tie authority. Votes lock once cast. Cheap auction decisions require each member's response; casual play has no timer.
+No host owns the room. Any ready player can start once 2–4 players are ready. Route, event, camp and starting-pact votes use an early strict majority; otherwise await all votes, then rotate tie authority. Votes lock once cast, and two players voting at the same instant are both counted rather than one being rejected. Cheap auction decisions require each member's response; casual play has no timer.
 
 At zero HP a hero is downed; the current round end counts toward a three-end-of-round grace period. Healing can revive before Fallen. After the grace period the hero becomes a spirit and keeps votes, bidding, pings and build inspection. Free camp rest returns all fallen/downed heroes at 15 HP; paid medicine costs 120 and restores 45; paid training costs 100 and grants every hero 3 Power for the rest of the run. Training used to be free, which made it the obvious pick whenever nobody was dying. Each battlefield revival costs 60 more than the last, so a party cannot both undo its mistakes and outfit itself. All heroes down at once means defeat. Active spirit combat abilities are not implemented yet.
 
@@ -87,7 +89,34 @@ Refresh restores the same hero using a device-held room bearer credential. Dupli
 
 ## Bosses
 
-The Collector targets the most expensive equipped investment, alternates single-target and row pressure, and adds damage below half HP. The Miser adds damage per 100 treasury gold and alternates single-target and economic row pressure. Both intensify below half HP; three-player parties also face a Kiln Mender, and four-player parties additionally face an Iron Bulwark, so a larger party must split its damage instead of burning the boss down before it acts. The Miser adds floor(gold/70) per attack in new runs, which makes hoarding genuinely dangerous. Item suppression, battle auctions and true scripted multi-phase encounter objectives remain future work.
+Both bosses fight for something, not merely harder. A boss states its objective
+in the log before the first round.
+
+**The Collector** targets the most expensive equipped investment, alternates
+single-target and row pressure, and adds damage below half HP. Its Repossess now
+also seizes the dearest item carried by each hero in the row it hits and banks
+it in a Strongbox: a container with health that sits in the enemy back row. The
+owners lose those items' triggers for as long as it holds them. Breaking it open
+returns everything and stops the Collector seizing again for the rest of the
+fight. The Strongbox is not an enemy to clear — the chamber falls silent when the
+Collector does, whether or not the box is still standing — so opening it is a
+choice between the equipment the party fights the rest of the boss with and the
+actions that opening it costs. Nothing seized ever outlives the chamber.
+
+**The Miser** adds damage per treasury gold and alternates single-target and
+economic row pressure. Its Weight of wealth now also shields it for one Barrier
+per twelve gold the treasury holds above an allowance of 160. A party that spent
+its money meets the Miser exactly as before; a party sitting on its winnings has
+handed the boss its armour. The allowance is deliberate and load-bearing: an
+unconditional shield lengthens the fight, and a longer fight meets the
+escalation clock, which punished small parties for something they could not
+answer. Spending is the counterplay, and a battlefield revival mid-fight both
+buys back an action and thins the next shield.
+
+Both still intensify below half HP; three-player parties also face a Kiln Mender,
+and four-player parties additionally face an Iron Bulwark, so a larger party must
+split its damage instead of burning the boss down before it acts. Battle auctions
+and multi-phase scripted encounters remain future work.
 
 ## Presentation and accessibility
 

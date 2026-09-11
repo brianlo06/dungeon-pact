@@ -1,6 +1,7 @@
 import type { Ability, HeroDef } from "../shared/model";
 import { chosenUpgrades } from "./upgrades";
 import { evolution } from "./evolutions";
+import { items } from "./items";
 const a = (
   id: string,
   name: string,
@@ -73,6 +74,7 @@ export const utility: Ability[] = [
 ];
 export const heroes: HeroDef[] = [
   {
+    presentation: { spriteSet: "vanguard", theme: "guard", idlePeriod: 4.2 },
     id: "vanguard",
     name: "Vanguard",
     title: "Stand between fate and your friends.",
@@ -116,6 +118,11 @@ export const heroes: HeroDef[] = [
     ],
   },
   {
+    presentation: {
+      spriteSet: "arcanist",
+      theme: "arcane",
+      idlePeriod: 3.2,
+    },
     id: "arcanist",
     name: "Arcanist",
     title: "Power is a debt worth taking.",
@@ -167,6 +174,11 @@ export const heroes: HeroDef[] = [
     ],
   },
   {
+    presentation: {
+      spriteSet: "ranger",
+      theme: "precision",
+      idlePeriod: 2.9,
+    },
     id: "ranger",
     name: "Ranger",
     title: "One mark. A hundred possibilities.",
@@ -215,6 +227,11 @@ export const heroes: HeroDef[] = [
     ],
   },
   {
+    presentation: {
+      spriteSet: "warden",
+      theme: "growth",
+      idlePeriod: 3.8,
+    },
     id: "warden",
     name: "Warden",
     title: "Nothing living is beyond hope.",
@@ -274,6 +291,11 @@ export const heroes: HeroDef[] = [
     ],
   },
   {
+    presentation: {
+      spriteSet: "broker",
+      theme: "contract",
+      idlePeriod: 3.3,
+    },
     id: "broker",
     name: "Broker",
     title: "Everything has a price. Including this.",
@@ -321,6 +343,11 @@ export const heroes: HeroDef[] = [
     ],
   },
   {
+    presentation: {
+      spriteSet: "herald",
+      theme: "resonance",
+      idlePeriod: 3.0,
+    },
     id: "herald",
     name: "Herald",
     title: "You are worth more than you think.",
@@ -370,6 +397,11 @@ export const heroes: HeroDef[] = [
     ],
   },
   {
+    presentation: {
+      spriteSet: "reaver",
+      theme: "blood",
+      idlePeriod: 2.7,
+    },
     id: "reaver",
     name: "Reaver",
     title: "Pain is just unspent currency.",
@@ -416,6 +448,11 @@ export const heroes: HeroDef[] = [
     ],
   },
   {
+    presentation: {
+      spriteSet: "beguiler",
+      theme: "sway",
+      idlePeriod: 3.5,
+    },
     id: "beguiler",
     name: "Beguiler",
     title: "Why fight them? Let them fight each other.",
@@ -590,11 +627,22 @@ export const tacticalSkills: Record<string, Ability[]> = {
  * upgrade branches patched over it. Upgrades keep ability ids, so locked plans
  * and cooldowns survive the change.
  */
+/** The one-shot actions a hero's carried supplies grant, one entry per supply. */
+export function supplyActions(carried: string[] = []): Ability[] {
+  return carried
+    .map((id) => items.find((i) => i.id === id)?.use)
+    .filter((a): a is Ability => !!a);
+}
+/** The supply an ability came from, or undefined if it is part of the kit. */
+export function supplyFor(abilityId: string) {
+  return items.find((i) => i.use?.id === abilityId);
+}
 export function abilities(
   id: string,
   combatVersion?: 2,
   chosen: string[] = [],
   path?: string,
+  carried: string[] = [],
 ): Ability[] {
   const base = hero(id).abilities;
   const changes = combatVersion === 2 ? (tacticalSkills[id] ?? []) : [];
@@ -603,7 +651,13 @@ export function abilities(
     ...changes,
     ...utility,
   ];
+  // Supplies join the kit only under tactical rules; legacy rooms never sold
+  // any, so a legacy save cannot be carrying one.
   if (combatVersion !== 2) return list;
+  // One entry however many copies are carried: the plan names the action, and
+  // resolving it spends one copy.
+  for (const use of supplyActions(carried))
+    if (!list.some((a) => a.id === use.id)) list.push(use);
   // A class path swaps one signature ability, keeping its id so branches,
   // cooldowns and locked plans still line up.
   const taken = evolution(path);

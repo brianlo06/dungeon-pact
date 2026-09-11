@@ -8,3 +8,11 @@ dist/
 .screenshots/
 
 art-out/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+
+# Parallel agent checkouts
+.claude/worktrees/

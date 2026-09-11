@@ -1,0 +1,1744 @@
+/*
+ * The battle screen.
+ *
+ * One rule governs this file: combat owns exactly one viewport and never
+ * scrolls. The strip and the controls are the only fixed heights; the stage
+ * takes everything left over. Anything that wants more room has to earn it from
+ * one of those two, which is what stops the screen growing a section at a time
+ * until it needs 1.3 screens the way the old layout did.
+ */
+
+.battle {
+  --strip: 44px;
+  --controls: clamp(132px, 21vh, 186px);
+  height: 100%;
+  display: grid;
+  grid-template-rows: var(--strip) minmax(0, 1fr) auto;
+  /* Clip, not hidden: see .stage. */
+  overflow: clip;
+  position: relative;
+  background: #1b1822;
+}
+
+/* ---------------------------------------------------------------- strip -- */
+
+.battle-strip {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 18px;
+  min-width: 0;
+  background: linear-gradient(#2a2333, #221c2b);
+  border-bottom: 2px solid #14121b;
+  box-shadow: 0 2px #4a3d52;
+  font-size: 11px;
+}
+.strip-chamber {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  color: var(--cream);
+  white-space: nowrap;
+}
+.strip-chamber b {
+  font: 9px var(--pixel);
+  color: var(--gold);
+}
+.strip-objective {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: #f0dcc4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-left: 3px solid var(--gold);
+  padding-left: 10px;
+}
+.strip-objective b {
+  font: 8px var(--pixel);
+  color: var(--gold);
+}
+.strip-objective i {
+  color: #ffcc75;
+  font-style: normal;
+}
+.strip-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  white-space: nowrap;
+}
+.strip-treasury {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 11px var(--pixel);
+  color: var(--gold);
+}
+.strip-treasury .pixel-icon {
+  width: 13px;
+  height: 13px;
+}
+.strip-locked {
+  font: 9px var(--pixel);
+  color: var(--muted);
+}
+/* Playback controls, shown only while a round is replaying. */
+.strip-playback {
+  display: inline-flex;
+  gap: 3px;
+}
+.strip-playback button {
+  padding: 3px 6px;
+  font: 8px var(--pixel);
+  box-shadow:
+    inset 0 1px #6d5668,
+    0 1px var(--ink);
+}
+.strip-playback button[data-on] {
+  background: #57402f;
+  color: var(--gold);
+}
+.strip-history {
+  padding: 4px 9px;
+  font-size: 12px;
+  box-shadow:
+    inset 0 2px #6d5668,
+    0 2px var(--ink);
+}
+
+/* ---------------------------------------------------------------- stage -- */
+
+/*
+ * Layers, back to front: scenery, ground, then the world the camera moves,
+ * then foreground and screen space. The split is what lets a projectile pass
+ * in front of one creature and behind another, and keeps a screen flash from
+ * being dragged around by a camera shake.
+ */
+.stage {
+  position: relative;
+  /*
+   * Clip, not hidden. `hidden` still makes the stage a scroll container, and
+   * anything that scrolls an element into view — keyboard focus landing on a
+   * combatant near the edge, or a test's click — scrolled the whole battlefield
+   * up by a hundred pixels or more, with no way back. `clip` crops the same
+   * and cannot be scrolled at all.
+   */
+  overflow: clip;
+  min-height: 0;
+  container-type: size;
+  container-name: stage;
+  background:
+    radial-gradient(120% 80% at 50% 10%, #4a2f30 0%, transparent 60%),
+    linear-gradient(#2c2130 0%, #241d2c 55%, #1d1825 100%);
+}
+.layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.layer > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* Parallax. Each layer declares its depth; the camera supplies the motion. */
+.layer-far,
+.layer-mid,
+.layer-foreground {
+  will-change: transform;
+}
+/* The floor starts above the deepest rank, so every combatant stands on it
+ * rather than floating over a hard horizon line. */
+.layer-ground {
+  inset: 26% -8% -4%;
+  /* Fade the far edge into the hall instead of cutting it with a seam. */
+  -webkit-mask-image: linear-gradient(
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.55) 8%,
+    #000 22%
+  );
+  mask-image: linear-gradient(
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.55) 8%,
+    #000 22%
+  );
+}
+.layer-ground > svg {
+  transform: perspective(760px) rotateX(38deg);
+  transform-origin: 50% 0;
+}
+/* Ambient motion. Nothing shares a period, so the room never pulses in time. */
+.molten {
+  animation: molten 7.5s ease-in-out infinite;
+}
+@keyframes molten {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+.furnace-mouth {
+  animation: furnace 4.3s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes furnace {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  42% {
+    opacity: 1;
+  }
+  58% {
+    opacity: 0.85;
+  }
+}
+.grate {
+  animation: grate 5.9s ease-in-out infinite;
+}
+@keyframes grate {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.gear {
+  animation: spin 34s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.gear-slow {
+  animation-duration: 52s;
+  animation-direction: reverse;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.sway {
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: sway 9s ease-in-out infinite;
+}
+.sway-b {
+  animation-duration: 12.5s;
+  animation-delay: -3s;
+}
+.sway-c {
+  animation-duration: 7.5s;
+  animation-delay: -5s;
+}
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(-1.4deg);
+  }
+  50% {
+    transform: rotate(1.4deg);
+  }
+}
+/*
+ * Scene lighting. The director tints this for fire, lightning and payoffs.
+ *
+ * It blends only while it is lit. A blend mode makes everything under it one
+ * group that the compositor draws offscreen and copies back, every frame, even
+ * at opacity 0 — a full extra pass over the stage for a layer that is dark
+ * nearly all the time. The delayed discrete transition keeps the blend on
+ * until the fade-out has finished.
+ */
+.layer-light {
+  z-index: 5000;
+  opacity: 0;
+  transition:
+    opacity 0.12s ease-out,
+    mix-blend-mode 0s 0.12s allow-discrete;
+}
+.layer-light[data-lit] {
+  opacity: 1;
+  mix-blend-mode: screen;
+  transition: opacity 0.12s ease-out;
+}
+
+/* Everything the camera moves. The camera sets its transform origin. */
+.world {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+.layer-units {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.layer-units .combatant {
+  pointer-events: auto;
+}
+.layer-vfx {
+  z-index: 4000;
+}
+.layer-screen {
+  z-index: 6000;
+}
+/* Banners centre themselves; the layer stays a plain positioning context, so
+ * absolutely-placed controls inside it keep their own size. */
+.screen-centre {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+/* Only the control is clickable; the banner wrapper must never eat a click
+ * meant for the battlefield underneath it. */
+.layer-screen .skip-replay {
+  pointer-events: auto;
+}
+
+/* ------------------------------------------------------------ combatant -- */
+
+.combatant {
+  --unit: clamp(58px, 21cqh, 150px);
+  /* Placement already folded depth into scale; this is just the pixel size. */
+  --size: calc(var(--unit) * var(--scale, 1));
+  position: absolute;
+  /* `top` is the unit's ground point, so it stands on the floor. */
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  /* Depth: the back ranks are duller and darker. Applied by the rule below. */
+  --tone: saturate(calc(0.72 + var(--depth) * 0.4))
+    brightness(calc(0.86 + var(--depth) * 0.18));
+  /* Its inverse, so a hit's flash can be laid over the figure as it would be
+   * without the tone and the tone put back on top: a flash blows out to white,
+   * and white must land on the back row as dimmed as the rest of it. */
+  --untone: brightness(calc(1 / (0.86 + var(--depth) * 0.18)))
+    saturate(calc(1 / (0.72 + var(--depth) * 0.4)));
+}
+.combatant[data-down] {
+  --tone: grayscale(0.8) brightness(0.6);
+  --untone: brightness(calc(1 / 0.6)) saturate(5);
+}
+/*
+ * The tone is applied to every drawn shape, never to the combatant or the rig.
+ *
+ * A filter on anything that holds the rig's parts makes the compositor draw the
+ * whole figure into its own surface and re-filter it every frame, because the
+ * parts move every frame: eight combatants, eight extra passes a frame. On a
+ * single shape inside a part the filter is baked in once when the part is
+ * rasterised, and the part then moves for free. Saturate and brightness are
+ * linear, so toning each shape is the same picture as toning the group.
+ *
+ * Zero specificity, so a creature's own `filter` (a glow) wins — and must end
+ * with `var(--tone,)` to keep the tone. `tests/perf-css.test.ts` holds that.
+ */
+:where(
+  .combatant > :not(.combatant-body),
+  .combatant-body > :not(.combatant-rig)
+),
+:where(.combatant-rig)
+  :where(
+    :not(g, svg, defs, defs *, linearGradient, radialGradient, stop, tspan)
+  ) {
+  filter: var(--tone);
+}
+.combatant-body {
+  position: relative;
+  display: block;
+  width: var(--size);
+  height: var(--size);
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  cursor: pointer;
+}
+.combatant-body:disabled {
+  cursor: default;
+}
+/*
+ * Enemies face the party. This flip exists for the raster atlas, which is
+ * drawn facing right — so it is scoped to `.sprite`, the atlas renderer's own
+ * class. Authored SVG creatures are drawn facing the party already, and
+ * flipping them pointed a battering ram away from the people it charges.
+ */
+.combatant[data-side="enemy"] .sprite.combatant-sprite {
+  transform: scaleX(-1);
+}
+.combatant-body .combatant-rig {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* The animator writes this element's transform every frame; nothing else
+   * may, or the two will fight and the sprite will judder. */
+  transform-origin: 50% 92%;
+  will-change: transform;
+}
+.combatant-sprite {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Grounding. Without a shadow every sprite floats like a sticker. */
+.combatant-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: -4%;
+  width: calc(var(--shadow, 0.78) * 100%);
+  height: 12%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(0, 0, 0, 0.62),
+    transparent 78%
+  );
+}
+.combatant-ring {
+  position: absolute;
+  left: 50%;
+  bottom: -6%;
+  width: 96%;
+  height: 20%;
+  transform: translateX(-50%);
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(238, 184, 96, 0.55);
+  animation: ring 1.4s ease-in-out infinite;
+}
+@keyframes ring {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.combatant-body:not(:disabled):hover .combatant-sprite {
+  filter: drop-shadow(0 0 8px rgba(238, 184, 96, 0.8));
+}
+
+.combatant-plate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 3px;
+  max-width: calc(var(--size) * 1.7);
+  text-align: center;
+}
+.combatant-name {
+  font: 9px var(--pixel);
+  text-shadow: 0 1px 2px #000;
+  color: var(--cream);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.combatant[data-you] .combatant-name {
+  color: var(--gold);
+}
+.combatant-lock {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 4px;
+  background: var(--gold);
+  transform: rotate(45deg);
+}
+.combatant-bar {
+  position: relative;
+  width: calc(var(--size) * 0.92);
+  height: 7px;
+  background: #17131d;
+  border: 1px solid #0f0d15;
+  overflow: hidden;
+}
+/*
+ * Health is shown by scaling the fill, never by its width. A width is layout,
+ * and a bar easing its width re-lays the whole battle grid out every frame for
+ * as long as it moves — which re-rasters the stage's backdrop on every hit.
+ */
+.combatant-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(#e08a5a, #b8503a);
+  transform-origin: 0 50%;
+  transition: transform 0.28s ease;
+}
+.combatant[data-side="hero"] .combatant-bar i {
+  background: linear-gradient(#9ec27a, #5f8f55);
+}
+.combatant-bar b {
+  position: absolute;
+  right: 1px;
+  top: -1px;
+  font: 7px var(--pixel);
+  color: #cfe6ff;
+}
+.combatant-tag {
+  font: 7px var(--pixel);
+  color: #ffcc75;
+}
+.combatant-tag.holding {
+  color: var(--gold);
+  white-space: nowrap;
+}
+.combatant-statuses {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.combatant-statuses i {
+  font-style: normal;
+  font-size: 9px;
+  line-height: 1;
+  color: #d7c2e0;
+}
+
+/* Intentions ride the creature instead of floating in a detached card. */
+.combatant-intent {
+  margin-bottom: 3px;
+  max-width: calc(var(--size) * 2.1);
+}
+.intent-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 3px 7px;
+  background: rgba(24, 20, 30, 0.9);
+  border: 1px solid #6a5570;
+  font-size: 9px;
+  line-height: 1.3;
+  color: #e7d4bb;
+  max-width: 100%;
+}
+.intent-chip strong {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.intent-chip em {
+  font-style: normal;
+  font-size: 8px;
+  color: var(--muted);
+}
+.intent-chip b {
+  font: 7px var(--pixel);
+  color: #ffcc75;
+}
+.intent-windup {
+  border-color: #d08a3a;
+  box-shadow: 0 0 10px rgba(208, 138, 58, 0.4);
+  animation: windup 1.6s ease-in-out infinite;
+}
+@keyframes windup {
+  0%,
+  100% {
+    box-shadow: 0 0 6px rgba(208, 138, 58, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(224, 120, 60, 0.75);
+  }
+}
+.intent-gone {
+  opacity: 0.5;
+  border-style: dashed;
+}
+
+/* -------------------------------------------------------------- impacts -- */
+
+.combatant[data-impact="heal"] .combatant-sprite {
+  filter: drop-shadow(0 0 10px #8fdc8a);
+}
+.combatant[data-impact="block"] .combatant-sprite {
+  filter: drop-shadow(0 0 10px #8fc6ff);
+}
+
+.combatant-pop {
+  position: absolute;
+  left: 50%;
+  top: 4%;
+  transform: translateX(-50%);
+  font: 15px var(--pixel);
+  color: #ffd9b0;
+  text-shadow: 0 2px 0 #000;
+  pointer-events: none;
+  animation: pop 0.85s ease-out forwards;
+}
+.pop-heal {
+  color: #9ff08f;
+}
+.pop-block {
+  color: #9fd0ff;
+}
+@keyframes pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(-50%, -8px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -34px);
+  }
+}
+
+/* --------------------------------------------------------- beat overlay -- */
+
+.beat-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.callout {
+  text-align: center;
+  animation: slam 0.5s ease-out;
+}
+.callout small {
+  display: block;
+  font: 8px var(--pixel);
+  color: var(--muted);
+}
+.callout strong {
+  font: clamp(18px, 3.4vw, 34px) var(--pixel);
+  color: var(--cream);
+  text-shadow: 0 3px 0 #000;
+}
+.combo-banner {
+  font: clamp(20px, 4vw, 44px) var(--pixel);
+  color: var(--gold);
+  text-shadow: 0 4px 0 #000;
+  animation: slam 0.5s ease-out;
+}
+.combo-banner.defeat {
+  color: var(--rust);
+}
+@keyframes slam {
+  0% {
+    opacity: 0;
+    transform: scale(1.5) skewX(-8deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.98) skewX(-8deg);
+  }
+  100% {
+    transform: scale(1) skewX(-8deg);
+  }
+}
+.skip-replay {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  font-size: 10px;
+  padding: 5px 11px;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------- controls -- */
+
+.battle-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  padding: 8px 16px 10px;
+  min-height: 0;
+  max-height: var(--controls);
+  background: linear-gradient(#251f2e, #1d1826);
+  border-top: 2px solid #14121b;
+  box-shadow: 0 -2px #4a3d52;
+}
+.control-note {
+  margin: auto;
+  font-size: 11px;
+  color: var(--muted);
+  max-width: 60ch;
+}
+
+.party-hud {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  flex: 0 0 auto;
+}
+.hud-hero {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px 5px 5px;
+  background: #2c2436;
+  border: 1px solid #423650;
+  min-width: 118px;
+}
+.hud-hero[data-you] {
+  border-color: var(--gold);
+  box-shadow: inset 0 0 0 1px rgba(238, 184, 96, 0.3);
+}
+.hud-hero[data-state="down"],
+.hud-hero[data-state="spirit"] {
+  filter: grayscale(0.85);
+  opacity: 0.7;
+}
+.hud-portrait {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+}
+.hud-portrait .sprite {
+  width: 100%;
+  height: 100%;
+}
+.hud-away {
+  position: absolute;
+  right: -2px;
+  top: -4px;
+  font-size: 9px;
+  color: var(--muted);
+}
+.hud-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.hud-name {
+  font: 8px var(--pixel);
+  color: var(--cream);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hud-bar {
+  height: 4px;
+  background: #17131d;
+  overflow: hidden;
+}
+/* Scaled, not resized, for the same reason as `.combatant-bar i`. */
+.hud-bar i {
+  display: block;
+  height: 100%;
+  transform-origin: 0 50%;
+  transition: transform 0.28s ease;
+}
+.hud-hp i {
+  background: linear-gradient(#9ec27a, #5f8f55);
+}
+.hud-resource i {
+  background: linear-gradient(#7fa6d8, #4c6ca8);
+}
+.hud-state {
+  font: 7px var(--pixel);
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+.hud-hero[data-state="locked"] .hud-state {
+  color: var(--gold);
+}
+
+.action-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.action-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-content: flex-start;
+  overflow: auto;
+  min-height: 0;
+}
+.action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 5px 10px;
+  min-width: 104px;
+  text-align: left;
+  background: #362c40;
+  border: 2px solid var(--ink);
+  box-shadow:
+    inset 0 2px #55425c,
+    0 2px var(--ink);
+}
+.action strong {
+  font-size: 11px;
+  line-height: 1.2;
+}
+.action small {
+  font: 7px var(--pixel);
+  color: var(--muted);
+}
+.action.is-chosen {
+  background: #57402f;
+  border-color: var(--gold);
+  box-shadow:
+    inset 0 2px #7d6040,
+    0 0 10px rgba(238, 184, 96, 0.35);
+}
+.action[data-blocked] {
+  opacity: 0.55;
+}
+.action[data-blocked] small {
+  color: var(--rust);
+}
+.action-commit {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.action-commit p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #d8c6ce;
+  flex: 1;
+  min-width: 0;
+}
+.action-commit small {
+  display: block;
+  font: 8px var(--pixel);
+  color: var(--gold);
+  margin-top: 2px;
+}
+.lock-action {
+  flex: 0 0 auto;
+  padding: 9px 16px;
+}
+
+/* -------------------------------------------------------------- history -- */
+
+.history-drawer {
+  position: absolute;
+  right: 0;
+  top: var(--strip);
+  bottom: 0;
+  width: min(420px, 42vw);
+  background: rgba(24, 20, 30, 0.97);
+  border-left: 2px solid #4a3d52;
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+  animation: drawer 0.18s ease-out;
+}
+@keyframes drawer {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+}
+.history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid #4a3d52;
+}
+.history-head strong {
+  font: 9px var(--pixel);
+  color: var(--gold);
+}
+.history-head button {
+  padding: 4px 10px;
+  font-size: 10px;
+}
+.history-list {
+  margin: 0;
+  padding: 10px 16px 16px 30px;
+  overflow-y: auto;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.history-list li {
+  margin-bottom: 3px;
+}
+
+/* ----------------------------------------------------------- responsive -- */
+
+/* Height is the binding constraint, so the breakpoints key off it. */
+@media (max-height: 780px) {
+  .battle {
+    --controls: clamp(120px, 19vh, 150px);
+  }
+  .action {
+    min-width: 92px;
+    padding: 4px 8px;
+  }
+  .action strong {
+    font-size: 10px;
+  }
+  .hud-hero {
+    min-width: 104px;
+  }
+}
+@media (max-height: 680px) {
+  .battle {
+    --strip: 38px;
+    --controls: 118px;
+  }
+  .combatant-intent {
+    display: none;
+  }
+  .band-enemy-front .combatant-intent,
+  .combatant[data-side="enemy"]:hover .combatant-intent {
+    display: block;
+  }
+  .hud-state,
+  .combatant-tag {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  .strip-objective {
+    display: none;
+  }
+  .hud-lines {
+    display: none;
+  }
+  .hud-hero {
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .combatant-sprite,
+  .intent-windup,
+  .combatant-ring {
+    animation: none;
+  }
+}
+:root[data-motion="reduced"] .combatant-rig,
+:root[data-motion="reduced"] .intent-windup,
+:root[data-motion="reduced"] .combatant-ring,
+:root[data-motion="reduced"] .combatant-pop,
+:root[data-motion="reduced"] .callout,
+:root[data-motion="reduced"] .combo-banner {
+  animation: none;
+}
+
+/* ------------------------------------------------------------ action fan -- */
+
+/*
+ * Contract slips torn off the hero. They cascade away from the character, and
+ * they lean toward whichever side has room, so a hero standing near an edge
+ * still gets a readable menu. Signature abilities sit nearest to hand.
+ */
+.action-fan {
+  position: absolute;
+  z-index: 5500;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  /* Clear the hero first, then cascade outward and up. */
+  --out: 1;
+  --lead: 56px;
+  --step-x: 16px;
+  /* One slip's height, so nothing ever covers the label below it. */
+  --step-y: var(--slip, 31px);
+  --col-w: 132px;
+}
+.action-fan[data-dir="left"] {
+  --out: -1;
+}
+.fan-anchor {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.fan-seal {
+  width: 12px;
+  height: 12px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  box-shadow: 0 0 10px rgba(238, 184, 96, 0.7);
+  animation: seal 2.2s ease-in-out infinite;
+}
+@keyframes seal {
+  0%,
+  100% {
+    transform: rotate(45deg) scale(1);
+  }
+  50% {
+    transform: rotate(45deg) scale(1.18);
+  }
+}
+.fan-who {
+  font: 7px var(--pixel);
+  color: var(--muted);
+  text-shadow: 0 1px 2px #000;
+}
+.fan-slips {
+  position: absolute;
+  bottom: 30px;
+  left: calc(50% + var(--lead) * var(--out) + var(--fan-x, 0px));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fan-slip {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  /* Rows climb; a full column steps sideways instead of climbing further. */
+  z-index: calc(60 - var(--i, 0));
+  transform: translate(
+      calc(
+        (var(--row, 0) * var(--step-x) + var(--col, 0) * var(--col-w)) *
+          var(--out) + (var(--out) - 1) * 50%
+      ),
+      calc(var(--row, 0) * var(--step-y) * -1)
+    )
+    skewX(-8deg);
+  animation: slip 0.22s cubic-bezier(0.2, 1.3, 0.5, 1) backwards;
+  animation-delay: calc(var(--i) * 26ms);
+  pointer-events: auto;
+}
+@keyframes slip {
+  from {
+    opacity: 0;
+  }
+}
+.action-fan[data-mode="target"] .fan-slip {
+  transform: translate(calc((var(--out) - 1) * 50%), 0) skewX(-8deg);
+  animation: none;
+}
+/* The shared actions: a quiet cluster at the hero's feet, never a cascade. */
+.fan-common {
+  position: absolute;
+  bottom: 4px;
+  left: calc(50% + var(--common-x, 0px));
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+.fan-common .fan-slip {
+  position: static;
+  transform: skewX(-8deg);
+  animation: none;
+}
+.fan-common .fan-slip > button {
+  padding: 2px 7px;
+}
+.fan-common .fan-slip > button strong {
+  font-size: 9px;
+}
+.fan-common .fan-detail {
+  left: 50%;
+  right: auto;
+  bottom: auto;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+}
+.fan-slip > button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  white-space: nowrap;
+  padding: 5px 14px 5px 11px;
+  background: linear-gradient(#3d3147, #2c2436);
+  border: 1px solid #6a5570;
+  border-left: 3px solid var(--gold);
+  border-radius: 0;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.55);
+}
+.fan-slip > button strong {
+  font-size: 12px;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+}
+.fan-slip > button small {
+  font: 7px var(--pixel);
+  color: var(--muted);
+}
+.fan-slip[data-common] > button {
+  padding: 3px 10px 3px 8px;
+  border-left-color: #6a5570;
+  background: linear-gradient(#332b3d, #272031);
+  opacity: 0.86;
+}
+.fan-slip[data-common] > button strong {
+  font-size: 10px;
+  color: #cbb9c6;
+}
+.fan-slip[data-urgent] > button {
+  border-left-color: var(--rust);
+  background: linear-gradient(#4d2f33, #38222a);
+}
+.fan-slip[data-urgent] > button strong {
+  color: #ffcfc0;
+  font-size: 12px;
+}
+.fan-slip[data-chosen] > button {
+  background: linear-gradient(#63492f, #4a3524);
+  border-color: var(--gold);
+  box-shadow:
+    2px 3px 0 rgba(0, 0, 0, 0.55),
+    0 0 14px rgba(238, 184, 96, 0.45);
+}
+.fan-slip[data-blocked] > button {
+  opacity: 0.45;
+  border-left-color: var(--rust);
+}
+.fan-slip[data-blocked] small {
+  color: var(--rust);
+}
+/* Detail on demand, never printed permanently around the hero. */
+/* Detail opens toward the middle of the field. Opening it outward, on the same
+ * side the cascade already leans, pushes it off the edge of the stage. */
+.fan-detail {
+  position: absolute;
+  right: calc(100% + 10px);
+  bottom: 0;
+  width: 200px;
+  padding: 6px 9px;
+  background: rgba(18, 15, 24, 0.97);
+  border: 1px solid #6a5570;
+  font-size: 10px;
+  line-height: 1.4;
+  color: #ddcbd4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s;
+}
+.action-fan[data-dir="left"] .fan-detail {
+  right: auto;
+  left: calc(100% + 10px);
+}
+.fan-slip > button:hover + .fan-detail,
+.fan-slip > button:focus-visible + .fan-detail {
+  opacity: 1;
+}
+.fan-detail i {
+  font-style: normal;
+  color: var(--gold);
+}
+
+/* ----------------------------------------------------------- commit bar -- */
+
+.commit-bar {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.commit-what {
+  margin: 0;
+  min-width: 0;
+  flex: 1;
+}
+.commit-what strong {
+  display: block;
+  font-size: 13px;
+  color: var(--cream);
+}
+.commit-what small {
+  display: block;
+  font: 8px var(--pixel);
+  color: var(--gold);
+  margin-top: 3px;
+}
+.commit-back {
+  padding: 7px 12px;
+  font-size: 11px;
+}
+.commit-bar[data-mode="target"] .commit-what small {
+  animation: nudge 1.4s ease-in-out infinite;
+}
+@keyframes nudge {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ------------------------------------------------------------------ vfx -- */
+
+/*
+ * A small vocabulary of world-space effects. Abilities combine these rather
+ * than each shipping its own animation, which is what stops this file growing
+ * a rule per spell.
+ */
+.layer-vfx > span {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.vfx-impact {
+  width: 74px;
+  height: 74px;
+  margin-top: -3%;
+  border: 3px solid #ffd9a8;
+  border-radius: 50%;
+  animation: burst var(--life, 380ms) ease-out forwards;
+}
+@keyframes burst {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.25);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+.vfx-slash {
+  width: 96px;
+  height: 6px;
+  margin-top: -4%;
+  background: linear-gradient(90deg, transparent, #fff2d8, transparent);
+  animation: slash var(--life, 260ms) ease-out forwards;
+}
+@keyframes slash {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-38deg) scaleX(0.2);
+  }
+  40% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-38deg) scaleX(1.3);
+  }
+}
+.vfx-cast {
+  width: 60px;
+  height: 60px;
+  margin-top: -5%;
+  border: 2px dashed #b79bff;
+  border-radius: 50%;
+  animation: castring var(--life, 420ms) ease-out forwards;
+}
+@keyframes castring {
+  from {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.4) rotate(0deg);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5) rotate(140deg);
+  }
+}
+.vfx-bolt,
+.vfx-chain {
+  height: 4px;
+  transform-origin: 0 50%;
+  animation: travel var(--life, 320ms) ease-in forwards;
+}
+/* Travel is expressed as a translation to the target, so the element only ever
+ * needs its own two endpoints and never a computed angle. */
+@keyframes travel {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%);
+  }
+  15% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(calc(var(--dx) - 50%), calc(var(--dy) - 50%));
+  }
+}
+.vfx-bolt {
+  width: 22px;
+  background: linear-gradient(90deg, transparent, #cbb2ff, #fff);
+  box-shadow: 0 0 12px #a889ff;
+}
+.vfx-chain {
+  width: 30px;
+  background: repeating-linear-gradient(90deg, #ffcc75 0 6px, #7a5a2a 6px 10px);
+  box-shadow: 0 0 14px rgba(255, 204, 117, 0.8);
+}
+.vfx-heal {
+  width: 70px;
+  height: 70px;
+  margin-top: -4%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(150, 240, 140, 0.6),
+    transparent
+  );
+  animation: rise var(--life, 460ms) ease-out forwards;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20%) scale(0.6);
+  }
+  40% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -90%) scale(1.1);
+  }
+}
+.vfx-barrier {
+  width: 78px;
+  height: 78px;
+  margin-top: -4%;
+  border: 3px solid #9fd0ff;
+  border-radius: 50%;
+  box-shadow: 0 0 18px rgba(159, 208, 255, 0.7);
+  animation: hexflash var(--life, 380ms) ease-out forwards;
+}
+@keyframes hexflash {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+}
+.vfx-interrupt {
+  width: 90px;
+  height: 90px;
+  margin-top: -4%;
+  border: 4px solid #ff8a5c;
+  animation: snap var(--life, 520ms) ease-out forwards;
+}
+@keyframes snap {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(0deg) scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(35deg) scale(1.4);
+  }
+}
+.vfx-reclaim {
+  width: 120px;
+  height: 120px;
+  margin-top: -4%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 204, 117, 0.75),
+    transparent
+  );
+  animation: burst var(--life, 760ms) ease-out forwards;
+}
+.vfx-pop {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font: 17px var(--pixel);
+  color: #ffd9b0;
+  text-shadow:
+    0 2px 0 #000,
+    0 0 10px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  animation: pop 0.9s ease-out forwards;
+}
+.vfx-pop.pop-heal {
+  color: #9ff08f;
+}
+.vfx-pop.pop-block {
+  color: #9fd0ff;
+}
+.vfx-pop.pop-critical {
+  color: #ffb05c;
+  font-size: 24px;
+}
+.vfx-pop.pop-gold {
+  color: var(--gold);
+}
+
+/* Hit-stop: the whole scene holds still for a beat on a heavy landing. */
+.stage[data-frozen] .world,
+.stage[data-frozen] .combatant-sprite {
+  animation-play-state: paused;
+  transition: none;
+}
+
+/* ------------------------------------------------------------ typography -- */
+
+.ability-title {
+  text-align: center;
+  animation: slam 0.42s cubic-bezier(0.15, 1.4, 0.4, 1);
+}
+.ability-title small {
+  display: block;
+  font: 8px var(--pixel);
+  color: var(--muted);
+  letter-spacing: 0.18em;
+}
+.ability-title strong {
+  display: block;
+  font: clamp(20px, 4cqw, 40px) var(--pixel);
+  color: var(--cream);
+  text-shadow:
+    0 3px 0 #000,
+    0 0 24px rgba(0, 0, 0, 0.8);
+  transform: skewX(-9deg);
+}
+
+/* ---------------------------------------------------------------- vault -- */
+
+/*
+ * The Strongbox reads its state before anyone reads its count: dark and shut
+ * when empty, glowing along the seam with a lock lit per item, cracked and
+ * sparking when damaged, hanging open with its chains snapped when broken.
+ */
+.vault {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.vault-seam {
+  fill: #ffb257;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.vault[data-state="holding"] .vault-seam {
+  opacity: 0.55;
+  animation: seam 2.6s ease-in-out infinite;
+}
+.vault[data-state="damaged"] .vault-seam {
+  opacity: 0.8;
+  animation: seam 0.9s ease-in-out infinite;
+}
+.vault[data-state="broken"] .vault-seam {
+  opacity: 1;
+}
+@keyframes seam {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+.vault-lock-eye {
+  fill: #171320;
+  transition: fill 0.25s;
+}
+.vault-lock[data-lit] .vault-lock-eye {
+  fill: #ffc46a;
+  filter: drop-shadow(0 0 3px #ffb257) var(--tone,);
+}
+.vault-lock[data-lit] {
+  animation: lock-engage 0.35s ease-out;
+}
+@keyframes lock-engage {
+  0% {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  40% {
+    filter: brightness(2.2);
+  }
+}
+.vault-cracks {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.vault[data-state="damaged"] .vault-cracks {
+  opacity: 0.85;
+  animation: seam 0.7s ease-in-out infinite;
+}
+.vault[data-state="broken"] .vault-cracks {
+  opacity: 1;
+}
+.vault-lid {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: transform 0.45s cubic-bezier(0.2, 1.5, 0.4, 1);
+}
+.vault[data-state="broken"] .vault-lid {
+  transform: translateY(-14%) rotate(-26deg);
+}
+.chain-left,
+.chain-right {
+  transition:
+    opacity 0.2s,
+    transform 0.5s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.vault[data-state="broken"] .chain-left {
+  transform: translate(-14%, 12%) rotate(-34deg);
+  opacity: 0.3;
+}
+.vault[data-state="broken"] .chain-right {
+  transform: translate(14%, 12%) rotate(34deg);
+  opacity: 0.3;
+}
+.vault[data-state="broken"] .vault-seal {
+  opacity: 0.35;
+}
+.vault[data-state="broken"] .vault-lock-eye {
+  fill: #171320;
+}
+
+/* ----------------------------------------------------------- boss intro -- */
+
+.boss-intro {
+  position: absolute;
+  inset: 0;
+  z-index: 7000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+}
+/* The title sits below the boss so the thing being announced stays visible. */
+.boss-intro .intro-plate {
+  margin-bottom: 9%;
+}
+/* The veil is a spotlight on the boss, not an even dim: it should read as the
+ * room going quiet around one thing. */
+.intro-veil {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    46% 44% at 50% 36%,
+    rgba(8, 6, 12, 0) 0%,
+    rgba(6, 5, 9, 0.96) 78%
+  );
+  transition: opacity 0.7s ease;
+}
+.boss-intro[data-beat="reveal"] .intro-veil {
+  opacity: 0.75;
+}
+.boss-intro[data-beat="title"] .intro-veil {
+  opacity: 0.55;
+}
+.boss-intro[data-beat="done"] .intro-veil {
+  opacity: 0;
+}
+.intro-plate {
+  position: relative;
+  text-align: center;
+  opacity: 0;
+  transform: scale(1.4);
+}
+.boss-intro[data-beat="title"] .intro-plate {
+  /* The seal comes down hard and settles, the way a stamp does. */
+  animation: stamp 0.52s cubic-bezier(0.1, 1.5, 0.35, 1) forwards;
+}
+.boss-intro[data-beat="done"] .intro-plate {
+  opacity: 0;
+  transform: scale(1);
+  transition: opacity 0.35s ease;
+}
+@keyframes stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.5) rotate(-7deg);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.95) rotate(1.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+.intro-seal {
+  width: clamp(54px, 9cqw, 96px);
+  height: clamp(54px, 9cqw, 96px);
+  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.7));
+}
+.intro-name {
+  display: block;
+  margin-top: 8px;
+  font: clamp(22px, 4.4cqw, 46px) var(--pixel);
+  color: var(--cream);
+  letter-spacing: 0.06em;
+  text-shadow: 0 4px 0 #000;
+  transform: skewX(-7deg);
+}
+.intro-epithet {
+  display: block;
+  margin-top: 6px;
+  font: clamp(9px, 1.4cqw, 13px) var(--pixel);
+  font-style: normal;
+  color: var(--gold);
+  letter-spacing: 0.3em;
+}
+.intro-hint {
+  position: absolute;
+  top: 10px;
+  font: 7px var(--pixel);
+  color: #6d6276;
+  letter-spacing: 0.2em;
+}
+.boss-intro[data-beat="done"] .intro-hint {
+  opacity: 0;
+}
+
+/* ------------------------------------------------------------ collector -- */
+
+.collector {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+/* Parts are moved by the animator; they need their own transform box or the
+ * rotations would pivot around the whole SVG rather than the joint. */
+.collector > g {
+  transform-box: view-box;
+}
+.col-eye {
+  fill: #ffd27a;
+  filter: drop-shadow(0 0 3px #ffb257) var(--tone,);
+  animation: col-eye 4.4s ease-in-out infinite;
+}
+@keyframes col-eye {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  46% {
+    opacity: 1;
+  }
+  52% {
+    opacity: 0.5;
+  }
+}
+/* Phase two: the lamps go hot and the gold runs bright. */
+.combatant[data-phase="2"] .col-eye {
+  fill: #ff8a4c;
+  animation-duration: 1.5s;
+}
+:root[data-motion="reduced"] .col-eye {
+  animation: none;
+}
+
+/* --------------------------------------------------- bulwark and mender -- */
+
+.bulwark,
+.mender {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.bulwark > g,
+.mender > g {
+  transform-box: view-box;
+}
+/* The Bulwark's only opening, and its exhaust. */
+.blw-slot {
+  fill: #ff9a42;
+  filter: drop-shadow(0 0 4px #ff7a2e) var(--tone,);
+  animation: blw-slot 5.6s ease-in-out infinite;
+}
+@keyframes blw-slot {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  48% {
+    opacity: 1;
+  }
+}
+.blw-vent {
+  fill: #ffb35e;
+  opacity: 0.3;
+  animation: vent 3.8s ease-in-out infinite;
+}
+.blw-vent-b {
+  animation-duration: 5.1s;
+  animation-delay: -1.4s;
+}
+@keyframes vent {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: translateY(0) scale(0.8);
+  }
+  45% {
+    opacity: 0.5;
+    transform: translateY(-9%) scale(1.25);
+  }
+}
+.bulwark ellipse {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+/* The Mender runs hot: seams, clamp tips and a working lens. */
+.mnd-seam {
+  opacity: 0.75;
+  animation: seam 2.9s ease-in-out infinite;
+}
+.mnd-vent {
+  fill: #ff9a42;
+  opacity: 0.3;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: vent 3.1s ease-in-out infinite;
+}
+.mnd-tip {
+  fill: #ff8c3a;
+  filter: drop-shadow(0 0 3px #ff7a2e) var(--tone,);
+  animation: seam 1.9s ease-in-out infinite;
+}
+.mnd-lens {
+  fill: #b9f0ff;
+  filter: drop-shadow(0 0 3px #7fd8ff) var(--tone,);
+  animation: blw-slot 4.2s ease-in-out infinite;
+}
+:root[data-motion="reduced"] .blw-slot,
+:root[data-motion="reduced"] .blw-vent,
+:root[data-motion="reduced"] .mnd-seam,
+:root[data-motion="reduced"] .mnd-vent,
+:root[data-motion="reduced"] .mnd-tip,
+:root[data-motion="reduced"] .mnd-lens {
+  animation: none;
+}

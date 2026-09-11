@@ -59,6 +59,12 @@ export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
       kind: z.literal("gold"),
       amount: z.number().int().min(-10000).max(10000),
     }),
+    z.object({ kind: z.literal("seize"), count: z.number().int().positive() }),
+    z.object({
+      kind: z.literal("bank"),
+      per: z.number().int().positive(),
+      free: nonnegative,
+    }),
     z.object({
       kind: z.literal("conditional"),
       status: statusId,
@@ -81,7 +87,7 @@ const itemSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   rarity: z.enum(["Common", "Rare", "Epic", "Legendary"]),
-  slot: z.enum(["weapon", "armor", "relic"]),
+  slot: z.enum(["weapon", "armor", "relic", "supply"]),
   tags: z.array(z.string()).min(1),
   description: z.string().min(1),
   clue: z.string().min(1),
@@ -92,11 +98,14 @@ const itemSchema = z.object({
     "afterHeal",
     "onHurt",
     "onKill",
+    "use",
   ]),
-  effects: z.array(effectSchema).min(1),
+  effects: z.array(effectSchema),
+  use: abilitySchema.optional(),
   target: z.enum(["self", "target"]),
   price: z.number().int().positive(),
 });
+
 function unique(entries: { id: string }[], label: string) {
   if (new Set(entries.map((e) => e.id)).size !== entries.length)
     throw Error(`Duplicate ${label} ID`);
@@ -114,7 +123,10 @@ export function validateContent() {
       if (
         formation.length !== count ||
         formation.some(
-          (id) => !enemies.some((enemy) => enemy.id === id && !enemy.boss),
+          (id) =>
+            !enemies.some(
+              (enemy) => enemy.id === id && !enemy.boss && !enemy.object,
+            ),
         )
       )
         throw Error(`Invalid encounter ${e.id}`);
@@ -180,7 +192,22 @@ export function validateContent() {
     for (const h of heroes)
       if (!pathFor(m.id, h.id))
         throw Error(`Mentor ${m.id} teaches ${h.id} nothing`);
-  for (const i of items) itemSchema.parse(i);
+  for (const i of items) {
+    itemSchema.parse(i);
+    // A supply is nothing but its action; worn equipment is nothing but its
+    // passive. Getting this backwards produces an item that silently does
+    // nothing at all, which no other check would catch.
+    if (i.slot === "supply") {
+      if (!i.use || i.trigger !== "use" || i.effects.length)
+        throw Error(`Supply ${i.id} must carry a use and no passive`);
+      if (i.use.cost) throw Error(`Supply ${i.id} may not cost resource`);
+    } else if (!i.effects.length || i.use)
+      throw Error(`Item ${i.id} must carry a passive and no use`);
+  }
+  // A seizure names its container in engine code, so the container has to be
+  // in the catalog and has to be an object, or breaking it would end a chamber.
+  const box = enemies.find((e) => e.id === "strongbox");
+  if (!box?.object) throw Error("Missing strongbox container");
   for (const e of enemies) {
     z.object({
       hp: z.number().int().positive(),
