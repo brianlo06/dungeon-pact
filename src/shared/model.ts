@@ -10,6 +10,7 @@ export type Phase =
   | "EVENT"
   | "CAMP"
   | "COMPLETE";
+import type { AbilityPresentation, UnitPresentation } from "./presentation";
 export type Row = "front" | "back";
 export type StatusId =
   | "burn"
@@ -71,6 +72,8 @@ export type Effect =
   | { kind: "bank"; per: number; free: number }
   | { kind: "conditional"; status: StatusId; effects: Effect[] };
 export interface Ability {
+  /** How this action looks. Never how it resolves. */
+  presentation?: AbilityPresentation;
   interruptible?: boolean;
   id: string;
   name: string;
@@ -82,6 +85,7 @@ export interface Ability {
   cooldown: number;
 }
 export interface HeroDef {
+  presentation?: UnitPresentation;
   id: string;
   name: string;
   title: string;
@@ -176,6 +180,14 @@ export interface EnemyDef {
   object?: boolean;
   /** The boss's stated objective, shown before the first round. */
   objective?: string;
+  /** Title-card subtitle. Flavour; nothing reads it but the entrance. */
+  epithet?: string;
+  /**
+   * How this creature looks and moves. The presentation layer must learn size,
+   * rig and effect family from here rather than from the id — "large because
+   * its id is collector" is exactly the coupling this removes.
+   */
+  presentation?: UnitPresentation;
 }
 export interface MapNode {
   id: string;

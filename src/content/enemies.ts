@@ -27,6 +27,7 @@ const mend: Ability = {
 };
 export const enemies: EnemyDef[] = [
   {
+    presentation: { footprint: "small", theme: "foundry", idlePeriod: 3.1 },
     id: "stoker",
     name: "Cinder Stoker",
     glyph: "♟",
@@ -38,6 +39,13 @@ export const enemies: EnemyDef[] = [
     abilities: [attack("tongs", "Branding tongs", 12)],
   },
   {
+    presentation: {
+      spriteSet: "bulwark",
+      footprint: "heavy",
+      theme: "guard",
+      idlePeriod: 4.6,
+      shadow: 0.92,
+    },
     id: "bulwark",
     name: "Iron Bulwark",
     glyph: "▣",
@@ -49,6 +57,7 @@ export const enemies: EnemyDef[] = [
     abilities: [attack("ram", "Shield ram", 15)],
   },
   {
+    presentation: { footprint: "small", theme: "arcane", idlePeriod: 2.9 },
     id: "acolyte",
     name: "Ash Acolyte",
     glyph: "♝",
@@ -64,6 +73,12 @@ export const enemies: EnemyDef[] = [
     ],
   },
   {
+    presentation: {
+      spriteSet: "mender",
+      footprint: "person",
+      theme: "growth",
+      idlePeriod: 3.6,
+    },
     id: "mender",
     name: "Kiln Mender",
     glyph: "✣",
@@ -75,6 +90,7 @@ export const enemies: EnemyDef[] = [
     abilities: [mend, attack("wrench", "Wrench", 9)],
   },
   {
+    presentation: { footprint: "person", theme: "blood", idlePeriod: 2.2 },
     id: "hound",
     name: "Slag Hound",
     glyph: "♞",
@@ -86,6 +102,7 @@ export const enemies: EnemyDef[] = [
     abilities: [attack("bite", "Searing bite", 13)],
   },
   {
+    presentation: { footprint: "small", theme: "precision", idlePeriod: 3.3 },
     id: "sniper",
     name: "Rivet Sniper",
     glyph: "⌖",
@@ -97,6 +114,7 @@ export const enemies: EnemyDef[] = [
     abilities: [attack("rivet", "Back-row rivet", 18)],
   },
   {
+    presentation: { footprint: "person", theme: "contract", idlePeriod: 2.6 },
     id: "thief",
     name: "Coin Leech",
     glyph: "◈",
@@ -112,6 +130,7 @@ export const enemies: EnemyDef[] = [
     ],
   },
   {
+    presentation: { footprint: "heavy", theme: "foundry", idlePeriod: 5.2 },
     id: "bellows",
     name: "Living Bellows",
     glyph: "♜",
@@ -123,6 +142,13 @@ export const enemies: EnemyDef[] = [
     abilities: [attack("exhale", "Scorching exhale", 9, "enemyRow")],
   },
   {
+    presentation: {
+      spriteSet: "strongbox",
+      footprint: "container",
+      theme: "contract",
+      idlePeriod: 6.5,
+      shadow: 0.95,
+    },
     id: "strongbox",
     name: "The Strongbox",
     glyph: "▤",
@@ -148,6 +174,13 @@ export const enemies: EnemyDef[] = [
     ],
   },
   {
+    presentation: {
+      spriteSet: "collector",
+      footprint: "boss-large",
+      theme: "contract",
+      idlePeriod: 5.8,
+      shadow: 1,
+    },
     id: "collector",
     name: "The Collector",
     glyph: "♛",
@@ -157,6 +190,7 @@ export const enemies: EnemyDef[] = [
     speed: 4,
     row: "front",
     boss: true,
+    epithet: "Keeper of Unpaid Debts",
     objective:
       "It banks what it takes. Break the Strongbox to get your equipment back — or finish the fight without it.",
     abilities: [
@@ -165,6 +199,12 @@ export const enemies: EnemyDef[] = [
     ],
   },
   {
+    presentation: {
+      footprint: "boss",
+      theme: "contract",
+      idlePeriod: 5.4,
+      shadow: 1,
+    },
     id: "miser",
     name: "The Miser",
     glyph: "♚",
@@ -174,6 +214,7 @@ export const enemies: EnemyDef[] = [
     speed: 3,
     row: "front",
     boss: true,
+    epithet: "Who Counts What You Kept",
     objective:
       "It shields itself with whatever gold the pact still holds. A full treasury is armour you gave away.",
     abilities: [

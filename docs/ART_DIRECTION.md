@@ -92,3 +92,97 @@ somewhere to plug in — that needs the atlas work above first.
 ## Next art work
 
 Actual multi-frame attacks/casting/hurt animations; biome floor/background tiles matching the sprite pixel density; distinct item icons; responsive status popovers; event illustrations. Current stepped idle movement is CSS presentation, not a skeletal or sprite animation system. Avoid marketing language that implies commissioned human art or production-ready animation coverage.
+
+## Art medium — the decision, and why
+
+**Hybrid.** Large pixel sprites for heroes and ordinary enemies; layered cutout
+rigs for bosses, containers and anything that has to carry weight.
+
+The alternatives were weighed and rejected for concrete reasons rather than
+taste. High-resolution illustration costs the most per asset and is the hardest
+to animate at this team's size, and the first thing that would suffer is the
+number of enemies. Pure pixel art cannot give the Collector believable heft
+without dozens of hand-drawn frames per action, and that budget does not exist.
+Cutout rigging alone fights the pixel assets already in the project.
+
+The hybrid is also what the engine already supports: the animation player takes
+frame sheets **and** transform rigs behind one interface, so a creature can be
+upgraded from one to the other without touching a call site.
+
+Do not read the current placeholder sprites as the decision. They are 128px
+prototypes; the target is 256px cells with real anticipation frames.
+
+## Sprite and rig conventions
+
+**Frame sheets.** One horizontal strip per clip.
+
+```
+art/heroes/vanguard/
+  idle.png      256×256 per frame, 8 frames, 12fps, loop
+  attack.png    256×256 per frame, 9 frames, 18fps, once
+  hurt.png      ...
+```
+
+- **Cell:** square, power of two, 256×256 at the current target.
+- **Anchor:** bottom-centre of the cell is the character's ground point. The
+  stage positions by ground point, so a sprite that floats inside its cell will
+  float on the battlefield.
+- **Headroom:** leave the top 10% clear. Intent chips and damage numbers sit
+  there.
+- **Transparency:** straight alpha, no matte.
+- **Scaling:** `image-rendering: pixelated`, integer-friendly sizes.
+- **Naming:** the clip names in `shared/presentation.ts` and nothing else.
+
+**Transform rigs** live in `client/battle/rigs.ts` as keyed poses. They exist
+so a creature can have anticipation and recovery before it has any artwork at
+all, and they stay the right answer for bosses afterwards.
+
+## Animation principles
+
+Every action reads as **anticipation → action → impact → recovery**. A strike
+that begins at the moment of contact reads as a teleport no matter how fast the
+rest of it is; the pull-back is what makes it legible and heavy. Light actions
+compress this, they do not skip it.
+
+Weight is communicated by how little a thing moves when hit. The Vanguard
+recoils; the Collector barely shifts. That asymmetry is most of what separates
+a boss from an enemy.
+
+Idles never synchronise. Every unit starts its loop at a random phase and
+creatures carry their own period, because a row of things breathing in time is
+the clearest possible signal that a battlefield is a spreadsheet.
+
+## Creature direction — the boss encounter
+
+These four appear together and are the coherence test for the whole bestiary.
+
+**The Collector.** A creditor, not a wizard. The silhouette should be legible
+in pure black: a large asymmetric armoured figure, one side weighed down by
+what it has taken — hanging seals, a ledger chained to the forearm, an
+oversized key that doubles as its weapon. Ornate wealth bolted onto industrial
+brutality. Slow, deliberate, and it should look like it has never hurried.
+
+**The Strongbox.** Built to contain confiscated power, not to store treasure.
+A squat riveted vault, gold strapping, a lock per item taken, a contract seal
+across the face, chains wrapping the hull. Light escapes the seam when it is
+holding something. _This is now authored art rather than a placeholder._
+
+**Iron Bulwark.** A defensive frontliner, and its anatomy should say so before
+its intent does: the entire forebody is a plated wall, the centre of gravity is
+low, and almost no body is exposed. It should look immovable at rest and like a
+ram in motion.
+
+**Kiln Mender.** A support creature, and deliberately unpleasant. A forge
+surgeon: long instrument limbs, heated clamps, bellows organs, repair machinery
+grown into the body. When it heals, it should look like it is welding something
+shut rather than blessing it.
+
+None of these are drawn yet. The Collector, Bulwark and Mender still use the
+prototype sprites.
+
+## What does not fit
+
+Cute mascots. Enemies that share a footprint. Sprites that stand still. Bosses
+that bounce. Anything whose silhouette needs a name tag. Dashed grid cells,
+detached stat panels, or an interface that sits beside the battle rather than
+inside it.

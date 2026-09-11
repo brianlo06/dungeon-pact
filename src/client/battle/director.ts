@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Beat, Snapshot } from "../../shared/model";
+import type { ClipName, SfxName } from "../../shared/presentation";
+import { tempo } from "./tempo";
 
 /**
  * The presentation director.
@@ -88,7 +90,9 @@ export interface DirectorHooks {
   /** Called once per beat so the camera can frame it. */
   onCamera?: (beat: Beat | null) => void;
   onShake?: (amount: number) => void;
-  onSound?: (kind: string) => void;
+  onSound?: (name: SfxName) => void;
+  /** Ask a combatant for a clip. The director never knows how it is drawn. */
+  onClip?: (unit: string, clip: ClipName, then?: ClipName) => void;
 }
 
 export function useDirector(
@@ -163,6 +167,7 @@ export function useDirector(
     switch (beat.kind) {
       case "cast":
         next.title = { text: beat.label ?? "", actor: beat.actor };
+        if (beat.actor) hooksRef.current.onClip?.(beat.actor, "attack");
         add({ kind: "cast", from: beat.actor, life: 420 });
         if (beat.actor && beat.target && beat.actor !== beat.target)
           add({
@@ -171,9 +176,10 @@ export function useDirector(
             to: beat.target,
             life: 320,
           });
-        hooksRef.current.onSound?.("cast");
+        hooksRef.current.onSound?.("swing-heavy");
         break;
       case "damage":
+        if (beat.target) hooksRef.current.onClip?.(beat.target, "hurt");
         add({ kind: "impact", to: beat.target, life: 380 });
         add({ kind: "slash", to: beat.target, life: 260 });
         pop(
@@ -182,7 +188,9 @@ export function useDirector(
           beat.target,
         );
         hooksRef.current.onShake?.((beat.amount ?? 0) >= 20 ? 0.012 : 0.005);
-        hooksRef.current.onSound?.("damage");
+        hooksRef.current.onSound?.(
+          (beat.amount ?? 0) >= 24 ? "impact-heavy" : "impact-light",
+        );
         next.frozen = stopFor(beat.amount ?? 0) > 0;
         hold += stopFor(beat.amount ?? 0);
         break;
@@ -192,9 +200,10 @@ export function useDirector(
         hooksRef.current.onSound?.("heal");
         break;
       case "block":
+        if (beat.target) hooksRef.current.onClip?.(beat.target, "block");
         add({ kind: "barrier", to: beat.target, life: 380 });
         pop(`⬡${beat.amount ?? 0}`, "block", beat.target);
-        hooksRef.current.onSound?.("block");
+        hooksRef.current.onSound?.("shield-block");
         break;
       case "combo":
         next.title = { text: beat.label ?? "", actor: beat.actor };
@@ -208,17 +217,28 @@ export function useDirector(
         else if (beat.label === "INTERRUPTED")
           add({ kind: "interrupt", to: beat.target, life: 520 });
         hooksRef.current.onShake?.(0.014);
-        hooksRef.current.onSound?.("combo");
+        hooksRef.current.onSound?.(
+          beat.label === "SEIZED"
+            ? "chain"
+            : beat.label === "RECLAIMED"
+              ? "vault-break"
+              : beat.label === "INTERRUPTED"
+                ? "interrupt"
+                : "impact-metal",
+        );
+        if (beat.label === "SEIZED") hooksRef.current.onSound?.("lock");
         break;
       case "defeat":
+        if (beat.target)
+          hooksRef.current.onClip?.(beat.target, "defeat", "defeat");
         hooksRef.current.onShake?.(0.02);
-        hooksRef.current.onSound?.("defeat");
+        hooksRef.current.onSound?.("down");
         break;
     }
     hooksRef.current.onCamera?.(beat);
     live.current = next;
     setCues(next);
-    waitUntil.current = now + hold / Math.max(0.25, speedRef.current);
+    waitUntil.current = now + hold / Math.max(0.25, speedRef.current) / tempo();
   }, []);
 
   // Build the timeline whenever the server sends a round we have not played.

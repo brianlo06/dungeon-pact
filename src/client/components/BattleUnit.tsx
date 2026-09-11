@@ -1,7 +1,10 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import type { Enemy, Player, Unit } from "../../shared/model";
 import type { Placement } from "../battle/layout";
+import { unitPresentation } from "../battle/layout";
+import type { Animators } from "../battle/useAnimators";
 import { Sprite } from "./Sprite";
+import { Strongbox, type VaultState } from "./Strongbox";
 import { statuses } from "../../content/statuses";
 import { items } from "../../content/items";
 
@@ -31,6 +34,7 @@ export function BattleUnit({
   you,
   intent,
   owners,
+  animators,
 }: {
   unit: Unit;
   /** Where presentation space says this unit stands. */
@@ -47,14 +51,30 @@ export function BattleUnit({
   you?: boolean;
   intent?: ReactNode;
   owners?: Player[];
+  animators?: Animators;
 }) {
   const player = "heroId" in unit ? (unit as Player) : null;
   const enemy = "definition" in unit ? (unit as Enemy) : null;
+  const look = unitPresentation(enemy?.definition, player?.heroId);
+  const sprite = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    animators?.register(unit.id, look.spriteSet);
+    animators?.attach(unit.id, sprite.current);
+    return () => animators?.attach(unit.id, null);
+  }, [animators, unit.id, look.spriteSet]);
   const shown = hp ?? unit.hp;
   const down = shown <= 0;
   const share = Math.max(0, Math.min(1, shown / unit.maxHp));
   const barrier = unit.statuses.find((s) => s.id === "barrier")?.stacks ?? 0;
   const held = enemy?.holding ?? [];
+  // The vault's state is readable before anyone reads the count.
+  const vault: VaultState = down
+    ? "broken"
+    : share < 0.45
+      ? "damaged"
+      : held.length
+        ? "holding"
+        : "empty";
   return (
     <div
       className="combatant"
@@ -84,10 +104,20 @@ export function BattleUnit({
         aria-label={`${unit.name}, ${shown} of ${unit.maxHp} health`}
       >
         <span className="combatant-shadow" aria-hidden="true" />
-        <Sprite
-          id={player?.heroId ?? enemy?.definition ?? "chest"}
-          className="combatant-sprite"
-        />
+        <span className="combatant-rig" ref={sprite}>
+          {look.spriteSet === "strongbox" ? (
+            <Strongbox
+              className="combatant-sprite"
+              held={held.length}
+              state={vault}
+            />
+          ) : (
+            <Sprite
+              id={player?.heroId ?? enemy?.definition ?? "chest"}
+              className="combatant-sprite"
+            />
+          )}
+        </span>
         {selected && <span className="combatant-ring" aria-hidden="true" />}
         {pop && (
           <span className={`combatant-pop pop-${impact ?? "damage"}`}>

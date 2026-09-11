@@ -1,5 +1,11 @@
 import type { Row, Snapshot } from "../../shared/model";
 import { enemies as enemyDefs } from "../../content/enemies";
+import { heroes } from "../../content/heroes";
+import {
+  DEFAULT_UNIT,
+  FOOTPRINT_SCALE,
+  type UnitPresentation,
+} from "../../shared/presentation";
 
 /**
  * Presentation space.
@@ -51,21 +57,31 @@ export const bandOf = (side: "hero" | "enemy", row: Row): BandName =>
       : "hero-back";
 
 /**
- * How much room a creature takes. Scale is threat: a boss must not share a
- * footprint with the thing beside it, and a container must not read as a
- * combatant. Presentation-only, and keyed off flags the content already
- * carries rather than off names.
+ * How much room a creature takes, read from content rather than inferred. The
+ * presentation layer used to know that the Collector was large because of its
+ * id; it now knows only that some entity uses the `boss-large` footprint.
  */
 export function bulk(definition: string | undefined) {
-  if (!definition) return 1;
+  if (!definition) return FOOTPRINT_SCALE[DEFAULT_UNIT.footprint];
   const def = enemyDefs.find((d) => d.id === definition);
-  if (def?.boss) return 1.62;
-  if (def?.object) return 1.15;
-  if (definition === "bulwark") return 1.18;
-  if (definition === "bellows") return 1.12;
-  if (definition === "hound") return 1.06;
-  if (definition === "acolyte" || definition === "sniper") return 0.9;
-  return 1;
+  const footprint = def?.presentation?.footprint ?? DEFAULT_UNIT.footprint;
+  return FOOTPRINT_SCALE[footprint];
+}
+
+/** Everything presentation knows about a unit, with defaults filled in. */
+export function unitPresentation(
+  definition: string | undefined,
+  heroId?: string,
+): Required<
+  Pick<UnitPresentation, "footprint" | "theme" | "idlePeriod" | "shadow">
+> &
+  UnitPresentation {
+  const def = definition
+    ? enemyDefs.find((d) => d.id === definition)?.presentation
+    : heroId
+      ? heroes.find((h) => h.id === heroId)?.presentation
+      : undefined;
+  return { ...DEFAULT_UNIT, ...def };
 }
 
 /** Depth alone makes a unit smaller; bulk then makes the creature itself big. */
@@ -87,7 +103,7 @@ export function placements(s: Snapshot): Map<string, Placement> {
   const groups: [
     BandName,
     "hero" | "enemy",
-    { id: string; definition?: string }[],
+    { id: string; definition?: string; heroId?: string }[],
   ][] = [
     ["enemy-back", "enemy", s.enemies.filter((e) => e.row === "back")],
     ["enemy-front", "enemy", s.enemies.filter((e) => e.row === "front")],
@@ -111,7 +127,12 @@ export function placements(s: Snapshot): Map<string, Placement> {
         // Paint order follows the ground line, so a nearer unit overlaps a
         // further one exactly the way standing in front of someone works.
         z: Math.round(y * 1000) + i,
-        shadow: 0.82 - depth * 0.12,
+        shadow:
+          unitPresentation(
+            (u as { definition?: string }).definition,
+            (u as { heroId?: string }).heroId,
+          ).shadow *
+          (0.94 - depth * 0.12),
       });
     });
   }

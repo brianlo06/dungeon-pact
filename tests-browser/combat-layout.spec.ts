@@ -381,3 +381,85 @@ test.describe("the Collector's objective is legible without the chronicle", () =
     expect(battle.wide).toBeLessThanOrEqual(TOLERANCE);
   });
 });
+
+test.describe("the new visual layer stays inside the viewport", () => {
+  test("the boss entrance never overflows or blocks the fight", async ({
+    page,
+  }) => {
+    // Slowed, so a loaded parallel worker cannot miss the window. The tempo
+    // control is development-only and exists for capture; this reuses it.
+    await open(page, { party: 4, stage: "opening", motion: 1, tempo: 0.2 });
+    await expect(page.locator(".boss-intro")).toBeVisible();
+    const o = await overflow(page);
+    expect(o.vertical).toBeLessThanOrEqual(TOLERANCE);
+    expect(o.horizontal).toBeLessThanOrEqual(TOLERANCE);
+    // The title must stay on screen at every supported size.
+    const plate = await inViewport(page, ".intro-plate");
+    expect(plate.inside).toBe(true);
+    // Any input clears it, so nobody is trapped watching it.
+    await page.keyboard.press("Space");
+    await expect(page.locator(".boss-intro")).toHaveCount(0);
+  });
+
+  test("the environment never covers a combatant or an intention", async ({
+    page,
+  }) => {
+    await open(page, { party: 4, stage: "resolved" });
+    // Foreground art is decorative and must not eat clicks meant for the field.
+    const blocking = await page.evaluate(() =>
+      [
+        ...document.querySelectorAll(
+          ".layer-foreground, .layer-far, .layer-mid",
+        ),
+      ]
+        .filter((el) => getComputedStyle(el).pointerEvents !== "none")
+        .map((el) => el.className),
+    );
+    expect(blocking).toEqual([]);
+    // And an enemy is still clickable through it.
+    await page.locator(".fan-slip:not([data-common]) > button").first().click();
+    await page
+      .locator(".combatant[data-side='enemy'] .combatant-body")
+      .nth(1)
+      .click();
+    await expect(page.locator(".lock-action")).toBeEnabled();
+  });
+
+  test("the strongbox shows its state, not just its count", async ({
+    page,
+  }) => {
+    await open(page, { party: 4, stage: "resolved" });
+    const vault = page.locator(".vault");
+    await expect(vault).toHaveAttribute("data-state", /holding|damaged/);
+    // A lock is lit for each item it has taken.
+    const lit = await page.locator(".vault-lock[data-lit]").count();
+    expect(lit).toBeGreaterThan(0);
+
+    await open(page, { party: 4, stage: "released" });
+    await expect(page.locator(".vault")).toHaveAttribute(
+      "data-state",
+      "broken",
+    );
+    expect(await page.locator(".vault-lock[data-lit]").count()).toBe(0);
+  });
+
+  test("every combatant animates through its own rig", async ({ page }) => {
+    await open(page, { party: 4, stage: "objective" });
+    const first = await page.evaluate(() =>
+      [...document.querySelectorAll(".combatant-rig")].map(
+        (el) => (el as HTMLElement).style.transform,
+      ),
+    );
+    await page.waitForTimeout(700);
+    const later = await page.evaluate(() =>
+      [...document.querySelectorAll(".combatant-rig")].map(
+        (el) => (el as HTMLElement).style.transform,
+      ),
+    );
+    expect(first.length).toBeGreaterThan(3);
+    expect(first.every(Boolean)).toBe(true);
+    // Idles are out of phase, so the field is not breathing in lockstep.
+    expect(new Set(later).size).toBeGreaterThan(1);
+    expect(later.some((t, i) => t !== first[i])).toBe(true);
+  });
+});

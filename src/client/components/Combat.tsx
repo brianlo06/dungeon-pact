@@ -14,7 +14,9 @@ import type { Impact } from "./BattleUnit";
 import { placements } from "../battle/layout";
 import { useCamera } from "../battle/camera";
 import { BattleVfx } from "./BattleVfx";
-import { audio } from "../audio";
+import { useAnimators } from "../battle/useAnimators";
+import { BossIntro } from "./BossIntro";
+import { mixer } from "../audio/engine";
 
 /**
  * The battle screen. It owns one viewport and never scrolls: a fixed strip of
@@ -36,20 +38,15 @@ export function Combat({
 }) {
   const me = s.players.find((p) => p.id === s.you)!;
   const [history, setHistory] = useState(false);
+  // The entrance plays once for an encounter, not once a round.
+  const [introShown, setIntroShown] = useState(false);
   const places = useMemo(() => placements(s), [s]);
   const camera = useCamera(reducedMotion);
+  const animators = useAnimators();
   const replay = useDirector(s, reducedMotion, {
     onShake: camera.shake,
-    onSound: (kind) =>
-      audio.cue(
-        kind === "heal"
-          ? "heal"
-          : kind === "combo"
-            ? "combo"
-            : kind === "cast"
-              ? "info"
-              : "damage",
-      ),
+    onClip: animators.play,
+    onSound: (name) => mixer.play(name),
   });
   const b = replay.beat;
 
@@ -257,6 +254,7 @@ export function Combat({
       </div>
 
       <BattleStage
+        animators={animators}
         frozen={replay.frozen}
         s={s}
         places={places}
@@ -363,6 +361,14 @@ export function Combat({
         )}
       </div>
 
+      {bossDef?.objective && !introShown && s.round <= 1 && (
+        <BossIntro
+          name={bossDef.name}
+          epithet={bossDef.epithet}
+          reduced={reducedMotion}
+          onDone={() => setIntroShown(true)}
+        />
+      )}
       <HistoryDrawer s={s} open={history} onClose={() => setHistory(false)} />
     </div>
   );

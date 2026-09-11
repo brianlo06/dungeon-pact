@@ -74,6 +74,7 @@ export const utility: Ability[] = [
 ];
 export const heroes: HeroDef[] = [
   {
+    presentation: { spriteSet: "vanguard", theme: "guard", idlePeriod: 4.2 },
     id: "vanguard",
     name: "Vanguard",
     title: "Stand between fate and your friends.",
@@ -117,6 +118,7 @@ export const heroes: HeroDef[] = [
     ],
   },
   {
+    presentation: { theme: "arcane", idlePeriod: 3.2 },
     id: "arcanist",
     name: "Arcanist",
     title: "Power is a debt worth taking.",
@@ -168,6 +170,7 @@ export const heroes: HeroDef[] = [
     ],
   },
   {
+    presentation: { theme: "precision", idlePeriod: 2.9 },
     id: "ranger",
     name: "Ranger",
     title: "One mark. A hundred possibilities.",
@@ -216,6 +219,7 @@ export const heroes: HeroDef[] = [
     ],
   },
   {
+    presentation: { theme: "growth", idlePeriod: 3.8 },
     id: "warden",
     name: "Warden",
     title: "Nothing living is beyond hope.",
@@ -275,6 +279,7 @@ export const heroes: HeroDef[] = [
     ],
   },
   {
+    presentation: { theme: "contract", idlePeriod: 3.3 },
     id: "broker",
     name: "Broker",
     title: "Everything has a price. Including this.",
@@ -322,6 +327,7 @@ export const heroes: HeroDef[] = [
     ],
   },
   {
+    presentation: { theme: "resonance", idlePeriod: 3.0 },
     id: "herald",
     name: "Herald",
     title: "You are worth more than you think.",
@@ -371,6 +377,7 @@ export const heroes: HeroDef[] = [
     ],
   },
   {
+    presentation: { theme: "blood", idlePeriod: 2.7 },
     id: "reaver",
     name: "Reaver",
     title: "Pain is just unspent currency.",
@@ -417,6 +424,7 @@ export const heroes: HeroDef[] = [
     ],
   },
   {
+    presentation: { theme: "sway", idlePeriod: 3.5 },
     id: "beguiler",
     name: "Beguiler",
     title: "Why fight them? Let them fight each other.",

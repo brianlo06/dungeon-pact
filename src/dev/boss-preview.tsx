@@ -30,6 +30,7 @@ function fromUrl(): {
   viewport: string;
   you: number;
   motion: boolean;
+  tempo: string;
 } {
   const q = new URLSearchParams(location.search);
   const num = (k: string, fallback: number) => {
@@ -50,6 +51,7 @@ function fromUrl(): {
     viewport: q.get("viewport") ?? "fit",
     you: num("you", 0),
     motion: q.get("motion") === "1",
+    tempo: q.get("tempo") ?? "1",
   };
 }
 const initial = fromUrl();
@@ -69,6 +71,12 @@ function BossPreview() {
   useEffect(() => {
     document.documentElement.dataset.motion = motion ? "full" : "reduced";
   }, [motion]);
+  // Capture tempo. Development only: it slows presentation so intermediate
+  // animation states can actually be inspected.
+  const [tempo, setTempo] = useState(initial.tempo);
+  useEffect(() => {
+    document.documentElement.dataset.tempo = tempo;
+  }, [tempo]);
   const s = snapshot(
     run,
     you,
@@ -182,6 +190,16 @@ function BossPreview() {
               onChange={(e) => setMotion(e.target.checked)}
             />{" "}
             Round animation
+          </label>
+          <label>
+            Tempo{" "}
+            <select value={tempo} onChange={(e) => setTempo(e.target.value)}>
+              {["1", "0.5", "0.25", "0.1"].map((n) => (
+                <option key={n} value={n}>
+                  {n}×
+                </option>
+              ))}
+            </select>
           </label>
           <label>
             Viewport{" "}

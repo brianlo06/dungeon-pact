@@ -133,57 +133,127 @@
   inset: 0;
   pointer-events: none;
 }
-.layer-far {
-  background-image:
-    linear-gradient(#3a2b3a 2px, transparent 2px),
-    linear-gradient(90deg, #362836 2px, transparent 2px);
-  background-size: 190px 120px;
-  opacity: 0.2;
-  filter: blur(1px);
+.layer > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
-.layer-mid {
-  background:
-    radial-gradient(closest-side, #6d3324 0%, transparent 70%) -6% 26% / 34% 44%
-      no-repeat,
-    radial-gradient(closest-side, #5c2f22 0%, transparent 70%) 104% 20% / 30%
-      38% no-repeat;
-  opacity: 0.45;
-}
-/* The floor, receding away from the camera. */
-.layer-ground {
-  inset: 30% -12% -4%;
-  background:
-    linear-gradient(
-      rgba(74, 58, 72, 0.9) 0 2px,
-      rgba(46, 36, 52, 0.92) 2px,
-      rgba(20, 17, 27, 0.96)
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.03) 0 2px,
-      transparent 2px 90px
-    );
-  transform: perspective(560px) rotateX(54deg);
-  transform-origin: 50% 0;
-  box-shadow: inset 0 14px 40px rgba(0, 0, 0, 0.55);
-}
+/* Parallax. Each layer declares its depth; the camera supplies the motion. */
+.layer-far,
+.layer-mid,
 .layer-foreground {
-  background: radial-gradient(
-    130% 60% at 50% 108%,
-    rgba(233, 128, 61, 0.2) 0%,
-    transparent 60%
+  will-change: transform;
+}
+/* The floor starts above the deepest rank, so every combatant stands on it
+ * rather than floating over a hard horizon line. */
+.layer-ground {
+  inset: 26% -8% -4%;
+  /* Fade the far edge into the hall instead of cutting it with a seam. */
+  -webkit-mask-image: linear-gradient(
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.55) 8%,
+    #000 22%
   );
-  animation: furnace 6s ease-in-out infinite;
+  mask-image: linear-gradient(
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.55) 8%,
+    #000 22%
+  );
+}
+.layer-ground > svg {
+  transform: perspective(760px) rotateX(38deg);
+  transform-origin: 50% 0;
+}
+/* Ambient motion. Nothing shares a period, so the room never pulses in time. */
+.molten {
+  animation: molten 7.5s ease-in-out infinite;
+}
+@keyframes molten {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+.furnace-mouth {
+  animation: furnace 4.3s ease-in-out infinite;
+  transform-origin: center;
 }
 @keyframes furnace {
   0%,
   100% {
-    opacity: 0.6;
+    opacity: 0.7;
+  }
+  42% {
+    opacity: 1;
+  }
+  58% {
+    opacity: 0.85;
+  }
+}
+.grate {
+  animation: grate 5.9s ease-in-out infinite;
+}
+@keyframes grate {
+  0%,
+  100% {
+    opacity: 0.8;
   }
   50% {
     opacity: 1;
   }
 }
+.gear {
+  animation: spin 34s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.gear-slow {
+  animation-duration: 52s;
+  animation-direction: reverse;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.sway {
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: sway 9s ease-in-out infinite;
+}
+.sway-b {
+  animation-duration: 12.5s;
+  animation-delay: -3s;
+}
+.sway-c {
+  animation-duration: 7.5s;
+  animation-delay: -5s;
+}
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(-1.4deg);
+  }
+  50% {
+    transform: rotate(1.4deg);
+  }
+}
+/* Scene lighting. The director tints this for fire, lightning and payoffs. */
+.layer-light {
+  z-index: 5000;
+  opacity: 0;
+  mix-blend-mode: screen;
+  transition: opacity 0.12s ease-out;
+}
+.layer-light[data-lit] {
+  opacity: 1;
+}
+
 /* Everything the camera moves. */
 .world {
   position: absolute;
@@ -255,37 +325,25 @@
   cursor: default;
 }
 .combatant[data-side="enemy"] .combatant-sprite {
-  /* Enemies face the party. */
+  /* Enemies face the party. Applied to the image, not the rig, so animation
+   * and facing never overwrite one another. */
   transform: scaleX(-1);
 }
-.combatant-body .combatant-sprite {
+.combatant-body .combatant-rig {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* The animator writes this element's transform every frame; nothing else
+   * may, or the two will fight and the sprite will judder. */
+  transform-origin: 50% 92%;
+  will-change: transform;
+}
+.combatant-sprite {
   width: 100%;
   height: 100%;
   display: block;
-  animation: breathe 3.4s ease-in-out infinite;
-  transform-origin: 50% 100%;
 }
-.combatant[data-side="enemy"] .combatant-sprite {
-  animation: breathe-enemy 3.9s ease-in-out infinite;
-}
-@keyframes breathe {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-2%) scale(1.015);
-  }
-}
-@keyframes breathe-enemy {
-  0%,
-  100% {
-    transform: scaleX(-1) translateY(0);
-  }
-  50% {
-    transform: scaleX(-1) translateY(-1.6%);
-  }
-}
+
 /* Grounding. Without a shadow every sprite floats like a sticker. */
 .combatant-shadow {
   position: absolute;
@@ -456,38 +514,13 @@
 
 /* -------------------------------------------------------------- impacts -- */
 
-.combatant[data-impact="damage"] .combatant-body {
-  animation: recoil 0.26s ease;
-}
 .combatant[data-impact="heal"] .combatant-sprite {
   filter: drop-shadow(0 0 10px #8fdc8a);
 }
 .combatant[data-impact="block"] .combatant-sprite {
   filter: drop-shadow(0 0 10px #8fc6ff);
 }
-.combatant[data-acting] .combatant-body {
-  animation: lunge 0.34s ease;
-}
-@keyframes recoil {
-  0% {
-    transform: translateX(0);
-  }
-  30% {
-    transform: translateX(6px) rotate(2deg);
-  }
-  100% {
-    transform: translateX(0);
-  }
-}
-@keyframes lunge {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  45% {
-    transform: translateY(-9%) scale(1.04);
-  }
-}
+
 .combatant-pop {
   position: absolute;
   left: 50%;
@@ -850,7 +883,7 @@
     animation: none;
   }
 }
-:root[data-motion="reduced"] .combatant-sprite,
+:root[data-motion="reduced"] .combatant-rig,
 :root[data-motion="reduced"] :root[data-motion="reduced"] .intent-windup,
 :root[data-motion="reduced"] .combatant-ring,
 :root[data-motion="reduced"] .combatant-pop,
@@ -1330,4 +1363,200 @@
     0 3px 0 #000,
     0 0 24px rgba(0, 0, 0, 0.8);
   transform: skewX(-9deg);
+}
+
+/* ---------------------------------------------------------------- vault -- */
+
+/*
+ * The Strongbox reads its state before anyone reads its count: dark and shut
+ * when empty, glowing along the seam with a lock lit per item, cracked and
+ * sparking when damaged, hanging open with its chains snapped when broken.
+ */
+.vault {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.vault-seam {
+  fill: #ffb257;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.vault[data-state="holding"] .vault-seam {
+  opacity: 0.55;
+  animation: seam 2.6s ease-in-out infinite;
+}
+.vault[data-state="damaged"] .vault-seam {
+  opacity: 0.8;
+  animation: seam 0.9s ease-in-out infinite;
+}
+.vault[data-state="broken"] .vault-seam {
+  opacity: 1;
+}
+@keyframes seam {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+.vault-lock-eye {
+  fill: #171320;
+  transition: fill 0.25s;
+}
+.vault-lock[data-lit] .vault-lock-eye {
+  fill: #ffc46a;
+  filter: drop-shadow(0 0 3px #ffb257);
+}
+.vault-lock[data-lit] {
+  animation: lock-engage 0.35s ease-out;
+}
+@keyframes lock-engage {
+  0% {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  40% {
+    filter: brightness(2.2);
+  }
+}
+.vault-cracks {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.vault[data-state="damaged"] .vault-cracks {
+  opacity: 0.85;
+  animation: seam 0.7s ease-in-out infinite;
+}
+.vault[data-state="broken"] .vault-cracks {
+  opacity: 1;
+}
+.vault-lid {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: transform 0.45s cubic-bezier(0.2, 1.5, 0.4, 1);
+}
+.vault[data-state="broken"] .vault-lid {
+  transform: translateY(-14%) rotate(-26deg);
+}
+.chain-left,
+.chain-right {
+  transition:
+    opacity 0.2s,
+    transform 0.5s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.vault[data-state="broken"] .chain-left {
+  transform: translate(-14%, 12%) rotate(-34deg);
+  opacity: 0.3;
+}
+.vault[data-state="broken"] .chain-right {
+  transform: translate(14%, 12%) rotate(34deg);
+  opacity: 0.3;
+}
+.vault[data-state="broken"] .vault-seal {
+  opacity: 0.35;
+}
+.vault[data-state="broken"] .vault-lock-eye {
+  fill: #171320;
+}
+
+/* ----------------------------------------------------------- boss intro -- */
+
+.boss-intro {
+  position: absolute;
+  inset: 0;
+  z-index: 7000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+}
+/* The title sits below the boss so the thing being announced stays visible. */
+.boss-intro .intro-plate {
+  margin-bottom: 9%;
+}
+/* The veil is a spotlight on the boss, not an even dim: it should read as the
+ * room going quiet around one thing. */
+.intro-veil {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    46% 44% at 50% 36%,
+    rgba(8, 6, 12, 0) 0%,
+    rgba(6, 5, 9, 0.96) 78%
+  );
+  transition: opacity 0.7s ease;
+}
+.boss-intro[data-beat="reveal"] .intro-veil {
+  opacity: 0.75;
+}
+.boss-intro[data-beat="title"] .intro-veil {
+  opacity: 0.55;
+}
+.boss-intro[data-beat="done"] .intro-veil {
+  opacity: 0;
+}
+.intro-plate {
+  position: relative;
+  text-align: center;
+  opacity: 0;
+  transform: scale(1.4);
+}
+.boss-intro[data-beat="title"] .intro-plate {
+  /* The seal comes down hard and settles, the way a stamp does. */
+  animation: stamp 0.52s cubic-bezier(0.1, 1.5, 0.35, 1) forwards;
+}
+.boss-intro[data-beat="done"] .intro-plate {
+  opacity: 0;
+  transform: scale(1);
+  transition: opacity 0.35s ease;
+}
+@keyframes stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.5) rotate(-7deg);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.95) rotate(1.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+.intro-seal {
+  width: clamp(54px, 9cqw, 96px);
+  height: clamp(54px, 9cqw, 96px);
+  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.7));
+}
+.intro-name {
+  display: block;
+  margin-top: 8px;
+  font: clamp(22px, 4.4cqw, 46px) var(--pixel);
+  color: var(--cream);
+  letter-spacing: 0.06em;
+  text-shadow: 0 4px 0 #000;
+  transform: skewX(-7deg);
+}
+.intro-epithet {
+  display: block;
+  margin-top: 6px;
+  font: clamp(9px, 1.4cqw, 13px) var(--pixel);
+  font-style: normal;
+  color: var(--gold);
+  letter-spacing: 0.3em;
+}
+.intro-hint {
+  position: absolute;
+  top: 10px;
+  font: 7px var(--pixel);
+  color: #6d6276;
+  letter-spacing: 0.2em;
+}
+.boss-intro[data-beat="done"] .intro-hint {
+  opacity: 0;
 }

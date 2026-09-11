@@ -5,6 +5,8 @@ import { BattleUnit, type Impact } from "./BattleUnit";
 import { describeIntentEffect } from "../combat-presentation";
 import type { Placement } from "../battle/layout";
 import type { Camera } from "../battle/camera";
+import type { Animators } from "../battle/useAnimators";
+import { Foundry } from "./Foundry";
 
 export interface StageBeat {
   beatFor: (id: string) => {
@@ -41,6 +43,7 @@ export function BattleStage({
   beat,
   camera,
   frozen,
+  animators,
   children,
 }: {
   s: Snapshot;
@@ -52,6 +55,7 @@ export function BattleStage({
   camera: Camera;
   /** Hold the scene still for a beat on a heavy hit. */
   frozen?: boolean;
+  animators: Animators;
   /** Anything anchored in stage space — the action menu lives here. */
   children?: ReactNode;
 }) {
@@ -101,9 +105,7 @@ export function BattleStage({
       className={`stage ${beat.playing ? "is-replaying" : ""}`}
       data-frozen={frozen ? "" : undefined}
     >
-      <div className="layer layer-far" aria-hidden="true" />
-      <div className="layer layer-mid" aria-hidden="true" />
-      <div className="layer layer-ground" aria-hidden="true" />
+      <Foundry />
 
       <div className="world" ref={camera.attach}>
         <div className="layer layer-units">
@@ -119,6 +121,7 @@ export function BattleStage({
                 onSelect={() => onTarget(u.id)}
                 intent={enemy ? intentFor(u as never) : undefined}
                 owners={s.players}
+                animators={animators}
                 locked={!enemy && s.locked.includes(u.id)}
                 connected={enemy || s.connected.includes(u.id)}
                 you={u.id === s.you}
@@ -133,7 +136,7 @@ export function BattleStage({
         {children}
       </div>
 
-      <div className="layer layer-foreground" aria-hidden="true" />
+      <div className="layer layer-light" aria-hidden="true" />
       <div className="layer layer-screen">{beat.overlay}</div>
     </div>
   );
