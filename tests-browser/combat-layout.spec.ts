@@ -261,6 +261,91 @@ test.describe("the action interface belongs to the hero", () => {
     });
   }
 
+  /**
+   * What the fan covers, measured against what is actually drawn: each
+   * figure's painted bounds (glows aside), every name plate and every intent
+   * chip. The fan used to open at fixed offsets and covered its own hero at
+   * every seat.
+   */
+  const fanCovers = (page: Page) =>
+    page.evaluate(() => {
+      const things = [...document.querySelectorAll(".combatant")].flatMap(
+        (u) => {
+          const name = u.querySelector(".combatant-name")?.textContent?.trim();
+          const out: { k: string; r: DOMRect | Record<string, number> }[] = [
+            {
+              k: `${name}'s plate`,
+              r: u.querySelector(".combatant-plate")!.getBoundingClientRect(),
+            },
+          ];
+          const chip = u.querySelector(".intent-chip");
+          if (chip && chip.getBoundingClientRect().width > 1)
+            out.push({ k: `${name}'s chip`, r: chip.getBoundingClientRect() });
+          const svg = u.querySelector<SVGSVGElement>("svg.combatant-sprite");
+          if (svg) {
+            const glows = [...svg.querySelectorAll<SVGElement>(".ph-glow")];
+            glows.forEach((g) => (g.style.display = "none"));
+            const bb = svg.getBBox();
+            glows.forEach((g) => (g.style.display = ""));
+            const m = svg.getScreenCTM()!;
+            const a = new DOMPoint(bb.x, bb.y).matrixTransform(m);
+            const c = new DOMPoint(
+              bb.x + bb.width,
+              bb.y + bb.height,
+            ).matrixTransform(m);
+            out.push({
+              k: name ?? "?",
+              r: {
+                left: Math.min(a.x, c.x),
+                right: Math.max(a.x, c.x),
+                top: Math.min(a.y, c.y),
+                bottom: Math.max(a.y, c.y),
+              },
+            });
+          }
+          return out;
+        },
+      );
+      const faults: string[] = [];
+      for (const el of document.querySelectorAll(".action-fan button")) {
+        const s = el.getBoundingClientRect();
+        for (const t of things) {
+          const ix = Math.min(s.right, t.r.right) - Math.max(s.left, t.r.left);
+          const iy = Math.min(s.bottom, t.r.bottom) - Math.max(s.top, t.r.top);
+          if (ix > 2 && iy > 2)
+            faults.push(`${el.textContent?.trim()} covers ${t.k}`);
+        }
+      }
+      return faults;
+    });
+
+  for (const fight of [
+    { encounter: "hunting-pack", party: 4 },
+    { encounter: "toll-collectors", party: 3, heroes: "broker,herald,reaver" },
+    { boss: "collector", party: 4, heroes: "reaver,beguiler,warden,broker" },
+  ])
+    test(`the fan covers nobody, at any seat: ${fight.encounter ?? fight.boss}`, async ({
+      page,
+    }) => {
+      for (let you = 0; you < fight.party; you++) {
+        await open(page, { ...fight, stage: "objective", you });
+        await page.evaluate(() => document.fonts.ready);
+        await expect(page.locator(".fan-block")).toBeVisible();
+        expect(await fanCovers(page), `seat ${you}`).toEqual([]);
+        // Collapsed to the chosen slip while targeting, it still covers no one.
+        await page
+          .locator(".fan-slip:not([data-common]) > button")
+          .first()
+          .click();
+        await expect(page.locator(".commit-bar")).toHaveAttribute(
+          "data-mode",
+          "target",
+        );
+        await page.waitForTimeout(150);
+        expect(await fanCovers(page), `seat ${you}, targeting`).toEqual([]);
+      }
+    });
+
   test("choosing an ability moves to picking a target on the field", async ({
     page,
   }) => {

@@ -61,7 +61,9 @@ and unit tests.
 The art pass is finished and its first round of fixes is in: the bosses hold
 their wind-ups and land signatures, targeting marks legal targets instead of
 fading everyone else, intent chips no longer cover name plates, the three
-weakest enemies were redrawn, and five heroes got faces of their own. One real bug turned up on the way:
+weakest enemies were redrawn, and five heroes got faces of their own. The
+action fan no longer covers anyone: it is placed by measurement beside its
+hero and chooses its own shape (see `battle/fan-layout.ts`). One real bug turned up on the way:
 the stage was a scroll container, so keyboard focus near its edge could slide
 the whole battlefield out of view. It now uses `overflow: clip`.
 
@@ -79,9 +81,6 @@ layer SVG parts the same way, has not been measured. `tests/perf-css.test.ts`
 and `tests-browser/perf.spec.ts` hold the rules that made the difference.
 What is left, all presentation and none of it blocking:
 
-- **The action fan covers heroes.** The ability slips that open from your hero
-  sit over the hero and the ally below. The user saw it and asked for it to be
-  left for now; it is the next thing they will want.
 - **Bodies still cover name plates.** Chips are laid out, units are not: at
   three heroes Bram's hat covers the Collector's and the Stoker's plates, and
   the front-row Collector covers the Kiln Mender's. That is unit placement in
@@ -200,6 +199,10 @@ npm run simulate -- 25 --matrix --policy=tactical,hoard  # ...and the hoarder
 npm run dev:server                                       # then npm run test:network
 npm run test:browser                                     # PW_PORT=… to run two checkouts at once
 ```
+
+Run `npm test` on its own. Its simulation tests are CPU-bound and time out
+when the browser suite is running beside them; that is starvation, not a
+regression, and a rerun on a quiet machine settles it.
 
 The Battle Lab (`/dev/bosses.html`) stages any fight by URL: `boss=collector`
 or `boss=miser`, or `encounter=<id>` for any ordinary encounter, with
