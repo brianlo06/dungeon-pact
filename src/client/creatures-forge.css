@@ -43,26 +43,53 @@
   filter: drop-shadow(0 0 2px #ffb257);
 }
 
-/* Acolyte: the fire it has for a head, the ember in its palm, the ash. */
-.aco-flame {
+/* Acolyte: the fire it has for a head, the ember in its palm, the ash. Every
+ * glow is a soft shape with an opacity pulse; nothing here uses a filter. */
+.acolyte .aco-flame {
   transform-box: fill-box;
   transform-origin: 50% 100%;
   animation: frg-flicker 0.9s steps(3, jump-none) infinite;
 }
 .aco-core {
-  fill: #ffcf6a;
-  filter: drop-shadow(0 0 3px #ff9a42);
+  fill: #fff2c2;
+}
+.aco-fleck {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: aco-fleck 1.3s ease-out infinite;
+}
+.aco-haze {
+  animation: frg-glow 1.7s ease-in-out infinite;
+}
+.aco-grate {
+  animation: frg-glow 1.1s ease-in-out infinite;
 }
 .aco-halo {
-  fill: #ff9a42;
-  opacity: 0.25;
   transform-box: fill-box;
   transform-origin: center;
-  animation: frg-halo 1.6s ease-in-out infinite;
+  animation: aco-halo 1.6s ease-in-out infinite;
 }
 .aco-censer {
-  fill: #ffb35e;
   animation: frg-glint 2.6s ease-in-out infinite;
+}
+.aco-sigil {
+  fill: #ffc05e;
+  animation: frg-glow 2.2s ease-in-out infinite;
+}
+.aco-burn {
+  animation: frg-glow 0.8s ease-in-out infinite;
+}
+.aco-cinder {
+  fill: #ff9a42;
+  animation: frg-glint 1.9s ease-in-out infinite;
+}
+.aco-cinder-b {
+  animation-duration: 2.5s;
+  animation-delay: -0.9s;
+}
+.aco-cinder-c {
+  animation-duration: 1.5s;
+  animation-delay: -0.4s;
 }
 .aco-ash {
   animation: frg-ash 3.2s linear infinite;
@@ -74,9 +101,43 @@
 .aco-ash-c {
   animation-delay: -1.9s;
 }
-.aco-ash-d {
-  animation-delay: -2.4s;
-  animation-duration: 3.6s;
+/* Killed, the fire goes out: the flame and its haze fade, the grate cools. */
+.acolyte .aco-flame,
+.acolyte .aco-haze,
+.acolyte .aco-fleck,
+.acolyte .aco-grate {
+  transition: opacity 0.7s ease-in 0.15s;
+}
+.combatant[data-down] .acolyte .aco-flame,
+.combatant[data-down] .acolyte .aco-haze,
+.combatant[data-down] .acolyte .aco-fleck {
+  opacity: 0;
+  animation: none;
+}
+.combatant[data-down] .acolyte .aco-grate {
+  opacity: 0.25;
+  animation: none;
+}
+@keyframes aco-halo {
+  0%,
+  100% {
+    transform: scale(0.85);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+@keyframes aco-fleck {
+  0% {
+    transform: translate(0, 2px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(1px, -4px) scale(0.3);
+    opacity: 0;
+  }
 }
 
 /* Bellows: the grate, the horn's mouth, the eyes, the fold glow. */
@@ -150,17 +211,6 @@
     transform: scale(1, 1);
   }
 }
-@keyframes frg-halo {
-  0%,
-  100% {
-    transform: scale(0.85);
-    opacity: 0.18;
-  }
-  50% {
-    transform: scale(1.15);
-    opacity: 0.38;
-  }
-}
 @keyframes frg-ash {
   0% {
     transform: translate(0, -6px);
@@ -190,9 +240,15 @@
 
 :root[data-motion="reduced"] .stk-ember,
 :root[data-motion="reduced"] .stk-coal,
-:root[data-motion="reduced"] .aco-flame,
+:root[data-motion="reduced"] .acolyte .aco-flame,
+:root[data-motion="reduced"] .aco-fleck,
+:root[data-motion="reduced"] .aco-haze,
+:root[data-motion="reduced"] .aco-grate,
 :root[data-motion="reduced"] .aco-halo,
 :root[data-motion="reduced"] .aco-censer,
+:root[data-motion="reduced"] .aco-sigil,
+:root[data-motion="reduced"] .aco-burn,
+:root[data-motion="reduced"] .aco-cinder,
 :root[data-motion="reduced"] .aco-ash,
 :root[data-motion="reduced"] .bel-grate,
 :root[data-motion="reduced"] .bel-mouth,

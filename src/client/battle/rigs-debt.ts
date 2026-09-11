@@ -12,13 +12,16 @@ import type { Rig } from "./animation";
 /**
  * The Miser: it does not want to get up. Its idle is counting — the hand taps
  * the stacks, the head follows each coin, and every so often it looks up at
- * the party as if they owed it something. When it attacks it scoops, draws
- * back and flings a fistful of gold; the hump follows a beat late and the coin
- * shawl lags behind that. Hit, it barely shifts — the coins on its back take
- * it — and when its Barrier soaks a blow it hunkers down into them.
+ * the party as if they owed it something. Its strikes are the hand — the big
+ * four-fingered toad's hand that is its silhouette: held up over its head
+ * through a wind-up, then brought over the top and raked out at the party at
+ * full stretch, the hump following a beat late and the coin shawl lagging
+ * behind that. Hit, it barely shifts — the coins on its back take it — and
+ * the hand is left wherever it was, so a flinch never breaks a held wind-up.
  *
  * The arm pivots at the shoulder with the hand below and in front of it, so a
- * *positive* rotation of `hand` swings it forward and up towards the party.
+ * *positive* rotation of `hand` swings it forward and up towards the party;
+ * past about 100 degrees it is overhead, behind the eyes.
  */
 const miser: Rig = {
   idle: {
@@ -89,7 +92,11 @@ const miser: Rig = {
       ],
     },
   },
-  /** Weight of wealth: scoop, draw back, fling a fistful of gold. */
+  /**
+   * A plain blow: scoop, draw back, fling a fistful of gold. The director
+   * plays `signature` for both of the Miser's strikes, so this is the
+   * fallback for anything else that asks for an attack.
+   */
   attack: {
     duration: 920,
     poses: [
@@ -102,14 +109,16 @@ const miser: Rig = {
       { at: 1, x: 0, rotate: 0, squash: 1, scale: 1, y: 0 },
     ],
     parts: {
+      // Scooped down into the heap, then thrown out level at the party:
+      // high enough to fling, never so high the hand covers its own face.
       hand: [
-        { at: 0, rotate: 0, y: 0 },
+        { at: 0, rotate: 0, x: 0, y: 0 },
         { at: 0.14, rotate: -6, y: 0.012 },
-        { at: 0.34, rotate: -28, y: 0 },
-        { at: 0.48, rotate: 47, y: 0.01 },
-        { at: 0.62, rotate: 38, y: 0.01 },
-        { at: 0.82, rotate: 10 },
-        { at: 1, rotate: 0, y: 0 },
+        { at: 0.34, rotate: -32, x: 0.01, y: 0 },
+        { at: 0.48, rotate: 22, x: -0.025, y: 0.01 },
+        { at: 0.62, rotate: 16, x: -0.02, y: 0.01 },
+        { at: 0.82, rotate: 5, x: -0.005 },
+        { at: 1, rotate: 0, x: 0, y: 0 },
       ],
       head: [
         { at: 0, rotate: 0, x: 0 },
@@ -150,57 +159,74 @@ const miser: Rig = {
     },
   },
   /**
-   * Crushing levy held in the air: the hand hangs over the party, fingers
-   * spread, the jaw working. The threat is the held pose, as the Collector's.
+   * Crushing levy held in the air: the hand goes up over its head, fingers
+   * spread, and stays there, flexing, while the head glares down at the party
+   * and the jaw works. The threat is the held pose, as the Collector's. The
+   * hand rises behind the head rather than in front of it, so the face stays
+   * readable for as long as the wind-up is held.
    */
   windup: {
     duration: 1300,
     loop: true,
     poses: [
-      { at: 0, y: 0, scale: 1, flash: 0, rotate: 0 },
-      { at: 0.5, y: -0.012, scale: 1.02, flash: 0.22, rotate: 1.5 },
-      { at: 1, y: 0, scale: 1, flash: 0, rotate: 0 },
+      { at: 0, y: -0.01, scale: 1.015, flash: 0, rotate: 1 },
+      { at: 0.5, y: -0.018, scale: 1.03, flash: 0.22, rotate: 2 },
+      { at: 1, y: -0.01, scale: 1.015, flash: 0, rotate: 1 },
     ],
     parts: {
       hand: [
-        { at: 0, rotate: 34, y: -0.02 },
-        { at: 0.5, rotate: 40, y: -0.03 },
-        { at: 1, rotate: 34, y: -0.02 },
+        { at: 0, rotate: 110, x: 0.004, y: -0.05 },
+        { at: 0.5, rotate: 117, x: 0.008, y: -0.06 },
+        { at: 1, rotate: 110, x: 0.004, y: -0.05 },
       ],
       head: [
-        { at: 0, rotate: 5 },
-        { at: 0.5, rotate: 8 },
-        { at: 1, rotate: 5 },
+        { at: 0, rotate: -5, x: -0.006 },
+        { at: 0.5, rotate: -7, x: -0.01 },
+        { at: 1, rotate: -5, x: -0.006 },
       ],
       jaw: [
         { at: 0, rotate: -3 },
-        { at: 0.25, rotate: -8 },
+        { at: 0.25, rotate: -9 },
         { at: 0.5, rotate: -3 },
-        { at: 0.75, rotate: -8 },
+        { at: 0.75, rotate: -9 },
         { at: 1, rotate: -3 },
       ],
       shawl: [
-        { at: 0, scale: 1 },
-        { at: 0.5, scale: 1.025, y: -0.006 },
-        { at: 1, scale: 1 },
+        { at: 0, scale: 1.01, rotate: 0.5 },
+        { at: 0.5, scale: 1.03, rotate: 1, y: -0.006 },
+        { at: 1, scale: 1.01, rotate: 0.5 },
+      ],
+      body: [
+        { at: 0, squash: 0.99 },
+        { at: 0.5, squash: 0.98 },
+        { at: 1, squash: 0.99 },
       ],
     },
   },
-  /** Crushing levy: it rises off the heap and rakes the whole row. */
+  /**
+   * Crushing levy, and the Weight of wealth blow: it rises off the heap with
+   * the hand still up, then brings it over the top and rakes it out at the
+   * party, the arm at full stretch and the whole body lunging behind it. At
+   * impact the hand is further towards the party than anywhere else in its
+   * repertoire — well past the held wind-up — so it reads as reaching them,
+   * not as slapping its own gold. It starts from the held wind-up pose, since
+   * that is what comes before the levy; from idle (Weight of wealth) the
+   * animator eases it up into the same place.
+   */
   signature: {
     duration: 1240,
     poses: [
-      { at: 0, x: 0, y: 0, rotate: 0, scale: 1 },
+      { at: 0, x: 0, y: -0.012, rotate: 1.5, scale: 1.02 },
       {
         at: 0.22,
         x: 0.04,
-        y: -0.03,
+        y: -0.035,
         rotate: 5,
         scale: 1.05,
         squash: 0.96,
         flash: 0.2,
       },
-      { at: 0.38, x: 0.05, y: -0.035, rotate: 6, scale: 1.06, flash: 0.45 },
+      { at: 0.38, x: 0.05, y: -0.04, rotate: 6, scale: 1.06, flash: 0.45 },
       {
         at: 0.5,
         x: -0.12,
@@ -215,45 +241,57 @@ const miser: Rig = {
     ],
     parts: {
       hand: [
-        { at: 0, rotate: 0 },
-        { at: 0.24, rotate: 70, y: -0.04 },
-        { at: 0.38, rotate: 84, y: -0.05 },
-        { at: 0.52, rotate: -18, y: 0.02 },
-        { at: 0.68, rotate: -10 },
-        { at: 1, rotate: 0, y: 0 },
+        { at: 0, rotate: 113, x: 0.006, y: -0.055 },
+        { at: 0.24, rotate: 124, x: 0.012, y: -0.07 },
+        { at: 0.38, rotate: 130, x: 0.014, y: -0.075 },
+        // Over the top and out: the rake lands at full reach.
+        { at: 0.5, rotate: 16, x: -0.07, y: 0.005 },
+        { at: 0.6, rotate: 8, x: -0.07, y: 0.02 },
+        { at: 0.78, rotate: 3, x: -0.025, y: 0.008 },
+        { at: 1, rotate: 0, x: 0, y: 0 },
       ],
       jaw: [
-        { at: 0, rotate: 0 },
+        { at: 0, rotate: -6 },
         { at: 0.3, rotate: -14 },
         { at: 0.5, rotate: -24 },
         { at: 0.72, rotate: -8 },
         { at: 1, rotate: 0 },
       ],
+      // The head goes back as the hand goes up, and the gape follows the
+      // hand out, high enough that the arm passes under the jaw.
       head: [
-        { at: 0, rotate: 0 },
-        { at: 0.3, rotate: 9 },
-        { at: 0.5, rotate: -8 },
-        { at: 1, rotate: 0 },
+        { at: 0, rotate: -6, x: -0.008 },
+        { at: 0.3, rotate: 6, x: 0.004 },
+        { at: 0.5, rotate: 2, x: -0.02, y: -0.012 },
+        { at: 0.7, rotate: -1, x: -0.01 },
+        { at: 1, rotate: 0, x: 0, y: 0 },
       ],
       shawl: [
-        { at: 0, rotate: 0, scale: 1 },
+        { at: 0, rotate: 0.8, scale: 1.02 },
         { at: 0.3, rotate: -3, scale: 1.03 },
         { at: 0.56, rotate: 5, scale: 1.02 },
         { at: 0.78, rotate: -2, scale: 1 },
         { at: 1, rotate: 0 },
       ],
+      // The heap shifts under it as its weight comes forward.
       stacks: [
         { at: 0, rotate: 0, x: 0 },
-        { at: 0.52, rotate: 0, x: 0 },
-        { at: 0.6, rotate: -8, x: -0.02 },
-        { at: 0.8, rotate: 3 },
+        { at: 0.5, rotate: 0, x: 0 },
+        { at: 0.58, rotate: -5, x: -0.012 },
+        { at: 0.8, rotate: 2 },
         { at: 1, rotate: 0, x: 0 },
       ],
       hoard: [
         { at: 0, y: 0 },
-        { at: 0.52, y: 0 },
-        { at: 0.58, y: -0.012 },
+        { at: 0.5, y: 0 },
+        { at: 0.56, y: -0.012 },
         { at: 0.7, y: 0 },
+      ],
+      body: [
+        { at: 0, squash: 0.99 },
+        { at: 0.38, squash: 0.97 },
+        { at: 0.52, squash: 1.04 },
+        { at: 1, squash: 1 },
       ],
     },
   },
@@ -279,11 +317,8 @@ const miser: Rig = {
         { at: 0.7, x: 0.01, y: 0.01, rotate: 2 },
         { at: 1, x: 0, y: 0, rotate: 0 },
       ],
-      hand: [
-        { at: 0, rotate: 0 },
-        { at: 0.24, rotate: -12 },
-        { at: 1, rotate: 0 },
-      ],
+      // No hand track: whatever the hand is doing — counting, or held up
+      // over a wind-up — it keeps doing through the blow.
       jaw: [
         { at: 0, rotate: 0 },
         { at: 0.24, rotate: -3 },
@@ -318,12 +353,8 @@ const miser: Rig = {
         { at: 0.6, rotate: -2 },
         { at: 1, rotate: 0 },
       ],
-      // Its first thought is for the stacks.
-      hand: [
-        { at: 0, rotate: 0 },
-        { at: 0.26, rotate: -9 },
-        { at: 1, rotate: 0 },
-      ],
+      // No hand track, like the Collector's key: a flinch played over a held
+      // wind-up must not knock the raised hand out of it.
     },
   },
   /** It slumps forward over its hoard, reaching for the stacks to the last. */
@@ -590,16 +621,20 @@ const sniper: Rig = {
 };
 
 /**
- * The Coin Leech: quick, and it moves like something with no bones. The idle
- * is a cobra's sway that travels up the body a joint at a time — the coil
- * first, the neck a beat later, the mouth last. It strikes by rearing back and
- * then throwing the whole column forward, latches, and pulls back swallowing,
- * the belly swelling with what it took.
+ * The Coin Leech: quick, and it moves like something with no bones that is
+ * about to go for you. Its idle is a strike held back — the arch breathes,
+ * the coil tightens, and the head hangs low at the end of the neck, tracking,
+ * with a small feint towards the party every loop. It strikes by winding the
+ * arch back and up, then throwing the whole column forward with the neck
+ * stretching past its length; it latches, holds, and pulls back as the belly
+ * swells with what it took.
  *
- * The body is a chain of loose parts rather than a hierarchy, so wherever a
- * segment swings a long way the segment above it is carried with a matching
- * translation to keep the joint closed. Positive `upper` and `head` rotations
- * rear back; negative ones lunge at the party.
+ * The body is a chain of loose parts rather than a hierarchy, so wherever
+ * `upper` swings, `head` is carried with the matching translation — the head
+ * joint (36, 44) rotated about the arch's root (72, 50) — to keep the neck
+ * closed; any x or y beyond that is the neck stretching. Positive `upper` and
+ * `head` rotations rear back and lift the mouth; negative ones drop the arch
+ * towards the party.
  */
 const leech: Rig = {
   idle: {
@@ -607,75 +642,84 @@ const leech: Rig = {
     loop: true,
     interruptible: true,
     poses: [
-      { at: 0, x: 0, y: 0, rotate: 0 },
-      { at: 0.25, x: -0.01, y: -0.008, rotate: -1 },
-      { at: 0.5, x: 0, y: 0, rotate: 0 },
-      { at: 0.75, x: 0.01, y: -0.006, rotate: 1 },
-      { at: 1, x: 0, y: 0, rotate: 0 },
+      { at: 0, x: 0, y: 0, rotate: 0, squash: 1 },
+      { at: 0.25, x: 0.008, y: -0.006, rotate: 0.8, squash: 0.99 },
+      { at: 0.5, x: 0, y: 0, rotate: 0, squash: 1 },
+      { at: 0.75, x: -0.008, y: -0.004, rotate: -0.8, squash: 1.01 },
+      { at: 1, x: 0, y: 0, rotate: 0, squash: 1 },
     ],
     parts: {
       lower: [
         { at: 0, rotate: 0 },
-        { at: 0.25, rotate: -2 },
-        { at: 0.75, rotate: 2 },
+        { at: 0.25, rotate: 1.5 },
+        { at: 0.75, rotate: -1.5 },
         { at: 1, rotate: 0 },
       ],
       belly: [
         { at: 0, rotate: 0, scale: 1 },
-        { at: 0.25, rotate: -2, scale: 1.02 },
-        { at: 0.75, rotate: 2, scale: 1 },
+        { at: 0.25, rotate: 1.5, scale: 1.02 },
+        { at: 0.75, rotate: -1.5, scale: 1 },
         { at: 1, rotate: 0, scale: 1 },
       ],
       upper: [
         { at: 0, rotate: 2 },
         { at: 0.4, rotate: -4 },
+        { at: 0.62, rotate: -0.9 },
         { at: 0.9, rotate: 4 },
         { at: 1, rotate: 2 },
       ],
+      // Carried by the arch, hanging and tracking; at 0.66 it feints.
       head: [
-        { at: 0, rotate: 5, x: 0.008 },
-        { at: 0.2, rotate: 2 },
-        { at: 0.55, rotate: -7, x: -0.016, y: 0.012 },
-        { at: 0.8, rotate: 3 },
-        { at: 1, rotate: 5, x: 0.008 },
+        { at: 0, rotate: 5, x: 0.0023, y: -0.0125 },
+        { at: 0.4, rotate: -6, x: -0.0033, y: 0.0253 },
+        { at: 0.62, rotate: -3, x: -0.0009, y: 0.0057 },
+        { at: 0.66, rotate: 4, x: -0.016, y: 0.004 },
+        { at: 0.72, rotate: -2, x: 0.001, y: 0.004 },
+        { at: 0.9, rotate: 7, x: 0.0051, y: -0.025 },
+        { at: 1, rotate: 5, x: 0.0023, y: -0.0125 },
       ],
       tail: [
         { at: 0, rotate: 0 },
         { at: 0.3, rotate: 1.5 },
-        { at: 0.36, rotate: -1 },
+        { at: 0.36, rotate: -1.5 },
+        { at: 0.42, rotate: 1 },
         { at: 0.7, rotate: 0.5 },
         { at: 1, rotate: 0 },
       ],
     },
   },
-  /** Treasury tithe: rear back, throw the column forward, latch, swallow. */
+  /**
+   * Treasury tithe: the arch winds back and the mouth lifts and flares, then
+   * the column is thrown forward, the neck stretching, and it latches, holds,
+   * and swallows.
+   */
   attack: {
     duration: 600,
     poses: [
       { at: 0, x: 0, rotate: 0, squash: 1 },
-      { at: 0.26, x: 0.06, rotate: 4, squash: 0.94, y: 0.01 },
-      { at: 0.42, x: -0.28, rotate: -10, squash: 1.06, scale: 1.05 },
-      { at: 0.58, x: -0.26, rotate: -9, squash: 1.04, scale: 1.05 },
+      { at: 0.26, x: 0.06, rotate: 5, squash: 0.92, y: 0.012 },
+      { at: 0.42, x: -0.28, rotate: -8, squash: 1.08, scale: 1.05 },
+      { at: 0.58, x: -0.26, rotate: -7, squash: 1.04, scale: 1.05 },
       { at: 0.74, x: -0.07, rotate: -2, squash: 1.01 },
       { at: 1, x: 0, rotate: 0, squash: 1, scale: 1, y: 0 },
     ],
     parts: {
       upper: [
         { at: 0, rotate: 0 },
-        { at: 0.26, rotate: 10 },
-        { at: 0.42, rotate: -18 },
-        { at: 0.58, rotate: -16 },
-        { at: 0.76, rotate: -4 },
+        { at: 0.26, rotate: 12 },
+        { at: 0.42, rotate: -8 },
+        { at: 0.58, rotate: -7 },
+        { at: 0.76, rotate: -2 },
         { at: 1, rotate: 0 },
       ],
       head: [
-        { at: 0, rotate: 0, x: 0, y: 0 },
-        { at: 0.26, rotate: 14, x: 0.048, y: -0.027 },
-        { at: 0.42, rotate: -18, x: -0.072, y: 0.068 },
-        { at: 0.5, rotate: -22, x: -0.07, y: 0.066 },
-        { at: 0.58, rotate: -16, x: -0.064, y: 0.06 },
-        { at: 0.76, rotate: -3, x: -0.012, y: 0.01 },
-        { at: 1, rotate: 0, x: 0, y: 0 },
+        { at: 0, rotate: 0, x: 0, y: 0, scale: 1 },
+        { at: 0.26, rotate: 20, x: 0.0203, y: -0.0735, scale: 1.06 },
+        { at: 0.42, rotate: 10, x: -0.055, y: 0.045, scale: 1.08 },
+        { at: 0.5, rotate: 4, x: -0.06, y: 0.05, scale: 1.04 },
+        { at: 0.58, rotate: 2, x: -0.045, y: 0.0443, scale: 1.02 },
+        { at: 0.76, rotate: -2, x: -0.005, y: 0.0126, scale: 1 },
+        { at: 1, rotate: 0, x: 0, y: 0, scale: 1 },
       ],
       // It swallows: the belly bulges after the bite, not before.
       belly: [
@@ -717,8 +761,8 @@ const leech: Rig = {
       ],
       head: [
         { at: 0, rotate: 0, x: 0, y: 0 },
-        { at: 0.2, rotate: 18, x: 0.058, y: -0.012 },
-        { at: 0.5, rotate: -8, x: -0.02, y: 0.018 },
+        { at: 0.2, rotate: 20, x: 0.0203, y: -0.0735 },
+        { at: 0.5, rotate: -9, x: -0.0039, y: 0.0316 },
         { at: 1, rotate: 0, x: 0, y: 0 },
       ],
       tail: [
@@ -734,7 +778,7 @@ const leech: Rig = {
       ],
     },
   },
-  /** Coiling tight behind its own body. */
+  /** Coiling tight behind its own body, the mouth pulled up out of reach. */
   block: {
     duration: 480,
     poses: [
@@ -750,7 +794,7 @@ const leech: Rig = {
       ],
       head: [
         { at: 0, rotate: 0, x: 0, y: 0 },
-        { at: 0.3, rotate: 12, x: 0.04, y: -0.02 },
+        { at: 0.3, rotate: 14, x: 0.0119, y: -0.0495 },
         { at: 1, rotate: 0, x: 0, y: 0 },
       ],
     },
@@ -778,7 +822,7 @@ const leech: Rig = {
       ],
       head: [
         { at: 0, rotate: 0, x: 0, y: 0 },
-        { at: 1, rotate: 26, x: 0.064, y: -0.01 },
+        { at: 1, rotate: 30, x: 0.0252, y: -0.0853 },
       ],
       belly: [
         { at: 0, scale: 1, squash: 1 },

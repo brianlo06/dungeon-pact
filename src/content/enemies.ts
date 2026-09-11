@@ -64,7 +64,7 @@ export const enemies: EnemyDef[] = [
   {
     presentation: {
       spriteSet: "acolyte",
-      footprint: "small",
+      footprint: "person",
       theme: "arcane",
       idlePeriod: 2.9,
     },
