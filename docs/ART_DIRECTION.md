@@ -78,11 +78,22 @@ stylised turn presentation — typography, layout, colour and animation carrying
 the theme rather than new mechanics, and every action on its own button with no
 scrolling — expressed in this game's pixel palette rather than Persona's.
 
-Timing is short and overshoots slightly; nothing lingers. A long round scales
-its step duration down so replay never exceeds about four seconds, and a Skip
-control is always present. Reduced motion disables replay entirely and shows
-the settled board immediately, so the animation is never load-bearing for
-information — the chronicle still carries every event in text.
+Timing is short and overshoots slightly; nothing lingers. Every beat has a
+natural length and a floor — the least it can be given and still be read: a
+move 400ms, a signature 580ms, a first hit 220ms, a following hit 100ms, a
+banner 480ms (`battle/pacing.ts`). A round longer than six seconds is squeezed
+evenly towards its floors. This used to claim four seconds, and nothing
+enforced even that: a four-hero boss round needs five to six seconds at its
+floors, so four was never reachable without cutting beats below readable. A
+round too busy to fit at its floors runs longer rather than faster. A Skip
+control is always present.
+
+Reduced motion disables replay entirely and shows the settled board
+immediately, so the animation is never load-bearing for information — the
+chronicle still carries every event in text. It also stills every combatant:
+each shows one pose and nothing moves. A held wind-up is still shown as the
+threat it is — the Collector's key stays raised — and the fallen lie where
+they fell.
 
 Impacts layer a filtered noise burst under the tone cue, because a pure
 oscillator reads as beeping rather than hitting.
@@ -102,9 +113,17 @@ pose. When the wound-up move lands, or a boss lands its objective strike (a
 While a player picks a target, legal targets are marked — gold brackets
 closing on the figure's feet and around its name plate — and nothing else
 changes. Nothing is faded: a ghosted combatant read as dead once the art was
-drawn, and a filter on animating SVG costs frames. Intent chips are laid out
-by a measuring pass so that no chip covers a name plate or another chip at
-any camera framing the planning phase can reach.
+drawn, and a filter on animating SVG costs frames.
+
+Everything on the stage is placed by measuring what each combatant actually
+paints — at rest, holding a wind-up, or lying where it fell — rather than the
+square it is drawn in (`battle/unit-layout.ts`). Each rank slides until no
+figure covers a name plate behind it; a lone back-row hero stands in the gap
+between the two in front. Intent chips are then laid out so that none covers
+a name plate, another chip, or its own creature, at any framing the planning
+phase can reach; a wind-up chip carries WINDUP on its name's line to stay
+compact. While the player decides, the camera leans only as far as keeps the
+whole board, from the top rank's chips to the back row's plates, on screen.
 
 Your actions open beside your hero as a block of slips — signature abilities
 stacked above, the shared actions at the foot — and the block covers nobody:
@@ -269,18 +288,22 @@ it home. Killed, it goes over backwards under the load.
 
 **Ash Acolyte.** _Drawn._ A faceless furnace zealot: where the head should be,
 an iron bowl on a thin neck with one fire burning in it; a charred mantle lit
-from above, a single rust stole, a hem burning at its edge like paper. It hangs
-in the air rather than walking. Drawn in few, large shapes because it lives in
-the back row: a bone-white column and bell sleeve that stand out against the
-dim row, the sleeve reaching out with an ember over the hand, and a censer
-swung clear on a chain. The fire is one tall tongue leaning back and curling
-over, white core inside orange inside red, and nothing about it is symmetrical
-— the first version's even tongues and iron bars read as a crown. No hood,
-because the Collector is the hooded one. `person` footprint. Rigged as `hem`,
-`robe`, `offArm` (the censer), `head`, `castArm` with a nested `ember`, and
-`cinders`. It drifts; to cast it draws the ember back overhead and throws it.
-Killed, the fire goes out and it folds into its robe. _Still the smallest
-thing on the field; in flat black the fire, the ember and the censer carry it._
+from above, a single rust stole, a hem burning at its edge like paper. It
+hangs in the air rather than walking. Drawn in few, large shapes because it
+lives in the back row, and spread across its whole box, ember to censer:
+daylight either side of the neck; a torn mantle wider than a pinched waist;
+the bone-white robe trailing away behind as it drifts, which gives the figure
+a diagonal; the casting arm raised at the party with the ember over the hand
+and a bell sleeve hanging in a long point; and a censer swung wide on its
+chain. The fire is one tall tongue leaning back and curling over, white core
+inside orange inside red, and nothing about it is symmetrical — the first
+version's even tongues and iron bars read as a crown. No hood, because the
+Collector is the hooded one. `person` footprint. Rigged as `hem`, `robe`,
+`offArm` (the censer), `head`, `castArm` with a nested `ember`, and `cinders`.
+It drifts; to cast it draws the ember back overhead and throws it. Killed, the
+fire goes out and it folds into its robe. _A narrow first column filled black
+as one blob; the spread is what reads now. In colour its dark mantle still
+sinks into the dark back wall, so the sleeve, hem, fire and ember carry it._
 
 **Living Bellows.** _Drawn._ A forge bellows that got up and walked: a long,
 low concertina of leather pleats between iron hoops, a riveted end-plate with a
@@ -322,14 +345,20 @@ little contrast against the floor for menace._
 
 **The Miser.** _Drawn._ A hoarder, not a creditor — the Collector takes, this
 keeps. A hunched toad squatting in a heap of coins, counting: olive warted
-skin, two eye domes, a gold eye with a flat bar of a pupil under a heavy lid,
-a throat sac, a wide lipless mouth with one gold tooth, and a short brass
-loupe screwed into the near eye.
+skin, a throat sac, a wide lipless mouth the whole length of the head with one
+gold tooth, and a brass loupe screwed into its one bulging eye.
+
+The head is one clean shape: a long flat wedge pointed at the party, a single
+half-round bulge of eye near the front, a flat crown behind it — filled black,
+a toad's profile. Earlier heads read as a lumpy knot, a rat's ear or a dog's
+brow.
 
 What breaks its outline, the way the key breaks the Collector's, is the hand:
 far too big for its thin arm, four knuckled fingers splayed over the stacks
-with daylight between them, each ending in a round toad's pad. Low, wide and
-back-heavy, with no hood, crown or key. `boss-large` footprint.
+with daylight between them, each ending in a round toad's pad. The stacks stop
+short of the pads however rich the pact, because pads resting on the coins
+merged the hand into its money. Low, wide and back-heavy, with no hood, crown
+or key. `boss-large` footprint.
 
 The shawl is the objective. It reads the same `bank` figure the engine and the
 objective strip use: the richer the pact, the more settings are filled, the
@@ -339,16 +368,17 @@ it holds banked Barrier the coins glow.
 
 Rigged as `body`, `shawl`, `hoard`, `stacks`, `head`, `jaw`, `hand`. Its idle
 is counting: three taps, a pause, a look up. Winding up, the hand is held high
-over its head, and a hit does not knock it down. Its signature — which plays
-for both its moves — brings the hand over the top and rakes it out at the
-party at full stretch, further forward than the held pose, while the mouth
-gapes. It dies slumped over its heap as the stacks topple.
+above its head with daylight under the fingers, so in black the hand, the eye
+and the crest stay three shapes; a hit does not knock it down. Its signature —
+which plays for both its moves — brings the hand over the top and rakes it out
+at the party at full stretch, further forward than the held pose, while the
+mouth gapes. It dies slumped over its heap as the stacks topple.
 
 The head is a toad's because an early drawing drifted towards a hook-nosed,
 gold-counting old man — an antisemitic caricature. Every change since has
-moved it further from a person; keep it that way. _Better than it was, but not
-yet as iconic in flat black as the Collector's key: the head is a lumpy toad
-shape rather than one clean graphic element._
+moved it further from a person; keep it that way. _It reads as a toad in flat
+black now, but the head alone could be any frog: what makes it the Miser is
+the hand and the coin crest together._
 
 ## Creature direction — the party
 

@@ -1,5 +1,7 @@
 import { frameFor, planningFrame, type CameraCommand } from "./camera";
 import type { Box } from "./intent-layout";
+import { paintedFigure } from "./unit-layout";
+import { rigFor } from "./rigs";
 
 /**
  * Where your hero's action fan opens.
@@ -293,37 +295,23 @@ export function layoutFan(
 }
 
 /**
- * The box a combatant actually paints, in world pixels. The body's square is
- * far larger than most figures, and a fixed inset is wrong both ways: a
- * shouldered sword or a bow reaches the edge, a round mender does not. So the
- * drawing is asked for its own bounds, glows excluded, and mapped through the
- * viewBox onto the body's untransformed box.
+ * The box a combatant paints, in world pixels, in the pose it holds while a
+ * decision is made — standing, holding a wind-up, or lying where it fell. The
+ * unit layout measures the same way, so the fan and the placement agree on
+ * where everyone is. A little room is added for idle sway.
  */
 function figureOf(u: HTMLElement, local: (r: DOMRect) => Box): Box | null {
-  const body = u.querySelector(":scope > .combatant-body");
-  if (!body) return null;
-  const b = local(body.getBoundingClientRect());
-  const svg = u.querySelector<SVGSVGElement>("svg.combatant-sprite");
-  const vb = svg?.viewBox?.baseVal;
-  if (!svg || !vb || !vb.width) return b;
-  const glows = [...svg.querySelectorAll<SVGElement>(".ph-glow")];
-  for (const g of glows) g.style.display = "none";
-  let bb: DOMRect;
-  try {
-    bb = svg.getBBox();
-  } finally {
-    for (const g of glows) g.style.display = "";
-  }
-  // viewBox is square and fills the body with "meet"; letterbox the long side.
-  const bw = b.right - b.left;
-  const bh = b.bottom - b.top;
-  const s = Math.min(bw / vb.width, bh / vb.height);
-  const ox = b.left + (bw - vb.width * s) / 2;
-  const oy = b.top + (bh - vb.height * s) / 2;
+  const f = paintedFigure(
+    u,
+    local,
+    rigFor(u.dataset.rig),
+    u.hasAttribute("data-down"),
+  );
+  if (!f) return null;
   return {
-    left: ox + (bb.x - vb.x) * s - SWAY,
-    right: ox + (bb.x + bb.width - vb.x) * s + SWAY,
-    top: oy + (bb.y - vb.y) * s - SWAY,
-    bottom: oy + (bb.y + bb.height - vb.y) * s + SWAY,
+    left: f.held.left - SWAY,
+    right: f.held.right + SWAY,
+    top: f.held.top - SWAY,
+    bottom: f.held.bottom + SWAY,
   };
 }

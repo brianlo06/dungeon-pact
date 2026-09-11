@@ -57,6 +57,11 @@ for (const [name, params] of Object.entries(SCENES)) {
           // The Strongbox's idle tick is an authored flash on its rig.
           if (el.matches(".combatant-rig") && el.querySelector(".vault"))
             continue;
+          // So is a held wind-up's pulse: the threat, flashing on purpose
+          // (see `tests/perf-css.test.ts`). This stage used to be checked
+          // while it replayed the fixture's round on load, before the Miser
+          // took up its wind-up; a first board is no longer replayed.
+          if (el.matches(".combatant-rig[data-clip='windup']")) continue;
           const f = getComputedStyle(el).filter;
           if (f !== "none") out.push(`${el.className}: filter ${f}`);
         }

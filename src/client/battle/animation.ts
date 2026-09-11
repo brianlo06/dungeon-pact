@@ -180,6 +180,16 @@ export class Animator {
   private written = new Map<Element, string>();
   /** The flash filter last written to the root, "" for none. */
   private flash = "";
+  /**
+   * Reduced motion: every unit holds one static pose — its rest loop's first
+   * frame, or the last frame of a fall — and nothing is written again until
+   * something asks for a different pose.
+   */
+  private still = false;
+  /** In a still pose, whether something has changed since it was drawn. */
+  private dirty = true;
+  /** The clip name last reported on the node as `data-clip`. */
+  private reported: string | null = null;
 
   constructor(rig: Rig, phase = Math.random()) {
     this.rig = rig;
@@ -217,12 +227,30 @@ export class Animator {
         length: blendFor(clip),
       };
     this.playing = { clip, name, start: now, then };
+    this.dirty = true;
+  }
+
+  /**
+   * Keep the clip on screen readable from the page, as `data-clip` on the
+   * node, for anything that has to know — the browser tests do. Called as
+   * each frame is drawn, so it reports what was drawn: a clip asked for and
+   * replaced before the next frame — a windup handed to idle and at once to
+   * the signature — never appears. Written only when the clip changes.
+   */
+  private report() {
+    const name = this.playing?.name ?? null;
+    if (!this.node || name === this.reported) return;
+    this.reported = name;
+    if (name) this.node.dataset.clip = name;
+    else delete this.node.dataset.clip;
   }
 
   attach(node: HTMLElement | null) {
     this.node = node;
     this.written.clear();
     this.flash = node?.style.filter ?? "";
+    this.dirty = true;
+    this.reported = null;
   }
   /**
    * Register a named piece of a cutout rig.
@@ -244,6 +272,7 @@ export class Animator {
       node.style.willChange = "transform";
       this.parts.set(name, node);
     } else this.parts.delete(name);
+    this.dirty = true;
   }
   /** Write a transform, unless it is the one already there. */
   private write(node: SVGElement | HTMLElement, transform: string) {
@@ -271,9 +300,17 @@ export class Animator {
         if (!replacement.clip.loop) state.start = performance.now();
       }
     }
+    this.dirty = true;
   }
   setSpeed(n: number) {
     this.speed = Math.max(0.05, n);
+  }
+  /** Hold still, for reduced motion, or move again. */
+  setStill(still: boolean) {
+    if (still === this.still) return;
+    this.still = still;
+    this.dirty = true;
+    this.blend = null;
   }
 
   /**
@@ -284,6 +321,7 @@ export class Animator {
    */
   setRest(name: ClipName) {
     this.rest = name;
+    this.dirty = true;
     const current = this.playing;
     if (!current || !current.clip.loop) return;
     const next = this.resolve(name);
@@ -322,12 +360,82 @@ export class Animator {
     this.begin(resolved, clip, then ?? null);
   }
 
+  /** Whether the unit is lying where it fell: a fall that holds its last pose. */
+  get lying(): boolean {
+    const p = this.playing;
+    return !!p && p.name === "defeat" && p.then === "defeat";
+  }
+
+  /**
+   * Lie down or get up, to match the board. It reads the pose actually on
+   * screen rather than remembering what it was last told, so it can be asked
+   * every time the board changes: asking for the state already shown does
+   * nothing, a fall already played by the replay is not played again, and
+   * only someone lying down gets up. A unit first seen lying — before it has
+   * drawn a single frame — is shown lying rather than falling over in front
+   * of someone who has just arrived.
+   */
+  setDown(down: boolean) {
+    if (down === this.lying) return;
+    if (!down) {
+      this.play("revive");
+      return;
+    }
+    const unseen = !this.last;
+    this.play("defeat", "defeat");
+    const state = this.playing;
+    if (unseen && state) {
+      state.start = performance.now() - state.clip.duration / this.speed;
+      this.blend = null;
+    }
+  }
+
   get current(): ClipName | null {
     return this.playing?.name ?? null;
   }
 
+  /**
+   * The still pose, for reduced motion. A one-shot is over the moment it is
+   * asked for: a fall shows where it ends, anything else hands straight to
+   * the rest loop, which shows its first frame. A held windup is therefore
+   * the raised key, not idle. Nothing flashes, and nothing is sampled or
+   * written again until something changes.
+   */
+  private hold(now: number): Sampled {
+    if (!this.dirty && this.last) return this.last.root;
+    this.dirty = false;
+    this.blend = null;
+    let state = this.playing;
+    for (let hops = 0; state && !state.clip.loop && hops < 4; hops++) {
+      const next = state.then ?? this.rest;
+      if (next === state.name) break;
+      const { name, clip } = this.resolve(next);
+      this.playing = state = { clip, name, start: now, then: null };
+    }
+    this.report();
+    const t = state && !state.clip.loop ? 1 : 0;
+    const pose = { ...(state ? sample(state.clip, t) : REST), flash: 0 };
+    const written = new Map<string, Sampled>();
+    for (const [name, node] of this.parts) {
+      const track = state?.clip.parts?.[name];
+      const p = track ? sampleTrack(track, t) : REST;
+      written.set(name, p);
+      this.write(node, poseToTransform(p));
+    }
+    this.last = { root: pose, parts: written };
+    if (this.node) {
+      this.write(this.node, poseToTransform(pose));
+      if (this.flash) {
+        this.flash = "";
+        this.node.style.filter = "";
+      }
+    }
+    return pose;
+  }
+
   /** Advance and write. Returns the sampled pose so callers can read flash. */
   tick(now: number): Required<Omit<Pose, "at">> {
+    if (this.still) return this.hold(now);
     const state = this.playing;
     if (!state) return sample(GENERIC.idle!, 0);
     const length = state.clip.duration / this.speed;
@@ -392,6 +500,7 @@ export class Animator {
       }
     }
     this.last = { root: pose, parts: written };
+    this.report();
     if (this.node) {
       this.write(this.node, poseToTransform(pose));
       // Flash is a filter over the whole figure, and a filter on the rig is an

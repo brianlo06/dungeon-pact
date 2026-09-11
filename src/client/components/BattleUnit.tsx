@@ -78,21 +78,23 @@ export function BattleUnit({
   const shown = hp ?? unit.hp;
   const down = shown <= 0;
   // A hero lies down while downed and gets up when revived, whether or not a
-  // round was replayed to get there. The fall is `defeat`, the same clip the
-  // director asks for on the killing blow, so the two never play it twice.
-  // It waits a moment before acting: a new round renders once with settled
-  // health before the director rewinds it for replay, and reacting to that
-  // one frame would stand a downed hero up only to knock it straight over.
-  const wasDown = useRef(down);
+  // round was replayed to get there. The pose follows the board being shown:
+  // the replay's health while a round is replayed, the settled board
+  // otherwise. A round that has arrived but not yet played its first beat has
+  // no replay health, and its settled board is the round *after* the one
+  // about to be shown, so the pose waits for the replay — the `replaying`
+  // flag says so on the very render the round arrives in, however late the
+  // replay's first frame comes. During a replay the director's defeat beat
+  // does the knocking down; a revival there, or anything on the settled
+  // board, is this. `setDown` compares against the pose on screen, so a fall
+  // the replay already played is not played twice and only the fallen rise.
+  const posed = replaying ? hp : unit.hp;
+  const lying = posed === undefined ? null : posed <= 0;
   useEffect(() => {
-    if (!player || !animators) return;
-    const settle = setTimeout(() => {
-      if (down) animators.play(unit.id, "defeat", "defeat");
-      else if (wasDown.current) animators.play(unit.id, "revive");
-      wasDown.current = down;
-    }, 60);
-    return () => clearTimeout(settle);
-  }, [down, player, animators, unit.id]);
+    if (!player || !animators || lying === null) return;
+    if (lying && replaying) return;
+    animators.setDown(unit.id, lying);
+  }, [lying, replaying, player, animators, unit.id]);
   // An enemy with a wind-up announced holds its `windup` pose through the
   // planning phase: the threat is the held pose. This follows the settled
   // board only. During a replay the board already shows next round's intents
@@ -122,6 +124,7 @@ export function BattleUnit({
     <div
       className="combatant"
       data-unit={unit.id}
+      data-rig={look.spriteSet}
       data-side={place.side}
       data-impact={impact ?? undefined}
       data-acting={acting ? "" : undefined}

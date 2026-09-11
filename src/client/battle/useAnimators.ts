@@ -15,6 +15,10 @@ import { tempo } from "./tempo";
  * Idle phases are randomised per unit at registration, which is what stops a
  * line of creatures breathing in lockstep — the single most obvious tell that
  * a battlefield is a spreadsheet.
+ *
+ * Each animator reports the clip it is playing as `data-clip` on its unit's
+ * rig, written only when the clip changes. That is the supported way for
+ * anything outside to know what a combatant is doing.
  */
 export interface Animators {
   register: (id: string, spriteSet: string | undefined) => void;
@@ -31,16 +35,46 @@ export interface Animators {
    * announced wind-up, otherwise `idle`. A rig without the clip keeps idling.
    */
   setRest: (id: string, clip: ClipName) => void;
+  /**
+   * Lie down or stand up to match the board. Idempotent: it compares against
+   * the pose on screen, so it can follow the board on every change.
+   */
+  setDown: (id: string, down: boolean) => void;
   /** Slow everything down together, for capture and inspection. */
   setSpeed: (n: number) => void;
   current: (id: string) => ClipName | null;
 }
 
-export function useAnimators(paused = false): Animators {
+export interface AnimatorOptions {
+  /** Hold every animator on its current frame, for a hit-stop. */
+  paused?: boolean;
+  /**
+   * Reduced motion. Every combatant shows one static pose — standing, lying
+   * where it fell, or holding its wind-up — and nothing loops.
+   */
+  still?: boolean;
+}
+
+export function useAnimators({
+  paused = false,
+  still = false,
+}: AnimatorOptions = {}): Animators {
   const units = useRef(new Map<string, Animator>());
   const speed = useRef(1);
   const frozen = useRef(paused);
   frozen.current = paused;
+  const stillRef = useRef(still);
+  stillRef.current = still;
+  /** The capture tempo every animator was last given. */
+  const applied = useRef(tempo());
+
+  /** A new animator, already at the stage's speed, tempo and stillness. */
+  const create = useCallback((spriteSet: string | undefined) => {
+    const animator = new Animator(rigFor(spriteSet));
+    animator.setSpeed(speed.current * applied.current);
+    animator.setStill(stillRef.current);
+    return animator;
+  }, []);
 
   useEffect(() => {
     let stop = false;
@@ -49,6 +83,14 @@ export function useAnimators(paused = false): Animators {
     let last = performance.now();
     const tick = (now: number) => {
       if (stop) return;
+      // The capture tempo is read from the document once a frame, so a
+      // change reaches animators that already exist, not only new ones.
+      const k = tempo();
+      if (k !== applied.current) {
+        applied.current = k;
+        for (const animator of units.current.values())
+          animator.setSpeed(speed.current * k);
+      }
       // A hit-stop holds every animator on its current frame rather than
       // letting them drift on while the stage is frozen.
       if (frozen.current) held += now - last;
@@ -64,6 +106,10 @@ export function useAnimators(paused = false): Animators {
   }, []);
 
   useEffect(() => {
+    for (const animator of units.current.values()) animator.setStill(still);
+  }, [still]);
+
+  useEffect(() => {
     const live = units.current;
     return () => {
       for (const animator of live.values()) animator.dispose();
@@ -71,16 +117,17 @@ export function useAnimators(paused = false): Animators {
     };
   }, []);
 
-  const register = useCallback((id: string, spriteSet: string | undefined) => {
-    const existing = units.current.get(id);
-    if (existing) {
-      existing.setRig(rigFor(spriteSet));
-      return;
-    }
-    const animator = new Animator(rigFor(spriteSet));
-    animator.setSpeed(speed.current * tempo());
-    units.current.set(id, animator);
-  }, []);
+  const register = useCallback(
+    (id: string, spriteSet: string | undefined) => {
+      const existing = units.current.get(id);
+      if (existing) {
+        existing.setRig(rigFor(spriteSet));
+        return;
+      }
+      units.current.set(id, create(spriteSet));
+    },
+    [create],
+  );
 
   const attach = useCallback((id: string, node: HTMLElement | null) => {
     const animator = units.current.get(id);
@@ -95,13 +142,12 @@ export function useAnimators(paused = false): Animators {
       // `register` only ever swaps the rig on an existing instance.
       let animator = units.current.get(id);
       if (!animator && node) {
-        animator = new Animator(rigFor(undefined));
-        animator.setSpeed(speed.current * tempo());
+        animator = create(undefined);
         units.current.set(id, animator);
       }
       animator?.attachPart(part, node);
     },
-    [],
+    [create],
   );
 
   const play = useCallback((id: string, clip: ClipName, then?: ClipName) => {
@@ -112,9 +158,14 @@ export function useAnimators(paused = false): Animators {
     units.current.get(id)?.setRest(clip);
   }, []);
 
+  const setDown = useCallback((id: string, down: boolean) => {
+    units.current.get(id)?.setDown(down);
+  }, []);
+
   const setSpeed = useCallback((n: number) => {
     speed.current = n;
-    for (const animator of units.current.values()) animator.setSpeed(n);
+    for (const animator of units.current.values())
+      animator.setSpeed(n * applied.current);
   }, []);
 
   const current = useCallback(
@@ -123,7 +174,16 @@ export function useAnimators(paused = false): Animators {
   );
 
   return useMemo(
-    () => ({ register, attach, attachPart, play, setRest, setSpeed, current }),
-    [register, attach, attachPart, play, setRest, setSpeed, current],
+    () => ({
+      register,
+      attach,
+      attachPart,
+      play,
+      setRest,
+      setDown,
+      setSpeed,
+      current,
+    }),
+    [register, attach, attachPart, play, setRest, setDown, setSpeed, current],
   );
 }

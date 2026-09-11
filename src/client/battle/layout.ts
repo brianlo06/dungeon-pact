@@ -6,6 +6,8 @@ import {
   FOOTPRINT_SCALE,
   type UnitPresentation,
 } from "../../shared/presentation";
+import { FLOOR, planningFrame } from "./camera";
+import { arrangeUnits, type StageShapes, type UnitShape } from "./unit-layout";
 
 /**
  * Presentation space.
@@ -38,12 +40,16 @@ export interface Placement {
   shadow: number;
 }
 
-/** Where each band's feet sit, and how far it leans off centre. */
+/**
+ * Where each band's feet sit, and how far it leans off centre. The nearest
+ * band stands on the camera's floor, the one line every framing keeps on
+ * screen, so the back row's health bars never drop off the bottom edge.
+ */
 const BANDS = {
-  "enemy-back": { y: 0.39, depth: 0, lean: 0.12 },
-  "enemy-front": { y: 0.6, depth: 0.32, lean: 0.06 },
-  "hero-front": { y: 0.8, depth: 0.72, lean: -0.06 },
-  "hero-back": { y: 0.97, depth: 1, lean: -0.13 },
+  "enemy-back": { y: 0.42, depth: 0, lean: 0.12, rank: 0 },
+  "enemy-front": { y: 0.615, depth: 0.32, lean: 0.06, rank: 1 },
+  "hero-front": { y: 0.8, depth: 0.72, lean: -0.06, rank: 2 },
+  "hero-back": { y: FLOOR, depth: 1, lean: -0.13, rank: 3 },
 } as const;
 export type BandName = keyof typeof BANDS;
 
@@ -98,7 +104,77 @@ function spread(count: number, centre: number, room: number) {
   return Array.from({ length: count }, (_, i) => start + step * i);
 }
 
-export function placements(s: Snapshot): Map<string, Placement> {
+/**
+ * Stand n units in the gaps of the rank in front of them: between its units
+ * first, from the middle out, then off its left end and its right. The back
+ * row of the party is nearest the camera and drawn largest, and a hero
+ * standing straight behind another covers their name plate however the two
+ * are drawn. Null when there is no rank in front to stand behind.
+ */
+function between(count: number, ahead: number[]) {
+  if (!ahead.length || !count) return null;
+  const pitch =
+    ahead.length > 1
+      ? (ahead[ahead.length - 1] - ahead[0]) / (ahead.length - 1)
+      : 0.19;
+  const mid = (ahead[0] + ahead[ahead.length - 1]) / 2;
+  const gaps = ahead
+    .slice(1)
+    .map((x, i) => (x + ahead[i]) / 2)
+    .sort((a, b) => Math.abs(a - mid) - Math.abs(b - mid) || a - b);
+  for (let k = 0; gaps.length < count; k++)
+    gaps.push(
+      ahead[0] - pitch * (k + 0.5),
+      ahead[ahead.length - 1] + pitch * (k + 0.5),
+    );
+  return gaps.slice(0, count).sort((a, b) => a - b);
+}
+
+/** Keep units this far inside what every decision framing shows. */
+const MARGIN = 6;
+
+/**
+ * Where everyone stands. Without measurements this is the formation alone:
+ * bands, leans and spreads. With them, each rank is slid sideways so that no
+ * painted figure covers a name plate in the rank behind it (see
+ * `unit-layout.ts`) — the fractions returned already include that, so the
+ * camera, the effects and the action fan all aim at where a unit really is.
+ */
+export function placements(
+  s: Snapshot,
+  measured?: StageShapes | null,
+): Map<string, Placement> {
+  const out = formation(s);
+  if (!measured) return out;
+  const { width: w, height: h } = measured;
+  const shapes: UnitShape[] = [];
+  for (const p of out.values()) {
+    const shape = measured.units[p.id];
+    // A unit not measured yet: hold the formation until it has been.
+    if (!shape || !w || !h) return out;
+    const unit = s.enemies.find((e) => e.id === p.id);
+    shapes.push({
+      id: p.id,
+      rank: BANDS[bandOf(p.side, p.row)].rank,
+      x: p.x * w,
+      y: p.y * h,
+      figure: shape.figure,
+      plate: shape.plate,
+      // Big things hold their ground; a boss belongs at the centre of the
+      // threat, and the small figures around it make way.
+      weight: bulk(unit?.definition) ** 2,
+    });
+  }
+  const frame = planningFrame(w, h);
+  const dx = arrangeUnits(shapes, {
+    left: frame.left + MARGIN,
+    right: frame.right - MARGIN,
+  });
+  for (const p of out.values()) p.x += (dx.get(p.id) ?? 0) / w;
+  return out;
+}
+
+function formation(s: Snapshot): Map<string, Placement> {
   const out = new Map<string, Placement>();
   const groups: [
     BandName,
@@ -110,9 +186,13 @@ export function placements(s: Snapshot): Map<string, Placement> {
     ["hero-front", "hero", s.players.filter((p) => p.row === "front")],
     ["hero-back", "hero", s.players.filter((p) => p.row === "back")],
   ];
+  let ahead: number[] = [];
   for (const [band, side, units] of groups) {
     const { y, depth, lean } = BANDS[band];
-    const xs = spread(units.length, 0.5 + lean, 0.62);
+    const xs =
+      (band === "hero-back" && between(units.length, ahead)) ||
+      spread(units.length, 0.5 + lean, 0.62);
+    ahead = units.length ? xs : [];
     units.forEach((u, i) => {
       const scale =
         depthScale(depth) * bulk((u as { definition?: string }).definition);

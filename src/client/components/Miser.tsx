@@ -10,15 +10,16 @@ import "../creatures-debt.css";
  * The Collector is a creditor who takes; this is a hoarder who keeps. It is
  * drawn as a hunched toad squatting in a heap of coins, counting — one long
  * arm always held out over the stacks in front of it, ending in a hand too big
- * for it, a jeweller's loupe screwed into one bulging eye, a wide lipless
+ * for it, a jeweller's loupe screwed into its bulging eye, a wide lipless
  * mouth with one gold tooth, and across its back a shawl sewn with coins.
  *
  * It is deliberately a creature and not an old man. A gold-counting miser with
  * a hooked nose and a skullcap is an ugly caricature with a long history, and
  * the first sketch of this drifted towards it; the toad's head was the fix.
  * Everything since has pushed further from a person: olive, warted skin, a
- * throat sac, eyes on domes with a toad's flat pupil, a blunt snout with a
- * pinhole for a nostril, and four fingers ending in round pads.
+ * throat sac, an eye bulging out of the top of the skull with a toad's flat
+ * pupil, a blunt snout with a pinhole for a nostril, a mouth the whole length
+ * of the head, and four fingers ending in round pads.
  *
  * The shawl is the objective. It shields itself with whatever gold the pact
  * still holds, so the coins on its back are the party's own treasury: the
@@ -30,12 +31,18 @@ import "../creatures-debt.css";
  *
  * Silhouette: low, wide and back-heavy — the opposite of the Collector's tall
  * wedge. The mass is a hump high on the right with a crest of coins along its
- * spine, and a broad flat head juts forward with two eye domes on top. What
+ * spine. The head is one clean shape, not a cluster: a long flat wedge
+ * pointed at the party with a single half-round bulge of eye near the front
+ * and a flat crown behind it — the toad's profile, readable filled black.
+ * (Two eye domes, a loupe sticking out and a hanging throat made the earlier
+ * head a lumpy knot; a whole round dome on its own read as a rat's ear.) What
  * breaks the outline, the way the key breaks the Collector's, is the hand:
  * four long knuckled fingers splayed over the stacks with daylight between
- * them, each ending in a round bulb, on a thin arm held clear of the jaw.
- * Raised over its head in a wind-up it is the whole threat. No hood, no crown,
- * no key: none of the Collector's shapes.
+ * them, each ending in a round bulb, on a thin arm held clear of the jaw. The
+ * stacks stop short of the pads, however rich the pact, so the hand never
+ * merges with its money. Raised over its head in a wind-up, clear of the eye
+ * and the crest, it is the whole threat. No hood, no crown, no key: none of
+ * the Collector's shapes.
  */
 const PARTS = [
   "body",
@@ -138,10 +145,12 @@ export function Miser({
     shield <= 0 ? "bare" : shield < 20 ? "lined" : "hoarding";
   // The heap it sits in and the stacks it counts grow with the treasury too.
   const heap = 0.4 + 0.6 * level;
+  // Capped so the tallest stops well short of the fingertips: pads resting on
+  // the coins merged the hand and the stacks into one shape.
   const stacks = [
-    1 + Math.round(level * 6),
+    1 + Math.round(level * 4),
     1 + Math.round(level * 3),
-    Math.round(level * 2),
+    Math.round(level * 3),
   ];
 
   return (
@@ -404,84 +413,61 @@ export function Miser({
         )}
       </g>
 
-      {/* ---- head: a toad's — broad, flat, bulge-eyed, a loupe in one eye ---- */}
+      {/* ---- head: a toad's, drawn as one clean shape — a long flat wedge
+          pointed at the party with a single round eye dome on top. The loupe
+          is screwed into the dome, inside its outline, so nothing else
+          breaks the head's edge ---- */}
       <g
         ref={hold("head")}
         data-part="head"
         style={{ transformOrigin: "40px 42px" }}
       >
-        {/* A short thick neck: toads have next to none */}
-        <path
-          d="M33 33 L46 37 L46 53 L34 51 Z"
-          fill="#4c4a2c"
-          stroke="#171420"
-          strokeWidth="1.4"
-        />
-        {/* Everything above the neck sits high, so there is daylight
-            between the jaw and the hand below it */}
-        <g transform="translate(-1 -5)">
-          {/* The far eye, bulging up behind the skull: gold, a toad's flat bar
-            of a pupil, a heavy lid half down over it */}
-          <circle
-            cx="36"
-            cy="22.6"
-            r="6.2"
-            fill="url(#msr-skin)"
-            stroke="#171420"
-            strokeWidth="1.8"
-          />
-          <ellipse
-            cx="35.2"
-            cy="23"
-            rx="3.9"
-            ry="3.4"
-            fill="url(#msr-iris)"
-            stroke="#171420"
-            strokeWidth="0.8"
-          />
-          <rect
-            x="32.2"
-            y="22.6"
-            width="6"
-            height="1.2"
-            rx="0.6"
-            fill="#171420"
-          />
+        {/* Everything is authored 3 units low and lifted as one, so there is
+            daylight between the throat and the arm held out under it */}
+        <g transform="translate(0 -3)">
+          {/* A short thick neck: toads have next to none */}
           <path
-            d="M30.2 21.4 C31.4 16.4 40.4 15.8 41.8 21 C38.4 19.4 33.8 19.4 30.2 21.4 Z"
-            fill="url(#msr-skin)"
+            d="M34 34 L47 36 L47 57 L36 55 Z"
+            fill="#4c4a2c"
             stroke="#171420"
-            strokeWidth="1.2"
-            strokeLinejoin="round"
+            strokeWidth="1.4"
           />
           {/* The inside of the mouth, seen only when the jaw drops */}
-          <path d="M8 41.5 L38 45.6 L35 52 L13 50 Z" fill="#2b1419" />
-          {/* The jaw: hinged, heavy, a pale throat sac sagging under it */}
+          <path d="M4.6 41.2 L38.6 44.2 L35.6 50 L10 47.4 Z" fill="#2b1419" />
+          {/* The jaw: hinged at the corner of the mouth. Its underside is a
+              straight line from the chin back to a smooth swell of throat,
+              so the head reads as a wedge, not a bag */}
           <g
             ref={hold("jaw")}
             data-part="jaw"
             className="msr-jaw"
-            style={{ transformOrigin: "36px 45px" }}
+            style={{ transformOrigin: "39px 44px" }}
           >
             <path
-              d="M7.4 41.6 C5.8 44 6.8 47 10 48.4 C14 50.4 17 55.4 24 57 C31 58 37 54.6 38.8 49.4 C39.4 47.6 39 46.2 37.6 45.6 C28 44.6 17 43 7.4 41.6 Z"
+              d="M3.6 41 C3.4 43.2 5 44.6 8 45.6 L23 50.4 C30.4 52 37.4 50 40.4 46.6 C41.2 45.6 40.8 44.6 39.4 44.2 Z"
               fill="url(#msr-skin)"
               stroke="#171420"
               strokeWidth="1.8"
               strokeLinejoin="round"
             />
             <path
-              d="M12.6 48.6 C17 53.6 21.6 56.2 26.6 56.2 C31.6 56 35.6 53 37.4 48.8 C29.4 49.8 20 49.8 12.6 48.6 Z"
+              d="M13 47.2 L23.4 50 C29.8 51.2 35.4 49.4 37.8 46.8 C29.4 46.2 20.6 46.2 13 47.2 Z"
               fill="url(#msr-throat)"
             />
-            <g stroke="#9a8646" strokeWidth="0.8" fill="none">
-              <path d="M17 51.6 C21 53.4 26 53.8 31 53" />
-              <path d="M21 54.6 C24 55.4 28 55.4 31.4 54.6" />
-            </g>
+            <path
+              d="M18.4 48.4 C22.4 49.4 27.4 49.6 32.2 48.6"
+              stroke="#9a8646"
+              strokeWidth="0.8"
+              fill="none"
+            />
           </g>
-          {/* The skull: broad and flat, a blunt rounded snout */}
+          {/* The skull, eye and all, as one outline: a blunt snout pushed at
+              the party, a straight run up to a single half-round bulge of
+              eye, and a flat crown behind it down to the neck. A whole round
+              dome drawn on its own read as an ear in silhouette — a rat, not
+              a toad — and a big brow swept back read as a dog's. */}
           <path
-            d="M7.4 41.6 C4.6 40.6 4 37 6 34.4 C9 30.4 14 27.4 20 26.4 C27 25.4 34 25.4 39 28 C43 30 45 35 44 40 C43.4 43.4 41 45.4 37.6 45.6 C28 44.6 17 43 7.4 41.6 Z"
+            d="M3.6 41 C1.2 40.2 0.6 37.4 2.4 35.8 L13.6 30.8 C13.6 26.4 16.6 23.2 20.4 23 C24.2 22.8 27.2 25.8 27.4 29.6 L37 29.2 C40.6 29.4 43.4 30.8 44.6 33 C46.6 35.4 46.4 39.6 44 42.4 C42.8 43.8 41.2 44.4 39.4 44.2 Z"
             fill="url(#msr-skin)"
             stroke="#171420"
             strokeWidth="1.9"
@@ -489,7 +475,7 @@ export function Miser({
           />
           {/* A lit ridge along the top of the snout */}
           <path
-            d="M8 33.4 C11 30.4 15 28.6 19 27.8"
+            d="M3.6 35.8 L14 31.2"
             stroke="#cdc486"
             strokeWidth="1"
             fill="none"
@@ -498,30 +484,30 @@ export function Miser({
           />
           {/* The poison gland behind the eye, and warts */}
           <ellipse
-            cx="37.4"
-            cy="34.4"
+            cx="35.6"
+            cy="34"
             rx="5.4"
-            ry="3.2"
-            transform="rotate(18 37.4 34.4)"
+            ry="2.8"
+            transform="rotate(10 35.6 34)"
             fill="#8c864c"
             stroke="#171420"
             strokeWidth="1"
           />
           {[
-            [34.6, 33.6],
-            [37.4, 35],
-            [40, 34.2],
+            [33.4, 33.4],
+            [35.8, 34.2],
+            [38.2, 34.8],
           ].map(([x, y]) => (
             <circle key={`${x}`} cx={x} cy={y} r="0.6" fill="#3b3a26" />
           ))}
           {[
-            [14, 34.4, 1.1],
-            [19.6, 37.8, 1],
-            [25.8, 35.8, 1.2],
-            [30.4, 39.6, 0.9],
-            [29, 30.6, 0.9],
-            [10.4, 38.4, 0.7],
-            [22.6, 31.4, 0.8],
+            [8.4, 36.4, 0.8],
+            [13.6, 38.2, 1.1],
+            [20, 39.6, 1],
+            [26.4, 38.4, 1.2],
+            [31.4, 40.8, 0.9],
+            [31.6, 32.6, 0.8],
+            [43, 39, 0.7],
           ].map(([x, y, r]) => (
             <g key={`${x}`}>
               <circle cx={x} cy={y} r={r} fill="#4c4a2c" />
@@ -533,17 +519,19 @@ export function Miser({
               />
             </g>
           ))}
-          {/* The wide, grim mouth, turned down at the corner; one gold tooth */}
+          {/* The wide, grim mouth, the whole length of the head, turned down
+              at the corner; one gold tooth */}
           <path
-            d="M7.4 41.6 C17 43 28 44.6 37.6 45.6 L40.4 48.8"
+            d="M3.6 41 L39.4 44.2 L42 47.4"
             stroke="#171420"
             strokeWidth="1.4"
             fill="none"
             strokeLinecap="round"
+            strokeLinejoin="round"
           />
           <rect
-            x="15.2"
-            y="42.2"
+            x="11"
+            y="41.2"
             width="2.4"
             height="3.2"
             rx="0.4"
@@ -552,60 +540,67 @@ export function Miser({
             strokeWidth="0.6"
           />
           {/* A nostril: a pinhole on the snout, nothing more */}
-          <ellipse cx="8.6" cy="35.2" rx="0.9" ry="0.6" fill="#171420" />
-          {/* The near eye, a bulge on top of the head with the loupe screwed
-            into it, tipped down at whatever it is counting */}
-          <circle
-            cx="21"
-            cy="25.4"
-            r="7"
-            fill="url(#msr-skin)"
-            stroke="#171420"
-            strokeWidth="1.9"
-          />
+          <ellipse cx="4.6" cy="36.6" rx="0.9" ry="0.6" fill="#171420" />
+          {/* The lit crest of the eye */}
           <path
-            d="M15.6 21.6 C18 18.8 23 18.4 26 20.6"
+            d="M15 27 C15.6 24.6 17.8 23.6 20.4 23.6 C22.6 23.6 24.6 24.6 25.8 26.4"
             stroke="#cdc486"
             strokeWidth="1"
             fill="none"
             strokeLinecap="round"
             opacity="0.8"
           />
-          {/* The loupe: a short brass cup screwed into the eye, the lens
-              at its end tipped down at the coins */}
-          <g transform="rotate(-12 21 25.4)">
-            <ellipse
-              className="msr-lens-glow ph-glow"
-              cx="11"
-              cy="25.4"
-              rx="5.4"
-              ry="7.6"
-            />
-            <path
-              d="M21 20.2 L13.6 21.4 L13.6 29.4 L21 30.6 Z"
-              fill="url(#msr-brass)"
-              stroke="#171420"
-              strokeWidth="1.3"
-              strokeLinejoin="round"
-            />
-            <path d="M14.6 22.4 L20 21.4" stroke="#f0d08a" strokeWidth="0.8" />
-            <ellipse
-              cx="13"
-              cy="25.4"
-              rx="2"
-              ry="4.6"
-              fill="#d7ad5d"
-              stroke="#171420"
-              strokeWidth="1.1"
-            />
-            <ellipse
-              className="msr-lens"
-              cx="12.6"
-              cy="25.4"
-              rx="1.2"
-              ry="3.3"
-            />
-          </g>
+          {/* The loupe, screwed into the eye: a brass ring round a lens, the
+              gold eye swimming huge behind it with a toad's flat bar of a
+              pupil, and a heavy lid pressed down on top */}
+          <ellipse
+            className="msr-lens-glow ph-glow"
+            cx="20.4"
+            cy="29.6"
+            rx="7.4"
+            ry="7.4"
+          />
+          <ellipse
+            cx="20.6"
+            cy="29.6"
+            rx="5.4"
+            ry="5.2"
+            fill="url(#msr-brass)"
+            stroke="#171420"
+            strokeWidth="1.3"
+          />
+          <ellipse className="msr-lens" cx="20.4" cy="29.6" rx="3.9" ry="3.7" />
+          <ellipse
+            cx="20.4"
+            cy="30"
+            rx="3.2"
+            ry="2.8"
+            fill="url(#msr-iris)"
+            stroke="#171420"
+            strokeWidth="0.7"
+          />
+          <rect
+            x="16.9"
+            y="29.5"
+            width="7"
+            height="1.2"
+            rx="0.6"
+            fill="#171420"
+          />
+          <path
+            d="M17.8 27.4 C18.8 26.4 20.2 26 21.6 26.2"
+            stroke="#fbf6dc"
+            strokeWidth="0.8"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d="M14.4 28.2 C15.6 22.8 25.6 22.2 27 27.8 C22.4 26.2 18.6 26.4 14.4 28.2 Z"
+            fill="url(#msr-skin)"
+            stroke="#171420"
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+          />
         </g>
       </g>
 
@@ -619,72 +614,77 @@ export function Miser({
       >
         {/* Sleeve, frayed at the elbow */}
         <path
-          d="M41 45 C47 48.6 48 56 44 61 L38 66 L36 63.6 L33.6 65.6 L31.4 61 L36 53 Z"
+          d="M42 47 C47.4 50 48 55 44.4 58.6 L38 62 L36 59.6 L33.6 61.6 L31.6 57.4 L37 51.6 Z"
           fill="url(#msr-coat)"
           stroke="#171420"
           strokeWidth="1.8"
           strokeLinejoin="round"
         />
-        {/* Bony forearm, held out level */}
-        <path
-          d="M33 62.6 L20 62"
-          stroke="#171420"
-          strokeWidth="5.6"
-          strokeLinecap="round"
-        />
-        <path
-          d="M33 62.6 L20 62"
-          stroke="#7a7646"
-          strokeWidth="3.4"
-          strokeLinecap="round"
-        />
-        {/* The fingers, splayed and hanging over the coins like a spider */}
-        <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <g stroke="#171420" strokeWidth="5">
-            {FINGERS.map((d) => (
-              <path key={d} d={d} />
-            ))}
-          </g>
-          <g stroke="url(#msr-finger)" strokeWidth="3">
-            {FINGERS.map((d) => (
-              <path key={d} d={d} />
-            ))}
-          </g>
-        </g>
-        {/* The palm, over the roots of the fingers */}
-        <path
-          d="M21.4 58.4 C16.4 57.4 11 59.4 10 64 C9.4 67.4 11.6 70 15.4 70.4 C19.8 70.8 24.2 69 24.8 65 C25.2 62 23.8 59.4 21.4 58.4 Z"
-          fill="url(#msr-skin)"
-          stroke="#171420"
-          strokeWidth="1.6"
-        />
-        <path
-          d="M12.4 62 C14.6 60 17.8 59.4 20.6 60"
-          stroke="#cdc486"
-          strokeWidth="0.9"
-          fill="none"
-          strokeLinecap="round"
-          opacity="0.8"
-        />
-        {/* Round toad pads on the fingertips: in silhouette, the four bulbs
-            are what make it a toad's hand and not a man's */}
-        {PADS.map(([x, y]) => (
-          <circle
-            key={`${x}`}
-            cx={x}
-            cy={y}
-            r="2.8"
-            fill="#b3aa6a"
+        {/* The forearm and hand are authored 4 units low and lifted as one:
+            the palm sits at (16, 61), high enough that the pads hover with
+            daylight over even the tallest stack */}
+        <g transform="translate(0 -4)">
+          {/* Bony forearm, held out level */}
+          <path
+            d="M33 62.6 L20 62"
             stroke="#171420"
-            strokeWidth="1.2"
+            strokeWidth="5.6"
+            strokeLinecap="round"
           />
-        ))}
-        {/* Rings, on the fingers it could get them onto */}
-        <path
-          d="M8.8 71 L12.2 73.4 M14.8 74 L18.6 74.6"
-          stroke="#f0c860"
-          strokeWidth="1.7"
-        />
+          <path
+            d="M33 62.6 L20 62"
+            stroke="#7a7646"
+            strokeWidth="3.4"
+            strokeLinecap="round"
+          />
+          {/* The fingers, splayed and hanging over the coins like a spider */}
+          <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <g stroke="#171420" strokeWidth="5">
+              {FINGERS.map((d) => (
+                <path key={d} d={d} />
+              ))}
+            </g>
+            <g stroke="url(#msr-finger)" strokeWidth="3">
+              {FINGERS.map((d) => (
+                <path key={d} d={d} />
+              ))}
+            </g>
+          </g>
+          {/* The palm, over the roots of the fingers */}
+          <path
+            d="M21.4 58.4 C16.4 57.4 11 59.4 10 64 C9.4 67.4 11.6 70 15.4 70.4 C19.8 70.8 24.2 69 24.8 65 C25.2 62 23.8 59.4 21.4 58.4 Z"
+            fill="url(#msr-skin)"
+            stroke="#171420"
+            strokeWidth="1.6"
+          />
+          <path
+            d="M12.4 62 C14.6 60 17.8 59.4 20.6 60"
+            stroke="#cdc486"
+            strokeWidth="0.9"
+            fill="none"
+            strokeLinecap="round"
+            opacity="0.8"
+          />
+          {/* Round toad pads on the fingertips: in silhouette, the four bulbs
+            are what make it a toad's hand and not a man's */}
+          {PADS.map(([x, y]) => (
+            <circle
+              key={`${x}`}
+              cx={x}
+              cy={y}
+              r="2.8"
+              fill="#b3aa6a"
+              stroke="#171420"
+              strokeWidth="1.2"
+            />
+          ))}
+          {/* Rings, on the fingers it could get them onto */}
+          <path
+            d="M8.8 71 L12.2 73.4 M14.8 74 L18.6 74.6"
+            stroke="#f0c860"
+            strokeWidth="1.7"
+          />
+        </g>
       </g>
     </svg>
   );
