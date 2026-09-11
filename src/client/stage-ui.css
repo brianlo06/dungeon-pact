@@ -1,0 +1,99 @@
+/*
+ * Picking a target on the field.
+ *
+ * Every combatant is drawn art, so legality is never shown by fading or
+ * filtering the ones you cannot pick: a ghosted back row reads as a rendering
+ * fault, and a filter over a figure whose parts move every frame has to be
+ * repainted every frame. The legal targets are marked instead, and everything
+ * else is left exactly as it is.
+ */
+
+/* A combatant is a button so it can be picked, but it is not a button to look
+ * at. The shell's disabled fade, hover lift and press inset all stop here. */
+.combatant-body:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.combatant-body:enabled:hover,
+.combatant-body:enabled:active {
+  background: none;
+  box-shadow: none;
+  transform: none;
+}
+
+/*
+ * The mark: a pair of brackets on the floor, closing on the figure's feet.
+ * Drawn as the two ends of a flattened ring, so it lies on the ground the way
+ * the shadow does and the figure stands inside it. Gold like the chosen ring,
+ * with a hard offset shadow under it so it holds on the lit floor and the dark
+ * one. Static: it is a label, not an alarm, and needs nothing under reduced
+ * motion. The chosen target keeps the pulsing ring, so the two never read as
+ * the same thing.
+ */
+.combatant-mark {
+  position: absolute;
+  left: 50%;
+  bottom: -6%;
+  width: calc(var(--shadow, 0.78) * 100% + 22%);
+  height: 20%;
+  min-height: 10px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.combatant-mark::before,
+.combatant-mark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 3px solid transparent;
+  border-radius: 50%;
+}
+.combatant-mark::before {
+  border-left-color: #120f18;
+  border-right-color: #120f18;
+  transform: translateY(2px);
+}
+.combatant-mark::after {
+  border-left-color: var(--gold);
+  border-right-color: var(--gold);
+}
+/* Hovering a legal target draws the brackets in, toward the one you mean. */
+.combatant-body:enabled:hover .combatant-mark {
+  width: calc(var(--shadow, 0.78) * 100% + 8%);
+}
+/* The chosen one is ringed; its brackets would only crowd the ring. */
+.combatant-body[aria-pressed="true"] .combatant-mark {
+  display: none;
+}
+
+/* The name plate says it too, for anyone reading names rather than feet:
+ * the name turns gold and the plate is bracketed like the feet are. The
+ * brackets hang outside the plate, so marking a target never changes its size
+ * and nothing laid out around it moves. */
+.combatant-plate {
+  position: relative;
+}
+.combatant[data-marked] .combatant-name {
+  color: var(--gold);
+}
+/* Square brackets span the name and the health bar — both fixed heights, so
+ * the bracket is the same whatever the name's length or the statuses below. */
+.combatant[data-marked] .combatant-plate::before,
+.combatant[data-marked] .combatant-plate::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  width: 3px;
+  height: 20px;
+  border: 2px solid var(--gold);
+}
+.combatant[data-marked] .combatant-plate::before {
+  right: calc(100% + 3px);
+  border-right: 0;
+  box-shadow: -2px 2px 0 #120f18;
+}
+.combatant[data-marked] .combatant-plate::after {
+  left: calc(100% + 3px);
+  border-left: 0;
+  box-shadow: 2px 2px 0 #120f18;
+}

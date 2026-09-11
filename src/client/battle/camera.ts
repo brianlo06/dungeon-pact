@@ -41,6 +41,33 @@ const BIAS: Record<CameraPreset, { pull: number; zoom: number }> = {
 const OVERSCAN = 1.12;
 /** How far the view may travel, in stage fractions. The overscan must cover it. */
 const REACH = 0.05;
+/** The world scales about this point, as stage fractions. Set on attach. */
+const ORIGIN = { x: 0.5, y: 0.62 };
+
+/**
+ * The part of the world, in untransformed stage pixels, that stays on screen
+ * however the camera frames a decision — the neutral, hero and target presets
+ * at any pan the reach allows. Replay framing may crop further; that is
+ * emphasis on the action, not the board the player plans from.
+ *
+ * Anything that must always be readable while planning (intent chips) keeps
+ * inside this box, so it cannot be pushed off screen by the camera leaning.
+ */
+export function planningFrame(width: number, height: number) {
+  const zoom =
+    OVERSCAN * Math.max(BIAS.neutral.zoom, BIAS.hero.zoom, BIAS.target.zoom);
+  // A screen edge maps back into the world through the inverse transform;
+  // the worst pan in each direction gives the tightest bound.
+  const inner = (size: number, origin: number, edge: 0 | 1) =>
+    origin * size +
+    ((edge ? size - REACH * size : REACH * size) - origin * size) / zoom;
+  return {
+    left: inner(width, ORIGIN.x, 0),
+    right: inner(width, ORIGIN.x, 1),
+    top: inner(height, ORIGIN.y, 0),
+    bottom: inner(height, ORIGIN.y, 1),
+  };
+}
 
 export interface CameraCommand {
   preset: CameraPreset;
@@ -127,6 +154,8 @@ export function useCamera(reduced: boolean): Camera {
 
   const attach = useCallback((el: HTMLElement | null) => {
     node.current = el;
+    // Owned here rather than in CSS, beside the geometry that depends on it.
+    if (el) el.style.transformOrigin = `${ORIGIN.x * 100}% ${ORIGIN.y * 100}%`;
   }, []);
   const look = useCallback((cmd: CameraCommand) => {
     goal.current = resolve(cmd);

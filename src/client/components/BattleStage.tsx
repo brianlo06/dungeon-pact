@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import type { Snapshot } from "../../shared/model";
 import { isObject } from "../../content/enemies";
 import { BattleUnit, type Impact } from "./BattleUnit";
@@ -7,6 +7,8 @@ import type { Placement } from "../battle/layout";
 import type { Camera } from "../battle/camera";
 import type { Animators } from "../battle/useAnimators";
 import { Foundry } from "./Foundry";
+import { useIntentLayout } from "../battle/intent-layout";
+import "../stage-ui.css";
 
 export interface StageBeat {
   beatFor: (id: string) => {
@@ -40,6 +42,7 @@ export function BattleStage({
   target,
   onTarget,
   targetable,
+  targeting,
   beat,
   camera,
   frozen,
@@ -51,6 +54,8 @@ export function BattleStage({
   target: string;
   onTarget: (id: string) => void;
   targetable: Set<string>;
+  /** The player is picking a target now, so the legal ones are marked. */
+  targeting?: boolean;
   beat: StageBeat;
   camera: Camera;
   /** Hold the scene still for a beat on a heavy hit. */
@@ -88,6 +93,10 @@ export function BattleStage({
     );
   };
 
+  // Chips step around name plates and each other; see intent-layout.
+  const unitLayer = useRef<HTMLDivElement>(null);
+  useIntentLayout(unitLayer, places);
+
   const units = [...s.enemies, ...s.players]
     .map((u) => ({ u, place: places.get(u.id) }))
     .filter(
@@ -108,7 +117,7 @@ export function BattleStage({
       <Foundry />
 
       <div className="world" ref={camera.attach}>
-        <div className="layer layer-units">
+        <div className="layer layer-units" ref={unitLayer}>
           {units.map(({ u, place }) => {
             const enemy = "definition" in u;
             return (
@@ -118,6 +127,7 @@ export function BattleStage({
                 place={place}
                 selectable={targetable.has(u.id)}
                 selected={target === u.id}
+                marked={targeting && targetable.has(u.id)}
                 onSelect={() => onTarget(u.id)}
                 intent={enemy ? intentFor(u as never) : undefined}
                 owners={s.players}
