@@ -49,7 +49,8 @@ const partTransforms = (page: Page, sel: string) =>
 test.describe("the debt creatures are drawn, not placeheld", () => {
   for (const [name, sel, params] of CREATURES) {
     test(`${name} is authored art with moving parts`, async ({ page }) => {
-      await open(page, params);
+      // With round animation on: under reduced motion nothing moves at all.
+      await open(page, { ...params, motion: 1 });
       const unit = page.locator(".combatant", {
         has: page.locator(`.combatant-name:text-is("${name}")`),
       });
@@ -213,9 +214,8 @@ test.describe("the Counting House is authored throughout", () => {
     await page.locator(".stage").waitFor();
     await page.keyboard.press("Space"); // skip the entrance
     // Record every frame the animator writes to the hand, rather than
-    // sampling it: the tempo control does not always reach an animator that
-    // registered before the lab applied it, and at full speed the swing is
-    // over in a quarter of a second — easy for a poll to straddle.
+    // sampling it: even slowed, the swing is brief enough for a poll on a
+    // loaded worker to straddle.
     await page.evaluate(() => {
       const hand = document.querySelector(
         ".miser [data-part='hand']",

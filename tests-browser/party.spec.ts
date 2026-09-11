@@ -101,6 +101,8 @@ for (const group of PARTY) {
         party: 4,
         heroes: group.join(","),
         stage: "objective",
+        // Motion on: under reduced motion the idles are still.
+        motion: 1,
       });
       const read = () =>
         page.evaluate(

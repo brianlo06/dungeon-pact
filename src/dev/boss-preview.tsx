@@ -58,6 +58,12 @@ function fromUrl(): {
   };
 }
 const initial = fromUrl();
+// Presentation reads motion and tempo from the document, and the first
+// animators register in effects that run before any effect of the lab's own,
+// so both are set before anything renders. Set in an effect, a slowed capture
+// could start its animators at full speed.
+document.documentElement.dataset.motion = initial.motion ? "full" : "reduced";
+document.documentElement.dataset.tempo = initial.tempo;
 
 function BossPreview() {
   const [options, setOptions] = useState(initial.options);
