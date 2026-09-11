@@ -262,6 +262,7 @@ export function Combat({
         target={selectedTarget}
         onTarget={pickTarget}
         targetable={targetable}
+        targeting={mode === "target" && !locked && !replay.playing && me.hp > 0}
         beat={{
           beatFor,
           playing: replay.playing,

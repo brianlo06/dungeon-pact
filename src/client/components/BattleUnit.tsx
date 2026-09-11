@@ -26,6 +26,7 @@ export function BattleUnit({
   place,
   selectable,
   selected,
+  marked,
   onSelect,
   hp,
   impact,
@@ -44,6 +45,8 @@ export function BattleUnit({
   place: Placement;
   selectable?: boolean;
   selected?: boolean;
+  /** A legal target while the player is picking one. */
+  marked?: boolean;
   onSelect?: () => void;
   hp?: number;
   impact?: Impact;
@@ -106,6 +109,7 @@ export function BattleUnit({
       data-down={down ? "" : undefined}
       data-phase={enemy?.phase === 2 ? "2" : undefined}
       data-you={you ? "" : undefined}
+      data-marked={marked ? "" : undefined}
       style={
         {
           left: `${place.x * 100}%`,
@@ -127,6 +131,7 @@ export function BattleUnit({
         aria-label={`${unit.name}, ${shown} of ${unit.maxHp} health`}
       >
         <span className="combatant-shadow" aria-hidden="true" />
+        {marked && <span className="combatant-mark" aria-hidden="true" />}
         <span className="combatant-rig" ref={sprite}>
           {look.spriteSet === "strongbox" ? (
             <Strongbox

@@ -254,11 +254,10 @@
   opacity: 1;
 }
 
-/* Everything the camera moves. */
+/* Everything the camera moves. The camera sets its transform origin. */
 .world {
   position: absolute;
   inset: 0;
-  transform-origin: 50% 62%;
   will-change: transform;
 }
 .layer-units {
@@ -888,7 +887,7 @@
   }
 }
 :root[data-motion="reduced"] .combatant-rig,
-:root[data-motion="reduced"] :root[data-motion="reduced"] .intent-windup,
+:root[data-motion="reduced"] .intent-windup,
 :root[data-motion="reduced"] .combatant-ring,
 :root[data-motion="reduced"] .combatant-pop,
 :root[data-motion="reduced"] .callout,
