@@ -14,6 +14,10 @@ import "../../creatures-party.css";
  *
  * What makes each hero *themselves* is what they wear and carry, and that is
  * the part each file draws: a helm and a shield, a hat and a staff, a banner.
+ * So is the face. Three heroes hide theirs — a great helm, a brim, a mask —
+ * and the other five each draw their own head, because a shared face made
+ * them one person in five costumes. Head shape, jaw, brow, nose, age and skin
+ * all differ; the size, the pivot and the ink do not.
  */
 
 /** Every outline in the party is this colour, and nothing else is. */
@@ -27,6 +31,21 @@ export const DETAIL = 1.3;
 export const RAMP = {
   skin: ["#f2c49b", "#d69a70", "#9b6246"],
   skinPale: ["#f3dcc6", "#d9b79c", "#9f7f6c"],
+  /*
+   * Five more skins, one for each hero whose face shows. They are people from
+   * different places and different lives, so they are not one peach: a
+   * freckled fair kid, a ruddy pink money-man, a deep umber elder, a warm
+   * brown standard-bearer and a cold, pallid northerner. The one brute in
+   * the line is the pale one, on purpose — a heavy brow and a snarl on a
+   * darker skin is an old caricature, and nothing here should echo it.
+   */
+  skinFair: ["#f8dcc6", "#ebb49a", "#b4775e"],
+  skinRuddy: ["#f7cbb4", "#e09c86", "#a45f55"],
+  skinUmber: ["#bc8961", "#8a5a3d", "#523322"],
+  skinBrown: ["#d9a076", "#a86a45", "#673d27"],
+  skinPallid: ["#ecd8cb", "#c9a697", "#7f5f57"],
+  /** Whiskers, brows and beards gone grey. */
+  silver: ["#eef0f4", "#c3c5cf", "#858897"],
   leather: ["#a3714a", "#704b31", "#3f2a1d"],
   steel: ["#d4d1dc", "#9893a6", "#57526a"],
   iron: ["#6f687c", "#4a4456", "#2a2533"],
@@ -241,7 +260,8 @@ export function Legs({
 
 /**
  * The shared head: a big soft block, slightly wider at the jaw on the side the
- * hero is facing. Headgear is drawn over it by each hero.
+ * hero is facing. Only the heroes whose faces are hidden use it now; anyone
+ * whose face shows draws a head of their own inside the same box.
  */
 export const HEAD_PATH =
   "M48 13.5 C58.5 13.5 64.5 20 64.5 29.5 C64.5 39 58.5 44.5 48.5 44.5 C38.5 44.5 32.5 39 32.5 29.5 C32.5 20 37.5 13.5 48 13.5 Z";
@@ -253,31 +273,22 @@ export function Head({ fill }: { fill: string }) {
 /**
  * Eyes, set towards the right of the head so the face reads as turned towards
  * the enemy. The far eye is a touch smaller. `glow` is for faces lost in a
- * hood; `lids` is for eyes half-closed.
+ * hood. Faces that show draw their own eyes, because eyes are most of a face.
  */
 export function Eyes({
   x = 53.5,
   y = 31,
   glow,
-  lids,
 }: {
   x?: number;
   y?: number;
   glow?: string;
-  lids?: boolean;
 }) {
   if (glow)
     return (
       <g className="ph-glow-eyes" fill={glow}>
         <ellipse cx={x} cy={y} rx={2.1} ry={2.6} />
         <ellipse cx={x + 7} cy={y} rx={1.8} ry={2.3} />
-      </g>
-    );
-  if (lids)
-    return (
-      <g stroke={INK} strokeWidth={1.6} strokeLinecap="round" fill="none">
-        <path d={`M${x - 2} ${y} Q${x} ${y + 1.4} ${x + 2} ${y}`} />
-        <path d={`M${x + 5.3} ${y} Q${x + 7.1} ${y + 1.3} ${x + 8.7} ${y}`} />
       </g>
     );
   return (
