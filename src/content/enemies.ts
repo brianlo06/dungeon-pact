@@ -102,7 +102,7 @@ export const enemies: EnemyDef[] = [
     abilities: [attack("bite", "Searing bite", 13)],
   },
   {
-    presentation: { footprint: "small", theme: "precision", idlePeriod: 3.3 },
+    presentation: { spriteSet: "sniper", footprint: "small", theme: "precision", idlePeriod: 3.3 },
     id: "sniper",
     name: "Rivet Sniper",
     glyph: "⌖",
@@ -114,7 +114,7 @@ export const enemies: EnemyDef[] = [
     abilities: [attack("rivet", "Back-row rivet", 18)],
   },
   {
-    presentation: { footprint: "person", theme: "contract", idlePeriod: 2.6 },
+    presentation: { spriteSet: "thief", footprint: "person", theme: "contract", idlePeriod: 2.6 },
     id: "thief",
     name: "Coin Leech",
     glyph: "◈",
@@ -200,6 +200,7 @@ export const enemies: EnemyDef[] = [
   },
   {
     presentation: {
+      spriteSet: "miser",
       footprint: "boss",
       theme: "contract",
       idlePeriod: 5.4,

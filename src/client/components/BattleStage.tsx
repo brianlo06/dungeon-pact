@@ -122,6 +122,7 @@ export function BattleStage({
                 intent={enemy ? intentFor(u as never) : undefined}
                 owners={s.players}
                 animators={animators}
+                treasury={s.gold}
                 locked={!enemy && s.locked.includes(u.id)}
                 connected={enemy || s.connected.includes(u.id)}
                 you={u.id === s.you}

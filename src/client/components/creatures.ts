@@ -3,6 +3,9 @@ import type { CreatureProps } from "../battle/useRigParts";
 import { Collector } from "./Collector";
 import { Bulwark } from "./Bulwark";
 import { Mender } from "./Mender";
+import { Miser } from "./Miser";
+import { Sniper } from "./Sniper";
+import { Leech } from "./Leech";
 
 /**
  * Authored creatures, by `presentation.spriteSet`.
@@ -16,4 +19,7 @@ export const CREATURES: Record<string, ComponentType<CreatureProps>> = {
   collector: Collector,
   bulwark: Bulwark,
   mender: Mender,
+  miser: Miser,
+  sniper: Sniper,
+  thief: Leech,
 };
