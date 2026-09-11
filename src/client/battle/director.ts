@@ -3,6 +3,7 @@ import type { Beat, Snapshot } from "../../shared/model";
 import type { ClipName, SfxName } from "../../shared/presentation";
 import { tempo } from "./tempo";
 import { castClip } from "./hero-clips";
+import { hitStop, paceRound } from "./pacing";
 
 /**
  * The presentation director.
@@ -71,18 +72,13 @@ export interface DirectorControls {
   skip: () => void;
 }
 
-/** How long each kind of beat holds the stage, before the speed multiplier. */
-const HOLD: Record<CueKind, number> = {
-  cast: 520,
-  damage: 420,
-  heal: 420,
-  block: 340,
-  combo: 760,
-  defeat: 620,
-};
-/** Hit-stop, by how hard the hit landed. Subtle on purpose. */
-const stopFor = (amount: number) =>
-  amount >= 30 ? 120 : amount >= 18 ? 75 : amount > 0 ? 40 : 0;
+/**
+ * How late a beat may fire and still be timed from when it was due rather
+ * than from when it fired. A frame's jitter is absorbed, so twenty beats do
+ * not each add half a frame to the round; a pause, a step or a real stall is
+ * not, so nothing is shown for less than its hold after one.
+ */
+const JITTER = 34;
 
 const healthOf = (s: Snapshot) =>
   Object.fromEntries([...s.players, ...s.enemies].map((u) => [u.id, u.hp]));
@@ -121,9 +117,11 @@ export function useDirector(
   const [speed, setSpeed] = useState(1);
   const [paused, setPaused] = useState(false);
 
-  const seen = useRef(0);
+  /** The last chronicle entry seen; null until the first board arrives. */
+  const seen = useRef<number | null>(null);
   const settled = useRef<Record<string, number>>({});
-  const queue = useRef<Beat[]>([]);
+  /** The rest of the round, each beat with how long it holds. */
+  const queue = useRef<{ beat: Beat; hold: number }[]>([]);
   const board = useRef<Record<string, number>>({});
   const waitUntil = useRef(0);
   const stepOnce = useRef(false);
@@ -157,7 +155,7 @@ export function useDirector(
   }, []);
 
   /** Turn one beat into everything the screen should do about it. */
-  const perform = useCallback((beat: Beat, now: number) => {
+  const perform = useCallback((beat: Beat, hold: number, now: number) => {
     const cur = live.current;
     const next: DirectorCues = { ...cur, beat, frozen: false };
     const key = () => ++keys.current;
@@ -174,7 +172,6 @@ export function useDirector(
       next.pops = [...next.pops, { key: key(), unit, text, tone }];
     };
 
-    let hold = HOLD[beat.kind];
     switch (beat.kind) {
       case "cast":
         next.title = { text: beat.label ?? "", actor: beat.actor };
@@ -207,8 +204,8 @@ export function useDirector(
         hooksRef.current.onSound?.(
           (beat.amount ?? 0) >= 24 ? "impact-heavy" : "impact-light",
         );
-        next.frozen = stopFor(beat.amount ?? 0) > 0;
-        hold += stopFor(beat.amount ?? 0);
+        // The stop is already counted in this beat's hold.
+        next.frozen = hitStop(beat.amount ?? 0) > 0;
         break;
       case "heal":
         add({ kind: "heal", to: beat.target, life: 460 });
@@ -261,22 +258,35 @@ export function useDirector(
     hooksRef.current.onCamera?.(beat);
     live.current = next;
     setCues(next);
-    waitUntil.current = now + hold / Math.max(0.25, speedRef.current) / tempo();
+    const due = waitUntil.current;
+    const from = due && now - due <= JITTER ? due : now;
+    waitUntil.current =
+      from + hold / Math.max(0.25, speedRef.current) / tempo();
   }, []);
 
   // Build the timeline whenever the server sends a round we have not played.
   useEffect(() => {
     if (!s) return;
-    const fresh = s.logs.filter((l) => l.seq > seen.current && l.beat);
+    // The first board is shown as it stands. The chronicle it arrives with
+    // is history — a previous fight's rounds, the rounds before a reconnect —
+    // and replaying it would show the party a fight they have already seen.
+    const first = seen.current === null;
+    const fresh = s.logs.filter((l) => l.seq > (seen.current ?? 0) && l.beat);
     seen.current = s.logs.length ? s.logs[s.logs.length - 1].seq : 0;
-    if (!fresh.length || reduced || s.phase !== "COMBAT") {
+    if (first || !fresh.length || reduced || s.phase !== "COMBAT") {
       finish(s);
       return;
     }
     board.current = { ...settled.current, ...healthOf(s) };
     for (const [id, hp] of Object.entries(settled.current))
       board.current[id] = hp;
-    queue.current = fresh.map((l) => l.beat!);
+    // Paced as a whole, so a long round is squeezed evenly rather than
+    // running long.
+    const beats = fresh.map((l) => l.beat!);
+    const holds = paceRound(beats, {
+      signature: (b) => b.kind === "cast" && castClip(s, b) === "signature",
+    });
+    queue.current = beats.map((beat, i) => ({ beat, hold: holds[i] }));
     waitUntil.current = 0;
     live.current = { ...live.current, hp: { ...board.current }, playing: true };
     setCues(live.current);
@@ -292,7 +302,8 @@ export function useDirector(
         const gate = pausedRef.current && !stepOnce.current;
         if (!gate && now >= waitUntil.current) {
           stepOnce.current = false;
-          perform(queue.current.shift()!, now);
+          const { beat, hold } = queue.current.shift()!;
+          perform(beat, hold, now);
         }
       } else if (live.current.playing && now >= waitUntil.current && s) {
         finish(s);
@@ -329,7 +340,8 @@ export function useDirector(
     !!s &&
     !reduced &&
     s.phase === "COMBAT" &&
-    s.logs.some((l) => l.seq > seen.current && !!l.beat);
+    seen.current !== null &&
+    s.logs.some((l) => l.seq > seen.current! && !!l.beat);
 
   return {
     ...cues,

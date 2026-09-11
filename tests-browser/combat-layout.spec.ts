@@ -535,7 +535,8 @@ test.describe("the new visual layer stays inside the viewport", () => {
   });
 
   test("every combatant animates through its own rig", async ({ page }) => {
-    await open(page, { party: 4, stage: "objective" });
+    // Motion on: under reduced motion every figure holds one still pose.
+    await open(page, { party: 4, stage: "objective", motion: 1 });
     const first = await page.evaluate(() =>
       [...document.querySelectorAll(".combatant-rig")].map(
         (el) => (el as HTMLElement).style.transform,
@@ -557,7 +558,8 @@ test.describe("the new visual layer stays inside the viewport", () => {
 
 test.describe("the Collector is a cutout rig, not a sprite", () => {
   test("its parts move independently of the figure", async ({ page }) => {
-    await open(page, { party: 4, stage: "objective" });
+    // Motion on: under reduced motion every figure holds one still pose.
+    await open(page, { party: 4, stage: "objective", motion: 1 });
     const parts = page.locator(".collector > g");
     expect(await parts.count()).toBeGreaterThanOrEqual(5);
 

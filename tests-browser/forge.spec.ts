@@ -13,6 +13,9 @@ async function open(page: Page, encounter: string, party: number) {
     encounter,
     party: String(party),
     stage: "objective",
+    // Motion on: these check that parts move, and under reduced motion
+    // nothing does.
+    motion: "1",
   });
   await page.goto(`/dev/bosses.html?${q}`);
   await page.locator(".battle").waitFor();

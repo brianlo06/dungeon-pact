@@ -42,7 +42,7 @@ export function Combat({
   const [introShown, setIntroShown] = useState(false);
   const places = useMemo(() => placements(s), [s]);
   const camera = useCamera(reducedMotion);
-  const animators = useAnimators();
+  const animators = useAnimators({ still: reducedMotion });
   const replay = useDirector(s, reducedMotion, {
     onShake: camera.shake,
     onClip: animators.play,

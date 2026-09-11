@@ -8,18 +8,16 @@ import { test, expect, type Page } from "@playwright/test";
  * the wound-up move or its objective lands. Anything without the clip keeps
  * its idle: an ordinary enemy must never start pulsing on a wind-up.
  *
- * The animator draws straight to the DOM and never re-renders React, so the
- * clip is read from it directly: through the `animators` prop the stage hands
- * each combatant, found on the combatant's React fiber.
+ * The animator draws straight to the DOM and never re-renders React. It
+ * reports the clip it is playing as `data-clip` on the combatant's rig,
+ * written only when the clip changes, and that is what these read.
  */
 
 const scene = (params: Record<string, string | number> = {}) =>
   `/dev/bosses.html?${new URLSearchParams({ viewport: "fit", ...(params as never) })}`;
 
 type Probe = Window & {
-  /** The clip a named combatant's animator is playing. */
-  __clipOf?: (name: string) => string | null;
-  /** Every change of clip seen on one combatant, frame by frame. */
+  /** Every clip one combatant has passed through, in order. */
   __trace?: string[];
 };
 
@@ -27,45 +25,41 @@ async function open(page: Page, params: Record<string, string | number>) {
   await page.goto(scene(params));
   await page.locator(".battle").waitFor();
   await page.locator(".stage").waitFor();
-  await page.evaluate(() => {
-    type Fiber = {
-      memoizedProps?: {
-        unit?: { id: string; name: string };
-        animators?: { current: (id: string) => string | null };
-      };
-      return: Fiber | null;
-    };
-    (window as Probe).__clipOf = (name) => {
-      for (const el of document.querySelectorAll(".combatant")) {
-        const key = Object.keys(el).find((k) => k.startsWith("__reactFiber"));
-        if (!key) continue;
-        let f = (el as unknown as Record<string, Fiber>)[key] as Fiber | null;
-        while (f && !(f.memoizedProps?.unit && f.memoizedProps.animators))
-          f = f.return;
-        const props = f?.memoizedProps;
-        if (props?.unit?.name === name && props.animators)
-          return props.animators.current(props.unit.id);
-      }
-      return null;
-    };
-  });
 }
 
-const clipOf = (page: Page, name: string) =>
-  page.evaluate((n) => (window as Probe).__clipOf!(n), name);
+const rig = (page: Page, name: string) =>
+  page
+    .locator(".combatant", {
+      has: page.locator(`.combatant-name:text-is("${name}")`),
+    })
+    .locator(".combatant-rig");
 
-/** Record every clip a combatant passes through, sampled every frame. */
+const clipOf = (page: Page, name: string) =>
+  rig(page, name).getAttribute("data-clip");
+
+/**
+ * Record every clip a combatant passes through. The attribute changes only
+ * when the clip does, so an observer sees every change, however brief.
+ */
 const trace = (page: Page, name: string) =>
-  page.evaluate((n) => {
+  rig(page, name).evaluate((el) => {
     const w = window as Probe;
-    w.__trace = [];
-    const step = () => {
-      const clip = w.__clipOf!(n) ?? "none";
+    w.__trace = [(el as HTMLElement).dataset.clip ?? "none"];
+    const push = (clip: string) => {
       if (w.__trace!.at(-1) !== clip) w.__trace!.push(clip);
-      requestAnimationFrame(step);
     };
-    step();
-  }, name);
+    // Each record carries the value it replaced, so a clip that came and
+    // went between two callbacks is still seen: every value but the last is
+    // the old value of the record after it.
+    new MutationObserver((records) => {
+      records.slice(1).forEach((r) => push(r.oldValue ?? "none"));
+      push((el as HTMLElement).dataset.clip ?? "none");
+    }).observe(el, {
+      attributes: true,
+      attributeFilter: ["data-clip"],
+      attributeOldValue: true,
+    });
+  });
 const traced = (page: Page) =>
   page.evaluate(() => (window as Probe).__trace ?? []);
 
