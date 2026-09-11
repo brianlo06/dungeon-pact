@@ -13,9 +13,6 @@
 .forge-creature g {
   transform-box: view-box;
 }
-.forge-creature > g {
-  will-change: transform;
-}
 
 /* Non-part decoration animated by CSS. Never put a CSS animation on a part:
  * an animation outranks the inline transform the animator writes. */
@@ -35,12 +32,12 @@
 }
 .stk-coal {
   fill: #ff8a3a;
-  filter: drop-shadow(0 0 3px #ff7a2e);
+  filter: drop-shadow(0 0 3px #ff7a2e) var(--tone,);
   animation: frg-glow 1.9s ease-in-out infinite;
 }
 .stk-lens {
   fill: #ffcf6a;
-  filter: drop-shadow(0 0 2px #ffb257);
+  filter: drop-shadow(0 0 2px #ffb257) var(--tone,);
 }
 
 /* Acolyte: the fire it has for a head, the ember in its palm, the ash. Every
@@ -143,17 +140,17 @@
 /* Bellows: the grate, the horn's mouth, the eyes, the fold glow. */
 .bel-grate {
   fill: #ff9a42;
-  filter: drop-shadow(0 0 2px #ff7a2e);
+  filter: drop-shadow(0 0 2px #ff7a2e) var(--tone,);
   animation: frg-glow 5.4s ease-in-out infinite;
 }
 .bel-mouth {
   fill: #ffb35e;
-  filter: drop-shadow(0 0 4px #ff7a2e);
+  filter: drop-shadow(0 0 4px #ff7a2e) var(--tone,);
   animation: frg-glow 5.4s ease-in-out infinite;
 }
 .bel-eye {
   fill: #ffcf6a;
-  filter: drop-shadow(0 0 2px #ff9a42);
+  filter: drop-shadow(0 0 2px #ff9a42) var(--tone,);
 }
 .bel-folds {
   opacity: 0.35;
@@ -169,11 +166,11 @@
 }
 .hnd-maw {
   fill: #ff6a3a;
-  filter: drop-shadow(0 0 3px #d8342a);
+  filter: drop-shadow(0 0 3px #d8342a) var(--tone,);
 }
 .hnd-eye {
   stroke: #ffdf8a;
-  filter: drop-shadow(0 0 2px #ffb257);
+  filter: drop-shadow(0 0 2px #ffb257) var(--tone,);
 }
 .hnd-drip {
   animation: frg-drip 1.4s ease-in infinite;

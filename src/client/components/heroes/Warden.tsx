@@ -44,23 +44,23 @@ const leafD = (r: number) =>
 const place = (x: number, y: number, deg: number) =>
   `translate(${x} ${y}) rotate(${deg})`;
 
-export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
-  const hold = useRigParts(unitId, animators, PARTS);
-  const g = useShades("wdn");
-  const [bx, by] = BODY.shoulderBack;
-  const [fx, fy] = BODY.shoulderFront;
-
-  const Leaf = ({
-    x,
-    y,
-    r = 3,
-    a = 0,
-  }: {
-    x: number;
-    y: number;
-    r?: number;
-    a?: number;
-  }) => (
+/**
+ * One leaf. Declared here rather than inside `Warden`: a component made during
+ * render is a new type on every render, so React threw away and rebuilt every
+ * leaf each time the fight re-rendered — many times a second in a replay.
+ */
+function Leaf({
+  x,
+  y,
+  r = 3,
+  a = 0,
+}: {
+  x: number;
+  y: number;
+  r?: number;
+  a?: number;
+}) {
+  return (
     <path
       d={leafD(r)}
       transform={place(x, y, a)}
@@ -70,6 +70,13 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
       strokeLinejoin="round"
     />
   );
+}
+
+export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
+  const hold = useRigParts(unitId, animators, PARTS);
+  const g = useShades("wdn");
+  const [bx, by] = BODY.shoulderBack;
+  const [fx, fy] = BODY.shoulderFront;
 
   return (
     <HeroFrame

@@ -20,7 +20,6 @@
 .leech > g,
 .msr-jaw {
   transform-box: view-box;
-  will-change: transform;
 }
 
 /* ---------------------------------------------------------------- miser -- */
@@ -127,7 +126,7 @@
 /* Red lenses: the one thing on the back row that is looking at you. */
 .snp-lens {
   fill: #ff5a3c;
-  filter: drop-shadow(0 0 2px #ff3a1e);
+  filter: drop-shadow(0 0 2px #ff3a1e) var(--tone,);
   animation: snp-lens 3.1s ease-in-out infinite;
 }
 @keyframes snp-lens {
@@ -147,7 +146,7 @@
 .snp-coals,
 .snp-rivet {
   fill: #ff9a42;
-  filter: drop-shadow(0 0 2px #ff6a1e);
+  filter: drop-shadow(0 0 2px #ff6a1e) var(--tone,);
   animation: seam 1.7s ease-in-out infinite;
 }
 .snp-rivet:nth-child(odd) {
@@ -184,7 +183,8 @@
   15% {
     opacity: 1;
     transform: scale(3.4, 1.8);
-    filter: drop-shadow(0 0 4px #ffb24a);
+    /* Tone first, so this interpolates from the tone the muzzle rests in. */
+    filter: var(--tone,) drop-shadow(0 0 4px #ffb24a);
   }
   100% {
     opacity: 0;
