@@ -1,6 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
 import { REPLAY_CAP } from "../src/client/battle/pacing";
 
+// Every test here plays at least one whole replay, and some play two or
+// reload the page between them; thirty seconds did not fit that on a loaded
+// machine. The layout suite gives its replay-heavy tests the same room.
+test.describe.configure({ timeout: 60_000 });
+
 /**
  * How long a round takes to watch, and what stands still when it should.
  *
@@ -94,10 +99,14 @@ const drawn = (page: Page) =>
 
 test.describe("a replay fits its cap", () => {
   // Rounds that replayed for ten seconds and more before the cap came back.
-  // The click, the render that starts the replay and the one that ends it
-  // are outside the pacing, and a loaded worker adds frames; a second covers
-  // them and is still far short of what an uncapped replay takes.
-  const SLACK = 1000;
+  // This guards that the cap is applied in the running game at all; whether
+  // each round's pacing fits the cap exactly is checked, round by round, in
+  // tests/pacing.test.ts. Wall time here also carries the click, the renders
+  // either side of the replay and whatever the machine is doing: on a quiet
+  // machine these rounds take 6.1–6.3s, but under a full parallel suite with
+  // tracing they ran 7–8s. Two and a half seconds absorbs that and is still
+  // well short of what an uncapped replay takes.
+  const SLACK = 2500;
 
   test("a four-hero boss round", async ({ page }) => {
     await open(page, { boss: "collector", party: 4, motion: 1 });
