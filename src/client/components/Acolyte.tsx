@@ -9,8 +9,8 @@ import "../creatures-forge.css";
  * it, and the robe below the waist is burning away from the hem up. It does
  * not walk; it hangs.
  *
- * It stands in the back row at about seventy pixels, so it is drawn in a few
- * large shapes rather than many small ones: a bone-white column and bell
+ * It stands in the back row at about a hundred pixels, so it is drawn in a few
+ * large shapes rather than many small ones: a bone-white robe and bell
  * sleeve, a charred mantle, one rust stole, and on top a single big fire. The
  * fire is drawn as fire, not as a head-dress — one tall tongue leaning back
  * from the party and curling over at the tip, two short licks off its flanks,
@@ -19,14 +19,22 @@ import "../creatures-forge.css";
  * that used to stand up through it are gone: together those made the first
  * drawing read as a crown.
  *
- * Silhouette: a tall column, fire at the top, a mantle across the shoulders,
- * one long bell sleeve reaching out towards the party with an ember held up
- * over the hand, and a censer swung clear on the other side. The Cinder
- * Stoker it fights beside is wide, low and lumpy; this is the opposite shape
- * on purpose. And it has no hood: the Collector is the hooded one.
+ * Silhouette: the fire in its bowl on a thin neck, with daylight either side
+ * of the neck; a torn mantle wider than the robe, so its points stand out
+ * past a pinched waist; the robe below trailing away behind it as it drifts,
+ * which gives the figure a diagonal; the casting arm raised out at the party
+ * with the ember over the hand and the bell sleeve hanging from it in a long
+ * point, one clean wedge of daylight between that point and the robe; and
+ * the back arm swinging the censer wide on its chain, well clear of the
+ * mantle and the hem. The first drawing was a narrow column, and filled
+ * black its robe and mantle were one blob that only the fire, the ember and
+ * the censer rescued; this one spans the whole box, ember to censer. The
+ * Cinder Stoker it fights beside is wide, low and lumpy; this is tall and
+ * spread, on purpose. And it has no hood: the Collector is the hooded one.
  *
- * It uses the `person` footprint rather than `small`: a narrow column in the
- * back row needed the extra tenth to keep its fire and ember readable.
+ * It uses the `person` footprint rather than `small`: a caster in the back
+ * row needs the extra tenth to keep its fire and ember readable. The drawing,
+ * not a bigger footprint, is what makes it read now.
  *
  * Glows are soft shapes marked `ph-glow`, not filters, so the silhouette
  * check can ignore them and a full stage does not pay for a drop shadow.
@@ -67,9 +75,10 @@ export function Acolyte({ unitId, animators, className = "" }: CreatureProps) {
           <stop offset="1" stopColor="#a89aa0" />
         </linearGradient>
         <linearGradient id="aco-hem" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#c7bbb0" />
-          <stop offset="0.55" stopColor="#7c7080" />
-          <stop offset="1" stopColor="#2e2834" />
+          <stop offset="0" stopColor="#eee5d6" />
+          <stop offset="0.45" stopColor="#cbbfb3" />
+          <stop offset="0.8" stopColor="#7c7080" />
+          <stop offset="1" stopColor="#3a3240" />
         </linearGradient>
         <linearGradient id="aco-iron" x1="0" y1="0" x2="0.4" y2="1">
           <stop offset="0" stopColor="#5a5264" />
@@ -101,10 +110,11 @@ export function Acolyte({ unitId, animators, className = "" }: CreatureProps) {
         </radialGradient>
       </defs>
 
-      {/* ---- hem: the robe below the waist, burning up from the edge ---- */}
-      <g ref={hold("hem")} style={{ transformOrigin: "50px 66px" }}>
+      {/* ---- hem: the robe below the waist, trailing away behind it as it
+          drifts, burning up from the edge ---- */}
+      <g ref={hold("hem")} style={{ transformOrigin: "50px 62px" }}>
         <path
-          d="M35 63 L65 63 L71 80 L66 90 L60 83 L55 93 L49 84 L43 92 L39 83 L31 87 L34 76 Z"
+          d="M40 60 L60 60 C63 68 70 79 88 90 L79 88.6 L75 94 L69 88 L63 95 L58 88 L52 93.6 L47.6 86.6 L42.6 91.4 L40 84.6 L36.4 87 C37 77 38 68 40 60 Z"
           fill="url(#aco-hem)"
           stroke="#171420"
           strokeWidth="2.6"
@@ -113,7 +123,7 @@ export function Acolyte({ unitId, animators, className = "" }: CreatureProps) {
         {/* The edge is alight, the way paper burns */}
         <path
           className="aco-burn"
-          d="M34 85 L39 81 L43 89.5 L49 81.5 L55 90.5 L60 80.5 L66 87.5 L69.5 80"
+          d="M37.6 84 L40.6 81.6 L43 88 L47.6 83.4 L52 90.4 L58 85 L63 91.6 L69 85 L75 90.6 L79 85.8 L85 88"
           fill="none"
           stroke="#ff8a3a"
           strokeWidth="1.8"
@@ -121,61 +131,70 @@ export function Acolyte({ unitId, animators, className = "" }: CreatureProps) {
           strokeLinecap="round"
         />
         <g fill="#b0a4ac">
-          <rect className="aco-ash" x="44" y="94" width="2.4" height="2.4" />
+          <rect className="aco-ash" x="46" y="95" width="2.4" height="2.4" />
           <rect
             className="aco-ash aco-ash-b"
-            x="57"
-            y="94"
+            x="66"
+            y="95.4"
             width="2.2"
             height="2.2"
           />
           <rect
             className="aco-ash aco-ash-c"
-            x="36"
-            y="90"
+            x="84"
+            y="93"
             width="2"
             height="2"
           />
         </g>
       </g>
 
-      {/* ---- the back arm: a sleeve hanging, a censer swung out on a chain,
-          clear of the hem so it reads on its own ---- */}
-      <g ref={hold("offArm")} style={{ transformOrigin: "62px 40px" }}>
+      {/* ---- the back arm: a sleeve reaching out behind, and a censer swung
+          wide on a chain, well clear of the mantle and the hem ---- */}
+      <g ref={hold("offArm")} style={{ transformOrigin: "64px 46px" }}>
         <path
-          d="M59 38 L71 42 L77 60 L68 64 L62 50 Z"
+          d="M63 48 L74 47.6 L87.4 53 L83.4 59.6 L74.6 56.6 L66 57 Z"
           fill="url(#aco-mantle)"
           stroke="#171420"
           strokeWidth="2.4"
           strokeLinejoin="round"
         />
         <path
-          d="M74 61 L80.4 73"
+          d="M85.4 58.6 L89.6 63.4"
           stroke="#171420"
           strokeWidth="1.8"
           strokeDasharray="2 1.2"
         />
+        {/* The censer: a pierced iron ball under a pointed lid */}
+        <path
+          d="M85.4 68 Q91 60.4 96.6 68 Z"
+          fill="url(#aco-iron)"
+          stroke="#171420"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
         <circle
-          cx="81.6"
-          cy="78.4"
-          r="5.6"
+          cx="91"
+          cy="71"
+          r="5.4"
           fill="url(#aco-iron)"
           stroke="#171420"
           strokeWidth="2.2"
         />
         <path
           className="aco-censer"
-          d="M77.4 79 H85.8"
+          d="M87 71.6 H95"
           stroke="#ffb35e"
           strokeWidth="2.2"
           strokeLinecap="round"
         />
       </g>
 
-      {/* ---- robe: a bone column, a black mantle, one stole of ember cloth ---- */}
-      <g ref={hold("robe")} style={{ transformOrigin: "50px 64px" }}>
+      {/* ---- robe: a bone column pinched at the waist, a torn black mantle
+          wider than it, one stole of ember cloth ---- */}
+      <g ref={hold("robe")} style={{ transformOrigin: "50px 62px" }}>
         <path
-          d="M37 40 L63 40 L66 67 L34 67 Z"
+          d="M40 47 L60 47 L60.6 62 L39.4 62 Z"
           fill="url(#aco-robe)"
           stroke="#171420"
           strokeWidth="2.6"
@@ -183,33 +202,34 @@ export function Acolyte({ unitId, animators, className = "" }: CreatureProps) {
         />
         {/* The stole, one broad band hanging past the waist */}
         <path
-          d="M42 38 L40 80 L46 75 L52 80 L51 38 Z"
+          d="M43 46 L41.4 79 L46.4 74.6 L51.6 79 L50.6 46 Z"
           fill="#b8461c"
           stroke="#171420"
           strokeWidth="2"
           strokeLinejoin="round"
         />
-        <path d="M47.5 38 L47.5 76" stroke="#7a2a18" strokeWidth="1.6" />
+        <path d="M47 46 L46.8 75.6" stroke="#7a2a18" strokeWidth="1.6" />
         {/* One sigil burnt through it, lit from inside */}
         <rect
           className="aco-sigil"
-          x="43.4"
-          y="55.4"
+          x="44"
+          y="69"
           width="4.2"
           height="4.2"
-          transform="rotate(45 45.5 57.5)"
+          transform="rotate(45 46.1 71.1)"
         />
-        {/* The mantle: charred cloth over the shoulders, torn to three points,
-            lit along the top by the fire above it */}
+        {/* The mantle: charred cloth over the shoulders, wider than the
+            robe and torn to points, so it reads as its own shape; lit along
+            the top by the fire above it */}
         <path
-          d="M32 41 Q50 32 68 41 L69 51 L61 47 L56 54 L49 47 L42 53 L38 47 L31 51 Z"
+          d="M44 43.4 Q50 41.8 56 43.4 C62 45 68 48 72 52.6 L77 63.4 L67.6 58.6 L62.8 64.6 L56.4 59 L50 63.6 L43.6 59 L37.2 64.6 L33 57.4 L30.6 51.4 C34 47.6 38.6 45 44 43.4 Z"
           fill="url(#aco-mantle)"
           stroke="#171420"
           strokeWidth="2.4"
           strokeLinejoin="round"
         />
         <path
-          d="M35 40.6 Q50 34 65 40.6"
+          d="M31 51 C36 46.6 42 44.4 50 44 C58 44.4 64 46.6 69 51"
           fill="none"
           stroke="#ff9a4a"
           strokeWidth="1.6"
@@ -230,7 +250,9 @@ export function Acolyte({ unitId, animators, className = "" }: CreatureProps) {
           ry="20"
           fill="url(#aco-haze)"
         />
-        <path d="M46.5 39 L47.5 33 L52.5 33 L53.5 39 Z" fill="#171420" />
+        {/* A thin neck, long enough that there is daylight either side of it
+            between the bowl and the mantle */}
+        <path d="M46.6 44 L47.6 33 L52.4 33 L53.4 44 Z" fill="#171420" />
         {/* The fire: one big tongue leaning back from the party and curling
             over at the tip, two short licks off its flanks, a fleck torn loose
             above. Drawn behind the bowl so the rim cuts its base. */}
@@ -276,42 +298,44 @@ export function Acolyte({ unitId, animators, className = "" }: CreatureProps) {
         />
       </g>
 
-      {/* ---- casting arm: a bell sleeve reaching out, an ember held up ---- */}
-      <g ref={hold("castArm")} style={{ transformOrigin: "40px 40px" }}>
-        {/* The sleeve hangs in a point beneath the arm */}
+      {/* ---- casting arm: raised out at the party, a bell sleeve hanging from
+          it in a long point with daylight between it and the robe, and an
+          ember held up over the hand ---- */}
+      <g ref={hold("castArm")} style={{ transformOrigin: "38px 47px" }}>
         <path
-          d="M41 38 L22 33 L15 38 L22 61 L29 51 L43 51 Z"
+          d="M41 45 L18 28.6 L13.6 32.8 L19.4 37.6 L10.4 62 L25.4 55.8 L37.6 53.2 Z"
           fill="url(#aco-sleeve)"
           stroke="#171420"
           strokeWidth="2.4"
           strokeLinejoin="round"
         />
+        {/* The sleeve's point is smouldering */}
         <path
-          d="M22.5 60 L28.5 51"
+          d="M12.6 60 L24.8 55"
           stroke="#ff8a3a"
           strokeWidth="1.4"
           strokeLinecap="round"
           opacity="0.85"
         />
-        {/* Long charred fingers under the ember */}
+        {/* A charred hand out of the cuff, long fingers under the ember */}
         <g stroke="#171420" strokeWidth="2.6" strokeLinecap="round" fill="none">
-          <path d="M18 35 L11.5 31" />
-          <path d="M18.5 34.5 L14.5 27.5" />
-          <path d="M20 34.5 L20 28" />
+          <path d="M15.4 31.4 L9.6 28.6" />
+          <path d="M15.8 30.4 L12 24.6" />
+          <path d="M17.4 29.8 L17 23.8" />
         </g>
         {/* The ember: thrown on a cast, and a new one kindles in the palm */}
-        <g ref={hold("ember")} style={{ transformOrigin: "13px 21px" }}>
+        <g ref={hold("ember")} style={{ transformOrigin: "10.6px 18px" }}>
           <circle
             className="aco-halo ph-glow"
-            cx="13"
-            cy="21"
+            cx="10.6"
+            cy="18"
             r="12"
             fill="url(#aco-spark)"
           />
           <circle
-            cx="13"
-            cy="21"
-            r="6.2"
+            cx="10.6"
+            cy="18"
+            r="6.4"
             fill="url(#aco-orb)"
             stroke="#8c2416"
             strokeWidth="1.4"
@@ -322,14 +346,14 @@ export function Acolyte({ unitId, animators, className = "" }: CreatureProps) {
       {/* ---- cinders: live embers hanging around it in the heat ---- */}
       <g ref={hold("cinders")} style={{ transformOrigin: "50px 46px" }}>
         <g stroke="#171420" strokeWidth="1.4" strokeLinejoin="round">
-          <path className="aco-cinder" d="M76 22 L80 19 L83 23 L79 27 Z" />
+          <path className="aco-cinder" d="M74 20 L78 17 L81 21 L77 25 Z" />
           <path
             className="aco-cinder aco-cinder-b"
-            d="M82 40 L85.5 37.5 L88 41 L84.5 44 Z"
+            d="M82 36 L85.5 33.5 L88 37 L84.5 40 Z"
           />
           <path
             className="aco-cinder aco-cinder-c"
-            d="M22 70 L25.5 67.5 L28 71 L24.5 73.5 Z"
+            d="M16 80 L19.5 77.5 L22 81 L18.5 83.5 Z"
           />
         </g>
       </g>
