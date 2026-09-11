@@ -1,17 +1,18 @@
 # Handoff
 
-Updated 2026-09-11 · branch `boss-objectives`, 37 commits ahead of `main`
+Updated 2026-09-11 · `main`, after merging `boss-objectives` (PR #1)
 
 **Read this first, then `BALANCE.md`.** Everything below is current as of the
 last commit. Counts come from `validateContent()`, not memory.
 
 ## Where the work lives
 
-The route/upgrade/healing work is merged into `main`. Boss objectives,
-supplies and the reliability pass sit on **`boss-objectives`**, not merged.
-The repository is on GitHub as a private repo, `brianlo06/dungeon-pact`, with
-`main`, `balance-and-upgrades` and `boss-objectives` pushed. `main` is the
-default branch and does not yet have this work.
+Everything is on `main`: the route, upgrade and healing work, then boss
+objectives, supplies, the reliability pass and the presentation and art pass,
+merged from `boss-objectives` in PR #1 with a merge commit so each commit's
+reasoning survives. The repository is a private GitHub repo,
+`brianlo06/dungeon-pact`. The old branches are kept but fully merged; start new
+work on a fresh branch off `main` and land it through a pull request.
 
 Codex is working in the same tree on presentation. Its boss preview harness
 (`src/dev/`, `dev/bosses.html`, `docs/BOSS_PREVIEW.md`) is committed alongside
