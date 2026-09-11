@@ -6,7 +6,13 @@ import { encounters } from "../content/encounters";
 import type { RunState } from "../shared/model";
 
 export type Boss = "collector" | "miser";
-export type Stage = "opening" | "objective" | "resolved" | "released";
+/**
+ * `windup` is the first round in which the boss — or, in an ordinary
+ * encounter, any enemy — has an interruptible move announced, so the held
+ * windup pose can be looked at without playing rounds to reach it.
+ */
+export type Stage =
+  "opening" | "objective" | "resolved" | "released" | "windup";
 export interface FixtureOptions {
   boss: Boss;
   size: 2 | 3 | 4;
@@ -94,7 +100,16 @@ export function bossFixture(options: FixtureOptions): RunState {
       if (s.enemies.map((e) => e.definition).join() !== formation.join())
         continue;
     } else if (s.enemies[0].definition !== options.boss) continue;
-    if (!formation && options.stage !== "opening") {
+    if (options.stage === "windup") {
+      const watched = formation ? s.enemies : s.enemies.slice(0, 1);
+      const winding = () =>
+        watched.some((e) => e.hp > 0 && e.intent.ability.interruptible);
+      // Rounds past the escalation clock would change the numbers; stop short.
+      for (let round = 2; round <= 6 && !winding(); round++) {
+        s.round = round;
+        prepareIntents(s);
+      }
+    } else if (!formation && options.stage !== "opening") {
       s.round = options.boss === "collector" ? (options.legacy ? 2 : 3) : 1;
       prepareIntents(s);
     }

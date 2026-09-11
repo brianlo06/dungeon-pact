@@ -94,6 +94,14 @@ export interface DirectorHooks {
   onSound?: (name: SfxName) => void;
   /** Ask a combatant for a clip. The director never knows how it is drawn. */
   onClip?: (unit: string, clip: ClipName, then?: ClipName) => void;
+  /**
+   * Change the loop a combatant returns to between actions. The stage sets
+   * it from the settled board — a held windup while a wind-up is announced —
+   * and leaves it alone during a replay, which is the round *before* that
+   * board. Only the replay knows the moment a held wind-up ends: when the
+   * move lands, or when it is interrupted.
+   */
+  onRest?: (unit: string, clip: ClipName) => void;
 }
 
 export function useDirector(
@@ -170,8 +178,12 @@ export function useDirector(
     switch (beat.kind) {
       case "cast":
         next.title = { text: beat.label ?? "", actor: beat.actor };
-        if (beat.actor)
+        if (beat.actor) {
+          // Whatever it was holding, it has now spent: the strike hands back
+          // to idle, not to the pose it has just released.
+          hooksRef.current.onRest?.(beat.actor, "idle");
           hooksRef.current.onClip?.(beat.actor, castClip(snap.current, beat));
+        }
         add({ kind: "cast", from: beat.actor, life: 420 });
         if (beat.actor && beat.target && beat.actor !== beat.target)
           add({
@@ -218,8 +230,15 @@ export function useDirector(
           add({ kind: "seize", from: beat.target, to: "strongbox", life: 720 });
         else if (beat.label === "RECLAIMED")
           add({ kind: "reclaim", from: beat.target, life: 760 });
-        else if (beat.label === "INTERRUPTED")
+        else if (beat.label === "INTERRUPTED") {
           add({ kind: "interrupt", to: beat.target, life: 520 });
+          // The held pose breaks: a flinch, and back to idle rather than to
+          // the wind-up it no longer has.
+          if (beat.target) {
+            hooksRef.current.onRest?.(beat.target, "idle");
+            hooksRef.current.onClip?.(beat.target, "hurt");
+          }
+        }
         hooksRef.current.onShake?.(0.014);
         hooksRef.current.onSound?.(
           beat.label === "SEIZED"
@@ -302,8 +321,19 @@ export function useDirector(
 
   useEffect(() => () => cancelAnimationFrame(raf.current), []);
 
+  // A round that has arrived but whose replay has not started yet. The
+  // snapshot renders once before the effect above rewinds it, and without
+  // this that render reports the settled board of a round about to be
+  // replayed — so anything reacting to "not playing" would act on it.
+  const pending =
+    !!s &&
+    !reduced &&
+    s.phase === "COMBAT" &&
+    s.logs.some((l) => l.seq > seen.current && !!l.beat);
+
   return {
     ...cues,
+    playing: cues.playing || pending,
     speed,
     setSpeed,
     paused,

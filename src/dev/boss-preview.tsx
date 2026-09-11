@@ -164,6 +164,7 @@ function BossPreview() {
             >
               <option value="opening">Opening briefing</option>
               <option value="objective">Objective intent</option>
+              <option value="windup">Wind-up intent</option>
               <option value="resolved">After objective resolves</option>
               {options.boss === "collector" && (
                 <option value="released">Strongbox broken</option>
