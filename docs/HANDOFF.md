@@ -42,8 +42,10 @@ for each figure and why the medium changed.
 
 Verified at the last commit: 233 unit tests across 21 files, 373 browser
 checks across four resolutions (plus three informational frame-time checks
-that run only at 1920×1080), and a production build. The 12 real-WebSocket
-checks were last run before the art pass, which touched no server code. **Neither the boss
+that run only at 1920×1080), a production build, and 13 real-WebSocket checks
+against a local Worker. The thirteenth is new: the room server threw on every
+ordinary socket close and never told the party someone had left, which the old
+twelve could not see. **Neither the boss
 objectives nor the supplies have been driven in a browser by this session** —
 reaching a boss by hand takes a full run. Codex's preview harness exists
 precisely to make that cheap; use it.
