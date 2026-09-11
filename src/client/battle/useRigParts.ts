@@ -32,5 +32,8 @@ export function useRigParts(
   }, [animators, unitId]);
   return (name: string) => (el: SVGGElement | null) => {
     refs.current[name] = el;
+    // Named in the drawing too, so the stage can measure a pose the rig
+    // holds (a raised key) without waiting for the animator to reach it.
+    if (el) el.dataset.part = name;
   };
 }

@@ -75,6 +75,54 @@ describe("placing intent chips", () => {
     expect(moved.top).toBeGreaterThanOrEqual(frame.top);
   });
 
+  it("steps a chip off its own creature's painted figure", () => {
+    // A key raised past the top of the creature's square, into the chip.
+    const chip = box(400, 100, 110, 30);
+    const figure = box(410, 120, 90, 110);
+    const out = placeChips(
+      [{ id: "a", box: chip, owner: box(405, 132, 100, 100), figure }],
+      [],
+      frame,
+      [figure],
+    );
+    const moved = shifted(chip, out.get("a")!);
+    expect(hits(moved, figure)).toBe(false);
+    // Above it, still over its creature, rather than off to one side.
+    expect(moved.bottom).toBeLessThanOrEqual(figure.top);
+    expect(moved.right).toBeGreaterThan(figure.left);
+    expect(moved.left).toBeLessThan(figure.right);
+  });
+
+  it("uses the empty top of the square rather than leave the frame", () => {
+    // No room above the square: the chip may sink into its bare corners,
+    // but not onto the drawing.
+    const top = box(0, 40, 1000, 560);
+    const chip = box(400, 20, 110, 30);
+    const figure = box(420, 85, 70, 100);
+    const out = placeChips(
+      [{ id: "a", box: chip, owner: box(405, 52, 100, 100), figure }],
+      [],
+      top,
+      [figure],
+    );
+    const moved = shifted(chip, out.get("a")!);
+    expect(moved.top).toBeGreaterThanOrEqual(top.top);
+    expect(hits(moved, figure)).toBe(false);
+  });
+
+  it("never trades a name plate for its own creature", () => {
+    const chip = box(400, 100, 110, 30);
+    const figure = box(410, 120, 90, 110);
+    const plate = box(300, 60, 320, 40);
+    const out = placeChips(
+      [{ id: "a", box: chip, owner: box(405, 132, 100, 100), figure }],
+      [plate],
+      frame,
+      [figure],
+    );
+    expect(hits(shifted(chip, out.get("a")!), plate)).toBe(false);
+  });
+
   it("gives the same answer every time it is asked", () => {
     const chips = [
       { id: "a", box: box(400, 200, 110, 30), owner: box(405, 232, 100, 100) },

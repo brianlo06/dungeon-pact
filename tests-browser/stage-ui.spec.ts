@@ -241,6 +241,157 @@ function chipFaults(page: Page) {
   });
 }
 
+/**
+ * What each combatant paints, where its name plate is, its chip and its paint
+ * order. The figure is the drawing's own outline, glows aside, in whatever
+ * pose it holds right now — not the square it is drawn in.
+ */
+function field(page: Page) {
+  return page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>(".combatant")].map((u) => {
+      const name = u.querySelector(".combatant-name")?.textContent?.trim();
+      const svg = u.querySelector<SVGSVGElement>("svg.combatant-sprite");
+      let figure: Record<string, number> | null = null;
+      if (svg) {
+        const glows = [...svg.querySelectorAll<SVGElement>(".ph-glow")];
+        glows.forEach((g) => (g.style.display = "none"));
+        const bb = svg.getBBox();
+        glows.forEach((g) => (g.style.display = ""));
+        // Through the whole transform, rig included, so a figure the rig has
+        // turned — a fallen hero lying on the floor — is measured as drawn.
+        const m = svg.getScreenCTM()!;
+        const corners = [
+          [bb.x, bb.y],
+          [bb.x + bb.width, bb.y],
+          [bb.x, bb.y + bb.height],
+          [bb.x + bb.width, bb.y + bb.height],
+        ].map(([x, y]) => new DOMPoint(x, y).matrixTransform(m));
+        figure = {
+          left: Math.min(...corners.map((p) => p.x)),
+          right: Math.max(...corners.map((p) => p.x)),
+          top: Math.min(...corners.map((p) => p.y)),
+          bottom: Math.max(...corners.map((p) => p.y)),
+        };
+      }
+      const box = (el: Element | null) => {
+        const r = el?.getBoundingClientRect();
+        return r && r.width > 1
+          ? { left: r.left, right: r.right, top: r.top, bottom: r.bottom }
+          : null;
+      };
+      return {
+        name,
+        z: Number(u.style.zIndex),
+        figure,
+        plate: box(u.querySelector(".combatant-plate")),
+        chip: box(u.querySelector(".intent-chip")),
+        chipText: u.querySelector(".intent-chip")?.textContent,
+      };
+    }),
+  );
+}
+
+type Rect = { left: number; right: number; top: number; bottom: number };
+/** Overlap past the couple of pixels an idle sway accounts for. */
+const covers = (a: Rect | null, b: Rect | null) =>
+  !!a &&
+  !!b &&
+  Math.min(a.right, b.right) - Math.max(a.left, b.left) > 2 &&
+  Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 2;
+
+const FIGHTS = [
+  { encounter: "furnace-watch" },
+  { encounter: "hunting-pack" },
+  { encounter: "smoke-line" },
+  { encounter: "repair-detail" },
+  { encounter: "toll-collectors" },
+  { boss: "collector" },
+  { boss: "miser" },
+];
+
+test.describe("no figure is drawn over somebody's name plate", () => {
+  for (const fight of FIGHTS) {
+    const name = fight.encounter ?? fight.boss;
+    test(`${name}: at any party size, with either line-up`, async ({
+      page,
+    }) => {
+      test.setTimeout(90_000);
+      const scenes = [
+        "vanguard,arcanist,ranger,warden",
+        "broker,herald,reaver,beguiler",
+      ].flatMap((heroes) =>
+        [4, 3, 2].map((party) => ({ heroes, party, downed: 0 })),
+      );
+      // A fallen hero lies across the floor, wider than it stood.
+      scenes.push(
+        { heroes: "vanguard,arcanist,ranger,warden", party: 4, downed: 1 },
+        { heroes: "vanguard,arcanist,ranger,warden", party: 2, downed: 1 },
+      );
+      for (const { heroes, party, downed } of scenes) {
+        await lab(page, { ...fight, party, heroes, downed });
+        await page.evaluate(() => document.fonts.ready);
+        await settledOffsets(page);
+        // Long enough for a fall to have finished.
+        if (downed) await page.waitForTimeout(900);
+        const units = await field(page);
+        const faults: string[] = [];
+        // A nearer combatant paints later; its figure is the one on top.
+        for (const a of units)
+          for (const b of units)
+            if (a !== b && a.z > b.z && covers(a.figure, b.plate))
+              faults.push(`${a.name} covers ${b.name}'s plate`);
+        expect(faults, `${name} party ${party} ${heroes} ${downed}`).toEqual(
+          [],
+        );
+      }
+    });
+  }
+});
+
+test.describe("no intent chip sits on its own creature", () => {
+  for (const fight of FIGHTS) {
+    const name = fight.encounter ?? fight.boss;
+    test(`${name}: planning and wind-up, at any party size`, async ({
+      page,
+    }) => {
+      test.setTimeout(90_000);
+      for (const stage of ["objective", "windup"])
+        for (const party of [4, 3, 2]) {
+          await lab(page, { ...fight, party, stage });
+          await page.evaluate(() => document.fonts.ready);
+          await settledOffsets(page);
+          // Long enough for a held wind-up to have eased all the way in.
+          await page.waitForTimeout(400);
+          const faults = (await field(page))
+            .filter((u) => covers(u.chip, u.figure))
+            .map((u) => `"${u.chipText}" sits on ${u.name}`);
+          expect(faults, `${name} ${stage} party ${party}`).toEqual([]);
+          // A wind-up chip once dropped onto its creature to stay on screen;
+          // it must now do neither, and still keep off plates and chips.
+          if (stage === "windup")
+            expect(
+              (await chipFaults(page)).faults,
+              `${name} windup party ${party}`,
+            ).toEqual([]);
+        }
+    });
+  }
+
+  test("the Collector's raised key clears its own chip", async ({ page }) => {
+    await lab(page, { boss: "collector", party: 4, stage: "windup" });
+    await settledOffsets(page);
+    await page.waitForTimeout(400);
+    const collector = (await field(page)).find(
+      (u) => u.name === "The Collector",
+    )!;
+    expect(collector.chipText).toContain("WINDUP");
+    // Above its creature, and still over it.
+    expect(collector.chip!.bottom).toBeLessThanOrEqual(collector.figure!.top);
+    expect(collector.chip!.right).toBeGreaterThan(collector.figure!.left);
+    expect(collector.chip!.left).toBeLessThan(collector.figure!.right);
+  });
+});
+
 /** Where the layout pass put each chip. */
 const offsets = (page: Page) =>
   page.evaluate(() =>

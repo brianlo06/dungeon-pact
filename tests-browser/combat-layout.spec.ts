@@ -167,6 +167,108 @@ test.describe("everything the player needs is on screen", () => {
   });
 });
 
+/** Wait for the camera to stop moving: two identical readings in a row. */
+async function cameraSettled(page: Page) {
+  let last = "";
+  for (let i = 0; i < 40; i++) {
+    const now = await page
+      .locator(".world")
+      .evaluate((el) => (el as HTMLElement).style.transform);
+    if (now && now === last) return;
+    last = now;
+    await page.waitForTimeout(120);
+  }
+}
+
+/**
+ * Every name plate in the nearest rank that is not wholly on the stage. The
+ * stage clips, so a plate past its bottom edge is a health bar nobody sees.
+ */
+function lostPlates(page: Page) {
+  return page.evaluate(() => {
+    const stage = document.querySelector(".stage")!.getBoundingClientRect();
+    const plates = [
+      ...document.querySelectorAll<HTMLElement>(".combatant[data-side='hero']"),
+    ].map((u) => ({
+      name: u.querySelector(".combatant-name")?.textContent,
+      b: u.querySelector(".combatant-plate")!.getBoundingClientRect(),
+    }));
+    const floor = Math.max(...plates.map((p) => p.b.bottom));
+    return plates
+      .filter((p) => p.b.bottom > floor - 30)
+      .filter(
+        (p) => p.b.bottom > stage.bottom + 0.5 || p.b.top < stage.top - 0.5,
+      )
+      .map(
+        (p) =>
+          `${p.name}'s plate ends ${Math.round(p.b.bottom - stage.bottom)}px below the stage`,
+      );
+  });
+}
+
+test.describe("the back row's health stays on screen when the camera leans in", () => {
+  for (const fight of [
+    { boss: "collector", party: 4 },
+    { encounter: "repair-detail", party: 4 },
+    { encounter: "hunting-pack", party: 3 },
+  ])
+    test(`while a target is picked: ${fight.encounter ?? fight.boss}`, async ({
+      page,
+    }) => {
+      test.setTimeout(60_000);
+      await open(page, { ...fight, stage: "objective" });
+      await cameraSettled(page);
+      expect(await lostPlates(page), "choosing").toEqual([]);
+      await page
+        .locator(".fan-slip:not([data-common]) > button")
+        .first()
+        .click();
+      const enemies = page.locator(
+        ".combatant[data-side='enemy'] .combatant-body",
+      );
+      // The back rank is the one that tips the camera furthest up.
+      for (let i = 0; i < (await enemies.count()); i++) {
+        await enemies.nth(i).click();
+        await cameraSettled(page);
+        expect(await lostPlates(page), `target ${i}`).toEqual([]);
+      }
+    });
+
+  test("while a round plays back, beat by beat", async ({ page }) => {
+    test.setTimeout(90_000);
+    await open(
+      page,
+      {
+        boss: "collector",
+        party: 4,
+        stage: "objective",
+        motion: 1,
+        tempo: 0.2,
+      },
+      true,
+    );
+    await page.locator(".fan-slip:not([data-common]) > button").first().click();
+    await page
+      .locator(".combatant[data-side='enemy'] .combatant-body")
+      .first()
+      .click();
+    await page.getByRole("button", { name: "Finish round" }).click();
+    const playback = page.locator(".strip-playback");
+    await expect(playback).toBeVisible();
+    await playback.getByRole("button", { name: "Pause" }).click();
+    let beats = 0;
+    for (; beats < 14 && (await playback.isVisible()); beats++) {
+      await cameraSettled(page);
+      expect(await lostPlates(page), `beat ${beats}`).toEqual([]);
+      const next = playback.locator('button[title="Next beat"]');
+      if (!(await next.isVisible())) break;
+      await next.click();
+    }
+    // The round had beats to look at: heroes and the boss acting, both ways.
+    expect(beats).toBeGreaterThan(2);
+  });
+});
+
 test.describe("the chronicle overlays and never resizes the fight", () => {
   test("opening and closing it leaves the stage exactly where it was", async ({
     page,
