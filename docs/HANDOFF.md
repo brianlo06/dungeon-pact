@@ -1,6 +1,6 @@
 # Handoff
 
-Updated 2026-09-11 · `main`, after merging `boss-objectives` (PR #1)
+Updated 2026-09-11 · `main`
 
 **Read this first, then `BALANCE.md`.** Everything below is current as of the
 last commit. Counts come from `validateContent()`, not memory.
@@ -43,12 +43,12 @@ SVG cutout rigs with named moving parts. Only the auctioneer and the reward
 chest still come from the generated atlas. `ART_DIRECTION.md` has the direction
 for each figure and why the medium changed.
 
-Verified at the last commit: 233 unit tests across 21 files, 373 browser
+Verified at the last commit: 300 unit tests across 25 files, 493 browser
 checks across four resolutions (plus three informational frame-time checks
 that run only at 1920×1080), a production build, and 13 real-WebSocket checks
-against a local Worker. The thirteenth is new: the room server threw on every
-ordinary socket close and never told the party someone had left, which the old
-twelve could not see. Both boss fights have
+against a local Worker — the thirteenth added after the room server was found
+throwing on every ordinary socket close, so the party was never told when
+someone left. Both boss fights have
 been driven in a browser many times over through the Battle Lab, which stages
 any fight by URL. **Supplies have not been driven in a browser** — buying one
 happens at an exchange, which the lab does not stage — only by the simulation
@@ -79,32 +79,37 @@ frames before or after — the gain there is about a fifth less GPU and raster
 work — at a cost of 10–25ms/s more main-thread time. Safari, which does not
 layer SVG parts the same way, has not been measured. `tests/perf-css.test.ts`
 and `tests-browser/perf.spec.ts` hold the rules that made the difference.
-What is left, all presentation and none of it blocking:
+The last round of loose ends is also done: units are placed by measuring what
+they paint, so no figure covers a name plate and back-row plates stay on
+screen; chips keep off their own creature; replays are capped (at six seconds,
+not the four the art direction used to claim — see there for why); reduced
+motion stills every combatant; the downed-hero fall no longer races a timer;
+the Battle Lab applies tempo from the first frame; tests read what each rig is
+playing from a `data-clip` attribute instead of React's internals; and the
+Miser and the Acolyte were redrawn to read in flat black.
 
-- **Bodies still cover name plates.** Chips are laid out, units are not: at
-  three heroes Bram's hat covers the Collector's and the Stoker's plates, and
-  the front-row Collector covers the Kiln Mender's. That is unit placement in
-  `layout.ts`.
-- **Back-row hero plates clip at the bottom of the stage** whenever the camera
-  zooms in.
-- **A replay runs about ten seconds**, not the four `ART_DIRECTION.md` claims.
-  Either the step-duration cap is not doing its job or the claim is stale.
-- **Chips can sit on their own creature's art.** Placement keeps chips clear of
-  name plates and each other, not of bodies — the Collector's key crosses its
-  own chip.
-- **At 1280×720 three-line WINDUP chips on back-row enemies** drop 14–20px onto
-  their own creature so they stay on screen at the tightest camera framing.
-- **Reduced motion still animates held poses.** It turns off replay; idles and
-  the held windup still loop.
-- **The downed-hero fall still waits on a 60ms timer.** The same approach failed
-  under load for the windup and was replaced there; the fall probably no longer
-  needs it.
-- **The Battle Lab applies tempo late**, after animators register, so slowed
-  captures are sometimes at full speed. Capture only.
-- **Two browser tests read clips through React's fiber internals**, which will
-  break if React changes how it stores props.
-- **Weakest figures now:** the Miser in flat black (better, not yet as iconic as
-  the Collector's key) and the Acolyte, still the smallest thing on the field.
+What is left, all small:
+
+- **The held wind-up costs frames.** A boss holding a wind-up pulses a faint
+  glow over its whole figure, which is a filter on animating SVG for the whole
+  planning phase. The frame-rate rules allow it; nobody has measured it.
+- **The operating system's reduced-motion setting** stops CSS animation but
+  does not switch the game's own reduced-motion mode, which is what stills the
+  rigs and skips replay.
+- **At 2× replay speed hits can land before strikes.** The speed control
+  halves beat lengths but not the animation clips.
+- **Beats play strictly one after another,** so four heroes bracing take about
+  two seconds of a replay.
+- **The camera leans up and down far less than it did,** because it must keep
+  the whole board on screen while the player decides. Sideways lean and zoom
+  are unchanged. If the camera feels flat, that is why.
+- **Small leftovers:** a fallen hero's lying figure overlaps its own plate a
+  little; dead enemies are measured standing; the unit layout takes 5–11ms per
+  stage change; in the widest action fans an inner slip's hover detail covers
+  the fan's own outer slips.
+- **Weakest figures:** the Miser's head is a clean toad now, but alone it could
+  be any frog — the hand and the coin crest are what make it the Miser. The
+  Acolyte's dark mantle sinks into the dark back wall in colour.
 
 ### 1. The Vanguard/Warden gap is now a ceiling problem
 
