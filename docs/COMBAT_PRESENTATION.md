@@ -135,20 +135,19 @@ because it was never an enemy that had to die.
 
 ## Still to build
 
-Phases C–I of the overhaul are not done. In rough priority:
+Much of the original list (phases C–I) has since been built by the
+presentation and art pass; `ART_DIRECTION.md` and the first item of
+`HANDOFF.md` are the current record.
 
-- **C** real 2.5D — parallax scenery, atmospheric particles, foreground
-  occlusion, camera translation and zoom.
-- **F** presentation metadata on content (`animationKey`, `vfxKey`,
-  `cameraPreset`), so an ability picks its own effect instead of the director
-  inferring one from the beat kind. The schema must be optional and default
-  cleanly. Creature footprints move there too.
-- **G** boss entrances, boss HUD, phase transitions.
-- **Sprite animation.** Every combatant is still a single cell that breathes
-  via transform. Idle/attack/cast/hurt/downed sheets have somewhere to plug in
-  and do not exist.
-- **H** creature art direction.
-- **I** timing, shake control, audio balance.
+- **Done:** camera translation and zoom (`battle/camera.ts`); parallax scenery
+  and a foreground layer that never covers a combatant (`Foundry.tsx`); boss
+  entrances (`BossIntro.tsx`); the presentation schema (`shared/presentation.ts`)
+  with creature footprints in content; every combatant drawn as an animated
+  cutout rig, which replaced the sprite-sheet plan; and creature art direction.
+- **Not re-audited against this list:** atmospheric particles, a boss HUD
+  beyond the ENRAGED tag, phase transitions, whether every ability supplies its
+  own effect rather than the director inferring one, and **I** — timing, shake
+  control and audio balance.
 
 ## Rules any of that must keep
 

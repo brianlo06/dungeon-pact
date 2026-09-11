@@ -38,7 +38,9 @@ the checkbox enables the normal round playback and Skip control.
 
 ## Presentation fixes
 
-- Restored combat foundations in `src/client/combat.css`, imported before the
+- _Superseded:_ `combat.css` was removed when combat moved onto one
+  battlefield (`952f567`); its rules now live in `battle.css`. Kept for the
+  record: restored combat foundations in `src/client/combat.css`, imported before the
   existing responsive rules. Commit `e463b5e` had removed them with a larger
   route-map CSS replacement: health bars disappeared, card labels ran together,
   and formations lost their grid. The restored rules preserve the prior art

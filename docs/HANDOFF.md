@@ -14,9 +14,11 @@ The repository is on GitHub as a private repo, `brianlo06/dungeon-pact`, with
 default branch and does not yet have this work.
 
 Codex is working in the same tree on presentation. Its boss preview harness
-(`src/dev/`, `dev/bosses.html`, `docs/BOSS_PREVIEW.md`) and the `BossObjective`
-component are committed alongside this work at the user's direction. `npm run
-build` excludes the preview from production.
+(`src/dev/`, `dev/bosses.html`, `docs/BOSS_PREVIEW.md`) is committed alongside
+this work at the user's direction and has grown into the Battle Lab the browser
+tests run against. The `BossObjective` component it added was removed when
+combat moved onto one battlefield; the objective now sits in the combat strip.
+`npm run build` excludes the preview from production.
 
 ## What the game is now
 
@@ -45,10 +47,11 @@ checks across four resolutions (plus three informational frame-time checks
 that run only at 1920×1080), a production build, and 13 real-WebSocket checks
 against a local Worker. The thirteenth is new: the room server threw on every
 ordinary socket close and never told the party someone had left, which the old
-twelve could not see. **Neither the boss
-objectives nor the supplies have been driven in a browser by this session** —
-reaching a boss by hand takes a full run. Codex's preview harness exists
-precisely to make that cheap; use it.
+twelve could not see. Both boss fights have
+been driven in a browser many times over through the Battle Lab, which stages
+any fight by URL. **Supplies have not been driven in a browser** — buying one
+happens at an exchange, which the lab does not stage — only by the simulation
+and unit tests.
 
 ## What is worth doing next
 

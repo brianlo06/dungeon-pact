@@ -433,8 +433,9 @@ both policies.
    no Warden and no Vanguard.
 3. Confirm the branch choice reads as a real decision rather than an obvious
    pick, and that people can explain their build afterwards.
-4. Record planning time and stale-action retries; exact-revision rejection may
-   frustrate simultaneous lock-ins.
+4. Record planning time and stale-action retries. Exact-revision rejection has
+   since been replaced by decision epochs, so simultaneous lock-ins in one
+   moment no longer collide; confirm that holds with real people.
 5. Monitor all-down defeats, whether the rising revival price changes behaviour,
    and time spent as a spirit.
 6. Test whether the camp's three priced options genuinely compete.
