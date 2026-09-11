@@ -13,3 +13,6 @@ art-out/
 /test-results/
 /playwright-report/
 /blob-report/
+
+# Parallel agent checkouts
+.claude/worktrees/
