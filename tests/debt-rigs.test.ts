@@ -1,6 +1,10 @@
 import { expect, it } from "vitest";
 import { DEBT_RIGS } from "../src/client/battle/rigs-debt";
-import { sampleTrack, type Pose } from "../src/client/battle/animation";
+import {
+  sampleTrack,
+  type Clip,
+  type Pose,
+} from "../src/client/battle/animation";
 import { rigFor } from "../src/client/battle/rigs";
 
 /**
@@ -74,6 +78,36 @@ it("carries every clip the director and the boss presentation ask for", () => {
   }
   expect(DEBT_RIGS.miser.windup?.loop).toBe(true);
   expect(DEBT_RIGS.miser.signature).toBeDefined();
+});
+
+it("rakes the Miser's hand out past its held wind-up when the levy lands", () => {
+  // Where the palm is, in view-box units, for a sampled hand pose and root.
+  // The arm pivots at the shoulder (44, 50); the palm sits at (16, 65). Part
+  // and root translations are fractions of the 100-unit box.
+  type Sampled = ReturnType<typeof sampleTrack>;
+  const palmX = (hand: Sampled, root: Sampled) => {
+    const a = (hand.rotate * Math.PI) / 180;
+    const [dx, dy] = [16 - 44, 65 - 50];
+    return 44 + dx * Math.cos(a) - dy * Math.sin(a) + (hand.x + root.x) * 100;
+  };
+  const reach = (clip: Clip) => {
+    let best = Infinity;
+    for (let i = 0; i <= 200; i++) {
+      const t = i / 200;
+      const x = palmX(
+        sampleTrack(clip.parts!.hand, t),
+        sampleTrack(clip.poses, t),
+      );
+      best = Math.min(best, x);
+    }
+    return best;
+  };
+  const { windup, signature, hurt, block } = DEBT_RIGS.miser;
+  // Forward is negative x: the impact reaches the party, not its own heap.
+  expect(reach(signature!)).toBeLessThan(reach(windup!) - 15);
+  // A flinch over a held wind-up leaves the raised hand where it is.
+  expect(hurt!.parts!.hand).toBeUndefined();
+  expect(block!.parts!.hand).toBeUndefined();
 });
 
 it("keeps flash on the root, the only place the animator applies it", () => {

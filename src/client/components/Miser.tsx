@@ -8,14 +8,17 @@ import "../creatures-debt.css";
  * The Miser.
  *
  * The Collector is a creditor who takes; this is a hoarder who keeps. It is
- * drawn as a hunched, toad-headed thing squatting in a heap of coins, counting
- * — one long arm always reaching down to the stacks in front of it, a
- * jeweller's loupe screwed into one eye, a wide lipless mouth with one gold
- * tooth, and across its back a shawl sewn with coins.
+ * drawn as a hunched toad squatting in a heap of coins, counting — one long
+ * arm always held out over the stacks in front of it, ending in a hand too big
+ * for it, a jeweller's loupe screwed into one bulging eye, a wide lipless
+ * mouth with one gold tooth, and across its back a shawl sewn with coins.
  *
  * It is deliberately a creature and not an old man. A gold-counting miser with
  * a hooked nose and a skullcap is an ugly caricature with a long history, and
  * the first sketch of this drifted towards it; the toad's head was the fix.
+ * Everything since has pushed further from a person: olive, warted skin, a
+ * throat sac, eyes on domes with a toad's flat pupil, a blunt snout with a
+ * pinhole for a nostril, and four fingers ending in round pads.
  *
  * The shawl is the objective. It shields itself with whatever gold the pact
  * still holds, so the coins on its back are the party's own treasury: the
@@ -27,10 +30,12 @@ import "../creatures-debt.css";
  *
  * Silhouette: low, wide and back-heavy — the opposite of the Collector's tall
  * wedge. The mass is a hump high on the right with a crest of coins along its
- * spine; a wide flat head juts forward and low, the loupe breaking its
- * outline; a long thin arm reaches down-forward to the stacks, with real
- * negative space between arm, knee and body. No hood, no crown, no key: none
- * of the Collector's shapes.
+ * spine, and a broad flat head juts forward with two eye domes on top. What
+ * breaks the outline, the way the key breaks the Collector's, is the hand:
+ * four long knuckled fingers splayed over the stacks with daylight between
+ * them, each ending in a round bulb, on a thin arm held clear of the jaw.
+ * Raised over its head in a wind-up it is the whole threat. No hood, no crown,
+ * no key: none of the Collector's shapes.
  */
 const PARTS = [
   "body",
@@ -92,6 +97,23 @@ const CREST: [number, number, number, number][] = [
   [89.6, 31, 58, 5.5],
 ];
 
+/**
+ * The hand's four fingers, knuckled, splayed and hanging, and the pads at
+ * their tips. Hovering just over the tallest stack, never quite resting.
+ */
+const FINGERS = [
+  "M12 65 L4.6 69.6 L1.8 77.6",
+  "M13.8 68.4 L8.6 74 L7.6 81.4",
+  "M17.6 69.4 L16.2 76 L16.8 83",
+  "M21.6 68 L25.4 73.4 L27.6 80",
+];
+const PADS: [number, number][] = [
+  [1.8, 77.6],
+  [7.6, 81.4],
+  [16.8, 83],
+  [27.6, 80],
+];
+
 export type Hoard = "bare" | "lined" | "hoarding";
 
 export function Miser({
@@ -143,10 +165,38 @@ export function Miser({
           <stop offset="1" stopColor="#2a1729" />
         </linearGradient>
         <linearGradient id="msr-skin" x1="0" y1="0" x2="0.6" y2="1">
-          <stop offset="0" stopColor="#c9b7a2" />
-          <stop offset="0.6" stopColor="#937e76" />
-          <stop offset="1" stopColor="#56444a" />
+          <stop offset="0" stopColor="#aaa162" />
+          <stop offset="0.55" stopColor="#737042" />
+          <stop offset="1" stopColor="#3e3d27" />
         </linearGradient>
+        <linearGradient id="msr-finger" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#8a8450" />
+          <stop offset="1" stopColor="#5e5b36" />
+        </linearGradient>
+        <linearGradient id="msr-throat" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#e2cf88" />
+          <stop offset="1" stopColor="#b49a52" />
+        </linearGradient>
+        <radialGradient id="msr-iris" cx="0.4" cy="0.35">
+          <stop offset="0" stopColor="#ffe89a" />
+          <stop offset="1" stopColor="#c7861f" />
+        </radialGradient>
+        <linearGradient id="msr-brass" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#d9b066" />
+          <stop offset="1" stopColor="#7c5722" />
+        </linearGradient>
+        <radialGradient id="msr-lens-glow">
+          <stop offset="0" stopColor="#e6f6b4" stopOpacity="0.7" />
+          <stop offset="1" stopColor="#c9e27a" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="msr-lens-hot">
+          <stop offset="0" stopColor="#ffb07a" stopOpacity="0.85" />
+          <stop offset="1" stopColor="#ff6a2e" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="msr-halo">
+          <stop offset="0.45" stopColor="#ffd36a" stopOpacity="0.85" />
+          <stop offset="1" stopColor="#ffb24a" stopOpacity="0" />
+        </radialGradient>
         <linearGradient id="msr-gold" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#f8dc8e" />
           <stop offset="0.55" stopColor="#d8a543" />
@@ -262,6 +312,15 @@ export function Miser({
           fill="none"
           opacity="0.8"
         />
+        {/* The glow of banked Barrier: soft shapes behind the set coins, one
+            group so the whole shawl pulses as one layer, never a filter */}
+        <g className="msr-halos ph-glow">
+          {SETTINGS.map(([x, y, r], i) =>
+            set.has(i) ? (
+              <circle key={i} cx={x} cy={y} r={r + 2.6} fill="url(#msr-halo)" />
+            ) : null,
+          )}
+        </g>
         {SETTINGS.map(([x, y, r], i) => (
           <g
             key={i}
@@ -345,159 +404,214 @@ export function Miser({
         )}
       </g>
 
-      {/* ---- head: wide, flat and toad-like, a loupe for an eye ---- */}
+      {/* ---- head: a toad's — broad, flat, bulge-eyed, a loupe in one eye ---- */}
       <g
         ref={hold("head")}
         data-part="head"
-        style={{ transformOrigin: "40px 46px" }}
+        style={{ transformOrigin: "40px 42px" }}
       >
-        {/* Neck, thin and craned forward out of the collar */}
+        {/* A short thick neck: toads have next to none */}
         <path
-          d="M36 41 L46 45 L45 52 L34 49 Z"
-          fill="#7a666a"
+          d="M33 33 L46 37 L46 53 L34 51 Z"
+          fill="#4c4a2c"
           stroke="#171420"
           strokeWidth="1.4"
         />
-        {/* The inside of the mouth, seen only when the jaw drops */}
-        <path d="M12.6 43.8 L36 46 L33 52 L16 50.4 Z" fill="#2b1419" />
-        {/* The jaw: hinged, heavy, a throat sac sagging under it */}
-        <g
-          ref={hold("jaw")}
-          data-part="jaw"
-          className="msr-jaw"
-          style={{ transformOrigin: "35px 46px" }}
-        >
-          <path
-            d="M12.6 43.8 C11.4 46 12 48.4 15 49.6 C19 51.6 23 54.6 28.4 54.6 C33 54.4 36.4 51.6 36.4 46 Z"
+        {/* Everything above the neck sits high, so there is daylight
+            between the jaw and the hand below it */}
+        <g transform="translate(-1 -5)">
+          {/* The far eye, bulging up behind the skull: gold, a toad's flat bar
+            of a pupil, a heavy lid half down over it */}
+          <circle
+            cx="36"
+            cy="22.6"
+            r="6.2"
             fill="url(#msr-skin)"
             stroke="#171420"
-            strokeWidth="1.7"
-            strokeLinejoin="round"
+            strokeWidth="1.8"
           />
-          <g stroke="#6e5a5e" strokeWidth="0.8" fill="none">
-            <path d="M17 50 C20 51.6 23 52.4 27 52.4" />
-          </g>
-          <path
-            d="M13.6 45 C20 45.8 28 46.6 35 47"
-            stroke="#d9c9b4"
-            strokeWidth="0.6"
-            fill="none"
-            opacity="0.7"
+          <ellipse
+            cx="35.2"
+            cy="23"
+            rx="3.9"
+            ry="3.4"
+            fill="url(#msr-iris)"
+            stroke="#171420"
+            strokeWidth="0.8"
           />
-        </g>
-        <path
-          d="M41 40 C41 35 39 31 36 30 C35 27 32 26 30 27.6 C28 28.6 27 28.6 26 27.4 C24 24.6 19 24.4 17 27.4 C15 29.6 13 32 11.6 35.6 C10.6 38 10 40.4 10.6 42.4 C11 43.4 12 43.8 13 43.8 C21 44.4 29 45 36 46 C39 45.4 41 43 41 40 Z"
-          fill="url(#msr-skin)"
-          stroke="#171420"
-          strokeWidth="1.8"
-          strokeLinejoin="round"
-        />
-        {/* Wrinkled brow round the socket, a far eye squinting */}
-        <g stroke="#6e5a5e" strokeWidth="0.8" fill="none">
-          <path d="M15.4 33.4 C18 31.6 22 31.4 25.4 32.6" />
-          <path d="M27 30.4 C28 31.6 28.4 33 28 34.4" />
-        </g>
-        <path
-          d="M31 29.6 C32.4 28.8 34 29 35 30"
-          stroke="#171420"
-          strokeWidth="1.3"
-          fill="none"
-          strokeLinecap="round"
-        />
-        <circle cx="33" cy="30.4" r="0.6" fill="#e6f6b4" />
-        {/* The wide, grim mouth, turned down at the corner; one gold tooth */}
-        <path
-          d="M12.8 43.8 C21 44.4 29 45 34.6 45.8 L37 48.4"
-          stroke="#171420"
-          strokeWidth="1.3"
-          fill="none"
-          strokeLinecap="round"
-        />
-        <rect x="18" y="44" width="1.9" height="2.1" fill="#f2cf72" />
-        {/* Slit nostril, an ear-drum, warts */}
-        <path d="M11.2 37.8 l1.8 -0.7" stroke="#171420" strokeWidth="0.9" />
-        <circle
-          cx="36"
-          cy="37.6"
-          r="2.1"
-          fill="#8a7470"
-          stroke="#5a4a4e"
-          strokeWidth="0.8"
-        />
-        {[
-          [25.6, 36.4, 1],
-          [30.4, 40.4, 0.8],
-          [39, 33.8, 0.8],
-          [16.6, 38.8, 0.7],
-          [22, 41, 0.7],
-          [33.6, 34, 0.6],
-        ].map(([x, y, r]) => (
-          <g key={`${x}`}>
-            <circle cx={x} cy={y} r={r} fill="#6a565a" />
-            <circle
-              cx={x - r * 0.3}
-              cy={y - r * 0.3}
-              r={r * 0.35}
-              fill="#d7c6b2"
-            />
-          </g>
-        ))}
-        {/* A second lens, flipped up on its hinge: a jeweller's headband */}
-        <path
-          d="M25 27 L19.4 17.4"
-          stroke="#171420"
-          strokeWidth="2.6"
-          strokeLinecap="round"
-        />
-        <path
-          d="M25 27 L19.4 17.4"
-          stroke="#c9a45a"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-        />
-        <circle
-          cx="18.4"
-          cy="15.4"
-          r="3.6"
-          fill="#3a3040"
-          stroke="#171420"
-          strokeWidth="1.2"
-        />
-        <circle
-          cx="18.4"
-          cy="15.4"
-          r="2.6"
-          fill="none"
-          stroke="#d7ad5d"
-          strokeWidth="1.1"
-        />
-        <path d="M17 14 l1.4 -0.8" stroke="#e6f6b4" strokeWidth="0.8" />
-        {/* The loupe, screwed into the near eye */}
-        <g transform="translate(19.6 29.4) rotate(-6)">
           <rect
-            x="-9.4"
-            y="-3.4"
-            width="10"
-            height="6.8"
-            fill="#a57f3e"
+            x="32.2"
+            y="22.6"
+            width="6"
+            height="1.2"
+            rx="0.6"
+            fill="#171420"
+          />
+          <path
+            d="M30.2 21.4 C31.4 16.4 40.4 15.8 41.8 21 C38.4 19.4 33.8 19.4 30.2 21.4 Z"
+            fill="url(#msr-skin)"
             stroke="#171420"
             strokeWidth="1.2"
+            strokeLinejoin="round"
           />
-          <path d="M-8.4 -2.6 H-0.6" stroke="#e1bb6c" strokeWidth="0.8" />
-          <rect
-            x="-11.2"
-            y="-4.2"
-            width="2.3"
-            height="8.4"
-            fill="#d7ad5d"
+          {/* The inside of the mouth, seen only when the jaw drops */}
+          <path d="M8 41.5 L38 45.6 L35 52 L13 50 Z" fill="#2b1419" />
+          {/* The jaw: hinged, heavy, a pale throat sac sagging under it */}
+          <g
+            ref={hold("jaw")}
+            data-part="jaw"
+            className="msr-jaw"
+            style={{ transformOrigin: "36px 45px" }}
+          >
+            <path
+              d="M7.4 41.6 C5.8 44 6.8 47 10 48.4 C14 50.4 17 55.4 24 57 C31 58 37 54.6 38.8 49.4 C39.4 47.6 39 46.2 37.6 45.6 C28 44.6 17 43 7.4 41.6 Z"
+              fill="url(#msr-skin)"
+              stroke="#171420"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M12.6 48.6 C17 53.6 21.6 56.2 26.6 56.2 C31.6 56 35.6 53 37.4 48.8 C29.4 49.8 20 49.8 12.6 48.6 Z"
+              fill="url(#msr-throat)"
+            />
+            <g stroke="#9a8646" strokeWidth="0.8" fill="none">
+              <path d="M17 51.6 C21 53.4 26 53.8 31 53" />
+              <path d="M21 54.6 C24 55.4 28 55.4 31.4 54.6" />
+            </g>
+          </g>
+          {/* The skull: broad and flat, a blunt rounded snout */}
+          <path
+            d="M7.4 41.6 C4.6 40.6 4 37 6 34.4 C9 30.4 14 27.4 20 26.4 C27 25.4 34 25.4 39 28 C43 30 45 35 44 40 C43.4 43.4 41 45.4 37.6 45.6 C28 44.6 17 43 7.4 41.6 Z"
+            fill="url(#msr-skin)"
             stroke="#171420"
-            strokeWidth="0.9"
+            strokeWidth="1.9"
+            strokeLinejoin="round"
           />
-          <ellipse className="msr-lens" cx="-11.2" cy="0" rx="1.4" ry="3.2" />
+          {/* A lit ridge along the top of the snout */}
+          <path
+            d="M8 33.4 C11 30.4 15 28.6 19 27.8"
+            stroke="#cdc486"
+            strokeWidth="1"
+            fill="none"
+            strokeLinecap="round"
+            opacity="0.8"
+          />
+          {/* The poison gland behind the eye, and warts */}
+          <ellipse
+            cx="37.4"
+            cy="34.4"
+            rx="5.4"
+            ry="3.2"
+            transform="rotate(18 37.4 34.4)"
+            fill="#8c864c"
+            stroke="#171420"
+            strokeWidth="1"
+          />
+          {[
+            [34.6, 33.6],
+            [37.4, 35],
+            [40, 34.2],
+          ].map(([x, y]) => (
+            <circle key={`${x}`} cx={x} cy={y} r="0.6" fill="#3b3a26" />
+          ))}
+          {[
+            [14, 34.4, 1.1],
+            [19.6, 37.8, 1],
+            [25.8, 35.8, 1.2],
+            [30.4, 39.6, 0.9],
+            [29, 30.6, 0.9],
+            [10.4, 38.4, 0.7],
+            [22.6, 31.4, 0.8],
+          ].map(([x, y, r]) => (
+            <g key={`${x}`}>
+              <circle cx={x} cy={y} r={r} fill="#4c4a2c" />
+              <circle
+                cx={x - r * 0.3}
+                cy={y - r * 0.3}
+                r={r * 0.38}
+                fill="#d6cd90"
+              />
+            </g>
+          ))}
+          {/* The wide, grim mouth, turned down at the corner; one gold tooth */}
+          <path
+            d="M7.4 41.6 C17 43 28 44.6 37.6 45.6 L40.4 48.8"
+            stroke="#171420"
+            strokeWidth="1.4"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <rect
+            x="15.2"
+            y="42.2"
+            width="2.4"
+            height="3.2"
+            rx="0.4"
+            fill="url(#msr-gold)"
+            stroke="#3e2810"
+            strokeWidth="0.6"
+          />
+          {/* A nostril: a pinhole on the snout, nothing more */}
+          <ellipse cx="8.6" cy="35.2" rx="0.9" ry="0.6" fill="#171420" />
+          {/* The near eye, a bulge on top of the head with the loupe screwed
+            into it, tipped down at whatever it is counting */}
+          <circle
+            cx="21"
+            cy="25.4"
+            r="7"
+            fill="url(#msr-skin)"
+            stroke="#171420"
+            strokeWidth="1.9"
+          />
+          <path
+            d="M15.6 21.6 C18 18.8 23 18.4 26 20.6"
+            stroke="#cdc486"
+            strokeWidth="1"
+            fill="none"
+            strokeLinecap="round"
+            opacity="0.8"
+          />
+          {/* The loupe: a short brass cup screwed into the eye, the lens
+              at its end tipped down at the coins */}
+          <g transform="rotate(-12 21 25.4)">
+            <ellipse
+              className="msr-lens-glow ph-glow"
+              cx="11"
+              cy="25.4"
+              rx="5.4"
+              ry="7.6"
+            />
+            <path
+              d="M21 20.2 L13.6 21.4 L13.6 29.4 L21 30.6 Z"
+              fill="url(#msr-brass)"
+              stroke="#171420"
+              strokeWidth="1.3"
+              strokeLinejoin="round"
+            />
+            <path d="M14.6 22.4 L20 21.4" stroke="#f0d08a" strokeWidth="0.8" />
+            <ellipse
+              cx="13"
+              cy="25.4"
+              rx="2"
+              ry="4.6"
+              fill="#d7ad5d"
+              stroke="#171420"
+              strokeWidth="1.1"
+            />
+            <ellipse
+              className="msr-lens"
+              cx="12.6"
+              cy="25.4"
+              rx="1.2"
+              ry="3.3"
+            />
+          </g>
         </g>
       </g>
 
-      {/* ---- hand: the long arm, always reaching for the stacks ---- */}
+      {/* ---- hand: the long arm, and a hand too big for it, always reaching
+          for the stacks. Four long knuckled fingers with round toad pads:
+          the one shape that tells this silhouette from any other ---- */}
       <g
         ref={hold("hand")}
         data-part="hand"
@@ -505,50 +619,71 @@ export function Miser({
       >
         {/* Sleeve, frayed at the elbow */}
         <path
-          d="M42 46 C47 50 47 57 43 61 L36 66 L34 64 L32 66 L29 61 L36 54 Z"
+          d="M41 45 C47 48.6 48 56 44 61 L38 66 L36 63.6 L33.6 65.6 L31.4 61 L36 53 Z"
           fill="url(#msr-coat)"
           stroke="#171420"
           strokeWidth="1.8"
           strokeLinejoin="round"
         />
-        {/* Bony forearm */}
+        {/* Bony forearm, held out level */}
         <path
-          d="M32 64 L21 71"
+          d="M33 62.6 L20 62"
           stroke="#171420"
-          strokeWidth="5"
+          strokeWidth="5.6"
           strokeLinecap="round"
         />
         <path
-          d="M32 64 L21 71"
-          stroke="#95888a"
-          strokeWidth="2.8"
+          d="M33 62.6 L20 62"
+          stroke="#7a7646"
+          strokeWidth="3.4"
           strokeLinecap="round"
         />
-        {/* The hand, too big, knuckled, rings on its fingers */}
+        {/* The fingers, splayed and hanging over the coins like a spider */}
+        <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <g stroke="#171420" strokeWidth="5">
+            {FINGERS.map((d) => (
+              <path key={d} d={d} />
+            ))}
+          </g>
+          <g stroke="url(#msr-finger)" strokeWidth="3">
+            {FINGERS.map((d) => (
+              <path key={d} d={d} />
+            ))}
+          </g>
+        </g>
+        {/* The palm, over the roots of the fingers */}
         <path
-          d="M24 67 C19 67 14 69 12 73 L5 82 L7.4 83.4 L12 77 L10.4 86 L13.2 86.4 L15.4 78 L16.4 86.6 L19.2 86.4 L19.4 77.6 L22.4 83 L24.8 82 L23.6 75 C25.6 73 26 70 24 67 Z"
+          d="M21.4 58.4 C16.4 57.4 11 59.4 10 64 C9.4 67.4 11.6 70 15.4 70.4 C19.8 70.8 24.2 69 24.8 65 C25.2 62 23.8 59.4 21.4 58.4 Z"
           fill="url(#msr-skin)"
           stroke="#171420"
-          strokeWidth="1.3"
-          strokeLinejoin="round"
+          strokeWidth="1.6"
         />
-        <rect
-          x="11.1"
-          y="80.4"
-          width="3.2"
-          height="1.5"
-          fill="#f0c860"
-          stroke="#3e2810"
-          strokeWidth="0.4"
+        <path
+          d="M12.4 62 C14.6 60 17.8 59.4 20.6 60"
+          stroke="#cdc486"
+          strokeWidth="0.9"
+          fill="none"
+          strokeLinecap="round"
+          opacity="0.8"
         />
-        <rect
-          x="16"
-          y="80.8"
-          width="3.2"
-          height="1.5"
-          fill="#f0c860"
-          stroke="#3e2810"
-          strokeWidth="0.4"
+        {/* Round toad pads on the fingertips: in silhouette, the four bulbs
+            are what make it a toad's hand and not a man's */}
+        {PADS.map(([x, y]) => (
+          <circle
+            key={`${x}`}
+            cx={x}
+            cy={y}
+            r="2.8"
+            fill="#b3aa6a"
+            stroke="#171420"
+            strokeWidth="1.2"
+          />
+        ))}
+        {/* Rings, on the fingers it could get them onto */}
+        <path
+          d="M8.8 71 L12.2 73.4 M14.8 74 L18.6 74.6"
+          stroke="#f0c860"
+          strokeWidth="1.7"
         />
       </g>
     </svg>
