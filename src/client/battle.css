@@ -1034,9 +1034,11 @@
   color: var(--rust);
 }
 /* Detail on demand, never printed permanently around the hero. */
+/* Detail opens toward the middle of the field. Opening it outward, on the same
+ * side the cascade already leans, pushes it off the edge of the stage. */
 .fan-detail {
   position: absolute;
-  left: calc(100% + 10px);
+  right: calc(100% + 10px);
   bottom: 0;
   width: 200px;
   padding: 6px 9px;
@@ -1050,8 +1052,8 @@
   transition: opacity 0.12s;
 }
 .action-fan[data-dir="left"] .fan-detail {
-  left: auto;
-  right: calc(100% + 10px);
+  right: auto;
+  left: calc(100% + 10px);
 }
 .fan-slip > button:hover + .fan-detail,
 .fan-slip > button:focus-visible + .fan-detail {
