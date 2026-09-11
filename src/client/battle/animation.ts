@@ -37,6 +37,14 @@ export interface Pose {
 
 export interface Clip {
   poses: Pose[];
+  /**
+   * Per-part tracks, for cutout rigs. The root track moves the whole figure;
+   * these move named pieces of it independently — a key-arm swinging through a
+   * strike, chains lagging behind the body, a ledger swinging on its chain.
+   * This is the half of the animation system that gives a boss weight without
+   * anybody drawing a frame.
+   */
+  parts?: Record<string, Pose[]>;
   /** Milliseconds for one pass. */
   duration: number;
   loop?: boolean;
@@ -48,10 +56,12 @@ export type Rig = Partial<Record<ClipName, Clip>>;
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-/** Sample a clip at a fraction of its length. */
-export function sample(clip: Clip, t: number): Required<Omit<Pose, "at">> {
+/** Sample a track of poses at a fraction of its length. */
+export function sampleTrack(
+  poses: Pose[],
+  t: number,
+): Required<Omit<Pose, "at">> {
   const base = { x: 0, y: 0, scale: 1, rotate: 0, squash: 1, flash: 0 };
-  const poses = clip.poses;
   if (!poses.length) return base;
   let a = poses[0];
   let b = poses[poses.length - 1];
@@ -78,6 +88,11 @@ export function sample(clip: Clip, t: number): Required<Omit<Pose, "at">> {
   };
 }
 
+/** Sample a clip's root track. */
+export function sample(clip: Clip, t: number) {
+  return sampleTrack(clip.poses, t);
+}
+
 export function poseToTransform(p: Required<Omit<Pose, "at">>) {
   return (
     `translate(${(p.x * 100).toFixed(2)}%, ${(p.y * 100).toFixed(2)}%) ` +
@@ -100,6 +115,7 @@ interface Playing {
  */
 export class Animator {
   private node: HTMLElement | null = null;
+  private parts = new Map<string, SVGElement | HTMLElement>();
   private playing: Playing | null = null;
   private rig: Rig;
   /** Every unit starts its idle at a different point so no line breathes in sync. */
@@ -115,8 +131,27 @@ export class Animator {
   attach(node: HTMLElement | null) {
     this.node = node;
   }
+  /** Register a named piece of a cutout rig. */
+  attachPart(name: string, node: SVGElement | HTMLElement | null) {
+    if (node) this.parts.set(name, node);
+    else this.parts.delete(name);
+  }
   setRig(rig: Rig) {
     this.rig = rig;
+    // Re-resolve whatever is already playing. A rig can arrive after the
+    // animator does — a cutout rig registers its parts from inside the
+    // combatant, before the combatant has said which rig it wants — and
+    // without this the unit keeps playing the generic clip it started on.
+    const state = this.playing;
+    if (state) {
+      const replacement = rig[state.name] ?? GENERIC[state.name];
+      if (replacement && replacement !== state.clip) {
+        state.clip = replacement;
+        // Looping clips keep their phase; one-shots restart so they are not
+        // resumed halfway through a different animation.
+        if (!replacement.loop) state.start = performance.now();
+      }
+    }
   }
   setSpeed(n: number) {
     this.speed = Math.max(0.05, n);
@@ -165,7 +200,19 @@ export class Animator {
         return this.tick(now);
       }
     }
-    const pose = sample(state.clip, Math.max(0, Math.min(1, t)));
+    const clamped = Math.max(0, Math.min(1, t));
+    const pose = sample(state.clip, clamped);
+    // Cutout parts. A part with no track in this clip returns to rest rather
+    // than holding whatever the previous clip left it at.
+    if (this.parts.size) {
+      for (const [name, node] of this.parts) {
+        const track = state.clip.parts?.[name];
+        const p = track
+          ? sampleTrack(track, clamped)
+          : { x: 0, y: 0, scale: 1, rotate: 0, squash: 1, flash: 0 };
+        node.style.transform = poseToTransform(p);
+      }
+    }
     if (this.node) {
       this.node.style.transform = poseToTransform(pose);
       this.node.style.filter = pose.flash
@@ -178,6 +225,7 @@ export class Animator {
   dispose() {
     this.playing = null;
     this.node = null;
+    this.parts.clear();
   }
 }
 

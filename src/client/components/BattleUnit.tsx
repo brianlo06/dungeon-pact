@@ -5,6 +5,7 @@ import { unitPresentation } from "../battle/layout";
 import type { Animators } from "../battle/useAnimators";
 import { Sprite } from "./Sprite";
 import { Strongbox, type VaultState } from "./Strongbox";
+import { Collector } from "./Collector";
 import { statuses } from "../../content/statuses";
 import { items } from "../../content/items";
 
@@ -82,6 +83,7 @@ export function BattleUnit({
       data-impact={impact ?? undefined}
       data-acting={acting ? "" : undefined}
       data-down={down ? "" : undefined}
+      data-phase={enemy?.phase === 2 ? "2" : undefined}
       data-you={you ? "" : undefined}
       style={
         {
@@ -110,6 +112,12 @@ export function BattleUnit({
               className="combatant-sprite"
               held={held.length}
               state={vault}
+            />
+          ) : look.spriteSet === "collector" ? (
+            <Collector
+              className="combatant-sprite"
+              unitId={unit.id}
+              animators={animators}
             />
           ) : (
             <Sprite

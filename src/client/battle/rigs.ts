@@ -117,7 +117,14 @@ const vanguard: Rig = {
   },
 };
 
-/** The Collector: never bounces. It leans, plants, and swings from the hips. */
+/**
+ * The Collector: never bounces. It leans, plants, and swings from the hips.
+ *
+ * This is the cutout rig in earnest — the key-arm, the chains, the seals and
+ * the ledger each get their own track, so the figure moves in pieces the way
+ * something heavy does. Chains and hanging seals lag deliberately behind the
+ * body: that lag is most of what sells the weight.
+ */
 const collector: Rig = {
   idle: {
     duration: 5800,
@@ -130,6 +137,36 @@ const collector: Rig = {
       { at: 0.8, y: -0.01, rotate: 0.9 },
       { at: 1, y: 0, rotate: 0, squash: 1 },
     ],
+    parts: {
+      // Everything hanging swings a beat behind the body.
+      chains: [
+        { at: 0, rotate: 0.8 },
+        { at: 0.42, rotate: -1.4 },
+        { at: 0.74, rotate: 1.2 },
+        { at: 1, rotate: 0.8 },
+      ],
+      seals: [
+        { at: 0, rotate: -1.2 },
+        { at: 0.5, rotate: 1.6 },
+        { at: 1, rotate: -1.2 },
+      ],
+      ledger: [
+        { at: 0, rotate: 1.4 },
+        { at: 0.46, rotate: -1.8 },
+        { at: 1, rotate: 1.4 },
+      ],
+      key: [
+        { at: 0, rotate: -0.6 },
+        { at: 0.55, rotate: 0.9 },
+        { at: 1, rotate: -0.6 },
+      ],
+      head: [
+        { at: 0, rotate: 0 },
+        { at: 0.36, rotate: -1.6 },
+        { at: 0.68, rotate: 1.1 },
+        { at: 1, rotate: 0 },
+      ],
+    },
   },
   windup: {
     duration: 1100,
@@ -139,6 +176,19 @@ const collector: Rig = {
       { at: 0.45, scale: 1.05, flash: 0.3, rotate: -2, y: -0.02 },
       { at: 1, scale: 1, flash: 0, rotate: 0 },
     ],
+    parts: {
+      // The key comes up and hangs there. The threat is the held pose.
+      key: [
+        { at: 0, rotate: 0 },
+        { at: 0.45, rotate: -22, y: -0.04 },
+        { at: 1, rotate: 0 },
+      ],
+      chains: [
+        { at: 0, rotate: 0 },
+        { at: 0.5, rotate: 4 },
+        { at: 1, rotate: 0 },
+      ],
+    },
   },
   /** Repossess: rear back, then throw its weight forward into the chains. */
   signature: {
@@ -151,6 +201,41 @@ const collector: Rig = {
       { at: 0.66, x: 0.1, rotate: 4, flash: 0.2 },
       { at: 1, x: 0, rotate: 0, squash: 1, scale: 1, flash: 0 },
     ],
+    parts: {
+      key: [
+        { at: 0, rotate: 0 },
+        { at: 0.3, rotate: -46, y: -0.06 },
+        { at: 0.38, rotate: -52, y: -0.07 },
+        { at: 0.52, rotate: 34, y: 0.02 },
+        { at: 0.68, rotate: 18 },
+        { at: 1, rotate: 0, y: 0 },
+      ],
+      chains: [
+        { at: 0, rotate: 0 },
+        { at: 0.34, rotate: -9 },
+        { at: 0.56, rotate: 14 },
+        { at: 0.8, rotate: -4 },
+        { at: 1, rotate: 0 },
+      ],
+      seals: [
+        { at: 0, rotate: 0 },
+        { at: 0.36, rotate: -12 },
+        { at: 0.6, rotate: 16 },
+        { at: 1, rotate: 0 },
+      ],
+      ledger: [
+        { at: 0, rotate: 0 },
+        { at: 0.4, rotate: 14 },
+        { at: 0.62, rotate: -10 },
+        { at: 1, rotate: 0 },
+      ],
+      head: [
+        { at: 0, rotate: 0 },
+        { at: 0.36, rotate: 4 },
+        { at: 0.52, rotate: -6 },
+        { at: 1, rotate: 0 },
+      ],
+    },
   },
   attack: {
     duration: 820,
@@ -161,6 +246,26 @@ const collector: Rig = {
       { at: 0.68, x: 0.08, rotate: 3 },
       { at: 1, x: 0, rotate: 0, squash: 1, scale: 1 },
     ],
+    parts: {
+      key: [
+        { at: 0, rotate: 0 },
+        { at: 0.3, rotate: -32 },
+        { at: 0.48, rotate: 26 },
+        { at: 0.72, rotate: 10 },
+        { at: 1, rotate: 0 },
+      ],
+      chains: [
+        { at: 0, rotate: 0 },
+        { at: 0.42, rotate: -7 },
+        { at: 0.62, rotate: 9 },
+        { at: 1, rotate: 0 },
+      ],
+      ledger: [
+        { at: 0, rotate: 0 },
+        { at: 0.5, rotate: 10 },
+        { at: 1, rotate: 0 },
+      ],
+    },
   },
   hurt: {
     duration: 320,
@@ -170,6 +275,25 @@ const collector: Rig = {
       { at: 0.2, x: 0.04, rotate: 2, squash: 0.97, flash: 0.5 },
       { at: 1, x: 0, rotate: 0, squash: 1, flash: 0 },
     ],
+    parts: {
+      // The figure holds; only what hangs off it reacts.
+      seals: [
+        { at: 0, rotate: 0 },
+        { at: 0.3, rotate: 9 },
+        { at: 0.7, rotate: -5 },
+        { at: 1, rotate: 0 },
+      ],
+      ledger: [
+        { at: 0, rotate: 0 },
+        { at: 0.3, rotate: -8 },
+        { at: 1, rotate: 0 },
+      ],
+      chains: [
+        { at: 0, rotate: 0 },
+        { at: 0.32, rotate: 6 },
+        { at: 1, rotate: 0 },
+      ],
+    },
   },
   defeat: {
     duration: 1400,
@@ -179,6 +303,22 @@ const collector: Rig = {
       { at: 0.5, rotate: -18, y: 0.04, flash: 0.3 },
       { at: 1, rotate: -72, y: 0.18, scale: 0.92, flash: 0 },
     ],
+    parts: {
+      // The key falls out of its grip first.
+      key: [
+        { at: 0, rotate: 0 },
+        { at: 0.3, rotate: 24, y: 0.04 },
+        { at: 1, rotate: 74, y: 0.2 },
+      ],
+      seals: [
+        { at: 0, rotate: 0 },
+        { at: 1, rotate: 28 },
+      ],
+      ledger: [
+        { at: 0, rotate: 0 },
+        { at: 1, rotate: -24 },
+      ],
+    },
   },
 };
 

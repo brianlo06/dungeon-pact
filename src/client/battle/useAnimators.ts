@@ -19,6 +19,12 @@ import { tempo } from "./tempo";
 export interface Animators {
   register: (id: string, spriteSet: string | undefined) => void;
   attach: (id: string, node: HTMLElement | null) => void;
+  /** Register one named piece of a cutout rig. */
+  attachPart: (
+    id: string,
+    part: string,
+    node: SVGElement | HTMLElement | null,
+  ) => void;
   play: (id: string, clip: ClipName, then?: ClipName) => void;
   /** Slow everything down together, for capture and inspection. */
   setSpeed: (n: number) => void;
@@ -76,6 +82,23 @@ export function useAnimators(paused = false): Animators {
     if (animator) animator.attach(node);
   }, []);
 
+  const attachPart = useCallback(
+    (id: string, part: string, node: SVGElement | HTMLElement | null) => {
+      // A cutout rig lives *inside* the combatant, so its effect runs before
+      // the combatant's own registration — React commits child effects first.
+      // Create the animator on demand rather than depending on that order;
+      // `register` only ever swaps the rig on an existing instance.
+      let animator = units.current.get(id);
+      if (!animator && node) {
+        animator = new Animator(rigFor(undefined));
+        animator.setSpeed(speed.current * tempo());
+        units.current.set(id, animator);
+      }
+      animator?.attachPart(part, node);
+    },
+    [],
+  );
+
   const play = useCallback((id: string, clip: ClipName, then?: ClipName) => {
     units.current.get(id)?.play(clip, then);
   }, []);
@@ -91,7 +114,7 @@ export function useAnimators(paused = false): Animators {
   );
 
   return useMemo(
-    () => ({ register, attach, play, setSpeed, current }),
-    [register, attach, play, setSpeed, current],
+    () => ({ register, attach, attachPart, play, setSpeed, current }),
+    [register, attach, attachPart, play, setSpeed, current],
   );
 }

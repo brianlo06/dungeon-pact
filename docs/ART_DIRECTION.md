@@ -156,11 +156,23 @@ the clearest possible signal that a battlefield is a spreadsheet.
 
 These four appear together and are the coherence test for the whole bestiary.
 
-**The Collector.** A creditor, not a wizard. The silhouette should be legible
-in pure black: a large asymmetric armoured figure, one side weighed down by
-what it has taken — hanging seals, a ledger chained to the forearm, an
-oversized key that doubles as its weapon. Ornate wealth bolted onto industrial
-brutality. Slow, deliberate, and it should look like it has never hurried.
+**The Collector.** _Drawn._ A creditor, not a wizard: a hooded, beaked figure
+in a flaring robe, a crown of small keys, seals hanging clear of the hem on one
+side, a ledger swinging on a chain, and an oversized key held outboard that
+doubles as its weapon.
+
+It is built as a **cutout rig** — `key`, `ledger`, `chains`, `seals`, `head` and
+`mantle` are separately animated parts — which is the documented approach for
+bosses and the first thing to use it. Everything that hangs off it lags behind
+the body, and that lag is most of what sells the weight. It barely moves when
+hit; the key falls out of its grip when it dies.
+
+The silhouette rule is not decoration. The first version of this design failed
+its own test: filled flat black it read as a squat lump. It was redrawn taller
+and deliberately lopsided so the key, the beak and the hanging seals all _break_
+the outline, with real negative space between the key and the body. Run that
+test on anything new — fill it black against a dimmed stage and see whether you
+still know what it is.
 
 **The Strongbox.** Built to contain confiscated power, not to store treasure.
 A squat riveted vault, gold strapping, a lock per item taken, a contract seal
@@ -177,8 +189,8 @@ surgeon: long instrument limbs, heated clamps, bellows organs, repair machinery
 grown into the body. When it heals, it should look like it is welding something
 shut rather than blessing it.
 
-None of these are drawn yet. The Collector, Bulwark and Mender still use the
-prototype sprites.
+The Bulwark and Mender still use the prototype sprites. The Collector and the
+Strongbox are drawn.
 
 ## What does not fit
 

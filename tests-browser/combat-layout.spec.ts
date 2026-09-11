@@ -353,7 +353,13 @@ test.describe("the Collector's objective is legible without the chronicle", () =
   test("playback can be paused, stepped and re-sped without breaking layout", async ({
     page,
   }) => {
-    await open(page, { party: 4, stage: "objective", motion: 1 }, true);
+    // Slowed, so the replay window cannot close before a loaded parallel
+    // worker gets to it. Same reason as the boss entrance above.
+    await open(
+      page,
+      { party: 4, stage: "objective", motion: 1, tempo: 0.2 },
+      true,
+    );
     await page.locator(".fan-slip:not([data-common]) > button").first().click();
     await page
       .locator(".combatant[data-side='enemy'] .combatant-body")
@@ -461,5 +467,45 @@ test.describe("the new visual layer stays inside the viewport", () => {
     // Idles are out of phase, so the field is not breathing in lockstep.
     expect(new Set(later).size).toBeGreaterThan(1);
     expect(later.some((t, i) => t !== first[i])).toBe(true);
+  });
+});
+
+test.describe("the Collector is a cutout rig, not a sprite", () => {
+  test("its parts move independently of the figure", async ({ page }) => {
+    await open(page, { party: 4, stage: "objective" });
+    const parts = page.locator(".collector > g");
+    expect(await parts.count()).toBeGreaterThanOrEqual(5);
+
+    const read = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll(".collector > g")].map(
+          (el) => (el as SVGElement).style.transform,
+        ),
+      );
+    const before = await read();
+    await page.waitForTimeout(900);
+    const after = await read();
+
+    // Every part is being driven, and they are not all driven identically —
+    // the chains and seals lag the body, which is what sells the weight.
+    expect(before.every(Boolean)).toBe(true);
+    expect(new Set(after).size).toBeGreaterThan(1);
+    expect(after.some((t, i) => t !== before[i])).toBe(true);
+  });
+
+  test("it dominates the frame next to an ordinary enemy", async ({ page }) => {
+    await open(page, { party: 4, stage: "objective" });
+    const boss = await page
+      .locator(".combatant", { has: page.locator(".collector") })
+      .locator(".combatant-body")
+      .boundingBox();
+    const bulwark = await page
+      .locator(".combatant", { has: page.locator("text=Iron Bulwark") })
+      .locator(".combatant-body")
+      .boundingBox();
+    expect(boss!.height).toBeGreaterThan(bulwark!.height * 1.3);
+    // ...and still fits on the stage.
+    const stage = (await page.locator(".stage").boundingBox())!;
+    expect(boss!.y).toBeGreaterThanOrEqual(stage.y - 1);
   });
 });
