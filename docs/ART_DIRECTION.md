@@ -90,9 +90,21 @@ oscillator reads as beeping rather than hitting.
 The beat system drives each combatant's rig: a hero's action plays the clip its
 ability implies (a strike, a signature, a cast on an ally, a brace), an enemy's
 plays a cast when aimed at another enemy and a brace when aimed at itself, and
-the hit, the fall and the revival each have their own clip. The authored
-`windup` and `signature` clips on the two bosses are not yet asked for by
-anything.
+the hit, the fall and the revival each have their own clip.
+
+An enemy that announces a wind-up — any interruptible intent — holds its
+`windup` pose for the whole planning phase, if its rig authors one; a creature
+without one keeps idling. A hit mid-windup flinches and returns to the held
+pose. When the wound-up move lands, or a boss lands its objective strike (a
+`seize` or `bank` effect), it plays `signature`, falling back to its own
+`attack`. Clip changes ease in briefly rather than snapping.
+
+While a player picks a target, legal targets are marked — gold brackets
+closing on the figure's feet and around its name plate — and nothing else
+changes. Nothing is faded: a ghosted combatant read as dead once the art was
+drawn, and a filter on animating SVG costs frames. Intent chips are laid out
+by a measuring pass so that no chip covers a name plate or another chip at
+any camera framing the planning phase can reach.
 
 ## Next art work
 
@@ -245,15 +257,20 @@ Rigged as `legs`, `hod`, `body`, `head`, `arm`. A labourer's shrug for an idle,
 with the hod settling a beat late; it rears back with the coal high and jabs
 it home. Killed, it goes over backwards under the load.
 
-**Ash Acolyte.** _Drawn._ A faceless furnace zealot: an iron brazier burning on
-a thin neck, a charred mantle, an ember stole, a ragged hem that sheds ash. It
-hangs in the air rather than walking. A tall pale column with fire on top and
-one bell sleeve reaching out; no hood, because the Collector is the hooded one.
-Rigged as `hem`, `robe`, `offArm` (a censer), `head`, `castArm` with a nested
-`ember`, and `cinders`. It drifts; to cast it draws the ember back overhead and
-throws it, and a new one kindles in the palm. Killed, the fire goes out and it
-folds into its robe. _The weakest silhouette at back-row size — about 70px,
-and the flame can read as a crown._
+**Ash Acolyte.** _Drawn._ A faceless furnace zealot: where the head should be,
+an iron bowl on a thin neck with one fire burning in it; a charred mantle lit
+from above, a single rust stole, a hem burning at its edge like paper. It hangs
+in the air rather than walking. Drawn in few, large shapes because it lives in
+the back row: a bone-white column and bell sleeve that stand out against the
+dim row, the sleeve reaching out with an ember over the hand, and a censer
+swung clear on a chain. The fire is one tall tongue leaning back and curling
+over, white core inside orange inside red, and nothing about it is symmetrical
+— the first version's even tongues and iron bars read as a crown. No hood,
+because the Collector is the hooded one. `person` footprint. Rigged as `hem`,
+`robe`, `offArm` (the censer), `head`, `castArm` with a nested `ember`, and
+`cinders`. It drifts; to cast it draws the ember back overhead and throws it.
+Killed, the fire goes out and it folds into its robe. _Still the smallest
+thing on the field; in flat black the fire, the ember and the censer carry it._
 
 **Living Bellows.** _Drawn._ A forge bellows that got up and walked: a long,
 low concertina of leather pleats between iron hoops, a riveted end-plate with a
@@ -280,40 +297,48 @@ pointing at the party with daylight under it. Rigged as `legs`, `brazier`,
 `belt`, `body`, `gun`, `head`. Its idle is aiming — the barrel drifts and snaps
 back. Firing is a held beat, then a kick up and back into the stock.
 
-**Coin Leech.** _Drawn._ A glossy ringed leech rearing out of its own coil,
-a lip-ringed sucker of gold-capped hooks facing the party, the swallowed coins
-showing through a translucent belly. An S-column on a spiral; nothing else in
-the game is serpentine. Rigged as `tail`, `lower`, `belly`, `upper`, `head`. A
-cobra's sway travelling up the body one joint at a time; it strikes by throwing
-the whole column forward, latches, and pulls back as the belly swells. _Clean
-rather than menacing._
+**Coin Leech.** _Drawn._ A leech drawn as a cocked spring: a bruise-dark
+oxblood body wound into a tight coil, a column leaning back off it, the neck
+hauled up into a high arch knobbed with papillae, and the head hanging low and
+forward with a lamprey's disc of a mouth already open — red inside, two rows
+of teeth, five hooks raked forward off the lip. A rust stripe down the back, an
+oily sheen, red eye-spots, and a sickly translucent belly full of swallowed
+coins. Nothing else in the game is serpentine. Rigged as `tail`, `lower`,
+`belly`, `upper`, `head`. Its idle is a strike held back — the arch breathes,
+the head tracks, and once a loop it feints. It strikes by throwing the column
+forward with the neck stretching past its length, latches, and pulls back as
+the belly swells. _The first version was clean and tidy; this one trades a
+little contrast against the floor for menace._
 
 **The Miser.** _Drawn._ A hoarder, not a creditor — the Collector takes, this
-keeps. A hunched, toad-headed thing squatting in a heap of coins, one long arm
-always reaching down to the stacks it is counting, a jeweller's loupe screwed
-into one eye, a wide lipless mouth with one gold tooth, a shawl sewn with coin
-settings across its back.
+keeps. A hunched toad squatting in a heap of coins, counting: olive warted
+skin, two eye domes, a gold eye with a flat bar of a pupil under a heavy lid,
+a throat sac, a wide lipless mouth with one gold tooth, and a short brass
+loupe screwed into the near eye.
+
+What breaks its outline, the way the key breaks the Collector's, is the hand:
+far too big for its thin arm, four knuckled fingers splayed over the stacks
+with daylight between them, each ending in a round toad's pad. Low, wide and
+back-heavy, with no hood, crown or key. `boss-large` footprint.
 
 The shawl is the objective. It reads the same `bank` figure the engine and the
 objective strip use: the richer the pact, the more settings are filled, the
-more coins stand on edge along its spine, the deeper the heap. A pact that
-spent faces a bare, moth-eaten thing with a knuckled spine; a pact that
-hoarded faces something crested in gold. While it holds banked Barrier the
-coins glow, and they flare when that Barrier soaks a hit.
+taller the crest, the deeper the heap. A pact that spent faces a bare,
+moth-eaten thing; a pact that hoarded faces something crested in gold. While
+it holds banked Barrier the coins glow.
 
-Low, wide and back-heavy, with no hood, crown or key — none of the Collector's
-shapes. It uses the `boss-large` footprint; at `boss` it stood barely taller
-than the Bulwark beside it. Rigged as `body`, `shawl`, `hoard`, `stacks`,
-`head`, `jaw`, `hand`. Its idle is counting: three taps, a pause, a look up at
-the party. It attacks by scooping, drawing back and flinging; it barely shifts
-when hit; it dies slumped over its heap as the stacks topple. Its entrance
-uses its own mark, a milled coin struck with a tally, and its own two sounds.
+Rigged as `body`, `shawl`, `hoard`, `stacks`, `head`, `jaw`, `hand`. Its idle
+is counting: three taps, a pause, a look up. Winding up, the hand is held high
+over its head, and a hit does not knock it down. Its signature — which plays
+for both its moves — brings the hand over the top and rakes it out at the
+party at full stretch, further forward than the held pose, while the mouth
+gapes. It dies slumped over its heap as the stacks topple.
 
-It went through four drawings. One of them was drifting towards a hook-nosed,
-gold-counting old man — an antisemitic caricature — and the head became a
-toad's for that reason. Keep it that way. _The black silhouette is less
-iconic than the Collector's key, and the flipped-up lens reads a little like
-an antenna._
+The head is a toad's because an early drawing drifted towards a hook-nosed,
+gold-counting old man — an antisemitic caricature. Every change since has
+moved it further from a person; keep it that way. _Better than it was, but not
+yet as iconic in flat black as the Collector's key: the head is a lumpy toad
+shape rather than one clean graphic element._
 
 ## Creature direction — the party
 
@@ -342,27 +367,27 @@ for a signature the hand goes up over the hat, and the hat tip is the lag.
 **Ranger.** A young scout in a patched green hood, fletching bristling over the
 shoulder, a longbow taller than its owner standing upright down the right
 side — the Sniper's gun is flat, this bow is vertical. It leans into the draw,
-holds, and lets go; the arrow leaves the hand and a new one returns.
+holds, and lets go; the arrow leaves the hand and a new one returns. Its face is the youngest: round, full-cheeked, a small pointed chin, big dark eyes set low, raised brows, a button nose, freckles and a sunburnt blush.
 
 **Warden.** A hedge-priest in a torn bone-white mantle, eyes closed, antlers
 growing up through the hood, a crooked staff with a hanging lantern. The heal
 is the slowest thing it does — staff lifted, open hand offered out, glow held.
-When it falls the lantern keeps hanging towards the floor.
+When it falls the lantern keeps hanging towards the floor. Its face is the oldest and longest: deep umber skin lined at brow and eye, eyes shut under heavy lids, bushy white brows, a long straight nose, and a long silver beard tapering forward over the mantle.
 
 **Broker.** Stout and spectacled, flat cap and quill, a violet coat over a
 straining amber waistcoat, coin pouches, a brass balance out front and a
 ledger under the arm — the widest, roundest body in the line. The pans never
-settle; Leveraged strike brings the ledger down over the cap.
+settle; Leveraged strike brings the ledger down over the cap. Its face is the only one wider at the chin than the temple — jowls past the cheek line, a second chin on the collar, grey mutton chops, ruddy skin, and a round red upturned nose. Dickensian, and kept away from the money-lender caricature for the same reason the Miser is a toad.
 
 **Herald.** A standard-bearer with a laurel, a sun tabard over mail and a
 curled horn; the banner pole is the tallest vertical in the party, its flag
 flying forward at the enemy. The rallying note is the horn raised and blown;
-anything done for allies is the banner lifted and waved.
+anything done for allies is the banner lifted and waved. Its face is the square one: flat sides, a jaw with corners, a cleft chin, level brows lifted in the middle, warm brown skin, and an open smile.
 
 **Reaver.** A scarred, bare-chested berserker, spiked black mane, bandaged fist
 raised, a notched cleaver too big to carry dragged point-down to the lower
 left. Reckless: the lunge overshoots, the recovery is a stumble, and hit, it
-snarls and leans straight back in.
+snarls and leans straight back in. Its face is the broadest: a low forehead under a shelf of brow, small glaring eyes in its shadow, a broken nose, a stubbled jutting jaw, gritted teeth with one missing, a notched ear, and a stitched scar. Pale, weather-beaten skin — deliberately: a brute's heavy brow and snarl drawn on darker skin echoes an old racist caricature, so the party's darker-skinned heroes are its healer and its earnest leader.
 
 **Beguiler.** A two-horned violet hood with bells, half the face under a
 cracked porcelain mask, a robe coming apart into tatters, a marionette control
@@ -371,8 +396,8 @@ The Acolyte holds a flame; the Beguiler holds someone. The head tilts too far
 and the puppet swings out of time.
 
 _Weaker spots:_ the Arcanist's spark and the Warden's lash are small next to
-the melee swings; five of the eight share one round face and are told apart by
-what they wear.
+the melee swings, and at the 30px HUD portrait every hero's eyes blur away, so
+the party is told apart there by skin, hair, beard and headgear.
 
 ## What does not fit
 

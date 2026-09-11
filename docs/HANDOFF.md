@@ -1,6 +1,6 @@
 # Handoff
 
-Updated 2026-09-11 · branch `boss-objectives`, 23 commits ahead of `main`
+Updated 2026-09-11 · branch `boss-objectives`, 37 commits ahead of `main`
 
 **Read this first, then `BALANCE.md`.** Everything below is current as of the
 last commit. Counts come from `validateContent()`, not memory.
@@ -9,7 +9,9 @@ last commit. Counts come from `validateContent()`, not memory.
 
 The route/upgrade/healing work is merged into `main`. Boss objectives,
 supplies and the reliability pass sit on **`boss-objectives`**, not merged.
-Nothing is pushed: the repository still has no remote at all.
+The repository is on GitHub as a private repo, `brianlo06/dungeon-pact`, with
+`main`, `balance-and-upgrades` and `boss-objectives` pushed. `main` is the
+default branch and does not yet have this work.
 
 Codex is working in the same tree on presentation. Its boss preview harness
 (`src/dev/`, `dev/bosses.html`, `docs/BOSS_PREVIEW.md`) and the `BossObjective`
@@ -38,8 +40,9 @@ SVG cutout rigs with named moving parts. Only the auctioneer and the reward
 chest still come from the generated atlas. `ART_DIRECTION.md` has the direction
 for each figure and why the medium changed.
 
-Verified at the last commit: 201 unit tests across 18 files and 232 browser
-checks across four resolutions (58 per resolution). The 12 real-WebSocket
+Verified at the last commit: 233 unit tests across 21 files, 373 browser
+checks across four resolutions (plus three informational frame-time checks
+that run only at 1920×1080), and a production build. The 12 real-WebSocket
 checks were last run before the art pass, which touched no server code. **Neither the boss
 objectives nor the supplies have been driven in a browser by this session** —
 reaching a boss by hand takes a full run. Codex's preview harness exists
@@ -47,28 +50,56 @@ precisely to make that cheap; use it.
 
 ## What is worth doing next
 
-### 0. Finish wiring the art that exists
+### 0. Presentation loose ends
 
-The drawing is done; a few things it can do are not yet asked for.
+The art pass is finished and its first round of fixes is in: the bosses hold
+their wind-ups and land signatures, targeting marks legal targets instead of
+fading everyone else, intent chips no longer cover name plates, the three
+weakest enemies were redrawn, and five heroes got faces of their own. One real bug turned up on the way:
+the stage was a scroll container, so keyboard focus near its edge could slide
+the whole battlefield out of view. It now uses `overflow: clip`.
 
-- **The bosses' `windup` and `signature` clips never play.** The Collector's
-  held key and the Miser's rake are authored, and nothing in the director
-  requests either. Windup belongs on an interruptible intent — the threat is
-  the held pose — and signature on the objective strike.
-- **Frame rate on real hardware.** A full boss stage measures 60fps median in
-  headless Chromium but drops to 30 on about one frame in twenty, worst 50ms.
-  That is software rendering and pessimistic; measure on the four physical
-  devices from item 4 before optimising. The likely cost is the `drop-shadow`
-  filters on the glows.
-- **Heroes go half-transparent while an enemy target is picked.** A global
-  `button:disabled` opacity rule catches every combatant that is not a legal
-  target. It predates the art, but ghostly heroes read far worse now they are
-  drawn. A UX call, not a bug.
-- **Weak figures, candidly:** the Ash Acolyte at back-row size, the Miser's
-  black silhouette next to the Collector's key, the Coin Leech (tidy rather
-  than menacing), and five heroes sharing one round face.
-- **The Battle Lab applies tempo late**, after the animators have registered,
-  so slowed captures are sometimes at full speed. Capture only.
+Frame rate was profiled rather than guessed at, and the cause was not the glow
+filters everyone suspected. Headless, the compositor was saturated by three
+things: a screen-blend lighting layer that was never lit but forced the whole
+stage offscreen every frame, a depth filter on every combatant, and health bars
+easing their `width`, which re-laid out the grid on every hit. All three are
+gone (the depth tone now sits on each shape, baked into its part's layer).
+Boss replays at 1920×1080 went from about 7% dropped frames to 0–0.3%
+headless. On a MacBook Air M2 with real GPU rendering there were no dropped
+frames before or after — the gain there is about a fifth less GPU and raster
+work — at a cost of 10–25ms/s more main-thread time. Safari, which does not
+layer SVG parts the same way, has not been measured. `tests/perf-css.test.ts`
+and `tests-browser/perf.spec.ts` hold the rules that made the difference.
+What is left, all presentation and none of it blocking:
+
+- **The action fan covers heroes.** The ability slips that open from your hero
+  sit over the hero and the ally below. The user saw it and asked for it to be
+  left for now; it is the next thing they will want.
+- **Bodies still cover name plates.** Chips are laid out, units are not: at
+  three heroes Bram's hat covers the Collector's and the Stoker's plates, and
+  the front-row Collector covers the Kiln Mender's. That is unit placement in
+  `layout.ts`.
+- **Back-row hero plates clip at the bottom of the stage** whenever the camera
+  zooms in.
+- **A replay runs about ten seconds**, not the four `ART_DIRECTION.md` claims.
+  Either the step-duration cap is not doing its job or the claim is stale.
+- **Chips can sit on their own creature's art.** Placement keeps chips clear of
+  name plates and each other, not of bodies — the Collector's key crosses its
+  own chip.
+- **At 1280×720 three-line WINDUP chips on back-row enemies** drop 14–20px onto
+  their own creature so they stay on screen at the tightest camera framing.
+- **Reduced motion still animates held poses.** It turns off replay; idles and
+  the held windup still loop.
+- **The downed-hero fall still waits on a 60ms timer.** The same approach failed
+  under load for the windup and was replaced there; the fall probably no longer
+  needs it.
+- **The Battle Lab applies tempo late**, after animators register, so slowed
+  captures are sometimes at full speed. Capture only.
+- **Two browser tests read clips through React's fiber internals**, which will
+  break if React changes how it stores props.
+- **Weakest figures now:** the Miser in flat black (better, not yet as iconic as
+  the Collector's key) and the Acolyte, still the smallest thing on the field.
 
 ### 1. The Vanguard/Warden gap is now a ceiling problem
 
