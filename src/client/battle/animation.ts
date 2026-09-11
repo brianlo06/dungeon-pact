@@ -172,6 +172,14 @@ export class Animator {
   /** The last pose written, so a change of clip can ease out of it. */
   private last: { root: Sampled; parts: Map<string, Sampled> } | null = null;
   private blend: Blend | null = null;
+  /**
+   * What was last written to each node, so an unchanged pose is not written
+   * again. A held part or one at rest would otherwise be re-parsed and
+   * re-styled every frame for nothing.
+   */
+  private written = new Map<Element, string>();
+  /** The flash filter last written to the root, "" for none. */
+  private flash = "";
 
   constructor(rig: Rig, phase = Math.random()) {
     this.rig = rig;
@@ -213,11 +221,35 @@ export class Animator {
 
   attach(node: HTMLElement | null) {
     this.node = node;
+    this.written.clear();
+    this.flash = node?.style.filter ?? "";
   }
-  /** Register a named piece of a cutout rig. */
+  /**
+   * Register a named piece of a cutout rig.
+   *
+   * The animator owns the part's `will-change` as well as its transform: a
+   * part it moves gets its own compositor layer, so moving it is a matrix
+   * change rather than a repaint of the figure around it. Owning it here
+   * covers every part, including those nested inside another part — a jaw in
+   * a head, a plume in a snout — which a stylesheet rule on an SVG's direct
+   * children silently missed.
+   */
   attachPart(name: string, node: SVGElement | HTMLElement | null) {
-    if (node) this.parts.set(name, node);
-    else this.parts.delete(name);
+    const old = this.parts.get(name);
+    if (old && old !== node) {
+      old.style.willChange = "";
+      this.written.delete(old);
+    }
+    if (node) {
+      node.style.willChange = "transform";
+      this.parts.set(name, node);
+    } else this.parts.delete(name);
+  }
+  /** Write a transform, unless it is the one already there. */
+  private write(node: SVGElement | HTMLElement, transform: string) {
+    if (this.written.get(node) === transform) return;
+    this.written.set(node, transform);
+    node.style.transform = transform;
   }
   setRig(rig: Rig) {
     this.rig = rig;
@@ -356,15 +388,29 @@ export class Animator {
               : REST,
         );
         written.set(name, p);
-        node.style.transform = poseToTransform(p);
+        this.write(node, poseToTransform(p));
       }
     }
     this.last = { root: pose, parts: written };
     if (this.node) {
-      this.node.style.transform = poseToTransform(pose);
-      this.node.style.filter = pose.flash
-        ? `brightness(${(1 + pose.flash * 1.6).toFixed(2)}) saturate(${(1 + pose.flash).toFixed(2)})`
-        : "";
+      this.write(this.node, poseToTransform(pose));
+      // Flash is a filter over the whole figure, and a filter on the rig is an
+      // offscreen pass every frame, so it is written only while it would show:
+      // the tail of an eased flash rounds to the identity long before it
+      // reaches zero. On the stage every shape inside is already toned for its
+      // depth, so the flash is bracketed by the tone's inverse and the tone,
+      // and blows out to the same white the untoned figure would; anywhere
+      // without a tone both are empty.
+      const brightness = (1 + pose.flash * 1.6).toFixed(2);
+      const saturate = (1 + pose.flash).toFixed(2);
+      const flash =
+        brightness === "1.00" && saturate === "1.00"
+          ? ""
+          : `var(--untone,) brightness(${brightness}) saturate(${saturate}) var(--tone,)`;
+      if (flash !== this.flash) {
+        this.flash = flash;
+        this.node.style.filter = flash;
+      }
     }
     return pose;
   }
@@ -375,6 +421,7 @@ export class Animator {
     this.blend = null;
     this.node = null;
     this.parts.clear();
+    this.written.clear();
   }
 }
 

@@ -36,14 +36,14 @@ export function PartyHud({ s }: { s: Snapshot }) {
               <span className="hud-bar hud-hp">
                 <i
                   style={{
-                    width: `${Math.max(0, (p.hp / p.maxHp) * 100)}%`,
+                    transform: `scaleX(${Math.max(0, p.hp / p.maxHp)})`,
                   }}
                 />
               </span>
               <span className="hud-bar hud-resource">
                 <i
                   style={{
-                    width: `${(p.resource / def.maxResource) * 100}%`,
+                    transform: `scaleX(${p.resource / def.maxResource})`,
                   }}
                 />
               </span>

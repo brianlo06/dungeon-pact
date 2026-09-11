@@ -192,7 +192,7 @@ export function BattleUnit({
           {locked && <i className="combatant-lock" title="Plan locked" />}
         </span>
         <span className="combatant-bar" title={`${shown} / ${unit.maxHp} HP`}>
-          <i style={{ width: `${share * 100}%` }} />
+          <i style={{ transform: `scaleX(${share})` }} />
           {barrier > 0 && <b>{barrier}</b>}
         </span>
         {enemy?.phase === 2 && <span className="combatant-tag">ENRAGED</span>}

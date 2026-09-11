@@ -243,15 +243,26 @@
     transform: rotate(1.4deg);
   }
 }
-/* Scene lighting. The director tints this for fire, lightning and payoffs. */
+/*
+ * Scene lighting. The director tints this for fire, lightning and payoffs.
+ *
+ * It blends only while it is lit. A blend mode makes everything under it one
+ * group that the compositor draws offscreen and copies back, every frame, even
+ * at opacity 0 — a full extra pass over the stage for a layer that is dark
+ * nearly all the time. The delayed discrete transition keeps the blend on
+ * until the fade-out has finished.
+ */
 .layer-light {
   z-index: 5000;
   opacity: 0;
-  mix-blend-mode: screen;
-  transition: opacity 0.12s ease-out;
+  transition:
+    opacity 0.12s ease-out,
+    mix-blend-mode 0s 0.12s allow-discrete;
 }
 .layer-light[data-lit] {
   opacity: 1;
+  mix-blend-mode: screen;
+  transition: opacity 0.12s ease-out;
 }
 
 /* Everything the camera moves. The camera sets its transform origin. */
@@ -303,11 +314,41 @@
   flex-direction: column;
   align-items: center;
   min-width: 0;
-  filter: saturate(calc(0.72 + var(--depth) * 0.4))
+  /* Depth: the back ranks are duller and darker. Applied by the rule below. */
+  --tone: saturate(calc(0.72 + var(--depth) * 0.4))
     brightness(calc(0.86 + var(--depth) * 0.18));
+  /* Its inverse, so a hit's flash can be laid over the figure as it would be
+   * without the tone and the tone put back on top: a flash blows out to white,
+   * and white must land on the back row as dimmed as the rest of it. */
+  --untone: brightness(calc(1 / (0.86 + var(--depth) * 0.18)))
+    saturate(calc(1 / (0.72 + var(--depth) * 0.4)));
 }
 .combatant[data-down] {
-  filter: grayscale(0.8) brightness(0.6);
+  --tone: grayscale(0.8) brightness(0.6);
+  --untone: brightness(calc(1 / 0.6)) saturate(5);
+}
+/*
+ * The tone is applied to every drawn shape, never to the combatant or the rig.
+ *
+ * A filter on anything that holds the rig's parts makes the compositor draw the
+ * whole figure into its own surface and re-filter it every frame, because the
+ * parts move every frame: eight combatants, eight extra passes a frame. On a
+ * single shape inside a part the filter is baked in once when the part is
+ * rasterised, and the part then moves for free. Saturate and brightness are
+ * linear, so toning each shape is the same picture as toning the group.
+ *
+ * Zero specificity, so a creature's own `filter` (a glow) wins — and must end
+ * with `var(--tone,)` to keep the tone. `tests/perf-css.test.ts` holds that.
+ */
+:where(
+  .combatant > :not(.combatant-body),
+  .combatant-body > :not(.combatant-rig)
+),
+:where(.combatant-rig)
+  :where(
+    :not(g, svg, defs, defs *, linearGradient, radialGradient, stop, tspan)
+  ) {
+  filter: var(--tone);
 }
 .combatant-body {
   position: relative;
@@ -425,11 +466,17 @@
   border: 1px solid #0f0d15;
   overflow: hidden;
 }
+/*
+ * Health is shown by scaling the fill, never by its width. A width is layout,
+ * and a bar easing its width re-lays the whole battle grid out every frame for
+ * as long as it moves — which re-rasters the stage's backdrop on every hit.
+ */
 .combatant-bar i {
   display: block;
   height: 100%;
   background: linear-gradient(#e08a5a, #b8503a);
-  transition: width 0.28s ease;
+  transform-origin: 0 50%;
+  transition: transform 0.28s ease;
 }
 .combatant[data-side="hero"] .combatant-bar i {
   background: linear-gradient(#9ec27a, #5f8f55);
@@ -691,10 +738,12 @@
   background: #17131d;
   overflow: hidden;
 }
+/* Scaled, not resized, for the same reason as `.combatant-bar i`. */
 .hud-bar i {
   display: block;
   height: 100%;
-  transition: width 0.28s ease;
+  transform-origin: 0 50%;
+  transition: transform 0.28s ease;
 }
 .hud-hp i {
   background: linear-gradient(#9ec27a, #5f8f55);
@@ -1412,7 +1461,7 @@
 }
 .vault-lock[data-lit] .vault-lock-eye {
   fill: #ffc46a;
-  filter: drop-shadow(0 0 3px #ffb257);
+  filter: drop-shadow(0 0 3px #ffb257) var(--tone,);
 }
 .vault-lock[data-lit] {
   animation: lock-engage 0.35s ease-out;
@@ -1576,11 +1625,10 @@
  * rotations would pivot around the whole SVG rather than the joint. */
 .collector > g {
   transform-box: view-box;
-  will-change: transform;
 }
 .col-eye {
   fill: #ffd27a;
-  filter: drop-shadow(0 0 3px #ffb257);
+  filter: drop-shadow(0 0 3px #ffb257) var(--tone,);
   animation: col-eye 4.4s ease-in-out infinite;
 }
 @keyframes col-eye {
@@ -1616,12 +1664,11 @@
 .bulwark > g,
 .mender > g {
   transform-box: view-box;
-  will-change: transform;
 }
 /* The Bulwark's only opening, and its exhaust. */
 .blw-slot {
   fill: #ff9a42;
-  filter: drop-shadow(0 0 4px #ff7a2e);
+  filter: drop-shadow(0 0 4px #ff7a2e) var(--tone,);
   animation: blw-slot 5.6s ease-in-out infinite;
 }
 @keyframes blw-slot {
@@ -1671,12 +1718,12 @@
 }
 .mnd-tip {
   fill: #ff8c3a;
-  filter: drop-shadow(0 0 3px #ff7a2e);
+  filter: drop-shadow(0 0 3px #ff7a2e) var(--tone,);
   animation: seam 1.9s ease-in-out infinite;
 }
 .mnd-lens {
   fill: #b9f0ff;
-  filter: drop-shadow(0 0 3px #7fd8ff);
+  filter: drop-shadow(0 0 3px #7fd8ff) var(--tone,);
   animation: blw-slot 4.2s ease-in-out infinite;
 }
 :root[data-motion="reduced"] .blw-slot,

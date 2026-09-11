@@ -13,6 +13,14 @@
 /* Parts pivot around their own joint, given in viewBox units. */
 .party-hero [data-part] {
   transform-box: view-box;
+}
+/*
+ * In combat the animator promotes the parts it moves. The HUD portraits are
+ * never moved, but they are promoted anyway: measured on a boss stage,
+ * flattening them into the page added about a third to the main thread's
+ * per-frame layerization work, more than their few small layers cost the GPU.
+ */
+.hud-portrait .party-hero [data-part] {
   will-change: transform;
 }
 
