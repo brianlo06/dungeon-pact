@@ -14,7 +14,8 @@
   height: 100%;
   display: grid;
   grid-template-rows: var(--strip) minmax(0, 1fr) auto;
-  overflow: hidden;
+  /* Clip, not hidden: see .stage. */
+  overflow: clip;
   position: relative;
   background: #1b1822;
 }
@@ -120,7 +121,14 @@
  */
 .stage {
   position: relative;
-  overflow: hidden;
+  /*
+   * Clip, not hidden. `hidden` still makes the stage a scroll container, and
+   * anything that scrolls an element into view — keyboard focus landing on a
+   * combatant near the edge, or a test's click — scrolled the whole battlefield
+   * up by a hundred pixels or more, with no way back. `clip` crops the same
+   * and cannot be scrolled at all.
+   */
+  overflow: clip;
   min-height: 0;
   container-type: size;
   container-name: stage;

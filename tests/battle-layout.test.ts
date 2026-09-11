@@ -35,7 +35,10 @@ it("gives the stage every pixel the fixed bands do not claim", () => {
   expect(battle).toMatch(
     /grid-template-rows:\s*var\(--strip\)\s*minmax\(0,\s*1fr\)\s*auto/,
   );
-  expect(battle).toMatch(/\.battle\s*\{[^}]*overflow:\s*hidden/);
+  // `clip`, not `hidden`: a hidden container can still be scrolled by focus or
+  // scrollIntoView, which slid the whole battlefield out of view.
+  expect(battle).toMatch(/\.battle\s*\{[^}]*overflow:\s*clip/);
+  expect(battle).toMatch(/\.stage\s*\{[^}]*overflow:\s*clip/);
 
   // The two fixed bands have to leave a usable stage at the smallest supported
   // height. 720 is the floor the design promises.

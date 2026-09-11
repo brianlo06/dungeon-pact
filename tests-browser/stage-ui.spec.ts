@@ -249,6 +249,47 @@ const offsets = (page: Page) =>
     ),
   );
 
+/**
+ * The chip offsets once the layout has had its say. The pass rightly reruns
+ * when a chip's box changes size, and the pixel font arriving changes every
+ * chip's size — so on a loaded machine a reading taken at load can predate
+ * the font. Wait for fonts, then for two identical readings.
+ */
+async function settledOffsets(page: Page) {
+  await page.evaluate(() => document.fonts.ready);
+  let last = await offsets(page);
+  for (let i = 0; i < 20; i++) {
+    await page.waitForTimeout(150);
+    const now = await offsets(page);
+    if (JSON.stringify(now) === JSON.stringify(last)) return now;
+    last = now;
+  }
+  return last;
+}
+
+test.describe("the battlefield cannot be scrolled out from under the player", () => {
+  test("focus and scrollIntoView leave the stage where it is", async ({
+    page,
+  }) => {
+    await lab(page, { encounter: "hunting-pack", party: 4 });
+    const moved = await page.evaluate(() => {
+      const stage = document.querySelector<HTMLElement>(".stage")!;
+      const battle = document.querySelector<HTMLElement>(".battle")!;
+      // Everything a browser or a keyboard user can do to scroll a container.
+      for (const el of document.querySelectorAll<HTMLElement>(
+        ".combatant-body, .fan-slip > button",
+      )) {
+        el.focus();
+        el.scrollIntoView({ block: "end", inline: "end" });
+      }
+      stage.scrollTop = 200;
+      battle.scrollTop = 200;
+      return [stage.scrollTop, stage.scrollLeft, battle.scrollTop];
+    });
+    expect(moved).toEqual([0, 0, 0]);
+  });
+});
+
 test.describe("intent chips stay readable and on screen", () => {
   const fights = [
     { encounter: "furnace-watch" },
@@ -299,7 +340,7 @@ test.describe("intent chips stay readable and on screen", () => {
     page,
   }) => {
     await lab(page, { encounter: "hunting-pack", party: 4, motion: 1 });
-    const settled = await offsets(page);
+    const settled = await settledOffsets(page);
     // At 720 this formation needs the layout pass; larger screens have room.
     if (page.viewportSize()!.height <= 720)
       expect(settled.some(Boolean)).toBe(true);
