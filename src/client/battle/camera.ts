@@ -43,6 +43,41 @@ const OVERSCAN = 1.12;
 const REACH = 0.05;
 /** The world scales about this point, as stage fractions. Set on attach. */
 const ORIGIN = { x: 0.5, y: 0.62 };
+/**
+ * The board's vertical extent, as stage fractions. `FLOOR` is the lowest
+ * ground line: the foot of the nearest rank, where its name plates end, and
+ * every combatant stands on or above it (see `layout.ts`). `CEILING` is as
+ * high as anything that must be read while planning may reach: the top of the
+ * furthest rank's intent chips.
+ *
+ * At these zooms the board fills the screen, and a lean toward the subject
+ * alone dropped the back row's health bars off the bottom edge when it looked
+ * up at an enemy, and pushed the top rank's intents off the top when it looked
+ * down at a hero. So the view leans only as far as keeps both lines on screen,
+ * and when a zoom cannot hold both — the replay's, which is emphasis — it
+ * keeps the floor and crops the top. The ceiling is as high as the target
+ * zoom can hold with the floor; any higher and planning would lose it too.
+ */
+export const FLOOR = 0.96;
+const FLOOR_CLEAR = 0.008;
+export const CEILING = 0.133;
+
+/*
+ * A screen point is `o + (p - o) * scale + pan`; these solve it for the pan
+ * that puts each line at its edge. `floorPan` is the furthest the view may
+ * push the world down, `ceilingPan` the furthest it may lift it.
+ */
+const floorPan = (zoom: number) =>
+  1 - FLOOR_CLEAR - ORIGIN.y - (FLOOR - ORIGIN.y) * OVERSCAN * zoom;
+const ceilingPan = (zoom: number) =>
+  -ORIGIN.y - (CEILING - ORIGIN.y) * OVERSCAN * zoom;
+
+/** The lowest and highest vertical pan a zoom allows, floor first. */
+function verticalRange(zoom: number) {
+  const clamp = (n: number) => Math.max(-REACH, Math.min(REACH, n));
+  const high = clamp(floorPan(zoom));
+  return { low: Math.min(high, clamp(ceilingPan(zoom))), high };
+}
 
 /**
  * The part of the world, in untransformed stage pixels, that stays on screen
@@ -54,19 +89,29 @@ const ORIGIN = { x: 0.5, y: 0.62 };
  * inside this box, so it cannot be pushed off screen by the camera leaning.
  */
 export function planningFrame(width: number, height: number) {
-  const zoom =
-    OVERSCAN * Math.max(BIAS.neutral.zoom, BIAS.hero.zoom, BIAS.target.zoom);
-  // A screen edge maps back into the world through the inverse transform;
-  // the worst pan in each direction gives the tightest bound.
-  const inner = (size: number, origin: number, edge: 0 | 1) =>
-    origin * size +
-    ((edge ? size - REACH * size : REACH * size) - origin * size) / zoom;
-  return {
-    left: inner(width, ORIGIN.x, 0),
-    right: inner(width, ORIGIN.x, 1),
-    top: inner(height, ORIGIN.y, 0),
-    bottom: inner(height, ORIGIN.y, 1),
-  };
+  // A screen edge maps back into the world through the inverse transform, so
+  // each bound is the worst over every decision preset at its worst pan.
+  const inner = (
+    size: number,
+    origin: number,
+    zoom: number,
+    edge: 0 | 1,
+    pan: number,
+  ) => origin * size + (edge * size - pan * size - origin * size) / zoom;
+  let left = 0;
+  let right = width;
+  let top = 0;
+  let bottom = height;
+  for (const preset of ["neutral", "hero", "target"] as const) {
+    const z = BIAS[preset].zoom;
+    const zoom = OVERSCAN * z;
+    left = Math.max(left, inner(width, ORIGIN.x, zoom, 0, -REACH));
+    right = Math.min(right, inner(width, ORIGIN.x, zoom, 1, REACH));
+    const { low, high } = verticalRange(z);
+    top = Math.max(top, inner(height, ORIGIN.y, zoom, 0, low));
+    bottom = Math.min(bottom, inner(height, ORIGIN.y, zoom, 1, high));
+  }
+  return { left, right, top, bottom };
 }
 
 /**
@@ -101,7 +146,10 @@ export interface CameraCommand {
 function resolve(cmd: CameraCommand): Omit<CameraState, "shake"> {
   const { pull, zoom } = BIAS[cmd.preset];
   const points = [cmd.at, cmd.and].filter(Boolean) as Placement[];
-  if (!points.length || pull === 0) return { x: 0, y: 0, zoom };
+  // Vertically, only as far as keeps the board on screen; see `FLOOR`.
+  const { low, high } = verticalRange(zoom);
+  const within = (lean: number) => Math.max(low, Math.min(high, lean));
+  if (!points.length || pull === 0) return { x: 0, y: within(0), zoom };
   const cx = points.reduce((n, p) => n + p.x, 0) / points.length;
   const cy = points.reduce((n, p) => n + p.y, 0) / points.length;
   // Move the view toward the subject by a fraction of its offset from centre,
@@ -109,7 +157,7 @@ function resolve(cmd: CameraCommand): Omit<CameraState, "shake"> {
   const clamp = (n: number) => Math.max(-REACH, Math.min(REACH, n));
   return {
     x: clamp((0.5 - cx) * pull),
-    y: clamp((0.55 - cy) * pull * 0.6),
+    y: within((0.55 - cy) * pull * 0.6),
     zoom,
   };
 }
@@ -134,9 +182,11 @@ export interface Camera {
  * fighting React's render cycle.
  */
 export function useCamera(reduced: boolean): Camera {
-  const goal = useRef<Omit<CameraState, "shake">>({ x: 0, y: 0, zoom: 1 });
+  const goal = useRef<Omit<CameraState, "shake">>(
+    resolve({ preset: "neutral" }),
+  );
   const shakeRef = useRef(0);
-  const live = useRef<CameraState>({ ...NEUTRAL });
+  const live = useRef<CameraState>({ ...NEUTRAL, ...goal.current });
   const node = useRef<HTMLElement | null>(null);
   const frame = useRef(0);
 
@@ -184,7 +234,7 @@ export function useCamera(reduced: boolean): Camera {
     shakeRef.current = Math.min(0.022, shakeRef.current + amount);
   }, []);
   const reset = useCallback(() => {
-    goal.current = { x: 0, y: 0, zoom: 1 };
+    goal.current = resolve({ preset: "neutral" });
   }, []);
 
   return { attach, look, shake, reset };

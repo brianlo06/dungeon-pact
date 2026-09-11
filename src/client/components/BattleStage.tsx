@@ -3,11 +3,13 @@ import type { Snapshot } from "../../shared/model";
 import { isObject } from "../../content/enemies";
 import { BattleUnit, type Impact } from "./BattleUnit";
 import { describeIntentEffect } from "../combat-presentation";
-import type { Placement } from "../battle/layout";
+import { unitPresentation, type Placement } from "../battle/layout";
 import type { Camera } from "../battle/camera";
 import type { Animators } from "../battle/useAnimators";
 import { Foundry } from "./Foundry";
-import { useIntentLayout } from "../battle/intent-layout";
+import { useStageLayout, type StageShapes } from "../battle/unit-layout";
+import { rigFor } from "../battle/rigs";
+import { holdsWindup } from "../battle/hero-clips";
 import "../stage-ui.css";
 
 export interface StageBeat {
@@ -47,10 +49,13 @@ export function BattleStage({
   camera,
   frozen,
   animators,
+  onShapes,
   children,
 }: {
   s: Snapshot;
   places: Map<string, Placement>;
+  /** What the stage measured of each combatant, for placing them by it. */
+  onShapes?: (shapes: StageShapes) => void;
   target: string;
   onTarget: (id: string) => void;
   targetable: Set<string>;
@@ -86,16 +91,42 @@ export function BattleStage({
         className={`intent-chip ${a.interruptible ? "intent-windup" : ""}`}
         title={reads}
       >
-        {a.interruptible && <b>WINDUP</b>}
-        <strong>{a.name}</strong>
+        {/* The warning rides the name's line: a third line put a back-row
+            chip above the top of what every camera framing shows. */}
+        <span className="intent-head">
+          {a.interruptible && <b>WINDUP</b>}
+          <strong>{a.name}</strong>
+        </span>
         {aim && <em>→ {aim}</em>}
       </span>
     );
   };
 
-  // Chips step around name plates and each other; see intent-layout.
+  // Units step clear of each other's name plates, then chips step around
+  // plates, figures and each other; see unit-layout and intent-layout.
   const unitLayer = useRef<HTMLDivElement>(null);
-  useIntentLayout(unitLayer, places);
+  useStageLayout(
+    unitLayer,
+    places,
+    {
+      rig: (id) => {
+        const enemy = s.enemies.find((e) => e.id === id);
+        const player = s.players.find((p) => p.id === id);
+        return rigFor(
+          unitPresentation(enemy?.definition, player?.heroId).spriteSet,
+        );
+      },
+      pose: (id) => {
+        const enemy = s.enemies.find((e) => e.id === id);
+        if (enemy) return holdsWindup(enemy) ? "windup" : "rest";
+        // A downed hero lies where it fell (see BattleUnit).
+        const player = s.players.find((p) => p.id === id);
+        return player && player.hp <= 0 ? "down" : "rest";
+      },
+    },
+    onShapes,
+    beat.playing,
+  );
 
   const units = [...s.enemies, ...s.players]
     .map((u) => ({ u, place: places.get(u.id) }))

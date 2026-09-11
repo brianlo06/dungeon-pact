@@ -1,4 +1,3 @@
-import { useLayoutEffect, type RefObject } from "react";
 import { planningFrame } from "./camera";
 
 /**
@@ -14,6 +13,7 @@ import { planningFrame } from "./camera";
  * stage pixels, so the camera and the rigs — both of which move every frame —
  * never enter into it, and the same stage always produces the same answer.
  * It reruns only when something changes size: a new round, a resize, a font.
+ * It runs after the units themselves have been placed (`unit-layout.ts`).
  */
 
 export interface Box {
@@ -29,6 +29,12 @@ export interface ChipSpec {
   box: Box;
   /** The creature it speaks for. A chip may slide, but never leave it. */
   owner: Box;
+  /**
+   * What that creature actually paints, if it is known. A chip never covers
+   * it: a raised key through its own speech panel reads as a rendering fault.
+   * The empty corners of the owner's square are free to use.
+   */
+  figure?: Box;
 }
 
 export interface Offset {
@@ -38,6 +44,8 @@ export interface Offset {
 
 /** Clear space kept between a chip and whatever it steps around. */
 const GAP = 3;
+/** How far an idle loop carries a figure past the outline it rests in. */
+const SWAY = 5;
 /** Anything below this, in square pixels, is rounding, not overlap. */
 const TOUCH = 1;
 /**
@@ -64,10 +72,18 @@ const moved = (b: Box, o: Offset): Box => ({
   bottom: b.bottom + o.y,
 });
 
+const grown = (b: Box, by: number): Box => ({
+  left: b.left - by,
+  right: b.right + by,
+  top: b.top - by,
+  bottom: b.bottom + by,
+});
+
 /**
  * Place every chip. Hard rules: inside the frame, clear of every name plate and
- * of every chip already placed. Soft: stay near home, prefer sliding sideways
- * or rising to sinking onto the creature, and avoid covering other figures.
+ * of every chip already placed. Then clear of its own creature's painted
+ * figure. Soft: stay attached to the creature, stay near home, prefer sliding
+ * sideways or rising to sinking, and avoid covering other figures.
  *
  * Chips are placed in the order given; the stage passes them back rank first,
  * so the rank nearest the top edge — which has least room to move — keeps its
@@ -85,6 +101,10 @@ export function placeChips(
     const b = chip.box;
     const h = b.bottom - b.top;
     const blockers = [...plates, ...placed];
+    // Kept clear by a little more than touching, so an idle sway never
+    // brings the drawing back across it.
+    const own = chip.figure ? grown(chip.figure, SWAY) : null;
+    const others = figures.filter((f) => f !== chip.figure);
 
     // Candidate moves: stay, meet the frame, or step just clear of a blocker
     // on any side. Every combination of a horizontal and a vertical step is
@@ -96,6 +116,11 @@ export function placeChips(
       xs.add(o.right + GAP - b.left);
       ys.add(o.top - GAP - b.bottom);
       ys.add(o.bottom + GAP - b.top);
+    }
+    if (own) {
+      xs.add(own.left - b.right);
+      xs.add(own.right - b.left);
+      ys.add(own.top - b.bottom);
     }
 
     const ownerMid = (chip.owner.left + chip.owner.right) / 2;
@@ -118,6 +143,7 @@ export function placeChips(
           const a = area(c, k);
           if (a > TOUCH) hit += a;
         }
+        const sits = own ? area(c, own) : 0;
         // Still visibly this creature's: over the middle of it, and not sunk
         // below its shoulders.
         const reach = ownerW * 0.2;
@@ -126,10 +152,10 @@ export function placeChips(
           Math.max(0, c.left - (ownerMid + reach)) +
           Math.max(0, c.bottom - (chip.owner.top + ownerH * 0.45));
         let cost = Math.abs(o.x) + (o.y < 0 ? -o.y * 1.4 : o.y * 3);
-        for (const f of figures) cost += (area(c, f) / h) * COVER;
+        for (const f of others) cost += (area(c, f) / h) * COVER;
         // Overlap is the thing being fixed, so it outranks everything; then
-        // staying attached; then staying close.
-        const key = [hit, detach, cost];
+        // the chip's own creature; then staying attached; then staying close.
+        const key = [hit, sits > TOUCH ? sits : 0, detach, cost];
         if (!best || before(key, best.key)) best = { o, key };
       }
     const o = best?.o ?? { x: 0, y: 0 };
@@ -139,19 +165,6 @@ export function placeChips(
   return out;
 }
 
-/** The figure a body box actually draws in, roughly: art is centred and
- * rarely reaches the corners of its square. */
-const figureOf = (b: Box): Box => {
-  const w = b.right - b.left;
-  const h = b.bottom - b.top;
-  return {
-    left: b.left + w * 0.22,
-    right: b.right - w * 0.22,
-    top: b.top + h * 0.12,
-    bottom: b.bottom - h * 0.04,
-  };
-};
-
 /** Keep chips this far inside the frame, so their borders never kiss an edge. */
 const MARGIN = 4;
 /** How far a target's plate brackets reach past it (see stage-ui.css). */
@@ -160,8 +173,15 @@ const PLATE_REACH = 8;
 /**
  * Measure the stage and move its chips. Offsets are written straight onto the
  * chip wrappers; React never renders a style there, so nothing fights it.
+ *
+ * `painted` is what each combatant paints, in the layer's untransformed
+ * pixels (see `unit-layout.ts`); a combatant missing from it counts as its
+ * whole square.
  */
-export function layoutIntents(layer: HTMLElement) {
+export function layoutIntents(
+  layer: HTMLElement,
+  painted: Map<HTMLElement, Box> = new Map(),
+) {
   const units = [...layer.querySelectorAll<HTMLElement>(".combatant")];
   const wrappers = units
     .map((u) => u.querySelector<HTMLElement>(":scope > .combatant-intent"))
@@ -202,14 +222,15 @@ export function layoutIntents(layer: HTMLElement) {
     }
     if (!body) return;
     const owner = local(body);
-    figures.push(figureOf(owner));
+    const figure = painted.get(u) ?? owner;
+    figures.push(figure);
     const wrapper = u.querySelector<HTMLElement>(":scope > .combatant-intent");
     const chip = wrapper?.querySelector(".intent-chip") ?? wrapper;
     if (!wrapper || !chip) return;
     const box = local(chip);
     // Collapsed at small heights, where chips only show on hover.
     if (box.right - box.left < 1) return;
-    chips.push({ id: String(i), box, owner, el: wrapper });
+    chips.push({ id: String(i), box, owner, figure, el: wrapper });
   });
 
   const f = planningFrame(layer.offsetWidth, layer.offsetHeight);
@@ -227,25 +248,4 @@ export function layoutIntents(layer: HTMLElement) {
     if (o && (o.x || o.y))
       c.el.style.transform = `translate(${o.x}px, ${o.y}px)`;
   }
-}
-
-/**
- * Lay the chips out whenever the stage's contents or size change. A resize
- * observer rather than a frame loop: the answer only changes when a box does.
- */
-export function useIntentLayout(
-  layer: RefObject<HTMLElement | null>,
-  key: unknown,
-) {
-  useLayoutEffect(() => {
-    const el = layer.current;
-    if (!el) return;
-    layoutIntents(el);
-    if (typeof ResizeObserver === "undefined") return;
-    const watch = new ResizeObserver(() => layoutIntents(el));
-    watch.observe(el);
-    for (const n of el.querySelectorAll(".combatant, .combatant-intent"))
-      watch.observe(n);
-    return () => watch.disconnect();
-  }, [layer, key]);
 }

@@ -12,6 +12,7 @@ import { ActionFan, type FanAbility } from "./ActionFan";
 import { treasuryBarrier } from "../combat-presentation";
 import type { Impact } from "./BattleUnit";
 import { placements } from "../battle/layout";
+import type { StageShapes } from "../battle/unit-layout";
 import { useCamera } from "../battle/camera";
 import { BattleVfx } from "./BattleVfx";
 import { useAnimators } from "../battle/useAnimators";
@@ -40,7 +41,10 @@ export function Combat({
   const [history, setHistory] = useState(false);
   // The entrance plays once for an encounter, not once a round.
   const [introShown, setIntroShown] = useState(false);
-  const places = useMemo(() => placements(s), [s]);
+  // The stage measures what each combatant paints, and everyone is placed by
+  // it: the units, and everything that aims at them — camera, effects, fan.
+  const [shapes, setShapes] = useState<StageShapes | null>(null);
+  const places = useMemo(() => placements(s, shapes), [s, shapes]);
   const camera = useCamera(reducedMotion);
   const animators = useAnimators();
   const replay = useDirector(s, reducedMotion, {
@@ -259,6 +263,7 @@ export function Combat({
         frozen={replay.frozen}
         s={s}
         places={places}
+        onShapes={setShapes}
         camera={camera}
         target={selectedTarget}
         onTarget={pickTarget}
