@@ -2,122 +2,26 @@ import type { Rig } from "./animation";
 import { GENERIC } from "./animation";
 import { FORGE_RIGS } from "./rigs-forge";
 import { DEBT_RIGS } from "./rigs-debt";
+import { PARTY_RIGS } from "./rigs-party";
 
 /**
  * Character rigs.
  *
- * The Vanguard is the first fully animated combatant, chosen because its
- * vocabulary exercises everything: a weighty strike, a shield raise, a physical
- * move into an ally's attack line, a recoil, a fall and a recovery. Everything
- * else in the game still uses the generic rig and looks fine doing it.
+ * Every combatant in the game now has one: the heroes in `rigs-party.ts`, the
+ * foundry creatures in `rigs-forge.ts`, the Counting House's in `rigs-debt.ts`,
+ * and the first creatures drawn — the Collector, the Bulwark, the Mender and
+ * the Strongbox — here. The generic rig remains only as a fallback.
  *
- * These are transform rigs rather than frame sheets. With no character art yet
- * that is the only way to get anticipation and weight at all — and for bosses
- * it stays the right answer even once art exists, because a cutout rig buys
- * heft that would otherwise cost dozens of hand-drawn frames.
+ * These are transform rigs rather than frame sheets, and each drives the named
+ * parts of an authored SVG creature, so a figure moves in pieces rather than
+ * as one sticker. That buys anticipation and weight that would otherwise cost
+ * dozens of hand-drawn frames per action.
+ *
+ * Poses are in screen space, in the creature's own facing. The animator knows
+ * nothing about sides, so a hero's strike travels towards positive x and an
+ * enemy's towards negative x. `tests/rig-facing.test.ts` and
+ * `tests/party-rigs.test.ts` hold every rig to that.
  */
-
-/** A shield-bearer: slow, planted, and heavy through the hips. */
-const vanguard: Rig = {
-  idle: {
-    duration: 4200,
-    loop: true,
-    interruptible: true,
-    poses: [
-      { at: 0, y: 0, rotate: 0, squash: 1 },
-      // Weight shifts onto the shield side, then back. Breathing is the small
-      // part of this; the shift is what makes it read as standing guard.
-      { at: 0.28, y: -0.012, rotate: -1.1, squash: 1.006 },
-      { at: 0.52, y: -0.004, rotate: 0.2 },
-      { at: 0.78, y: -0.016, rotate: 1, squash: 0.996 },
-      { at: 1, y: 0, rotate: 0, squash: 1 },
-    ],
-  },
-  anticipate: {
-    duration: 260,
-    poses: [
-      { at: 0, x: 0, rotate: 0 },
-      { at: 1, x: -0.13, rotate: -6, squash: 1.08, y: 0.01 },
-    ],
-  },
-  /** Basic strike: coil, drive through, follow through, recover. */
-  attack: {
-    duration: 620,
-    poses: [
-      { at: 0, x: 0, rotate: 0, squash: 1 },
-      { at: 0.26, x: -0.14, rotate: -7, squash: 1.09, y: 0.012 },
-      { at: 0.34, x: -0.15, rotate: -8 },
-      { at: 0.47, x: 0.26, rotate: 9, squash: 0.88, scale: 1.06, y: -0.01 },
-      { at: 0.6, x: 0.19, rotate: 5, squash: 0.96 },
-      { at: 0.78, x: 0.05, rotate: 1 },
-      { at: 1, x: 0, rotate: 0, squash: 1, scale: 1, y: 0 },
-    ],
-  },
-  /** Shieldbreaker: the same shape, bigger, slower, and it lands harder. */
-  signature: {
-    duration: 880,
-    poses: [
-      { at: 0, x: 0, rotate: 0 },
-      { at: 0.22, x: -0.2, rotate: -11, squash: 1.14, y: 0.02, scale: 1.02 },
-      { at: 0.4, x: -0.22, rotate: -12, flash: 0.25 },
-      { at: 0.52, x: 0.34, rotate: 14, squash: 0.82, scale: 1.12, flash: 0.5 },
-      { at: 0.64, x: 0.26, rotate: 8, squash: 0.95, flash: 0.15 },
-      { at: 0.84, x: 0.07, rotate: 2 },
-      { at: 1, x: 0, rotate: 0, squash: 1, scale: 1, y: 0, flash: 0 },
-    ],
-  },
-  /** Brace: the shield comes up and stays up. */
-  block: {
-    duration: 700,
-    poses: [
-      { at: 0, x: 0, rotate: 0 },
-      { at: 0.18, x: -0.05, rotate: -3, y: 0.012, squash: 1.08 },
-      { at: 0.36, x: 0.03, rotate: 2, scale: 1.05, flash: 0.3 },
-      { at: 0.62, x: 0.01, rotate: 1, scale: 1.03, flash: 0.1 },
-      { at: 1, x: 0, rotate: 0, scale: 1, squash: 1, flash: 0 },
-    ],
-  },
-  /** Intercept: drive across, plant, take it on the shield. */
-  cast: {
-    duration: 760,
-    poses: [
-      { at: 0, x: 0, rotate: 0 },
-      { at: 0.14, x: -0.08, rotate: -5, squash: 1.1 },
-      { at: 0.34, x: 0.3, rotate: 4, squash: 0.92, scale: 1.04 },
-      { at: 0.46, x: 0.26, rotate: 0, squash: 1.06, scale: 1.06, flash: 0.35 },
-      { at: 0.62, x: 0.3, rotate: 3, squash: 0.94, flash: 0.15 },
-      { at: 1, x: 0, rotate: 0, squash: 1, scale: 1, flash: 0 },
-    ],
-  },
-  hurt: {
-    duration: 380,
-    poses: [
-      { at: 0, x: 0, flash: 0.9 },
-      { at: 0.16, x: 0.13, rotate: 7, squash: 0.88, flash: 0.6 },
-      { at: 0.42, x: -0.05, rotate: -3, squash: 1.04 },
-      { at: 0.7, x: 0.02, rotate: 1 },
-      { at: 1, x: 0, rotate: 0, squash: 1, flash: 0 },
-    ],
-  },
-  down: {
-    duration: 640,
-    poses: [
-      { at: 0, rotate: 0, y: 0, flash: 0.5 },
-      { at: 0.22, rotate: -8, y: -0.03, flash: 0.2 },
-      { at: 0.55, rotate: -42, y: 0.06 },
-      { at: 1, rotate: -74, y: 0.14, squash: 1.2, flash: 0 },
-    ],
-  },
-  revive: {
-    duration: 820,
-    poses: [
-      { at: 0, rotate: -74, y: 0.14, squash: 1.2 },
-      { at: 0.35, rotate: -40, y: 0.08, flash: 0.5 },
-      { at: 0.68, rotate: 6, y: -0.05, scale: 1.05, flash: 0.8 },
-      { at: 1, rotate: 0, y: 0, scale: 1, squash: 1, flash: 0 },
-    ],
-  },
-};
 
 /**
  * The Collector: never bounces. It leans, plants, and swings from the hips.
@@ -688,7 +592,7 @@ const strongbox: Rig = {
 };
 
 const RIGS: Record<string, Rig> = {
-  vanguard,
+  ...PARTY_RIGS,
   collector,
   bulwark,
   mender,

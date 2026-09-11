@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { PARTY, PORTRAITS } from "./heroes";
 
 interface Atlas {
   /** Public path to an equal-cell RGBA sheet. */
@@ -49,11 +50,32 @@ export function Sprite({
   id,
   className = "",
   label,
+  crop,
 }: {
   id: string;
   className?: string;
   label?: string;
+  /** Head and shoulders, for a portrait too small for a whole figure. */
+  crop?: "portrait";
 }) {
+  // The party is drawn, not cut from the atlas. Outside combat it stands at
+  // rest in the same box an atlas cell would, so every screen that sizes a
+  // `.sprite` sizes a hero without knowing the difference.
+  const Drawn = PARTY[id];
+  if (Drawn)
+    return (
+      <span
+        role={label ? "img" : undefined}
+        aria-label={label}
+        aria-hidden={label ? undefined : true}
+        className={`sprite sprite-${id} sprite-drawn ${className}`}
+      >
+        <Drawn
+          unitId={`still-${id}`}
+          viewBox={crop === "portrait" ? PORTRAITS[id] : undefined}
+        />
+      </span>
+    );
   const { atlas, index } = locate(id);
   const span = 100 / (atlas.grid - 1);
   return (

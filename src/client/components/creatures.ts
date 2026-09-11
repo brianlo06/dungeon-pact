@@ -10,6 +10,7 @@ import { Hound } from "./Hound";
 import { Miser } from "./Miser";
 import { Sniper } from "./Sniper";
 import { Leech } from "./Leech";
+import { PARTY } from "./heroes";
 
 /**
  * Authored creatures, by `presentation.spriteSet`.
@@ -30,4 +31,5 @@ export const CREATURES: Record<string, ComponentType<CreatureProps>> = {
   miser: Miser,
   sniper: Sniper,
   thief: Leech,
+  ...PARTY,
 };

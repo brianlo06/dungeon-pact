@@ -28,7 +28,7 @@ export function PartyHud({ s }: { s: Snapshot }) {
             title={`${p.name} · ${def.name} · ${p.hp}/${p.maxHp} HP · ${p.resource}/${def.maxResource} ${def.resource}`}
           >
             <span className="hud-portrait">
-              <Sprite id={p.heroId} />
+              <Sprite id={p.heroId} crop="portrait" />
               {!s.connected.includes(p.id) && <i className="hud-away">○</i>}
             </span>
             <span className="hud-lines">
