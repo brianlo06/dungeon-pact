@@ -1,5 +1,4 @@
-import { useEffect, useRef } from "react";
-import type { Animators } from "../battle/useAnimators";
+import { useRigParts, type CreatureProps } from "../battle/useRigParts";
 
 /**
  * The Kiln Mender.
@@ -24,27 +23,8 @@ const PARTS = [
   "legs",
 ] as const;
 
-export function Mender({
-  unitId,
-  animators,
-  className = "",
-}: {
-  unitId: string;
-  animators?: Animators;
-  className?: string;
-}) {
-  const refs = useRef<Record<string, SVGGElement | null>>({});
-  useEffect(() => {
-    if (!animators) return;
-    for (const part of PARTS)
-      animators.attachPart(unitId, part, refs.current[part]);
-    return () => {
-      for (const part of PARTS) animators.attachPart(unitId, part, null);
-    };
-  }, [animators, unitId]);
-  const hold = (name: string) => (el: SVGGElement | null) => {
-    refs.current[name] = el;
-  };
+export function Mender({ unitId, animators, className = "" }: CreatureProps) {
+  const hold = useRigParts(unitId, animators, PARTS);
 
   /** One instrument limb: thin, jointed, ending in a heated clamp. */
   const limb = (d: string, cx: number, cy: number, rotate: number) => (

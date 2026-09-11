@@ -5,9 +5,7 @@ import { unitPresentation } from "../battle/layout";
 import type { Animators } from "../battle/useAnimators";
 import { Sprite } from "./Sprite";
 import { Strongbox, type VaultState } from "./Strongbox";
-import { Collector } from "./Collector";
-import { Bulwark } from "./Bulwark";
-import { Mender } from "./Mender";
+import { CREATURES } from "./creatures";
 import { statuses } from "../../content/statuses";
 import { items } from "../../content/items";
 
@@ -59,6 +57,7 @@ export function BattleUnit({
   const player = "heroId" in unit ? (unit as Player) : null;
   const enemy = "definition" in unit ? (unit as Enemy) : null;
   const look = unitPresentation(enemy?.definition, player?.heroId);
+  const Art = look.spriteSet ? CREATURES[look.spriteSet] : undefined;
   const sprite = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     animators?.register(unit.id, look.spriteSet);
@@ -115,20 +114,8 @@ export function BattleUnit({
               held={held.length}
               state={vault}
             />
-          ) : look.spriteSet === "collector" ? (
-            <Collector
-              className="combatant-sprite"
-              unitId={unit.id}
-              animators={animators}
-            />
-          ) : look.spriteSet === "bulwark" ? (
-            <Bulwark
-              className="combatant-sprite"
-              unitId={unit.id}
-              animators={animators}
-            />
-          ) : look.spriteSet === "mender" ? (
-            <Mender
+          ) : Art ? (
+            <Art
               className="combatant-sprite"
               unitId={unit.id}
               animators={animators}

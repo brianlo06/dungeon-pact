@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Combat } from "../client/components/Combat";
 import { items } from "../content/items";
+import { encounters } from "../content/encounters";
 import { reduce, snapshot } from "../engine/game";
 import type { Intent } from "../shared/protocol";
 import {
@@ -47,6 +48,8 @@ function fromUrl(): {
       legacy: q.get("legacy") === "1",
       downed: q.get("downed") === "1",
       longNames: q.get("longNames") === "1",
+      encounter: q.get("encounter") ?? undefined,
+      heroes: q.get("heroes")?.split(",").filter(Boolean),
     },
     viewport: q.get("viewport") ?? "fit",
     you: num("you", 0),
@@ -109,18 +112,25 @@ function BossPreview() {
         </p>
         <div className="preview-controls">
           <label>
-            Boss{" "}
+            Fight{" "}
             <select
-              value={options.boss}
-              onChange={(e) =>
-                load({
-                  ...options,
-                  boss: e.target.value as FixtureOptions["boss"],
-                })
-              }
+              value={options.encounter ?? options.boss}
+              onChange={(e) => {
+                const v = e.target.value;
+                load(
+                  v === "collector" || v === "miser"
+                    ? { ...options, boss: v, encounter: undefined }
+                    : { ...options, encounter: v },
+                );
+              }}
             >
               <option value="collector">The Collector</option>
               <option value="miser">The Miser</option>
+              {encounters.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.name}
+                </option>
+              ))}
             </select>
           </label>
           <label>

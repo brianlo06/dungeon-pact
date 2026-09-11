@@ -4,6 +4,7 @@ import {
   finishPreviewRound,
   type FixtureOptions,
 } from "../src/dev/boss-fixture";
+import { encounters } from "../src/content/encounters";
 
 const options: FixtureOptions = {
   boss: "collector",
@@ -12,6 +13,17 @@ const options: FixtureOptions = {
   gold: 700,
   legacy: false,
 };
+
+it("puts every ordinary encounter on the stage by name, with any party", () => {
+  const heroes = ["broker", "herald", "reaver", "beguiler"];
+  for (const e of encounters)
+    for (const size of [2, 3, 4] as const) {
+      const s = bossFixture({ ...options, encounter: e.id, size, heroes });
+      expect(s.phase).toBe("COMBAT");
+      expect(s.enemies.map((x) => x.definition)).toEqual(e.formations[size]);
+      expect(s.players.map((p) => p.heroId)).toEqual(heroes.slice(0, size));
+    }
+});
 
 it("previews the requested boss with real support formations at every party size", () => {
   for (const boss of ["collector", "miser"] as const)

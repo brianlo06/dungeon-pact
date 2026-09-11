@@ -17,6 +17,13 @@ export const RESOLUTIONS = [
   { name: "1920x1080", width: 1920, height: 1080 },
 ] as const;
 
+/*
+ * The port is overridable so that two checkouts can run their suites at once.
+ * `reuseExistingServer` would otherwise quietly point one checkout's tests at
+ * the other checkout's dev server, and both would report on the wrong code.
+ */
+const PORT = Number(process.env.PW_PORT ?? 5399);
+
 export default defineConfig({
   testDir: "./tests-browser",
   timeout: 30_000,
@@ -31,7 +38,7 @@ export default defineConfig({
   workers: process.env.CI ? 2 : 3,
   reporter: process.env.CI ? "list" : [["list"]],
   use: {
-    baseURL: "http://127.0.0.1:5399",
+    baseURL: `http://127.0.0.1:${PORT}`,
     trace: "retain-on-failure",
   },
   projects: RESOLUTIONS.map((r) => ({
@@ -42,8 +49,8 @@ export default defineConfig({
     },
   })),
   webServer: {
-    command: "npx vite --host 127.0.0.1 --port 5399 --strictPort",
-    url: "http://127.0.0.1:5399/dev/bosses.html",
+    command: `npx vite --host 127.0.0.1 --port ${PORT} --strictPort`,
+    url: `http://127.0.0.1:${PORT}/dev/bosses.html`,
     reuseExistingServer: true,
     timeout: 60_000,
   },
