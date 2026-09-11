@@ -960,20 +960,13 @@
  * still gets a readable menu. Signature abilities sit nearest to hand.
  */
 .action-fan {
+  /* A zero-size anchor at the hero's feet; the block is placed from here. */
   position: absolute;
   z-index: 5500;
-  transform: translate(-50%, -100%);
+  width: 0;
+  height: 0;
   pointer-events: none;
-  /* Clear the hero first, then cascade outward and up. */
-  --out: 1;
-  --lead: 56px;
-  --step-x: 16px;
-  /* One slip's height, so nothing ever covers the label below it. */
-  --step-y: var(--slip, 31px);
-  --col-w: 132px;
-}
-.action-fan[data-dir="left"] {
-  --out: -1;
+  --step-x: 9px;
 }
 .fan-anchor {
   position: absolute;
@@ -1007,31 +1000,49 @@
   color: var(--muted);
   text-shadow: 0 1px 2px #000;
 }
-.fan-slips {
+/*
+ * One block, placed beside the hero by measurement (battle/fan-layout.ts):
+ * the signature slips stacked above, the shared actions in a quiet block at
+ * the foot. The slips step away from the hero as they climb.
+ */
+.fan-block {
   position: absolute;
-  bottom: 30px;
-  left: calc(50% + var(--lead) * var(--out) + var(--fan-x, 0px));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  pointer-events: none;
+}
+.fan-block[data-side="left"] {
+  align-items: flex-end;
+}
+/* Columns fill upward from the foot; the solver prices each arrangement with
+ * the same gaps (fanShapes in battle/fan-layout.ts). */
+.fan-slips {
+  display: grid;
+  grid-auto-columns: auto;
+  column-gap: 6px;
+  row-gap: 2px;
+  justify-items: start;
+  align-items: end;
   margin: 0;
   padding: 0;
   list-style: none;
 }
+.fan-block[data-side="left"] .fan-slips {
+  justify-items: end;
+}
 .fan-slip {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  /* Rows climb; a full column steps sideways instead of climbing further. */
-  z-index: calc(60 - var(--i, 0));
-  transform: translate(
-      calc(
-        (var(--row, 0) * var(--step-x) + var(--col, 0) * var(--col-w)) *
-          var(--out) + (var(--out) - 1) * 50%
-      ),
-      calc(var(--row, 0) * var(--step-y) * -1)
-    )
-    skewX(-8deg);
+  position: relative;
+  transform: skewX(-8deg);
+  margin-left: calc(var(--i, 0) * var(--step-x));
   animation: slip 0.22s cubic-bezier(0.2, 1.3, 0.5, 1) backwards;
-  animation-delay: calc(var(--i) * 26ms);
+  animation-delay: calc(var(--i, 0) * 26ms);
   pointer-events: auto;
+}
+.fan-block[data-side="left"] .fan-slip {
+  margin-left: 0;
+  margin-right: calc(var(--i, 0) * var(--step-x));
 }
 @keyframes slip {
   from {
@@ -1039,15 +1050,13 @@
   }
 }
 .action-fan[data-mode="target"] .fan-slip {
-  transform: translate(calc((var(--out) - 1) * 50%), 0) skewX(-8deg);
+  margin: 0;
   animation: none;
 }
-/* The shared actions: a quiet cluster at the hero's feet, never a cascade. */
+/* The shared actions: a quiet block at the foot, never a cascade. */
 .fan-common {
-  position: absolute;
-  bottom: 4px;
-  left: calc(50% + var(--common-x, 0px));
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(var(--common-cols, 2), auto);
   gap: 4px;
   margin: 0;
   padding: 0;
@@ -1055,11 +1064,17 @@
   white-space: nowrap;
 }
 .fan-common .fan-slip {
-  position: static;
-  transform: skewX(-8deg);
+  margin: 0;
   animation: none;
 }
 .fan-common .fan-slip > button {
+  width: 100%;
+  padding: 2px 7px;
+}
+.fan-common .fan-slip > button strong {
+  font-size: 9px;
+}
+.fan-slip > button {
   padding: 2px 7px;
 }
 .fan-common .fan-slip > button strong {
@@ -1126,12 +1141,11 @@
 .fan-slip[data-blocked] small {
   color: var(--rust);
 }
-/* Detail on demand, never printed permanently around the hero. */
-/* Detail opens toward the middle of the field. Opening it outward, on the same
- * side the cascade already leans, pushes it off the edge of the stage. */
+/* Detail on demand, never printed permanently around the hero. It opens away
+ * from the hero, on the side the fan was placed because it was clear. */
 .fan-detail {
   position: absolute;
-  right: calc(100% + 10px);
+  left: calc(100% + 10px);
   bottom: 0;
   width: 200px;
   padding: 6px 9px;
@@ -1144,9 +1158,9 @@
   pointer-events: none;
   transition: opacity 0.12s;
 }
-.action-fan[data-dir="left"] .fan-detail {
-  right: auto;
-  left: calc(100% + 10px);
+.fan-block[data-side="left"] .fan-detail {
+  left: auto;
+  right: calc(100% + 10px);
 }
 .fan-slip > button:hover + .fan-detail,
 .fan-slip > button:focus-visible + .fan-detail {

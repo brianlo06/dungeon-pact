@@ -1,20 +1,28 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { Ability, Player } from "../../shared/model";
 import { hero, supplyFor } from "../../content/heroes";
 import type { Placement } from "../battle/layout";
+import { layoutFan } from "../battle/fan-layout";
 
 /**
  * Your actions, belonging to your hero.
  *
  * They used to be a strip of buttons along the bottom of the page, which made
  * choosing an action a form-filling exercise happening somewhere else. These
- * are contract slips torn off the hero: they cascade away from them, the
- * signature abilities nearest to hand and the things every class can do further
- * out and quieter, and they lean away from whichever screen edge the hero is
- * standing near.
+ * are contract slips torn off the hero: they stand beside them and step away
+ * from them, the signature abilities stacked above and the things every class
+ * can do in a quiet block at the foot.
  *
- * The fan never covers the enemies it is aimed at, because it opens along the
- * hero's own side of the field.
+ * The fan covers nobody — not the enemies it is aimed at, not the allies beside
+ * the hero, and not the hero themselves. Where it opens is measured against
+ * the stage rather than set by offsets, because a drawn hero is too wide for
+ * any fixed offset to clear.
  */
 
 export interface FanAbility {
@@ -59,96 +67,82 @@ export function ActionFan({
   const secondary = options.filter((o) => o.common && !o.urgent);
 
   /**
-   * Open where nobody is standing. "Outward from centre" is not good enough —
-   * outward can point straight at a creature. Both sides are scored by what
-   * the fan would cover up-field, and the emptier one wins; ties open outward.
+   * Where the fan opens is measured, not assumed: beside the hero, clear of
+   * every figure, name plate and intent chip on the stage — the hero's own
+   * figure included — and as close to the hero as that allows. See
+   * `battle/fan-layout.ts`. It is placed before the first paint, so it never
+   * appears in one spot and jumps to another.
    */
-  const SPAN = 0.24;
-  const covered = (d: -1 | 1) =>
-    occupied.filter((o) => {
-      const lo = Math.min(place.x, place.x + d * SPAN);
-      const hi = Math.max(place.x, place.x + d * SPAN);
-      return o.x > lo - 0.06 && o.x < hi + 0.06 && o.y < place.y - 0.02;
-    }).length;
-  const outward: -1 | 1 = place.x <= 0.5 ? -1 : 1;
-  const dir: -1 | 1 =
-    covered(-1) === covered(1) ? outward : covered(-1) < covered(1) ? -1 : 1;
-
-  /**
-   * The cascade must not climb into enemy territory. Its total rise is capped
-   * by the gap between this hero and the nearest thing standing up-field, and
-   * the per-slip step shrinks to fit rather than the fan growing taller.
-   */
-  const ceilingY = occupied
-    .filter((o) => o.y < place.y - 0.02)
-    .reduce((n, o) => Math.max(n, o.y), 0.18);
-  const rise = Math.max(0.1, place.y - ceilingY - 0.03);
-
-  /**
-   * Slips must never cover each other's text, so the cascade wraps into a
-   * second column rather than squeezing the step below a slip's own height.
-   * That needs the stage's real size, so it is measured rather than guessed.
-   */
-  const SLIP = 31;
-  const [stage, setStage] = useState({ w: 0, h: 0 });
-  const commonRef = useRef<HTMLUListElement>(null);
-  const [commonX, setCommonX] = useState(0);
-  useLayoutEffect(() => {
-    const parent = box.current?.offsetParent as HTMLElement | null;
-    if (!parent) return;
-    const measure = () => {
-      const b = parent.getBoundingClientRect();
-      setStage({ w: b.width, h: b.height });
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(parent);
-    return () => observer.disconnect();
-  }, []);
-  const stageH = stage.h;
-  // The shared-action row is wider than a slip and sits at the hero's feet, so
-  // a hero near an edge would push it off the stage. Clamp it to the stage.
-  useLayoutEffect(() => {
-    const width = commonRef.current?.getBoundingClientRect().width ?? 0;
-    if (!stage.w || !width) return;
-    const anchor = place.x * stage.w;
-    const ideal = anchor - width / 2;
-    const clamped = Math.max(8, Math.min(stage.w - width - 8, ideal));
-    setCommonX(clamped - anchor);
-  }, [stage.w, place.x, secondary.length]);
-  const perColumn = Math.max(
-    1,
-    Math.floor((stageH ? rise * stageH : 140) / SLIP),
-  );
-  /**
-   * A back-row hero has little vertical room, so the cascade wraps into more
-   * columns — and those columns can walk straight off the side of the stage.
-   * Modelling the slip widths to predict that was wrong by enough to push an
-   * ability off screen, so this measures what actually rendered and nudges the
-   * whole cascade back inside. The shift is applied on top of itself, so it
-   * settles in a single extra pass rather than oscillating.
-   */
-  const slipsRef = useRef<HTMLUListElement>(null);
-  const [fanX, setFanX] = useState(0);
-  useLayoutEffect(() => {
-    const parent = box.current?.offsetParent as HTMLElement | null;
-    const list = slipsRef.current;
-    if (!parent || !list) return;
-    const bounds = parent.getBoundingClientRect();
-    const slips = [...list.querySelectorAll("button")].map((el) =>
-      el.getBoundingClientRect(),
+  const block = useRef<HTMLDivElement>(null);
+  const [spot, setSpot] = useState<{
+    x: number;
+    y: number;
+    side: "left" | "right";
+    cols: number;
+    commonCols: number;
+  } | null>(null);
+  const place_ = useCallback(() => {
+    const anchor = box.current;
+    const world = anchor?.offsetParent as HTMLElement | null;
+    if (!anchor || !world || !block.current) return;
+    // While choosing, the camera is looking at this hero (see Combat.tsx), so
+    // what is on screen is known exactly. While targeting it moves, and the
+    // single remaining slip keeps to what every framing shows.
+    const found = layoutFan(
+      world,
+      anchor,
+      block.current,
+      me.id,
+      mode === "ability" ? { preset: "hero", at: place } : undefined,
     );
-    if (!slips.length) return;
-    const left = Math.min(...slips.map((b) => b.left)) - bounds.left;
-    const right = Math.max(...slips.map((b) => b.right)) - bounds.left;
-    const delta =
-      left < 8
-        ? 8 - left
-        : right > bounds.width - 8
-          ? bounds.width - 8 - right
-          : 0;
-    if (Math.abs(delta) > 0.5) setFanX((x) => x + delta);
-  }, [fanX, place.x, primary.length, perColumn, stage.w, mode]);
+    if (!found) return;
+    const next = {
+      x: found.x,
+      y: found.y,
+      side: found.side,
+      cols: found.shape.cols,
+      commonCols: found.shape.commonCols,
+    };
+    setSpot((prev) =>
+      prev &&
+      prev.x === next.x &&
+      prev.y === next.y &&
+      prev.side === next.side &&
+      prev.cols === next.cols &&
+      prev.commonCols === next.commonCols
+        ? prev
+        : next,
+    );
+  }, [me.id, mode, place]);
+  useLayoutEffect(() => {
+    place_();
+    // The intent chips are laid out by the stage after this effect runs, and
+    // fonts can land late; one more pass on the next frame sees both.
+    const frame = requestAnimationFrame(place_);
+    const world = box.current?.offsetParent as HTMLElement | null;
+    const watch =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(place_);
+    if (world) watch?.observe(world);
+    if (block.current) watch?.observe(block.current);
+    return () => {
+      cancelAnimationFrame(frame);
+      watch?.disconnect();
+    };
+  }, [place_, mode, options.length, place.x, place.y, occupied.length]);
+  const side = spot?.side ?? "right";
+  const cols = mode === "target" ? 1 : (spot?.cols ?? 1);
+  const rows = Math.max(1, Math.ceil(primary.length / cols));
+  /** Grid cell for the i-th slip: the first sits nearest the hero's hand, at
+   * the foot of the inner column, and each column fills upward. */
+  const cell = (i: number) => {
+    const col = Math.floor(i / rows);
+    const up = i % rows;
+    return {
+      "--i": up,
+      gridColumn: side === "right" ? col + 1 : cols - col,
+      gridRow: rows - up,
+    };
+  };
 
   // Keyboard: move through what is actually usable, commit, and back out.
   useEffect(() => {
@@ -184,16 +178,11 @@ export function ActionFan({
       ref={box}
       className="action-fan"
       data-mode={mode}
-      data-dir={dir > 0 ? "right" : "left"}
+      data-dir={side}
       style={
         {
           left: `${place.x * 100}%`,
           top: `${place.y * 100}%`,
-          "--rise": `${rise * 100}cqh`,
-          "--count": Math.max(1, primary.length),
-          "--slip": `${SLIP}px`,
-          "--common-x": `${commonX}px`,
-          "--fan-x": `${fanX}px`,
         } as React.CSSProperties
       }
     >
@@ -203,80 +192,89 @@ export function ActionFan({
           {me.resource}/{def.maxResource} {def.resource}
         </span>
       </div>
-      <ul
-        className="fan-slips"
-        ref={slipsRef}
-        role="listbox"
-        aria-label={`${me.name}'s actions`}
+      <div
+        ref={block}
+        className="fan-block"
+        data-side={side}
+        style={
+          {
+            left: `${spot?.x ?? 0}px`,
+            top: `${spot?.y ?? 0}px`,
+            visibility: spot ? undefined : "hidden",
+            "--common-cols": spot?.commonCols ?? 2,
+          } as React.CSSProperties
+        }
       >
-        {primary.map((o, i) => {
-          const isChosen = o.ability.id === chosen.id;
-          if (mode === "target" && !isChosen) return null;
-          return (
-            <li
-              key={o.ability.id}
-              className="fan-slip"
-              style={
-                {
-                  "--i": i,
-                  "--col": Math.floor(i / perColumn),
-                  "--row": i % perColumn,
-                } as React.CSSProperties
-              }
-              data-common={o.common ? "" : undefined}
-              data-urgent={o.urgent ? "" : undefined}
-              data-chosen={isChosen ? "" : undefined}
-              data-blocked={o.blocked ? "" : undefined}
-            >
-              <button
-                type="button"
-                role="option"
-                aria-selected={isChosen}
-                disabled={disabled || !!o.blocked}
-                onClick={() => onChoose(o.ability.id)}
-                title={o.ability.description}
+        <ul
+          className="fan-slips"
+          role="listbox"
+          aria-label={`${me.name}'s actions`}
+        >
+          {primary.map((o, i) => {
+            const isChosen = o.ability.id === chosen.id;
+            if (mode === "target" && !isChosen) return null;
+            return (
+              <li
+                key={o.ability.id}
+                className="fan-slip"
+                style={
+                  (mode === "target" ? {} : cell(i)) as React.CSSProperties
+                }
+                data-common={o.common ? "" : undefined}
+                data-urgent={o.urgent ? "" : undefined}
+                data-chosen={isChosen ? "" : undefined}
+                data-blocked={o.blocked ? "" : undefined}
               >
-                <strong>{o.ability.name}</strong>
-                <small>{o.blocked ?? o.cost}</small>
-              </button>
-              <span className="fan-detail" role="tooltip">
-                {o.ability.description}
-                {supplyFor(o.ability.id) && <i> · consumed on use</i>}
-                {o.ability.cooldown > 0 && (
-                  <i> · {o.ability.cooldown} round cooldown</i>
-                )}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-      {mode === "ability" && (
-        <ul className="fan-common" ref={commonRef} aria-label="Common actions">
-          {secondary.map((o) => (
-            <li
-              key={o.ability.id}
-              className="fan-slip"
-              data-common=""
-              data-chosen={o.ability.id === chosen.id ? "" : undefined}
-              data-blocked={o.blocked ? "" : undefined}
-            >
-              <button
-                type="button"
-                role="option"
-                aria-selected={o.ability.id === chosen.id}
-                disabled={disabled || !!o.blocked}
-                onClick={() => onChoose(o.ability.id)}
-                title={`${o.ability.name} — ${o.ability.description}`}
-              >
-                <strong>{o.ability.name}</strong>
-              </button>
-              <span className="fan-detail" role="tooltip">
-                {o.ability.description}
-              </span>
-            </li>
-          ))}
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={isChosen}
+                  disabled={disabled || !!o.blocked}
+                  onClick={() => onChoose(o.ability.id)}
+                  title={o.ability.description}
+                >
+                  <strong>{o.ability.name}</strong>
+                  <small>{o.blocked ?? o.cost}</small>
+                </button>
+                <span className="fan-detail" role="tooltip">
+                  {o.ability.description}
+                  {supplyFor(o.ability.id) && <i> · consumed on use</i>}
+                  {o.ability.cooldown > 0 && (
+                    <i> · {o.ability.cooldown} round cooldown</i>
+                  )}
+                </span>
+              </li>
+            );
+          })}
         </ul>
-      )}
+        {mode === "ability" && (
+          <ul className="fan-common" aria-label="Common actions">
+            {secondary.map((o) => (
+              <li
+                key={o.ability.id}
+                className="fan-slip"
+                data-common=""
+                data-chosen={o.ability.id === chosen.id ? "" : undefined}
+                data-blocked={o.blocked ? "" : undefined}
+              >
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={o.ability.id === chosen.id}
+                  disabled={disabled || !!o.blocked}
+                  onClick={() => onChoose(o.ability.id)}
+                  title={`${o.ability.name} — ${o.ability.description}`}
+                >
+                  <strong>{o.ability.name}</strong>
+                </button>
+                <span className="fan-detail" role="tooltip">
+                  {o.ability.description}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

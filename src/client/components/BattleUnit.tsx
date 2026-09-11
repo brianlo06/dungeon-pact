@@ -121,6 +121,7 @@ export function BattleUnit({
   return (
     <div
       className="combatant"
+      data-unit={unit.id}
       data-side={place.side}
       data-impact={impact ?? undefined}
       data-acting={acting ? "" : undefined}

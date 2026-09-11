@@ -69,6 +69,26 @@ export function planningFrame(width: number, height: number) {
   };
 }
 
+/**
+ * The part of the world, in untransformed stage pixels, that is on screen once
+ * the camera has settled on one command. Where `planningFrame` is the worst
+ * case over every decision framing, this is exact for one — for something that
+ * only shows under a known framing, like the action fan, which is only open
+ * while the camera is looking at its hero.
+ */
+export function frameFor(width: number, height: number, cmd: CameraCommand) {
+  const { x, y, zoom } = resolve(cmd);
+  const z = OVERSCAN * zoom;
+  const ox = ORIGIN.x * width;
+  const oy = ORIGIN.y * height;
+  return {
+    left: ox + (0 - ox - x * width) / z,
+    right: ox + (width - ox - x * width) / z,
+    top: oy + (0 - oy - y * height) / z,
+    bottom: oy + (height - oy - y * height) / z,
+  };
+}
+
 export interface CameraCommand {
   preset: CameraPreset;
   /** Look toward this placement, if the preset uses a focus. */

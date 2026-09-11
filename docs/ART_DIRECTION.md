@@ -106,6 +106,16 @@ drawn, and a filter on animating SVG costs frames. Intent chips are laid out
 by a measuring pass so that no chip covers a name plate or another chip at
 any camera framing the planning phase can reach.
 
+Your actions open beside your hero as a block of slips — signature abilities
+stacked above, the shared actions at the foot — and the block covers nobody:
+not the enemies, not the allies, not the hero. It is placed by measuring each
+figure's painted outline, and it changes shape to fit the gap it is given: a
+tall column where there is height, several columns and a single row of shared
+actions where there is not. It is never placed nearer another hero than its
+own, so it cannot be read as theirs. The first version used fixed offsets and
+covered its own hero at every seat, because a drawn hero is too wide for any
+fixed offset to clear.
+
 ## Next art work
 
 Biome floor/background tiles; distinct item icons; responsive status popovers; event illustrations; the auctioneer and the reward chest, the last two atlas cells. Avoid marketing language that implies commissioned human art.
