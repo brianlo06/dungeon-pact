@@ -141,11 +141,17 @@ export class PactRoom extends DurableObject<Env> {
     this.ctx.storage.sql.exec("INSERT INTO admissions(at) VALUES(?)", now);
     return true;
   }
+  /**
+   * Players with an open socket. A socket that is closing still turns up in
+   * `getWebSockets()` while its close handler runs, so it is filtered by state:
+   * otherwise the departure would be published with the leaver still listed.
+   */
   private connected() {
     return [
       ...new Set(
         this.ctx
           .getWebSockets()
+          .filter((ws) => ws.readyState === WebSocket.OPEN)
           .map((ws) => (ws.deserializeAttachment() as Attachment).player),
       ),
     ];
@@ -327,7 +333,15 @@ export class PactRoom extends DurableObject<Env> {
     }
   }
   webSocketClose(ws: WebSocket, code: number) {
-    ws.close(code);
+    // Echoing the client's code threw on every ordinary close: a close with no
+    // status arrives as 1005 and a dropped connection as 1006, and neither may
+    // be sent. The throw skipped the publish below, so nobody was ever told a
+    // player had left. Reply with a code that can be sent, and publish anyway.
+    try {
+      ws.close(code === 1005 || code === 1006 ? 1000 : code, "Closed");
+    } catch {
+      // Already closed; nothing to answer.
+    }
     this.publish(this.read());
   }
   webSocketError(ws: WebSocket) {

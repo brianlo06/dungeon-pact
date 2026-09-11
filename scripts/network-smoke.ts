@@ -118,6 +118,9 @@ try {
   await a.wait(() => a.messages.some((m) => m.code === "STALE"));
   const before = a.state;
   a.ws.close();
+  // The rest of the party is told someone left. This went unchecked while the
+  // server threw on every close and never published the departure.
+  await b.wait(() => !b.state.connected.includes(one.player));
   resumed = new Client(one.token);
   await resumed.wait(() => !!resumed!.state);
   assert.equal(resumed.state.you, one.player);
@@ -216,6 +219,7 @@ try {
         "duplicate command receipts",
         "simultaneous decisions accepted, passed moment refused",
         "resync",
+        "a departure reaches the rest of the party",
         "reconnect restores hero/gold/phase",
         "tactical encounter entry",
         "windup/interrupt resolution and cooldown",
