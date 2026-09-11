@@ -365,6 +365,7 @@ export function Combat({
         <BossIntro
           name={bossDef.name}
           epithet={bossDef.epithet}
+          boss={bossDef.id}
           reduced={reducedMotion}
           onDone={() => setIntroShown(true)}
         />

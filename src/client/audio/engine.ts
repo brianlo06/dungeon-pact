@@ -460,6 +460,60 @@ const VOICES: Record<SfxName, Voice> = {
       });
     },
   },
+  /*
+   * The Miser's voice. Where the Collector is machinery, this is something
+   * alive and wet: a toad's croak, rough and slow, over a trickle of coins
+   * running off a heap.
+   */
+  "miser-croak": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      for (const [i, f] of [64, 67].entries())
+        hit(c, o, t + i * 0.01, {
+          type: "sawtooth",
+          from: f,
+          to: 46,
+          gain: 0.2,
+          attack: 0.06,
+          decay: 0.7,
+        });
+      // The croak's rattle: short pulses of low noise, slowing down.
+      for (let i = 0; i < 7; i++)
+        crash(c, o, t + 0.05 + i * (0.06 + i * 0.012), {
+          seconds: 0.05,
+          gain: 0.14,
+          type: "lowpass",
+          freq: 380,
+        });
+      for (let i = 0; i < 9; i++)
+        hit(c, o, t + 0.15 + Math.random() * 0.8, {
+          type: "square",
+          from: 2300 + Math.random() * 1200,
+          gain: 0.035,
+          decay: 0.07,
+        });
+    },
+  },
+  /** A coin slapped down on the counter, spinning until it settles. */
+  "miser-coin": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      hit(c, o, t, { type: "sine", from: 130, to: 44, gain: 0.5, decay: 0.4 });
+      crash(c, o, t, { seconds: 0.18, gain: 0.24, freq: 2400, sweepTo: 700 });
+      // The spin: ticks closing up as the coin wobbles flat.
+      let at = t + 0.08;
+      for (let i = 0; i < 16; i++) {
+        const gap = 0.1 * Math.pow(0.84, i);
+        at += gap;
+        hit(c, o, at, {
+          type: "square",
+          from: 2600 + i * 60,
+          gain: 0.07 * (1 - i / 20),
+          decay: 0.05,
+        });
+      }
+    },
+  },
 };
 
 /**

@@ -7,6 +7,9 @@ import { Stoker } from "./Stoker";
 import { Acolyte } from "./Acolyte";
 import { Bellows } from "./Bellows";
 import { Hound } from "./Hound";
+import { Miser } from "./Miser";
+import { Sniper } from "./Sniper";
+import { Leech } from "./Leech";
 
 /**
  * Authored creatures, by `presentation.spriteSet`.
@@ -24,4 +27,7 @@ export const CREATURES: Record<string, ComponentType<CreatureProps>> = {
   acolyte: Acolyte,
   bellows: Bellows,
   hound: Hound,
+  miser: Miser,
+  sniper: Sniper,
+  thief: Leech,
 };

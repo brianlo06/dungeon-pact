@@ -29,10 +29,28 @@ const authored = enemies.filter(
     d.presentation?.spriteSet && rigFor(d.presentation.spriteSet) !== GENERIC,
 );
 
+/**
+ * A gun is the one honest exception: its impact pose is the kick, which drives
+ * it away from what it shoots. Listed by name so that any other exception has
+ * to be argued for rather than slipped in.
+ */
+const RECOILS_ON_FIRE = new Set(["sniper"]);
+
 describe("enemy rigs face the party", () => {
   it("covers the creatures already drawn", () => {
     const ids = authored.map((d) => d.id);
-    for (const id of ["collector", "bulwark", "mender"])
+    for (const id of [
+      "collector",
+      "bulwark",
+      "mender",
+      "stoker",
+      "acolyte",
+      "bellows",
+      "hound",
+      "miser",
+      "sniper",
+      "thief",
+    ])
       expect(ids).toContain(id);
   });
 
@@ -40,7 +58,11 @@ describe("enemy rigs face the party", () => {
     const rig = rigFor(d.presentation!.spriteSet);
     for (const name of ["attack", "signature"] as const) {
       const clip = rig[name];
-      if (clip)
+      if (clip && RECOILS_ON_FIRE.has(d.id))
+        it(`${d.id} ${name} kicks back as it fires`, () => {
+          expect(extremeX(clip)).toBeGreaterThan(0);
+        });
+      else if (clip)
         it(`${d.id} ${name} travels towards the party`, () => {
           expect(extremeX(clip)).toBeLessThan(0);
         });

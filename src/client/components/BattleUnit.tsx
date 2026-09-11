@@ -5,6 +5,7 @@ import { unitPresentation } from "../battle/layout";
 import type { Animators } from "../battle/useAnimators";
 import { Sprite } from "./Sprite";
 import { Strongbox, type VaultState } from "./Strongbox";
+import { Miser } from "./Miser";
 import { CREATURES } from "./creatures";
 import { statuses } from "../../content/statuses";
 import { items } from "../../content/items";
@@ -36,6 +37,7 @@ export function BattleUnit({
   intent,
   owners,
   animators,
+  treasury,
 }: {
   unit: Unit;
   /** Where presentation space says this unit stands. */
@@ -53,6 +55,8 @@ export function BattleUnit({
   intent?: ReactNode;
   owners?: Player[];
   animators?: Animators;
+  /** The pact's gold, for the Miser, which is armoured in it. */
+  treasury?: number;
 }) {
   const player = "heroId" in unit ? (unit as Player) : null;
   const enemy = "definition" in unit ? (unit as Enemy) : null;
@@ -113,6 +117,14 @@ export function BattleUnit({
               className="combatant-sprite"
               held={held.length}
               state={vault}
+            />
+          ) : look.spriteSet === "miser" ? (
+            <Miser
+              className="combatant-sprite"
+              unitId={unit.id}
+              animators={animators}
+              treasury={treasury}
+              barrier={barrier}
             />
           ) : Art ? (
             <Art

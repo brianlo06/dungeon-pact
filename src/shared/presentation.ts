@@ -79,7 +79,9 @@ export type SfxName =
   | "down"
   | "revive"
   | "boss-groan"
-  | "boss-stamp";
+  | "boss-stamp"
+  | "miser-croak"
+  | "miser-coin";
 
 export type CameraPreset =
   | "neutral"
