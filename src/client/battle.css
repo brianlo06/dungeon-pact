@@ -324,9 +324,13 @@
 .combatant-body:disabled {
   cursor: default;
 }
-.combatant[data-side="enemy"] .combatant-sprite {
-  /* Enemies face the party. Applied to the image, not the rig, so animation
-   * and facing never overwrite one another. */
+/*
+ * Enemies face the party. This flip exists for the raster atlas, which is
+ * drawn facing right — so it is scoped to `.sprite`, the atlas renderer's own
+ * class. Authored SVG creatures are drawn facing the party already, and
+ * flipping them pointed a battering ram away from the people it charges.
+ */
+.combatant[data-side="enemy"] .sprite.combatant-sprite {
   transform: scaleX(-1);
 }
 .combatant-body .combatant-rig {
@@ -1598,5 +1602,89 @@
   animation-duration: 1.5s;
 }
 :root[data-motion="reduced"] .col-eye {
+  animation: none;
+}
+
+/* --------------------------------------------------- bulwark and mender -- */
+
+.bulwark,
+.mender {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.bulwark > g,
+.mender > g {
+  transform-box: view-box;
+  will-change: transform;
+}
+/* The Bulwark's only opening, and its exhaust. */
+.blw-slot {
+  fill: #ff9a42;
+  filter: drop-shadow(0 0 4px #ff7a2e);
+  animation: blw-slot 5.6s ease-in-out infinite;
+}
+@keyframes blw-slot {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  48% {
+    opacity: 1;
+  }
+}
+.blw-vent {
+  fill: #ffb35e;
+  opacity: 0.3;
+  animation: vent 3.8s ease-in-out infinite;
+}
+.blw-vent-b {
+  animation-duration: 5.1s;
+  animation-delay: -1.4s;
+}
+@keyframes vent {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: translateY(0) scale(0.8);
+  }
+  45% {
+    opacity: 0.5;
+    transform: translateY(-9%) scale(1.25);
+  }
+}
+.bulwark ellipse {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+/* The Mender runs hot: seams, clamp tips and a working lens. */
+.mnd-seam {
+  opacity: 0.75;
+  animation: seam 2.9s ease-in-out infinite;
+}
+.mnd-vent {
+  fill: #ff9a42;
+  opacity: 0.3;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: vent 3.1s ease-in-out infinite;
+}
+.mnd-tip {
+  fill: #ff8c3a;
+  filter: drop-shadow(0 0 3px #ff7a2e);
+  animation: seam 1.9s ease-in-out infinite;
+}
+.mnd-lens {
+  fill: #b9f0ff;
+  filter: drop-shadow(0 0 3px #7fd8ff);
+  animation: blw-slot 4.2s ease-in-out infinite;
+}
+:root[data-motion="reduced"] .blw-slot,
+:root[data-motion="reduced"] .blw-vent,
+:root[data-motion="reduced"] .mnd-seam,
+:root[data-motion="reduced"] .mnd-vent,
+:root[data-motion="reduced"] .mnd-tip,
+:root[data-motion="reduced"] .mnd-lens {
   animation: none;
 }

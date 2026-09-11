@@ -6,6 +6,8 @@ import type { Animators } from "../battle/useAnimators";
 import { Sprite } from "./Sprite";
 import { Strongbox, type VaultState } from "./Strongbox";
 import { Collector } from "./Collector";
+import { Bulwark } from "./Bulwark";
+import { Mender } from "./Mender";
 import { statuses } from "../../content/statuses";
 import { items } from "../../content/items";
 
@@ -115,6 +117,18 @@ export function BattleUnit({
             />
           ) : look.spriteSet === "collector" ? (
             <Collector
+              className="combatant-sprite"
+              unitId={unit.id}
+              animators={animators}
+            />
+          ) : look.spriteSet === "bulwark" ? (
+            <Bulwark
+              className="combatant-sprite"
+              unitId={unit.id}
+              animators={animators}
+            />
+          ) : look.spriteSet === "mender" ? (
+            <Mender
               className="combatant-sprite"
               unitId={unit.id}
               animators={animators}

@@ -509,3 +509,43 @@ test.describe("the Collector is a cutout rig, not a sprite", () => {
     expect(boss!.y).toBeGreaterThanOrEqual(stage.y - 1);
   });
 });
+
+test.describe("the boss encounter is drawn, not placeheld", () => {
+  test("every creature in it is authored art with moving parts", async ({
+    page,
+  }) => {
+    await open(page, { party: 4, stage: "resolved" });
+    for (const sel of [".collector", ".bulwark", ".mender", ".vault"])
+      await expect(page.locator(sel)).toBeVisible();
+
+    // Each rigged creature has parts, and they are being driven.
+    for (const sel of [".collector", ".bulwark", ".mender"]) {
+      const parts = await page.evaluate(
+        (s) =>
+          [...document.querySelectorAll(`${s} > g`)].map(
+            (el) => (el as SVGElement).style.transform,
+          ),
+        sel,
+      );
+      expect(parts.length, sel).toBeGreaterThanOrEqual(4);
+      expect(parts.every(Boolean), sel).toBe(true);
+    }
+  });
+
+  test("authored creatures face the party rather than away from it", async ({
+    page,
+  }) => {
+    await open(page, { party: 4, stage: "objective" });
+    // The mirror exists for the raster atlas only. Flipping hand-drawn SVG
+    // pointed the Bulwark's ram away from the people it charges.
+    const flipped = await page.evaluate(() =>
+      [".collector", ".bulwark", ".mender"].filter((s) => {
+        const el = document.querySelector(s);
+        return el
+          ? getComputedStyle(el).transform.startsWith("matrix(-1")
+          : false;
+      }),
+    );
+    expect(flipped).toEqual([]);
+  });
+});

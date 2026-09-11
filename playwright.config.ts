@@ -20,8 +20,15 @@ export const RESOLUTIONS = [
 export default defineConfig({
   testDir: "./tests-browser",
   timeout: 30_000,
-  expect: { timeout: 5_000 },
+  /*
+   * Ten seconds, not five. Every page here runs two animation frame loops and
+   * a stage full of animated SVG, and four of them at once on one machine is
+   * real CPU contention — assertions were timing out on load rather than on
+   * anything being wrong. Same reason workers are capped below the core count.
+   */
+  expect: { timeout: 10_000 },
   fullyParallel: true,
+  workers: process.env.CI ? 2 : 3,
   reporter: process.env.CI ? "list" : [["list"]],
   use: {
     baseURL: "http://127.0.0.1:5399",

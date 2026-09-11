@@ -179,18 +179,35 @@ A squat riveted vault, gold strapping, a lock per item taken, a contract seal
 across the face, chains wrapping the hull. Light escapes the seam when it is
 holding something. _This is now authored art rather than a placeholder._
 
-**Iron Bulwark.** A defensive frontliner, and its anatomy should say so before
-its intent does: the entire forebody is a plated wall, the centre of gravity is
-low, and almost no body is exposed. It should look immovable at rest and like a
-ram in motion.
+**Iron Bulwark.** _Drawn._ A defensive frontliner whose anatomy says so before
+its intent does: the entire forebody is one angled plate with a lit leading
+edge, the centre of gravity is on the floor, splayed feet brace it, and a visor
+slot is the only opening. A ram boss juts from the plate and two exhaust stacks
+rake back off the shoulders.
 
-**Kiln Mender.** A support creature, and deliberately unpleasant. A forge
-surgeon: long instrument limbs, heated clamps, bellows organs, repair machinery
-grown into the body. When it heals, it should look like it is welding something
-shut rather than blessing it.
+Rigged as `shield`, `ram`, `legs`, `stacks`, `visor`. Its idle is almost
+nothing — only the exhaust moves. On a ram the plate and boss arrive first and
+the legs catch up; when it is hit the plate takes it and the machine behind
+barely registers. That is the opposite of the Mender, deliberately.
 
-The Bulwark and Mender still use the prototype sprites. The Collector and the
-Strongbox are drawn.
+**Kiln Mender.** _Drawn._ A forge surgeon, and deliberately not cute: a swollen
+bellows sac for a body with heat seams glowing through the hide, carried high
+on thin legs, a flue venting off its back, a single working lens instead of a
+face, and three instrument limbs ending in heated clamps.
+
+Rigged as `bellows`, `armA`, `armB`, `armC`, `head`, `flue`, `legs`. The sac
+drives the rhythm and everything else twitches off that beat. Repairing is a
+welding motion — the clamps reach in and work in short bursts. Hit, the limbs
+flail; killed, the sac empties and the legs buckle.
+
+All four are now drawn: the Collector, the Strongbox, the Iron Bulwark and the
+Kiln Mender. Nothing in the boss encounter is a prototype sprite. The rest of
+the bestiary still is.
+
+**Facing.** Enemies face the party, which is to their left. The raster atlas is
+drawn facing right and is flipped in CSS; authored SVG is drawn facing the
+party already and must _not_ be flipped. Getting this wrong pointed a battering
+ram away from the people it charges, and there is a test for it now.
 
 ## What does not fit
 

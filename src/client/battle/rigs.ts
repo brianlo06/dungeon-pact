@@ -322,7 +322,13 @@ const collector: Rig = {
   },
 };
 
-/** The Bulwark: immovable. Its idle is almost nothing; its attack is a ram. */
+/**
+ * The Bulwark: immovable. Its idle is almost nothing and its attack is a ram.
+ *
+ * The plate leads everything. On a ram it drives forward ahead of the body and
+ * the legs brace a beat late; on a block it comes up and locks; when it is hit,
+ * the plate absorbs and the machine behind it barely registers.
+ */
 const bulwark: Rig = {
   idle: {
     duration: 5200,
@@ -333,6 +339,19 @@ const bulwark: Rig = {
       { at: 0.5, y: -0.005, squash: 1.004 },
       { at: 1, y: 0, squash: 1 },
     ],
+    parts: {
+      // Only the exhaust moves. Everything else is planted.
+      stacks: [
+        { at: 0, rotate: 0 },
+        { at: 0.45, rotate: -1.2 },
+        { at: 1, rotate: 0 },
+      ],
+      shield: [
+        { at: 0, rotate: 0 },
+        { at: 0.5, rotate: 0.4 },
+        { at: 1, rotate: 0 },
+      ],
+    },
   },
   attack: {
     duration: 760,
@@ -343,6 +362,57 @@ const bulwark: Rig = {
       { at: 0.62, x: 0.24 },
       { at: 1, x: 0, squash: 1, scale: 1, y: 0 },
     ],
+    parts: {
+      // The plate and the ram arrive first; the legs catch up.
+      shield: [
+        { at: 0, x: 0, rotate: 0 },
+        { at: 0.3, x: -0.05, rotate: -4 },
+        { at: 0.46, x: 0.09, rotate: 6 },
+        { at: 0.7, x: 0.03, rotate: 2 },
+        { at: 1, x: 0, rotate: 0 },
+      ],
+      ram: [
+        { at: 0, x: 0, scale: 1 },
+        { at: 0.3, x: -0.06 },
+        { at: 0.46, x: 0.14, scale: 1.12, flash: 0.5 },
+        { at: 0.66, x: 0.05, scale: 1.02, flash: 0.1 },
+        { at: 1, x: 0, scale: 1, flash: 0 },
+      ],
+      legs: [
+        { at: 0, x: 0 },
+        { at: 0.38, x: -0.04, squash: 1.06 },
+        { at: 0.58, x: 0.08 },
+        { at: 1, x: 0, squash: 1 },
+      ],
+      stacks: [
+        { at: 0, rotate: 0 },
+        { at: 0.34, rotate: -6 },
+        { at: 0.52, rotate: 8, flash: 0.4 },
+        { at: 1, rotate: 0, flash: 0 },
+      ],
+    },
+  },
+  /** Lock shields: the plate comes up and stays there. */
+  block: {
+    duration: 640,
+    poses: [
+      { at: 0, y: 0 },
+      { at: 0.25, y: 0.012, squash: 1.06 },
+      { at: 1, y: 0, squash: 1 },
+    ],
+    parts: {
+      shield: [
+        { at: 0, rotate: 0, scale: 1 },
+        { at: 0.28, rotate: -7, scale: 1.06, y: -0.02 },
+        { at: 0.5, rotate: -5, scale: 1.08, flash: 0.35 },
+        { at: 1, rotate: 0, scale: 1, y: 0, flash: 0 },
+      ],
+      legs: [
+        { at: 0, squash: 1 },
+        { at: 0.3, squash: 1.08 },
+        { at: 1, squash: 1 },
+      ],
+    },
   },
   hurt: {
     duration: 280,
@@ -351,10 +421,46 @@ const bulwark: Rig = {
       { at: 0.25, x: 0.05, squash: 0.96, flash: 0.4 },
       { at: 1, x: 0, squash: 1, flash: 0 },
     ],
+    parts: {
+      // The plate takes it. The body behind barely notices.
+      shield: [
+        { at: 0, x: 0, rotate: 0 },
+        { at: 0.22, x: 0.05, rotate: 3, flash: 0.9 },
+        { at: 0.6, x: -0.02, rotate: -1 },
+        { at: 1, x: 0, rotate: 0, flash: 0 },
+      ],
+      stacks: [
+        { at: 0, rotate: 0 },
+        { at: 0.3, rotate: 5 },
+        { at: 1, rotate: 0 },
+      ],
+    },
+  },
+  defeat: {
+    duration: 1000,
+    poses: [
+      { at: 0, rotate: 0, flash: 1 },
+      { at: 0.25, rotate: -4, flash: 0.5 },
+      { at: 1, rotate: 14, y: 0.16, scale: 0.95, flash: 0 },
+    ],
+    parts: {
+      shield: [
+        { at: 0, rotate: 0 },
+        { at: 1, rotate: -26, y: 0.12 },
+      ],
+      stacks: [
+        { at: 0, rotate: 0 },
+        { at: 1, rotate: -18 },
+      ],
+    },
   },
 };
 
-/** The Mender: fussy, quick, unpleasant. Its heal is a forging motion. */
+/**
+ * The Mender: fussy, quick, unpleasant. It does not bless things; it welds
+ * them. The clamps reach out ahead of the body and work at the target, and the
+ * bellows sac drives the whole rhythm.
+ */
 const mender: Rig = {
   idle: {
     duration: 2600,
@@ -367,15 +473,182 @@ const mender: Rig = {
       { at: 0.75, y: -0.024, rotate: 2.5 },
       { at: 1, y: 0, rotate: 0 },
     ],
+    parts: {
+      // The sac fills and empties; everything else twitches off that beat.
+      bellows: [
+        { at: 0, scale: 1, squash: 1 },
+        { at: 0.38, scale: 1.06, squash: 1.05 },
+        { at: 0.62, scale: 1.02, squash: 0.98 },
+        { at: 1, scale: 1, squash: 1 },
+      ],
+      armA: [
+        { at: 0, rotate: 0 },
+        { at: 0.3, rotate: -4 },
+        { at: 0.7, rotate: 3 },
+        { at: 1, rotate: 0 },
+      ],
+      armB: [
+        { at: 0, rotate: 2 },
+        { at: 0.45, rotate: -5 },
+        { at: 1, rotate: 2 },
+      ],
+      armC: [
+        { at: 0, rotate: -3 },
+        { at: 0.55, rotate: 4 },
+        { at: 1, rotate: -3 },
+      ],
+      head: [
+        { at: 0, rotate: 0 },
+        { at: 0.32, rotate: 5 },
+        { at: 0.64, rotate: -4 },
+        { at: 1, rotate: 0 },
+      ],
+      flue: [
+        { at: 0, rotate: 0 },
+        { at: 0.4, rotate: -2 },
+        { at: 1, rotate: 0 },
+      ],
+      legs: [
+        { at: 0, squash: 1, y: 0 },
+        { at: 0.38, squash: 1.02, y: 0.006 },
+        { at: 1, squash: 1, y: 0 },
+      ],
+    },
   },
+  /** Repair lattice: the clamps go in and work. */
   cast: {
-    duration: 620,
+    duration: 760,
     poses: [
       { at: 0, y: 0, scale: 1 },
-      { at: 0.3, y: -0.05, scale: 1.06, rotate: -4, flash: 0.3 },
-      { at: 0.55, y: 0.01, scale: 0.98, rotate: 3, flash: 0.55 },
-      { at: 1, y: 0, scale: 1, rotate: 0, flash: 0 },
+      { at: 0.3, y: -0.04, scale: 1.04, rotate: -3 },
+      { at: 0.55, y: 0.01, scale: 0.99, rotate: 2 },
+      { at: 1, y: 0, scale: 1, rotate: 0 },
     ],
+    parts: {
+      bellows: [
+        { at: 0, scale: 1 },
+        { at: 0.26, scale: 1.16, squash: 1.1, flash: 0.3 },
+        { at: 0.48, scale: 0.94, squash: 0.92, flash: 0.6 },
+        { at: 1, scale: 1, squash: 1, flash: 0 },
+      ],
+      // All three limbs reach, then work in short bursts.
+      armA: [
+        { at: 0, rotate: 0, x: 0 },
+        { at: 0.3, rotate: -16, x: -0.05 },
+        { at: 0.5, rotate: -10, flash: 0.8 },
+        { at: 0.66, rotate: -14, flash: 0.4 },
+        { at: 1, rotate: 0, x: 0, flash: 0 },
+      ],
+      armB: [
+        { at: 0, rotate: 0, x: 0 },
+        { at: 0.34, rotate: 12, x: -0.06 },
+        { at: 0.54, rotate: 7, flash: 0.9 },
+        { at: 0.7, rotate: 11, flash: 0.4 },
+        { at: 1, rotate: 0, x: 0, flash: 0 },
+      ],
+      armC: [
+        { at: 0, rotate: 0 },
+        { at: 0.38, rotate: -13 },
+        { at: 0.58, rotate: -8, flash: 0.7 },
+        { at: 1, rotate: 0, flash: 0 },
+      ],
+      flue: [
+        { at: 0, rotate: 0, scale: 1 },
+        { at: 0.42, rotate: -5, scale: 1.08, flash: 0.7 },
+        { at: 1, rotate: 0, scale: 1, flash: 0 },
+      ],
+      head: [
+        { at: 0, rotate: 0 },
+        { at: 0.34, rotate: -9 },
+        { at: 1, rotate: 0 },
+      ],
+      legs: [
+        { at: 0, squash: 1 },
+        { at: 0.3, squash: 1.06, y: 0.01 },
+        { at: 1, squash: 1, y: 0 },
+      ],
+    },
+  },
+  attack: {
+    duration: 560,
+    poses: [
+      { at: 0, x: 0 },
+      { at: 0.3, x: -0.07, rotate: -4 },
+      { at: 0.48, x: 0.16, rotate: 5 },
+      { at: 1, x: 0, rotate: 0 },
+    ],
+    parts: {
+      armB: [
+        { at: 0, rotate: 0 },
+        { at: 0.28, rotate: 22 },
+        { at: 0.48, rotate: -18, flash: 0.6 },
+        { at: 1, rotate: 0, flash: 0 },
+      ],
+    },
+  },
+  hurt: {
+    duration: 340,
+    poses: [
+      { at: 0, x: 0, flash: 0.9 },
+      { at: 0.2, x: 0.12, rotate: 8, squash: 0.9, flash: 0.5 },
+      { at: 1, x: 0, rotate: 0, squash: 1, flash: 0 },
+    ],
+    parts: {
+      // Spindly things flail. This is the opposite of the Bulwark.
+      armA: [
+        { at: 0, rotate: 0 },
+        { at: 0.24, rotate: 24 },
+        { at: 0.6, rotate: -12 },
+        { at: 1, rotate: 0 },
+      ],
+      armB: [
+        { at: 0, rotate: 0 },
+        { at: 0.26, rotate: -26 },
+        { at: 0.62, rotate: 10 },
+        { at: 1, rotate: 0 },
+      ],
+      armC: [
+        { at: 0, rotate: 0 },
+        { at: 0.3, rotate: 20 },
+        { at: 1, rotate: 0 },
+      ],
+      bellows: [
+        { at: 0, squash: 1 },
+        { at: 0.22, squash: 0.88 },
+        { at: 1, squash: 1 },
+      ],
+    },
+  },
+  defeat: {
+    duration: 900,
+    poses: [
+      { at: 0, rotate: 0, flash: 1 },
+      { at: 0.3, rotate: 12, y: -0.03, flash: 0.5 },
+      { at: 1, rotate: 78, y: 0.16, scale: 0.9, flash: 0 },
+    ],
+    parts: {
+      // The sac empties and the limbs go slack.
+      bellows: [
+        { at: 0, scale: 1, squash: 1 },
+        { at: 1, scale: 0.8, squash: 0.78 },
+      ],
+      armA: [
+        { at: 0, rotate: 0 },
+        { at: 1, rotate: 46 },
+      ],
+      armB: [
+        { at: 0, rotate: 0 },
+        { at: 1, rotate: -38 },
+      ],
+      armC: [
+        { at: 0, rotate: 0 },
+        { at: 1, rotate: 30 },
+      ],
+      legs: [
+        { at: 0, squash: 1 },
+        { at: 1, squash: 0.7, y: 0.05 },
+      ],
+    },
   },
 };
 
