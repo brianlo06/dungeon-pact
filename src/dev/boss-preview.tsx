@@ -10,6 +10,7 @@ import {
   finishPreviewRound,
   type FixtureOptions,
 } from "./boss-fixture";
+import { ChoreoPanel, useChoreoLab } from "./choreo-lab";
 import "../client/style.css";
 import "./boss-preview.css";
 
@@ -32,6 +33,10 @@ function fromUrl(): {
   you: number;
   motion: boolean;
   tempo: string;
+  /** Show the choreography panel. */
+  choreo: boolean;
+  /** Draw the choreography debug overlay. */
+  debug: boolean;
 } {
   const q = new URLSearchParams(location.search);
   const num = (k: string, fallback: number) => {
@@ -55,6 +60,8 @@ function fromUrl(): {
     you: num("you", 0),
     motion: q.get("motion") === "1",
     tempo: q.get("tempo") ?? "1",
+    choreo: q.get("choreo") === "1",
+    debug: q.get("debug") === "1",
   };
 }
 const initial = fromUrl();
@@ -91,7 +98,10 @@ function BossPreview() {
     you,
     run.players.map((p) => p.id),
   );
+  const [panel, setPanel] = useState(initial.choreo);
+  const lab = useChoreoLab(s, run, setRun, initial.debug);
   function load(next: FixtureOptions) {
+    lab.clear();
     if (next.boss === "miser" && next.stage === "released")
       next = { ...next, stage: "resolved" };
     setOptions(next);
@@ -101,6 +111,7 @@ function BossPreview() {
     setError("");
   }
   function send(intent: Intent) {
+    lab.clear();
     try {
       setRun(reduce(run, you, intent, 0));
       setError("");
@@ -242,11 +253,15 @@ function BossPreview() {
           <button
             disabled={s.phase !== "COMBAT"}
             onClick={() => {
+              lab.clear();
               setRun(finishPreviewRound(run));
               setError("");
             }}
           >
             Finish round
+          </button>
+          <button onClick={() => setPanel((v) => !v)}>
+            {panel ? "Hide" : "Show"} choreography
           </button>
           <button onClick={() => load(options)}>Reset scene</button>
           <button onClick={() => setEvidence((v) => !v)}>
@@ -272,6 +287,7 @@ function BossPreview() {
               send={send}
               disabled={false}
               reducedMotion={!motion}
+              lab={lab.hooks}
             />
           ) : (
             <p role="status">
@@ -281,6 +297,7 @@ function BossPreview() {
           )}
         </main>
       </div>
+      {panel && s.phase === "COMBAT" && <ChoreoPanel s={s} lab={lab} />}
       {evidence && (
         <section className="preview-evidence" aria-label="Fixture evidence">
           <h2>Equipment after settlement</h2>

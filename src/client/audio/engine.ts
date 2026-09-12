@@ -494,6 +494,107 @@ const VOICES: Record<SfxName, Voice> = {
         });
     },
   },
+  /*
+   * Choreography cues, timed by the choreographer to what the figures do: a
+   * bow's creak across the draw and its snap at the release, the arrow's
+   * rush through the air, a heavy charge's footfalls, power gathering before
+   * a spell, and anything thrown leaving the hand.
+   */
+  "bow-draw": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      // A creak is a narrow, slowly rising resonance with a grain to it.
+      crash(c, o, t, {
+        seconds: 0.42,
+        gain: 0.08,
+        freq: 520,
+        sweepTo: 1250,
+        q: 9,
+      });
+      for (let i = 0; i < 5; i++)
+        crash(c, o, t + 0.04 + i * 0.07, {
+          seconds: 0.03,
+          gain: 0.05,
+          freq: 900 + i * 110,
+          q: 12,
+        });
+    },
+  },
+  "bow-release": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      hit(c, o, t, {
+        type: "triangle",
+        from: 560,
+        to: 170,
+        gain: 0.22,
+        decay: 0.13,
+      });
+      crash(c, o, t, { seconds: 0.05, gain: 0.26, freq: 3400, q: 2 });
+    },
+  },
+  "arrow-whoosh": {
+    bus: "sfx",
+    render: (c, o, t) =>
+      crash(c, o, t, {
+        seconds: 0.24,
+        gain: 0.12,
+        freq: 2400,
+        sweepTo: 620,
+        q: 1.4,
+      }),
+  },
+  "footstep-heavy": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      hit(c, o, t, { type: "sine", from: 78, to: 40, gain: 0.26, decay: 0.12 });
+      crash(c, o, t, {
+        seconds: 0.08,
+        gain: 0.1,
+        type: "lowpass",
+        freq: 520,
+      });
+    },
+  },
+  "charge-rise": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      hit(c, o, t, {
+        type: "sine",
+        from: 190,
+        to: 880,
+        gain: 0.12,
+        attack: 0.18,
+        decay: 0.48,
+      });
+      crash(c, o, t, {
+        seconds: 0.46,
+        gain: 0.05,
+        freq: 500,
+        sweepTo: 2600,
+        q: 0.8,
+      });
+    },
+  },
+  "projectile-release": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      crash(c, o, t, {
+        seconds: 0.14,
+        gain: 0.16,
+        freq: 2600,
+        sweepTo: 900,
+        q: 1,
+      });
+      hit(c, o, t, {
+        type: "triangle",
+        from: 380,
+        to: 720,
+        gain: 0.1,
+        decay: 0.1,
+      });
+    },
+  },
   /** A coin slapped down on the counter, spinning until it settles. */
   "miser-coin": {
     bus: "sfx",

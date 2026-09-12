@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { Placement } from "./layout";
+import { ORDER, type FrameLoop } from "./clock";
 
 /**
  * The combat camera.
@@ -140,11 +141,68 @@ export interface CameraCommand {
   at?: Placement | null;
   /** Also frame this one; the camera splits the difference. */
   and?: Placement | null;
+  /**
+   * Replay framing: points in stage fractions that must all stay on screen —
+   * an actor mid-run, its target, a projectile in the air. The camera leans
+   * towards their middle and zooms in no further than keeps every one of
+   * them inside the frame.
+   */
+  points?: { x: number; y: number }[];
+  /** For `points`: the closest zoom wanted. */
+  zoom?: number;
+}
+
+/** Margin kept between framed points and the screen's edge. */
+const FRAME_MARGIN = { x: 0.06, y: 0.05 };
+
+/**
+ * The closest framing of a set of points that keeps all of them on screen,
+ * and the floor line too. Zoom steps down from what was asked until a pan
+ * exists that fits; if none does, it frames at the widest.
+ */
+function fit(
+  points: { x: number; y: number }[],
+  want: number,
+  pull: number,
+): Omit<CameraState, "shake"> {
+  const cx = points.reduce((n, p) => n + p.x, 0) / points.length;
+  const cy = points.reduce((n, p) => n + p.y, 0) / points.length;
+  const clamp = (n: number, lo: number, hi: number) =>
+    Math.max(lo, Math.min(hi, n));
+  for (let z = want; z >= 1 - 1e-9; z -= 0.01) {
+    const s = OVERSCAN * z;
+    let xlo = -REACH;
+    let xhi = REACH;
+    const { low, high } = verticalRange(z);
+    let ylo = low;
+    let yhi = high;
+    for (const p of points) {
+      const sx = ORIGIN.x + (p.x - ORIGIN.x) * s;
+      const sy = ORIGIN.y + (p.y - ORIGIN.y) * s;
+      xlo = Math.max(xlo, FRAME_MARGIN.x - sx);
+      xhi = Math.min(xhi, 1 - FRAME_MARGIN.x - sx);
+      ylo = Math.max(ylo, FRAME_MARGIN.y - sy);
+      yhi = Math.min(yhi, 1 - FRAME_MARGIN.y - sy);
+    }
+    if (xlo <= xhi && ylo <= yhi)
+      return {
+        x: clamp((0.5 - cx) * pull, xlo, xhi),
+        y: clamp((0.55 - cy) * pull * 0.6, ylo, yhi),
+        zoom: z,
+      };
+  }
+  const { low, high } = verticalRange(1);
+  return {
+    x: clamp((0.5 - cx) * pull, -REACH, REACH),
+    y: clamp((0.55 - cy) * pull * 0.6, low, high),
+    zoom: 1,
+  };
 }
 
 /** Where a command wants the camera, before smoothing. */
 function resolve(cmd: CameraCommand): Omit<CameraState, "shake"> {
   const { pull, zoom } = BIAS[cmd.preset];
+  if (cmd.points?.length) return fit(cmd.points, cmd.zoom ?? zoom, pull);
   const points = [cmd.at, cmd.and].filter(Boolean) as Placement[];
   // Vertically, only as far as keeps the board on screen; see `FLOOR`.
   const { low, high } = verticalRange(zoom);
@@ -181,7 +239,7 @@ export interface Camera {
  * so the camera can be driven imperatively from the beat director without
  * fighting React's render cycle.
  */
-export function useCamera(reduced: boolean): Camera {
+export function useCamera(reduced: boolean, loop?: FrameLoop): Camera {
   const goal = useRef<Omit<CameraState, "shake">>(
     resolve({ preset: "neutral" }),
   );
@@ -189,30 +247,49 @@ export function useCamera(reduced: boolean): Camera {
   const live = useRef<CameraState>({ ...NEUTRAL, ...goal.current });
   const node = useRef<HTMLElement | null>(null);
   const frame = useRef(0);
+  const written = useRef("");
 
   useEffect(() => {
-    let stop = false;
-    const tick = () => {
-      if (stop) return;
+    /**
+     * One frame of camera. `free` is presentation time — so the camera
+     * eases at the replay's speed and holds still while it is paused — and
+     * it keeps running through a hit-stop, which is what lets the shake
+     * sell the stop.
+     */
+    const step = (free: number) => {
       const g = goal.current;
       const cur = live.current;
-      // Fast enough to feel responsive, slow enough to read as a camera.
-      const k = reduced ? 1 : 0.16;
+      // Fast enough to feel responsive, slow enough to read as a camera:
+      // 16% of the way per sixtieth of a second.
+      const frames = free / (1000 / 60);
+      const k = reduced ? 1 : 1 - Math.pow(1 - 0.16, frames);
       cur.x += (g.x - cur.x) * k;
       cur.y += (g.y - cur.y) * k;
       cur.zoom += (g.zoom - cur.zoom) * k;
       cur.shake = reduced ? 0 : shakeRef.current;
-      shakeRef.current *= 0.86;
+      shakeRef.current *= Math.pow(0.86, frames);
       if (shakeRef.current < 0.0004) shakeRef.current = 0;
 
-      if (node.current) {
+      if (node.current && (frames > 0 || !written.current)) {
         const jx = cur.shake ? (Math.random() - 0.5) * cur.shake : 0;
         const jy = cur.shake ? (Math.random() - 0.5) * cur.shake : 0;
-        node.current.style.transform =
+        const t =
           `translate3d(${((cur.x + jx) * 100).toFixed(3)}%, ` +
           `${((cur.y + jy) * 100).toFixed(3)}%, 0) ` +
           `scale(${(cur.zoom * OVERSCAN).toFixed(4)})`;
+        if (t !== written.current) {
+          written.current = t;
+          node.current.style.transform = t;
+        }
       }
+    };
+    if (loop) return loop.add(ORDER.camera, ({ free }) => step(free));
+    let stop = false;
+    let last = performance.now();
+    const tick = (now: number) => {
+      if (stop) return;
+      step(now - last);
+      last = now;
       frame.current = requestAnimationFrame(tick);
     };
     frame.current = requestAnimationFrame(tick);
@@ -220,7 +297,7 @@ export function useCamera(reduced: boolean): Camera {
       stop = true;
       cancelAnimationFrame(frame.current);
     };
-  }, [reduced]);
+  }, [reduced, loop]);
 
   const attach = useCallback((el: HTMLElement | null) => {
     node.current = el;
@@ -237,5 +314,10 @@ export function useCamera(reduced: boolean): Camera {
     goal.current = resolve({ preset: "neutral" });
   }, []);
 
-  return { attach, look, shake, reset };
+  // One object for the life of the stage: things built around the camera —
+  // the stagehand — must not be rebuilt because the combat screen rendered.
+  return useMemo(
+    () => ({ attach, look, shake, reset }),
+    [attach, look, shake, reset],
+  );
 }

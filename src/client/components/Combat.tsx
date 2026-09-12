@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Snapshot } from "../../shared/model";
 import type { Intent } from "../../shared/protocol";
 import { abilities, hero, supplyFor } from "../../content/heroes";
@@ -11,13 +11,34 @@ import { PixelIcon } from "./PixelIcon";
 import { ActionFan, type FanAbility } from "./ActionFan";
 import { treasuryBarrier } from "../combat-presentation";
 import type { Impact } from "./BattleUnit";
-import { placements } from "../battle/layout";
+import { bulk, placements } from "../battle/layout";
 import type { StageShapes } from "../battle/unit-layout";
 import { useCamera } from "../battle/camera";
 import { BattleVfx } from "./BattleVfx";
-import { useAnimators } from "../battle/useAnimators";
+import { useAnimators, type Animators } from "../battle/useAnimators";
 import { BossIntro } from "./BossIntro";
 import { mixer } from "../audio/engine";
+import { useFrameLoop, type FrameLoop } from "../battle/clock";
+import { useStagehand, type Stagehand } from "../battle/stagehand";
+import { stageGeometry } from "../battle/stage-geometry";
+import type { PlanOptions } from "../battle/round-plan";
+import type { RoundTimeline } from "../battle/choreography";
+
+/** What the Battle Lab reaches into. Development only. */
+export interface LabApi {
+  stagehand: Stagehand;
+  loop: FrameLoop;
+  animators: Animators;
+  timeline: () => RoundTimeline | null;
+  elapsed: () => number | null;
+  frameStep: () => void;
+  setPaused: (v: boolean) => void;
+  setSpeed: (n: number) => void;
+}
+export interface LabHooks {
+  plan?: PlanOptions;
+  attach?: (api: LabApi | null) => void;
+}
 
 /**
  * The battle screen. It owns one viewport and never scrolls: a fixed strip of
@@ -31,12 +52,16 @@ export function Combat({
   send,
   disabled,
   reducedMotion = false,
+  lab,
 }: {
   s: Snapshot;
   send: (i: Intent) => void;
   disabled: boolean;
   reducedMotion?: boolean;
+  /** The Battle Lab's hooks into the stage. Never set in the game. */
+  lab?: LabHooks;
 }) {
+  const choreoPlan = lab?.plan;
   const me = s.players.find((p) => p.id === s.you)!;
   const [history, setHistory] = useState(false);
   // The entrance plays once for an encounter, not once a round.
@@ -45,14 +70,49 @@ export function Combat({
   // it: the units, and everything that aims at them — camera, effects, fan.
   const [shapes, setShapes] = useState<StageShapes | null>(null);
   const places = useMemo(() => placements(s, shapes), [s, shapes]);
-  const camera = useCamera(reducedMotion);
-  const animators = useAnimators({ still: reducedMotion });
-  const replay = useDirector(s, reducedMotion, {
-    onShake: camera.shake,
-    onClip: animators.play,
-    onRest: animators.setRest,
-    onSound: (name) => mixer.play(name),
-  });
+  // One frame loop and one presentation clock for everything that moves.
+  const loop = useFrameLoop();
+  const camera = useCamera(reducedMotion, loop);
+  const animators = useAnimators({ still: reducedMotion, loop });
+  const stagehand = useStagehand(loop, camera, reducedMotion);
+  // The choreographer aims at where the stage has placed everyone, as
+  // measured; read when a round is planned, never written back.
+  const geometry = useRef({ places, shapes, s });
+  geometry.current = { places, shapes, s };
+  const replay = useDirector(
+    s,
+    reducedMotion,
+    {
+      onShake: camera.shake,
+      onClip: animators.play,
+      onRest: animators.setRest,
+      onSettle: animators.settle,
+      onSound: (name) => mixer.play(name),
+      geometry: (alive) => {
+        const g = geometry.current;
+        return stageGeometry(g.places, g.shapes, stagehand.stageSize(), alive, (id) =>
+          bulk(g.s.enemies.find((e) => e.id === id)?.definition),
+        );
+      },
+      plan: choreoPlan,
+    },
+    { loop, stagehand },
+  );
+  const replayRef = useRef(replay);
+  replayRef.current = replay;
+  useEffect(() => {
+    lab?.attach?.({
+      stagehand,
+      loop,
+      animators,
+      timeline: () => replayRef.current.timeline(),
+      elapsed: () => replayRef.current.elapsed(),
+      frameStep: () => replayRef.current.frameStep(),
+      setPaused: (v) => replayRef.current.setPaused(v),
+      setSpeed: (n) => replayRef.current.setSpeed(n),
+    });
+    return () => lab?.attach?.(null);
+  }, [lab, stagehand, loop, animators]);
   const b = replay.beat;
 
   const list = abilities(
@@ -89,15 +149,11 @@ export function Combat({
     if (target && !targetable.has(target)) setTarget("");
   }, [target, targetable]);
 
-  // The camera follows the decision being made, and nothing else.
+  // The camera follows the decision being made. During a replay the
+  // choreography frames the action instead (see `stagehand.ts`).
   useEffect(() => {
     const mine = places.get(me.id) ?? null;
-    if (replay.playing) {
-      const actor = b?.actor ? places.get(b.actor) : null;
-      const victim = b?.target ? places.get(b.target) : null;
-      camera.look({ preset: "action", at: actor ?? mine, and: victim });
-      return;
-    }
+    if (replay.playing) return;
     if (locked || me.hp <= 0) {
       camera.look({ preset: "neutral" });
       return;
@@ -114,7 +170,6 @@ export function Combat({
     selectedTarget,
     locked,
     replay.playing,
-    b,
     places,
     me.id,
     me.hp,
@@ -265,6 +320,7 @@ export function Combat({
       </div>
 
       <BattleStage
+        stagehand={stagehand}
         animators={animators}
         frozen={replay.frozen}
         s={s}

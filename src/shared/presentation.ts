@@ -22,7 +22,15 @@ export type Footprint =
 /** Which rig or sheet a combatant animates with. */
 export type SpriteSet = string;
 
-/** Clips an animation player can be asked for. Missing clips fall back. */
+/**
+ * Clips an animation player can be asked for. Missing clips fall back.
+ *
+ * The choreography clips — `approach`, `retreat`, `aim` and `release` — are
+ * what a combatant plays while it crosses the stage and while it draws and
+ * looses a shot. Each falls back to something every rig has (see
+ * `Animator.resolve`), so a creature nobody has animated for travel still
+ * crosses the stage rather than sliding rigidly.
+ */
 export type ClipName =
   | "idle"
   | "anticipate"
@@ -35,7 +43,15 @@ export type ClipName =
   | "victory"
   | "windup"
   | "signature"
-  | "defeat";
+  | "defeat"
+  /** A travel loop towards the target: a run, a charge, a sprint. */
+  | "approach"
+  /** A travel loop back home: a jog, or backing away on guard. */
+  | "retreat"
+  /** One-shot that ends holding a drawn or charged pose: a bow at full draw. */
+  | "aim"
+  /** One-shot from the held aim: the loose, and the recovery. */
+  | "release";
 
 /** The reusable effect vocabulary. Adding one means adding a renderer for it. */
 export type VfxName =
@@ -81,7 +97,19 @@ export type SfxName =
   | "boss-groan"
   | "boss-stamp"
   | "miser-croak"
-  | "miser-coin";
+  | "miser-coin"
+  /** Choreography: a bowstring creaking as it is drawn. */
+  | "bow-draw"
+  /** The string snapping forward on release. */
+  | "bow-release"
+  /** An arrow passing through the air. */
+  | "arrow-whoosh"
+  /** One heavy footfall; the choreographer spaces these along a charge. */
+  | "footstep-heavy"
+  /** Power gathering before a spell or a charged shot. */
+  | "charge-rise"
+  /** Something thrown or fired leaving its source. */
+  | "projectile-release";
 
 export type CameraPreset =
   | "neutral"
@@ -119,6 +147,11 @@ export interface UnitPresentation {
   shadow?: number;
   /** Clips this unit actually has. Anything absent uses the generic rig. */
   clips?: Partial<Record<ClipName, string>>;
+  /*
+   * How it performs a move is annotated in `content/choreography/<id>.ts`,
+   * one file per creature, so annotating two creatures never touches the
+   * same file. See `docs/CHOREOGRAPHY.md`.
+   */
 }
 
 /** What an action looks like when it is performed. */
@@ -134,6 +167,196 @@ export interface AbilityPresentation {
   theme?: VfxTheme;
   /** Show the ability's name across the stage when it fires. */
   announce?: boolean;
+  /** How the move is performed; absent means the choreographer infers it. */
+  archetype?: Archetype;
+  /** For spells and support: how the effect reaches its target. */
+  delivery?: Delivery;
+  /** What travels, for projectile, bow and spell moves. */
+  projectile?: ProjectileLook;
+  /**
+   * How long the build-up is held. `long` is a power shot — a longer draw and
+   * a brighter aim; `marked` flashes the target's mark before release, and
+   * only when the move actually exploited one (an `EXPLOIT` beat); `short` is
+   * a snap shot.
+   */
+  charge?: Charge;
+  /** Overrides the unit's own locomotion for this move: a pounce is a leap. */
+  locomotion?: Locomotion;
+  timing?: TimingHints;
+}
+
+/* ------------------------------------------------------------ choreography -- */
+
+/*
+ * Choreography metadata.
+ *
+ * The same rule as everything above: this says how a move *looks*, never what
+ * it does. Every multi-hit, every row impact and every projectile the stage
+ * shows comes from the beats the engine resolved; metadata only chooses how
+ * each of those is drawn. An arrow volley is drawn only for a move that hit a
+ * whole row, and a second bite only for a move that bit twice.
+ */
+
+/** How a move is performed. */
+export type Archetype =
+  /** Cross the stage to an attack point beside the target, strike, go home. */
+  | "melee"
+  /** A short lunge towards the target, never leaving its own ground. */
+  | "lunge"
+  /** Face, raise, draw, hold, loose; an arrow flies and lands. */
+  | "bow"
+  /** Something thrown or fired: a rivet, an ember, a coin. */
+  | "projectile"
+  /** A spell built in the hand and launched; `delivery` says how it lands. */
+  | "spell"
+  /** A continuous line from the caster to the target. */
+  | "beam"
+  /** One impact across a whole row: an eruption, a shockwave. */
+  | "area"
+  /** Performed on itself, in place: a brace, a fortify. */
+  | "self"
+  /** Aimed at an ally: a heal, a barrier. */
+  | "support";
+
+/** How a spell or a support move reaches its target. */
+export type Delivery =
+  /** A bolt or orb that travels from the caster's hand. */
+  | "bolt"
+  /** A strike that falls on the target from above. */
+  | "fromAbove"
+  /** A beam held between caster and target. */
+  | "beam"
+  /** The ground under the target is marked, then erupts. */
+  | "eruption"
+  /** A wave that runs along the ground from the caster. */
+  | "shockwave"
+  /** A sigil forms on the target, then bursts. */
+  | "sigil"
+  /** Light blooms on the target where it stands. */
+  | "bloom"
+  /** A mote of healing travels from the caster to the ally. */
+  | "mote";
+
+/** How a combatant gets across the stage. Each falls back to `run`. */
+export type Locomotion =
+  | "run"
+  | "dash"
+  | "heavyWalk"
+  | "charge"
+  | "hop"
+  | "leap"
+  | "crawl"
+  | "slither"
+  | "fly"
+  | "lunge"
+  | "teleport";
+
+export type Charge = "short" | "normal" | "long" | "marked";
+
+/** The shapes a projectile can be drawn as. The projectile layer draws each. */
+export type ProjectileVisual =
+  | "arrow"
+  | "bolt"
+  | "orb"
+  | "mote"
+  | "ember"
+  | "rivet"
+  | "shard"
+  | "wave";
+
+/** The path a projectile takes. */
+export type Trajectory =
+  | "linear"
+  | "arc"
+  | "homing"
+  | "beam"
+  | "ground"
+  | "fromAbove";
+
+export interface ProjectileLook {
+  visual?: ProjectileVisual;
+  trajectory?: Trajectory;
+  /** Stage widths per second. Ignored when `duration` is given. */
+  speed?: number;
+  /** Milliseconds of flight, at 1×. */
+  duration?: number;
+  /** Arc height as a fraction of the flight's length. */
+  arc?: number;
+  /** `tangent` points it along its path (arrows), `spin` turns it. */
+  rotate?: "tangent" | "spin" | "none";
+  trail?: boolean;
+  /** What happens to it when it lands. */
+  onArrival?: "stick" | "vanish" | "burst";
+  /** The effect at the target on arrival. */
+  impact?: VfxName;
+}
+
+/** Nudges to a move's timing. Milliseconds at 1×; all optional. */
+export interface TimingHints {
+  anticipation?: number;
+  /** How long the aim or charge is held before release. */
+  hold?: number;
+  /** Multiplies travel time: below 1 is faster. */
+  travel?: number;
+  /** How long the actor stays at the attack point after the strike. */
+  linger?: number;
+}
+
+/**
+ * A point on a drawing, in the drawing's own viewBox units, optionally riding
+ * a named rig part so it moves with that part: the Ranger's nock rides the
+ * `arrow` part, so an arrow leaves wherever the drawn arrow is at release.
+ */
+export interface Anchor {
+  at: [number, number];
+  part?: string;
+}
+
+/** The named points a choreographer asks a creature for. */
+export type AnchorName =
+  /** Where a projectile leaves: a nock, a staff tip, a hand, a barrel, a mouth. */
+  | "muzzle"
+  /** Where a projectile or blow lands on it. Upper torso by default. */
+  | "hit"
+  /** The striking point of its weapon at contact, for the debug overlay. */
+  | "weapon";
+
+/** How a creature performs, whatever the move. */
+export interface UnitChoreography {
+  locomotion?: Locomotion;
+  /** Travel speed in stage widths per second, before pacing. */
+  speed?: number;
+  /**
+   * How far in front of its own centre its weapon lands at contact, in
+   * drawing units, not counting how far the strike clip carries the whole
+   * figure (the choreographer adds that from the clip itself). Absent means
+   * the front of its painted outline.
+   */
+  reach?: number;
+  anchors?: Partial<Record<AnchorName, Anchor>>;
+  /** The archetype of its moves at a hostile target when a move names none. */
+  basic?: Archetype;
+  /**
+   * How far inside its painted outline the surface it is struck on sits, in
+   * drawing units: an outboard key or a raised arm is not where a sword lands.
+   */
+  strikeInset?: number;
+  /** Whether it turns round to go home (a hound) or backs away (a knight). */
+  turnToReturn?: boolean;
+  /** How far past the attack point the strike carries it, in drawing units. */
+  overshoot?: number;
+}
+
+/**
+ * One creature's annotations: its own choreography and its abilities', keyed
+ * by ability id, which upgrades and class paths keep. `named` is keyed by the
+ * ability's name instead, for a class path whose move looks different from
+ * the one it replaced.
+ */
+export interface CreatureChoreography {
+  unit?: UnitChoreography;
+  abilities?: Record<string, AbilityPresentation>;
+  named?: Record<string, AbilityPresentation>;
 }
 
 /** Defaults, so nothing has to be annotated to render. */

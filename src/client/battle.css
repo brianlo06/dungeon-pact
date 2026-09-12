@@ -290,6 +290,20 @@
 .layer-vfx {
   z-index: 4000;
 }
+/*
+ * Projectiles and marks. No z-index of its own, so this layer is not a
+ * stacking context: each projectile's paint order is compared directly with
+ * each combatant's, and an arrow flies in front of the creatures it passes in
+ * front of and behind the ones it passes behind.
+ */
+.layer-projectiles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.layer-choreo-debug {
+  z-index: 5200;
+}
 .layer-screen {
   z-index: 6000;
 }
@@ -354,7 +368,8 @@
  */
 :where(
   .combatant > :not(.combatant-body),
-  .combatant-body > :not(.combatant-rig)
+  .combatant-body > :not(.combatant-travel),
+  .combatant-travel > :not(.combatant-lift)
 ),
 :where(.combatant-rig)
   :where(
@@ -384,6 +399,19 @@
  */
 .combatant[data-side="enemy"] .sprite.combatant-sprite {
   transform: scaleX(-1);
+}
+/*
+ * The choreography offset and the lift. Both fill the drawing's square, and
+ * both are written by the stagehand only while a replay carries the figure
+ * somewhere; at home they carry no transform at all. Never filtered: each
+ * holds the rig, and a filter here would redraw the moving figure offscreen
+ * every frame (see `tests/perf-css.test.ts`).
+ */
+.combatant-travel,
+.combatant-lift {
+  position: absolute;
+  inset: 0;
+  display: block;
 }
 .combatant-body .combatant-rig {
   display: block;
@@ -1420,6 +1448,265 @@
 }
 .vfx-pop.pop-gold {
   color: var(--gold);
+}
+
+/* ---------------------------------------------------------- projectiles -- */
+
+/*
+ * Everything the stagehand flies. Each is a zero-size anchor at its own
+ * position, turned along its path; what it draws hangs off that point, with
+ * its head on it. Sized against the stage like the combatants are, so an
+ * arrow is the length of the arrow the Ranger is drawn holding.
+ */
+.projectile {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+.projectile > * {
+  position: absolute;
+}
+.projectile-arrow > svg {
+  width: calc(clamp(58px, 21cqh, 150px) * 0.36);
+  height: auto;
+  left: 0;
+  top: 0;
+  transform: translate(-75%, -50%);
+}
+/* A faint streak behind whatever is moving fast. */
+.projectile[data-trail]::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -1px;
+  width: calc(clamp(58px, 21cqh, 150px) * 0.5);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 238, 205, 0.45));
+  transform-origin: 100% 50%;
+}
+.projectile-arrow[data-trail]::before {
+  right: calc(clamp(58px, 21cqh, 150px) * 0.27);
+}
+.projectile[data-arrived]::before {
+  display: none;
+}
+.projectile > i {
+  left: 0;
+  top: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.projectile-bolt > i,
+.projectile-orb > i {
+  background: radial-gradient(circle, #fff 0 22%, #cbb2ff 45%, transparent 72%);
+  box-shadow: 0 0 14px 4px rgba(168, 137, 255, 0.7);
+}
+.projectile-orb > i {
+  width: 20px;
+  height: 20px;
+}
+.projectile-mote > i {
+  background: radial-gradient(circle, #f4ffe8 0 25%, #8fdc8a 50%, transparent 74%);
+  box-shadow: 0 0 16px 5px rgba(143, 220, 138, 0.6);
+}
+.projectile-ember > i {
+  background: radial-gradient(circle, #fff2c4 0 20%, #ff8a3c 48%, transparent 74%);
+  box-shadow: 0 0 14px 4px rgba(255, 138, 60, 0.7);
+}
+.projectile-rivet > i {
+  width: 9px;
+  height: 9px;
+  background: radial-gradient(circle, #fff2c4 0 30%, #ff6a3a 60%, #7a2a1a 100%);
+  box-shadow: 0 0 8px 2px rgba(255, 106, 58, 0.7);
+}
+.projectile-shard > i {
+  border-radius: 2px;
+  background: linear-gradient(135deg, #f0e6ff, #8e73b4);
+  box-shadow: 0 0 10px 2px rgba(142, 115, 180, 0.7);
+}
+/* A shockwave runs along the floor: flat, wide, and not turned. */
+.projectile-wave > i {
+  width: calc(clamp(58px, 21cqh, 150px) * 0.8);
+  height: calc(clamp(58px, 21cqh, 150px) * 0.16);
+  border: 3px solid rgba(255, 200, 130, 0.85);
+  border-radius: 50%;
+  background: none;
+  box-shadow: 0 0 12px rgba(255, 160, 80, 0.6);
+}
+/* A beam is a line from the caster, stretched to its target. */
+.projectile.trajectory-beam {
+  width: 1px;
+  height: 7px;
+  margin-top: -3.5px;
+  transform-origin: 0 50%;
+  background: linear-gradient(
+    #fff0 0%,
+    rgba(203, 178, 255, 0.85) 30%,
+    #fff 50%,
+    rgba(203, 178, 255, 0.85) 70%,
+    #fff0 100%
+  );
+  box-shadow: 0 0 10px rgba(168, 137, 255, 0.8);
+}
+.projectile.trajectory-beam > * {
+  display: none;
+}
+/* Landing: a burst blooms and goes; an arrow sticks, quivers, and fades. */
+.projectile[data-arrived="burst"] > i {
+  animation: burst 0.18s ease-out forwards;
+}
+.projectile[data-arrived="stick"] {
+  animation: stuck 0.42s ease-out forwards;
+}
+@keyframes stuck {
+  0% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/*
+ * Marks the choreography lays on the stage: a telegraph glowing on the floor
+ * before an eruption, a quarry mark flashing on a target before the shot that
+ * exploits it, power gathering at a muzzle, a sigil, a bloom — and, under
+ * reduced motion, the ring, line and mark that stand in for a whole move.
+ * Driven by `--k`, 0…1 through the mark's life, from the presentation clock;
+ * none of them animates on its own.
+ */
+.stage-mark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.stage-mark::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+}
+.mark-telegraph::after {
+  width: calc(var(--w) * 1.3);
+  height: calc(var(--w) * 0.3);
+  border: 2px solid rgba(255, 128, 64, calc(0.3 + var(--k) * 0.7));
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 110, 50, calc(var(--k) * 0.45)),
+    transparent
+  );
+  box-shadow: 0 0 calc(var(--k) * 18px) rgba(255, 110, 50, 0.6);
+}
+.mark-mark::after {
+  width: 34px;
+  height: 34px;
+  border: 3px solid #ffd27a;
+  border-radius: 3px;
+  transform: translate(-50%, -50%) rotate(45deg)
+    scale(calc(1.5 - min(1, var(--k) * 3) * 0.5));
+  box-shadow:
+    0 0 12px rgba(255, 210, 122, 0.8),
+    inset 0 0 8px rgba(255, 210, 122, 0.5);
+  opacity: calc(1 - max(0, var(--k) - 0.75) * 4);
+}
+.mark-charge::after {
+  width: calc(12px + var(--k) * 26px);
+  height: calc(12px + var(--k) * 26px);
+  border-radius: 50%;
+  background: radial-gradient(circle, #fffbe8 0 18%, rgba(255, 214, 130, 0.8) 40%, transparent 72%);
+  box-shadow: 0 0 calc(8px + var(--k) * 22px) rgba(255, 214, 130, 0.75);
+}
+.mark-sigil::after {
+  width: calc(var(--w) * 0.9);
+  height: calc(var(--w) * 0.9);
+  border: 2px dashed rgba(200, 170, 255, 0.9);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) rotate(calc(var(--k) * 200deg))
+    scale(calc(0.6 + var(--k) * 0.5));
+  box-shadow: 0 0 14px rgba(168, 137, 255, 0.6);
+}
+.mark-bloom::after {
+  width: calc(var(--w) * (0.4 + var(--k) * 0.8));
+  height: calc(var(--w) * (0.4 + var(--k) * 0.8));
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(170, 245, 150, 0.7), transparent);
+  opacity: calc(1 - max(0, var(--k) - 0.6) * 2.5);
+}
+.mark-emphasis::after {
+  width: calc(var(--w) * 1.2);
+  height: calc(var(--w) * 0.28);
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(238, 184, 96, 0.6);
+}
+.mark-line {
+  height: 2px;
+  margin-top: -1px;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, rgba(238, 184, 96, 0.9), rgba(255, 240, 210, 0.9));
+  box-shadow: 0 0 6px rgba(238, 184, 96, 0.7);
+}
+.mark-line::after {
+  display: none;
+}
+
+/* The Battle Lab's choreography overlay. Development only. */
+.layer-choreo-debug svg {
+  overflow: visible;
+}
+.layer-choreo-debug circle {
+  stroke: #120f18;
+  stroke-width: 1.5;
+}
+.layer-choreo-debug text {
+  font: 10px ui-monospace, monospace;
+  fill: #fff;
+  paint-order: stroke;
+  stroke: #120f18;
+  stroke-width: 3px;
+}
+.dbg-home {
+  fill: #5ad1ff;
+}
+.dbg-attack {
+  fill: #ffd27a;
+}
+.dbg-weapon {
+  fill: #ff5a5a;
+}
+.dbg-hit {
+  fill: #ff7ae0;
+}
+.dbg-muzzle {
+  fill: #8fdc8a;
+}
+.dbg-path,
+.dbg-back {
+  fill: none;
+  stroke: #ffd27a;
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
+.dbg-back {
+  stroke: #5ad1ff;
+}
+.layer-choreo-debug .dbg-phase {
+  font-size: 12px;
+  fill: #ffd27a;
 }
 
 /* Hit-stop: the whole scene holds still for a beat on a heavy landing. */

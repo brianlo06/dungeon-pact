@@ -302,7 +302,19 @@ export function arrangeUnits(
 export interface StageShapes {
   width: number;
   height: number;
-  units: Record<string, { figure: Box; plate: Box }>;
+  units: Record<string, MeasuredUnit>;
+}
+
+export interface MeasuredUnit {
+  figure: Box;
+  plate: Box;
+  /**
+   * The square the drawing is laid out in, and the drawing's own viewBox,
+   * so a point given in drawing units — a reach, an anchor — can be put on
+   * the stage. Absent for an atlas cell, which has no drawing units.
+   */
+  body?: Box;
+  view?: { x: number; y: number; width: number; height: number };
 }
 
 type Sampled = ReturnType<typeof sampleTrack>;
@@ -512,9 +524,17 @@ export function measureUnits(
         top: b.top - gy,
         bottom: b.bottom - gy,
       });
+    const bodyEl = u.querySelector(":scope > .combatant-body");
+    const vb = u.querySelector<SVGSVGElement>("svg.combatant-sprite")?.viewBox
+      ?.baseVal;
     shapes.units[id] = {
       figure: rel(figure),
       plate: rel(local(plateEl.getBoundingClientRect())),
+      body: bodyEl ? rel(local(bodyEl.getBoundingClientRect())) : undefined,
+      view:
+        vb && vb.width && vb.height
+          ? { x: vb.x, y: vb.y, width: vb.width, height: vb.height }
+          : undefined,
     };
   }
   return { shapes, figures };

@@ -11,6 +11,7 @@ import { PARTY } from "../client/components/heroes";
 import { EquipmentProvider } from "../client/equipment/Equipment";
 import { Strongbox } from "../client/components/Strongbox";
 import { useAnimators } from "../client/battle/useAnimators";
+import { useFrameLoop } from "../client/battle/clock";
 import { items } from "../content/items";
 import type { ClipName } from "../shared/presentation";
 import "../client/style.css";
@@ -29,7 +30,11 @@ function Workshop() {
   const [row, setRow] = useState(false);
   const [transfer, setTransfer] = useState<Vfx[]>([]);
   const [paused, setPaused] = useState(false);
-  const animators = useAnimators({ paused });
+  const loop = useFrameLoop();
+  const animators = useAnimators({ loop });
+  useEffect(() => {
+    loop.clock.paused = paused;
+  }, [loop, paused]);
   const root = useRef<HTMLSpanElement>(null);
   const Hero = PARTY[hero];
   useEffect(() => {

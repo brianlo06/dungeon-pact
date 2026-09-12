@@ -160,8 +160,19 @@ export function BattleUnit({
         aria-pressed={selected}
         aria-label={`${unit.name}, ${shown} of ${unit.maxHp} health`}
       >
+        {/*
+          The choreography offset lives on `.combatant-travel`, written by the
+          stagehand while a replay carries this figure across the floor; the
+          figure, its shadow and its marks travel, and the plate and chip stay
+          home. `.combatant-lift` raises it off the floor for a leap — the
+          shadow stays down — and mirrors it to face the other way, so the
+          drawing and its rig's motion turn round together. The rig itself is
+          the animator's. Nothing here is ever positioned by React.
+        */}
+        <span className="combatant-travel">
         <span className="combatant-shadow" aria-hidden="true" />
         {marked && <span className="combatant-mark" aria-hidden="true" />}
+        <span className="combatant-lift">
         <span className="combatant-rig" ref={sprite}>
           {look.spriteSet === "strongbox" ? (
             <Strongbox
@@ -198,7 +209,9 @@ export function BattleUnit({
             />
           )}
         </span>
+        </span>
         {selected && <span className="combatant-ring" aria-hidden="true" />}
+        </span>
         {pop && (
           <span className={`combatant-pop pop-${impact ?? "damage"}`}>
             {pop}

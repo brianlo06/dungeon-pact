@@ -94,6 +94,28 @@ export function unitPresentation(
 export const depthScale = (depth: number) => 0.72 + depth * 0.38;
 
 /**
+ * The depth of any ground line, between and beyond the bands: what a figure
+ * crossing the floor should be scaled by where it stands now. Piecewise
+ * through the bands' own ground lines and depths, and carried on past the
+ * ends at the slope of the nearest pair, within reason.
+ */
+export function depthAtGround(y: number): number {
+  const bands = Object.values(BANDS)
+    .map((b) => ({ y: b.y as number, depth: b.depth as number }))
+    .sort((a, b) => a.y - b.y);
+  let i = 0;
+  while (i < bands.length - 2 && y > bands[i + 1].y) i++;
+  const a = bands[i];
+  const b = bands[i + 1];
+  const d = a.depth + ((y - a.y) / (b.y - a.y)) * (b.depth - a.depth);
+  return Math.max(-0.2, Math.min(1.2, d));
+}
+
+/** Ground line for each side and row, for anything placing by band. */
+export const bandGround = (side: "hero" | "enemy", row: Row) =>
+  BANDS[bandOf(side, row)].y;
+
+/**
  * Spread n units around a centre. Wider bands for bigger groups, but never so
  * wide that a four-hero party runs off the sides at 1280.
  */

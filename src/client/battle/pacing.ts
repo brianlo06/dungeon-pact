@@ -1,48 +1,56 @@
 import type { Beat } from "../../shared/model";
 
 /**
- * How long each beat of a replayed round holds the stage.
+ * How long a replayed round takes.
  *
- * Every beat has a natural length, which is what a short round plays at, and
- * a floor, the least it can be given and still be read. A round whose natural
- * lengths add up to more than `REPLAY_CAP` is squeezed towards its floors, all
- * beats by the same share of their slack, until it fits. The floors are never
- * crossed: a round too busy to fit the cap at its floors runs at its floors,
- * longer than the cap, rather than playing faster than anyone can follow.
+ * A round used to be a list of beats, each held for a fixed time. It is now
+ * choreography: actors cross the floor to strike, arrows fly, and every hit
+ * is shown when the blow that caused it lands (see `choreography.ts`). What
+ * pacing decides is how much of that a round may take.
  *
- * The first version of the replay had a cap and the director that replaced it
- * did not, so a four-hero boss round ran for ten seconds.
+ * Every phase of every move has a natural length, which is what a short round
+ * plays at, and a floor, the least it can be given and still be read: an
+ * anticipation 150ms, an arrival 30ms, a fall's wait 170ms, a banner 480ms, a
+ * run 68% of its natural time. A strike clip is never squeezed — it is the
+ * art, and its contact is where the hit lands. A round whose natural length
+ * is over `REPLAY_CAP` is squeezed, every phase by the same share of its
+ * slack, until it fits; one too busy to fit at its floors runs at its floors,
+ * longer than the cap, rather than faster than anyone can follow.
  *
- * What makes each floor:
- *
- *  - **A move** names itself in a callout that is gone at the next beat, and
- *    the actor's strike has to land before its hit does. Authored strikes
- *    reach contact about halfway through: 260–460ms for the party's and the
- *    creatures' ordinary moves. The callout's slam takes 420ms to settle.
- *  - **A signature** is the round's headline and the longest strike on the
- *    field — the Collector's key lands about 600ms in — so it is barely
- *    squeezed at all, and its natural length waits for the landing.
- *  - **The first hit of a move** is the impact: the flinch, the number, the
- *    bar dropping. Anything after it in the same move — the second target of
- *    a row attack, thorns answering a strike — lands on a stage already
- *    looking at that move, and its number stays up long after its beat, so it
- *    only needs to be distinct. So does a beat that changed nothing, like a
- *    heal of zero.
- *  - **A banner** — SEIZED, INTERRUPTED, a hero going down — is one word or
- *    two that vanish at the next beat, and needs the time to read them.
+ * Rounds stay tight by overlapping: an actor's return home overlaps the next
+ * actor's wind-up (never its own next move), a shot's flight overlaps the
+ * next wind-up, and braces start one after another's contact. Nobody is hit
+ * while it is still on its way home.
  */
 
-/** The longest a replay runs, at 1× with no capture tempo, when floors allow. */
-export const REPLAY_CAP = 6000;
-
-interface Span {
-  natural: number;
-  floor: number;
-}
+/**
+ * The longest a replay runs, at 1× with no capture tempo, when floors allow.
+ *
+ * Measured, not chosen: see `docs/CHOREOGRAPHY.md`, "Pacing". Six seconds
+ * held beats that played in place; crossing the floor to strike and
+ * returning costs real time, and a four-hero boss round with everyone
+ * striking runs about nine seconds at its floors.
+ */
+export const REPLAY_CAP = 9000;
 
 /** Hit-stop, by how hard the hit landed. Subtle on purpose. */
 export const hitStop = (amount: number) =>
   amount >= 30 ? 120 : amount >= 18 ? 75 : amount > 0 ? 40 : 0;
+
+/**
+ * Legacy beat spans remain exported for the pacing contract tests and for
+ * consumers that only need a quick estimate. The live replay is scheduled by
+ * `scheduleRound`; these values do not drive choreography.
+ */
+export interface Span {
+  natural: number;
+  floor: number;
+}
+
+export interface PaceOptions {
+  cap?: number;
+  signature?: (beat: Beat) => boolean;
+}
 
 const MOVE: Span = { natural: 520, floor: 400 };
 const SIGNATURE: Span = { natural: 620, floor: 580 };
@@ -51,17 +59,7 @@ const BANNER: Record<"combo" | "defeat", Span> = {
   defeat: { natural: 620, floor: 480 },
 };
 const NATURAL = { damage: 420, heal: 420, block: 340 } as const;
-const IMPACT_FLOOR = 220;
-const FOLLOW_FLOOR = 100;
 
-export interface PaceOptions {
-  /** Defaults to `REPLAY_CAP`. */
-  cap?: number;
-  /** Whether a cast beat is its actor's signature move. */
-  signature?: (beat: Beat) => boolean;
-}
-
-/** Each beat's natural length and floor, in order. */
 export function spans(beats: Beat[], opts: PaceOptions = {}): Span[] {
   let struck = false;
   return beats.map((beat) => {
@@ -80,23 +78,21 @@ export function spans(beats: Beat[], opts: PaceOptions = {}): Span[] {
           (beat.kind === "damage" ? hitStop(beat.amount ?? 0) : 0);
         const lands = !!beat.amount && !struck;
         if (beat.amount) struck = true;
-        return { natural, floor: lands ? IMPACT_FLOOR : FOLLOW_FLOOR };
+        return { natural, floor: lands ? 220 : 100 };
       }
     }
   });
 }
 
-/**
- * How long each beat holds, in unscaled milliseconds: the natural lengths if
- * they fit the cap, squeezed evenly towards the floors if they do not.
- */
 export function paceRound(beats: Beat[], opts: PaceOptions = {}): number[] {
-  const cap = opts.cap ?? REPLAY_CAP;
   const all = spans(beats, opts);
-  const natural = all.reduce((n, s) => n + s.natural, 0);
-  if (natural <= cap) return all.map((s) => s.natural);
-  const floor = all.reduce((n, s) => n + s.floor, 0);
-  if (floor >= cap) return all.map((s) => s.floor);
-  const k = (cap - floor) / (natural - floor);
-  return all.map((s) => s.floor + (s.natural - s.floor) * k);
+  const cap = opts.cap ?? REPLAY_CAP;
+  const natural = all.reduce((n, span) => n + span.natural, 0);
+  if (natural <= cap) return all.map((span) => span.natural);
+  const floor = all.reduce((n, span) => n + span.floor, 0);
+  if (floor >= cap) return all.map((span) => span.floor);
+  const pace = (cap - floor) / (natural - floor);
+  return all.map(
+    (span) => span.floor + (span.natural - span.floor) * pace,
+  );
 }

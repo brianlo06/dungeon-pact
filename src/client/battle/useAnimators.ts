@@ -1,16 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { ClipName } from "../../shared/presentation";
-import { Animator } from "./animation";
+import { Animator, type PlayOptions, type Rig } from "./animation";
 import { rigFor } from "./rigs";
-import { tempo } from "./tempo";
+import { FrameLoop, ORDER } from "./clock";
 
 /**
  * One clock for every combatant on the field.
  *
- * Each unit gets an `Animator`; a single animation frame loop ticks all of
- * them and writes transforms straight to their nodes. A loop per unit would
- * multiply the cost by the party and the encounter for no benefit, and a React
- * render per frame would be worse still.
+ * Each unit gets an `Animator`; the stage's frame loop ticks all of them on
+ * the presentation clock and they write transforms straight to their nodes.
+ * A loop per unit would multiply the cost by the party and the encounter for
+ * no benefit, and a React render per frame would be worse still.
+ *
+ * The clock is the one the director schedules on (see `clock.ts`), so the
+ * replay speed, the capture tempo, pausing, stepping and hit-stop reach the
+ * rigs exactly as they reach the hits. Before it, the animators ran on the
+ * capture tempo alone and at 2× a hit could land before its strike.
  *
  * Idle phases are randomised per unit at registration, which is what stops a
  * line of creatures breathing in lockstep — the single most obvious tell that
@@ -29,7 +34,12 @@ export interface Animators {
     part: string,
     node: SVGElement | HTMLElement | null,
   ) => void;
-  play: (id: string, clip: ClipName, then?: ClipName) => void;
+  play: (
+    id: string,
+    clip: ClipName,
+    then?: ClipName,
+    opts?: PlayOptions,
+  ) => void;
   /**
    * The loop a unit returns to between actions — `windup` while it holds an
    * announced wind-up, otherwise `idle`. A rig without the clip keeps idling.
@@ -40,70 +50,56 @@ export interface Animators {
    * the pose on screen, so it can follow the board on every change.
    */
   setDown: (id: string, down: boolean) => void;
-  /** Slow everything down together, for capture and inspection. */
+  /** Back to rest now, whatever is playing: the end of a replay, a skip. */
+  settle: (id: string) => void;
+  /** Slow everything down together, beyond the clock. Kept for inspection. */
   setSpeed: (n: number) => void;
   current: (id: string) => ClipName | null;
+  /** The rig a unit is animating with, for the choreographer. */
+  rig: (id: string) => Rig | undefined;
+  /** The ids of every unit with an animator. */
+  ids: () => string[];
 }
 
 export interface AnimatorOptions {
-  /** Hold every animator on its current frame, for a hit-stop. */
-  paused?: boolean;
   /**
    * Reduced motion. Every combatant shows one static pose — standing, lying
    * where it fell, or holding its wind-up — and nothing loops.
    */
   still?: boolean;
+  /** The stage's frame loop; its clock is the animators' time. */
+  loop: FrameLoop;
 }
 
-export function useAnimators({
-  paused = false,
-  still = false,
-}: AnimatorOptions = {}): Animators {
+export function useAnimators({ still = false, loop }: AnimatorOptions): Animators {
   const units = useRef(new Map<string, Animator>());
+  const rigs = useRef(new Map<string, Rig>());
   const speed = useRef(1);
-  const frozen = useRef(paused);
-  frozen.current = paused;
   const stillRef = useRef(still);
   stillRef.current = still;
-  /** The capture tempo every animator was last given. */
-  const applied = useRef(tempo());
 
-  /** A new animator, already at the stage's speed, tempo and stillness. */
-  const create = useCallback((spriteSet: string | undefined) => {
-    const animator = new Animator(rigFor(spriteSet));
-    animator.setSpeed(speed.current * applied.current);
-    animator.setStill(stillRef.current);
-    return animator;
-  }, []);
+  /** A new animator, on the stage's clock, at its speed and stillness. */
+  const create = useCallback(
+    (spriteSet: string | undefined) => {
+      const animator = new Animator(
+        rigFor(spriteSet),
+        Math.random(),
+        () => loop.clock.time,
+      );
+      animator.setSpeed(speed.current);
+      animator.setStill(stillRef.current);
+      return animator;
+    },
+    [loop],
+  );
 
-  useEffect(() => {
-    let stop = false;
-    let frame = 0;
-    let held = 0;
-    let last = performance.now();
-    const tick = (now: number) => {
-      if (stop) return;
-      // The capture tempo is read from the document once a frame, so a
-      // change reaches animators that already exist, not only new ones.
-      const k = tempo();
-      if (k !== applied.current) {
-        applied.current = k;
-        for (const animator of units.current.values())
-          animator.setSpeed(speed.current * k);
-      }
-      // A hit-stop holds every animator on its current frame rather than
-      // letting them drift on while the stage is frozen.
-      if (frozen.current) held += now - last;
-      last = now;
-      for (const animator of units.current.values()) animator.tick(now - held);
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => {
-      stop = true;
-      cancelAnimationFrame(frame);
-    };
-  }, []);
+  useEffect(
+    () =>
+      loop.add(ORDER.animators, ({ time }) => {
+        for (const animator of units.current.values()) animator.tick(time);
+      }),
+    [loop],
+  );
 
   useEffect(() => {
     for (const animator of units.current.values()) animator.setStill(still);
@@ -119,6 +115,7 @@ export function useAnimators({
 
   const register = useCallback(
     (id: string, spriteSet: string | undefined) => {
+      rigs.current.set(id, rigFor(spriteSet));
       const existing = units.current.get(id);
       if (existing) {
         existing.setRig(rigFor(spriteSet));
@@ -150,9 +147,12 @@ export function useAnimators({
     [create],
   );
 
-  const play = useCallback((id: string, clip: ClipName, then?: ClipName) => {
-    units.current.get(id)?.play(clip, then);
-  }, []);
+  const play = useCallback(
+    (id: string, clip: ClipName, then?: ClipName, opts?: PlayOptions) => {
+      units.current.get(id)?.play(clip, then, opts);
+    },
+    [],
+  );
 
   const setRest = useCallback((id: string, clip: ClipName) => {
     units.current.get(id)?.setRest(clip);
@@ -162,16 +162,21 @@ export function useAnimators({
     units.current.get(id)?.setDown(down);
   }, []);
 
+  const settle = useCallback((id: string) => {
+    units.current.get(id)?.settle();
+  }, []);
+
   const setSpeed = useCallback((n: number) => {
     speed.current = n;
-    for (const animator of units.current.values())
-      animator.setSpeed(n * applied.current);
+    for (const animator of units.current.values()) animator.setSpeed(n);
   }, []);
 
   const current = useCallback(
     (id: string) => units.current.get(id)?.current ?? null,
     [],
   );
+  const rig = useCallback((id: string) => rigs.current.get(id), []);
+  const ids = useCallback(() => [...units.current.keys()], []);
 
   return useMemo(
     () => ({
@@ -181,9 +186,24 @@ export function useAnimators({
       play,
       setRest,
       setDown,
+      settle,
       setSpeed,
       current,
+      rig,
+      ids,
     }),
-    [register, attach, attachPart, play, setRest, setDown, setSpeed, current],
+    [
+      register,
+      attach,
+      attachPart,
+      play,
+      setRest,
+      setDown,
+      settle,
+      setSpeed,
+      current,
+      rig,
+      ids,
+    ],
   );
 }

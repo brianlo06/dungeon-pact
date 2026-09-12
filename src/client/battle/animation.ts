@@ -35,7 +35,20 @@ export interface Pose {
   flash?: number;
 }
 
+/**
+ * Moments in a clip that the choreographer times the fight by, as fractions
+ * of the clip. Authored from the art: `contact` is where the weapon meets the
+ * target — several, for a clip that strikes more than once — and `release`
+ * is where a shot or a spell leaves. A clip without them has them derived
+ * (see `contactTimes`), so this is a correction, never a requirement.
+ */
+export interface ClipMarkers {
+  contact?: number | number[];
+  release?: number;
+}
+
 export interface Clip {
+  markers?: ClipMarkers;
   poses: Pose[];
   /**
    * Per-part tracks, for cutout rigs. The root track moves the whole figure;
@@ -93,6 +106,61 @@ export function sample(clip: Clip, t: number) {
   return sampleTrack(clip.poses, t);
 }
 
+/**
+ * When a clip strikes, as fractions of its length, for a figure facing
+ * `facing` (+1 right, −1 left).
+ *
+ * Authored `contact` markers win. Otherwise contact is where the whole figure
+ * is furthest forward — the peak of the lunge, which is where every strike in
+ * the game is drawn to land — provided it goes forward far enough to count as
+ * a lunge at all. A clip that does not lunge (a cast, a shot) lands on its
+ * brightest flash, and one with neither on its middle.
+ */
+export function contactTimes(clip: Clip, facing: 1 | -1 = 1): number[] {
+  const authored = clip.markers?.contact;
+  if (authored !== undefined)
+    return (Array.isArray(authored) ? authored : [authored]).map((t) =>
+      Math.max(0, Math.min(1, t)),
+    );
+  return [derivedContact(clip, facing)];
+}
+
+/** The lunge peak, then the flash peak, then the middle. */
+export function derivedContact(clip: Clip, facing: 1 | -1 = 1): number {
+  const STEPS = 200;
+  let forward = 0;
+  let at = -1;
+  let flash = 0;
+  let lit = -1;
+  for (let i = 0; i <= STEPS; i++) {
+    const t = i / STEPS;
+    const p = sample(clip, t);
+    if (p.x * facing > forward + 1e-6) {
+      forward = p.x * facing;
+      at = t;
+    }
+    if (p.flash > flash + 1e-6) {
+      flash = p.flash;
+      lit = t;
+    }
+  }
+  if (at >= 0 && forward >= LUNGE) return at;
+  if (lit >= 0 && flash >= 0.15) return lit;
+  return 0.5;
+}
+
+/** How far forward, in figure widths, a clip must carry a figure to lunge. */
+export const LUNGE = 0.03;
+
+/** Where a clip lets a shot go: authored, else its first contact. */
+export function releaseTime(clip: Clip, facing: 1 | -1 = 1): number {
+  return clip.markers?.release ?? contactTimes(clip, facing)[0];
+}
+
+/** How far forward, in figure widths, a clip carries the figure at `t`. */
+export const forwardAt = (clip: Clip, t: number, facing: 1 | -1 = 1) =>
+  sample(clip, t).x * facing;
+
 export function poseToTransform(p: Required<Omit<Pose, "at">>) {
   return (
     `translate(${(p.x * 100).toFixed(2)}%, ${(p.y * 100).toFixed(2)}%) ` +
@@ -108,6 +176,8 @@ interface Playing {
   clip: Clip;
   name: ClipName;
   start: number;
+  /** Plays this many times faster than authored; 1 for nearly everything. */
+  rate: number;
   /**
    * Where to go when a one-shot finishes. Null means the unit's rest clip,
    * resolved when the one-shot ends rather than when it began, so a flinch
@@ -150,9 +220,72 @@ const mix = (a: Sampled, b: Sampled, k: number): Sampled => ({
   flash: b.flash,
 });
 
+/** How the choreographer asks for a clip: when it starts, and how fast. */
+export interface PlayOptions {
+  /**
+   * The time the clip starts, on the animator's clock — usually a moment
+   * the director scheduled and has just reached. Starting from the schedule
+   * rather than from the frame that noticed it keeps a strike's contact
+   * exactly where the director put its hit.
+   */
+  at?: number;
+  /** Replace whatever is playing, even a one-shot that has not finished. */
+  force?: boolean;
+  /** Play faster (above 1) or slower than authored. Never for strikes. */
+  rate?: number;
+  /**
+   * The choreography offset has just taken over where the last clip had
+   * carried the figure — a bite that lunged forward and runs on from there
+   * — so the ease out of that clip starts from no horizontal offset, rather
+   * than carrying the figure forward twice.
+   */
+  absorb?: boolean;
+}
+
+/**
+ * The clips that travel. Each falls back to one every rig can play, so a
+ * creature with no run cycle still bobs across the floor instead of sliding.
+ */
+const TRAVEL_FALLBACK: Partial<Record<ClipName, ClipName>> = {
+  retreat: "approach",
+  aim: "anticipate",
+};
+
+/**
+ * What a request for a clip actually plays on a rig.
+ *
+ * Most missing clips fall back to the generic rig. Two do not. A `windup`
+ * is authored or it does not exist: the generic one is a pulse, and every
+ * ordinary enemy pulsing whenever it announced a wind-up would be noise, so
+ * a creature without one keeps its idle. A `signature` without one is the
+ * creature's ordinary `attack` — its own strike, not the generic lunge. The
+ * choreographer times hits with this same function, so it plans with the
+ * clip the animator will play.
+ */
+export function resolveClip(
+  rig: Rig,
+  name: ClipName,
+): { name: ClipName; clip: Clip } {
+  const own = rig[name];
+  if (own) return { name, clip: own };
+  if (name === "windup") return resolveClip(rig, "idle");
+  if (name === "signature") return resolveClip(rig, "attack");
+  // A rig that authors a run but no retreat runs home too; one with a
+  // draw-and-hold falls back to its own anticipation before the generic.
+  const near = TRAVEL_FALLBACK[name];
+  if (near && rig[near]) return { name, clip: rig[near]! };
+  const generic = GENERIC[name];
+  if (generic) return { name, clip: generic };
+  return { name: "idle", clip: rig.idle ?? GENERIC.idle! };
+}
+
 /**
  * One combatant's animation state. Created per unit, ticked by the stage's
  * shared loop, and disposed with the element.
+ *
+ * Time comes from `clock`, which on the stage is the presentation clock (see
+ * `clock.ts`) — the same clock the director schedules hits on — so a clip
+ * slows, speeds, pauses and steps with the rest of the replay.
  */
 export class Animator {
   private node: HTMLElement | null = null;
@@ -191,10 +324,22 @@ export class Animator {
   /** The clip name last reported on the node as `data-clip`. */
   private reported: string | null = null;
 
-  constructor(rig: Rig, phase = Math.random()) {
+  private clock: () => number;
+
+  constructor(
+    rig: Rig,
+    phase = Math.random(),
+    clock: () => number = () => performance.now(),
+  ) {
     this.rig = rig;
     this.phase = phase;
+    this.clock = clock;
     this.play("idle");
+  }
+
+  /** How long the clip on screen lasts, in clock time. */
+  private length(state: Playing) {
+    return state.clip.duration / this.speed / state.rate;
   }
 
   /**
@@ -207,26 +352,26 @@ export class Animator {
    * creature's ordinary `attack` — its own strike, not the generic lunge.
    */
   private resolve(name: ClipName): { name: ClipName; clip: Clip } {
-    const own = this.rig[name];
-    if (own) return { name, clip: own };
-    if (name === "windup") return this.resolve("idle");
-    if (name === "signature") return this.resolve("attack");
-    const generic = GENERIC[name];
-    if (generic) return { name, clip: generic };
-    return { name: "idle", clip: this.rig.idle ?? GENERIC.idle! };
+    return resolveClip(this.rig, name);
   }
 
   /** Begin a clip, easing out of whatever was last on screen. */
-  private begin(name: ClipName, clip: Clip, then: ClipName | null) {
-    const now = performance.now();
+  private begin(
+    name: ClipName,
+    clip: Clip,
+    then: ClipName | null,
+    at = this.clock(),
+    rate = 1,
+    absorb = false,
+  ) {
     if (this.last && this.playing)
       this.blend = {
-        root: this.last.root,
+        root: absorb ? { ...this.last.root, x: 0 } : this.last.root,
         parts: new Map(this.last.parts),
-        start: now,
-        length: blendFor(clip),
+        start: at,
+        length: blendFor(clip) / rate,
       };
-    this.playing = { clip, name, start: now, then };
+    this.playing = { clip, name, start: at, then, rate };
     this.dirty = true;
   }
 
@@ -297,7 +442,7 @@ export class Animator {
         state.name = replacement.name;
         // Looping clips keep their phase; one-shots restart so they are not
         // resumed halfway through a different animation.
-        if (!replacement.clip.loop) state.start = performance.now();
+        if (!replacement.clip.loop) state.start = this.clock();
       }
     }
     this.dirty = true;
@@ -334,7 +479,7 @@ export class Animator {
    * can be upgraded a clip at a time and a typo never takes the fight down.
    * Without `then`, a one-shot hands back to the unit's rest loop.
    */
-  play(name: ClipName, then?: ClipName) {
+  play(name: ClipName, then?: ClipName, opts: PlayOptions = {}) {
     const { name: resolved, clip } = this.resolve(name);
     const current = this.playing;
     // A clip that ends by holding its last pose — a fall — is not restarted
@@ -343,21 +488,46 @@ export class Animator {
       current &&
       current.name === resolved &&
       current.then === resolved &&
-      !clip.loop
+      !clip.loop &&
+      (!opts.force || resolved === "defeat")
     )
       return;
     // A one-shot in progress is not interrupted by a request for a loop —
     // idle or a held windup. It hands over to the rest loop when it ends.
+    // The choreographer's requests are the exception: it knows the strike
+    // is over, and a run that waited for it would leave a figure sliding.
     if (
+      !opts.force &&
       current &&
       !current.clip.loop &&
       clip.loop &&
-      performance.now() - current.start < current.clip.duration / this.speed
+      this.clock() - current.start < this.length(current)
     )
       return;
     // Asking for the loop already playing does not restart it.
-    if (current && clip.loop && current.clip === clip) return;
-    this.begin(resolved, clip, then ?? null);
+    if (current && clip.loop && current.clip === clip && current.rate === (opts.rate ?? 1))
+      return;
+    this.begin(
+      resolved,
+      clip,
+      then ?? null,
+      opts.at,
+      opts.rate ?? 1,
+      opts.absorb,
+    );
+  }
+
+  /**
+   * Go back to rest now, whatever is playing — the end of a replay, or a
+   * skip. A choreography clip holding a drawn bow or a run cycle would
+   * otherwise play on over the settled board. The fallen stay down.
+   */
+  settle() {
+    if (this.lying) return;
+    const rest = this.resolve(this.rest);
+    const current = this.playing;
+    if (current && current.clip === rest.clip) return;
+    this.begin(rest.name, rest.clip, null);
   }
 
   /** Whether the unit is lying where it fell: a fall that holds its last pose. */
@@ -385,7 +555,7 @@ export class Animator {
     this.play("defeat", "defeat");
     const state = this.playing;
     if (unseen && state) {
-      state.start = performance.now() - state.clip.duration / this.speed;
+      state.start = this.clock() - this.length(state);
       this.blend = null;
     }
   }
@@ -410,7 +580,7 @@ export class Animator {
       const next = state.then ?? this.rest;
       if (next === state.name) break;
       const { name, clip } = this.resolve(next);
-      this.playing = state = { clip, name, start: now, then: null };
+      this.playing = state = { clip, name, start: now, then: null, rate: 1 };
     }
     this.report();
     const t = state && !state.clip.loop ? 1 : 0;
@@ -438,7 +608,7 @@ export class Animator {
     if (this.still) return this.hold(now);
     const state = this.playing;
     if (!state) return sample(GENERIC.idle!, 0);
-    const length = state.clip.duration / this.speed;
+    const length = this.length(state);
     let t = (now - state.start) / length;
     if (state.clip.loop) t = (((t + this.phase) % 1) + 1) % 1;
     else if (t >= 1) {
@@ -455,7 +625,10 @@ export class Animator {
     // Ease out of the previous clip, if one just ended.
     const blend = this.blend;
     const k = blend
-      ? Math.min(1, (now - blend.start) / (blend.length / this.speed))
+      ? Math.max(
+          0,
+          Math.min(1, (now - blend.start) / (blend.length / this.speed)),
+        )
       : 1;
     if (blend && k >= 1) this.blend = null;
     const eased = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
@@ -612,6 +785,39 @@ export const GENERIC: Rig = {
       { at: 1, rotate: 0, y: 0, squash: 1, flash: 0 },
     ],
   },
+  /*
+   * Travel and shooting, for anything without its own. No x and no tilt:
+   * this rig does not know which way the figure faces, and the stage carries
+   * it across the floor anyway. A bob is enough to say it is moving under its
+   * own power rather than being slid.
+   */
+  approach: {
+    duration: 380,
+    loop: true,
+    poses: [
+      { at: 0, y: 0, squash: 1 },
+      { at: 0.25, y: -0.035, squash: 0.97 },
+      { at: 0.5, y: 0, squash: 1.03 },
+      { at: 0.75, y: -0.035, squash: 0.97 },
+      { at: 1, y: 0, squash: 1 },
+    ],
+  },
+  aim: {
+    duration: 320,
+    poses: [
+      { at: 0, y: 0, squash: 1, scale: 1 },
+      { at: 1, y: 0.012, squash: 1.06, scale: 1.02, flash: 0.12 },
+    ],
+  },
+  release: {
+    duration: 360,
+    markers: { release: 0.15 },
+    poses: [
+      { at: 0, y: 0.012, squash: 1.06, scale: 1.02, flash: 0.12 },
+      { at: 0.15, y: -0.02, squash: 0.95, scale: 1.05, flash: 0.35 },
+      { at: 1, y: 0, squash: 1, scale: 1, flash: 0 },
+    ],
+  },
   // No `windup` and no `signature`, deliberately: both are a creature's own
   // or nothing. See `Animator.resolve`.
   defeat: {
@@ -623,3 +829,5 @@ export const GENERIC: Rig = {
     ],
   },
 };
+/** Going home is the same bob as setting out. */
+GENERIC.retreat = GENERIC.approach;

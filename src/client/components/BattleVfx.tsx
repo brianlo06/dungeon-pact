@@ -75,8 +75,14 @@ export function BattleVfx({
     <>
       {vfx.map((v) => {
         const from = find(v.from);
-        const to = find(v.to);
-        const style = { "--life": `${v.life}ms` } as React.CSSProperties;
+        // An effect that knows exactly where it lands — the target's hit
+        // anchor, from the choreographer — goes there; otherwise it stands
+        // on the target's ground point, lifted by its own margin.
+        const to = v.at && find(v.to) ? { ...find(v.to)!, ...v.at } : find(v.to);
+        const style = {
+          "--life": `${v.life}ms`,
+          ...(v.at ? { marginTop: 0 } : {}),
+        } as React.CSSProperties;
         switch (v.kind) {
           case "gearTransfer": {
             const item = items.find((i) => i.id === v.itemId);

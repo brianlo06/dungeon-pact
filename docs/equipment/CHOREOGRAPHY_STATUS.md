@@ -1,41 +1,19 @@
-# Claude choreography work: inspection after equipment implementation
+# Combat choreography integration status
 
-Inspected September 11, 2026. No changes were made to Claude's worktree and none of its work was merged.
+Updated September 11, 2026 after recovering the stalled Claude worktree.
 
-**Worktree:** `.claude/worktrees/agent-a709a58795fffe3d3`
+Claude's substantial uncommitted implementation was recovered from `.claude/worktrees/agent-a709a58795fffe3d3`, completed, tested, and integrated with the visual equipment system.
 
-**Branch:** `worktree-agent-a709a58795fffe3d3`
+The integrated system includes:
 
-**HEAD:** `4e93cb68437f8150b9be93e53b709098dbbc8518` — same starting commit as the equipment checkout. The choreography changes are uncommitted. Two other registered Claude worktrees contain older unrelated art work.
+- one presentation clock for rig animation, travel, projectiles, impacts, VFX, audio cues, camera motion, pause, speed, frame stepping, and hit stop
+- beat-derived round plans with anticipation, approach, contact or release, recovery, and return
+- measured attack points, obstacle-aware stage paths, projectile trajectories, and stable formation nodes
+- authored choreography metadata for all eight heroes, every regular enemy, the Strongbox, the Collector, and the Miser
+- Battle Lab scenes and debug geometry for Vanguard, Ranger, and Slag Hound
+- equipment trigger pulses and Collector gear transfers scheduled by authoritative `Beat.equipment` cues on the shared presentation clock
+- equipment reconstruction at replay start, so seized gear disappears at the authoritative beat and recovered gear returns without changing gameplay state
 
-## What survived the stalled agent
+The replay ceiling is now 9 seconds. Physical traversal cannot reliably fit the former 6-second ceiling while preserving readable anticipation, contact, recovery, and return. Busy plans still compress toward their authored timing floors.
 
-The core work is substantial, not lost:
-
-- `clock.ts`: PresentationClock and shared frame loop, pause, speed, capture tempo and hit-stop.
-- `choreography.ts`, `round-plan.ts`: planning moves/phases from resolved beats, overlap, recovery, pacing.
-- `attack-point.ts`, `stage-geometry.ts`, `trajectory.ts`: attack positions and travel/projectile paths.
-- `stagehand.ts`: writes movement, animation and effects against the presentation clock.
-- `choreo-meta.ts` and `src/content/choreography/`: content-facing unit/ability annotations.
-- Revised director, camera, animator, stage layout, battle components, audio and CSS.
-- `src/dev/choreo-lab.tsx` plus lab integration and a debug overlay.
-
-There are 16 modified tracked files, plus untracked core/annotation/lab files. No implementation commit was found. The latest inspected director edit was at 17:32 local filesystem time.
-
-## Completion gaps verified
-
-1. `npm run check` **fails** in the worktree. `tests/pacing.test.ts` still imports removed `paceRound` and `spans` exports, followed by related implicit-any diagnostics (10 TypeScript diagnostics total). This is an integration/testing gap; the command reported no diagnostics in the new source files themselves.
-2. `docs/CHOREOGRAPHY.md` does not exist, despite being referenced by the new code.
-3. No new choreography/clock/trajectory test files or `.screenshots` directory were found in that worktree.
-4. Vanguard, Ranger and Hound have authored annotations. Mender and Bulwark have hit/target anchors only. The other roster modules, including Arcanist, explicitly say “Not annotated yet” and export generic defaults. Phase 2 has not been completed.
-5. `REPLAY_CAP` is already set to **9000 ms**. Its comment calls this measured and refers to the absent design document. No supporting measurement report or completed user decision was found. The equipment checkout retains the existing six-second policy.
-
-## Integration with visible equipment
-
-The saved code is recoverable and can be resumed in its existing worktree. It should not simply overwrite the equipment changes: both modify the director, pacing, Combat, BattleStage, BattleUnit, BattleVfx and the lab.
-
-The compatible part is the physical hierarchy: gear already lives inside named SVG bones, so the new travel/animation wrappers will carry it naturally. Vanguard's special blade uses the same wrist as the original; Ranger's replacement bow and arrow use the existing bow/arrow groups.
-
-When resuming, preserve `Beat.equipment` source cues and ownership replay, schedule their reactions/transfers on the shared clock, and resolve projectile/weapon origins from current attached equipment. Do not reinstate a default weapon layer while a replacement is equipped. The new round planner must accept the non-blocking `equipment` beat kind without interpreting it as an attack. Re-run the equipment attachment, seizure/return, reconnect and preview regressions along with the new contact/release timing tests.
-
-Before merging: restore/update the pacing tests, add clock/timeline/browser tests, complete the promised design and measured-cap report, inspect the three fighter captures, then finish the roster annotations. This inspection does not restart or control the failed Claude agent.
+Validation includes TypeScript, the production build, the existing pacing contract, and structural tests for clock control, deterministic frame task order, contact geometry, obstacle avoidance, projectile arrival, and round dependency scheduling. See `docs/CHOREOGRAPHY.md` for the full architecture.

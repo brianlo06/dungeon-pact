@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from "react";
+import { useCallback, useRef, type ReactNode } from "react";
 import type { Snapshot } from "../../shared/model";
 import { isObject } from "../../content/enemies";
 import { BattleUnit, type Impact } from "./BattleUnit";
@@ -10,6 +10,7 @@ import { Foundry } from "./Foundry";
 import { useStageLayout, type StageShapes } from "../battle/unit-layout";
 import { rigFor } from "../battle/rigs";
 import { holdsWindup } from "../battle/hero-clips";
+import type { Stagehand } from "../battle/stagehand";
 import "../stage-ui.css";
 
 export interface StageBeat {
@@ -52,6 +53,7 @@ export function BattleStage({
   camera,
   frozen,
   animators,
+  stagehand,
   onShapes,
   children,
 }: {
@@ -69,6 +71,8 @@ export function BattleStage({
   /** Hold the scene still for a beat on a heavy hit. */
   frozen?: boolean;
   animators: Animators;
+  /** Moves figures across the floor and flies projectiles during a replay. */
+  stagehand?: Stagehand;
   /** Anything anchored in stage space — the action menu lives here. */
   children?: ReactNode;
 }) {
@@ -131,6 +135,41 @@ export function BattleStage({
     beat.playing,
   );
 
+  // The stagehand draws into three layers inside the camera's world: the
+  // units (it offsets travelling figures), the projectiles and marks — which
+  // take part in the units' paint order, so an arrow passes in front of one
+  // creature and behind another — and the debug overlay.
+  const projectileLayer = useRef<HTMLDivElement>(null);
+  const overlayLayer = useRef<HTMLDivElement>(null);
+  const attach = useCallback(() => {
+    stagehand?.attach(
+      unitLayer.current,
+      projectileLayer.current,
+      overlayLayer.current,
+    );
+  }, [stagehand]);
+  const unitsRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      unitLayer.current = el;
+      attach();
+    },
+    [attach],
+  );
+  const projectilesRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      projectileLayer.current = el;
+      attach();
+    },
+    [attach],
+  );
+  const overlayRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      overlayLayer.current = el;
+      attach();
+    },
+    [attach],
+  );
+
   const units = [...s.enemies, ...s.players]
     .map((u) => ({ u, place: places.get(u.id) }))
     .filter(
@@ -151,7 +190,7 @@ export function BattleStage({
       <Foundry />
 
       <div className="world" ref={camera.attach}>
-        <div className="layer layer-units" ref={unitLayer}>
+        <div className="layer layer-units" ref={unitsRef}>
           {units.map(({ u, place }) => {
             const enemy = "definition" in u;
             return (
@@ -176,9 +215,19 @@ export function BattleStage({
             );
           })}
         </div>
+        <div
+          className="layer layer-projectiles"
+          aria-hidden="true"
+          ref={projectilesRef}
+        />
         <div className="layer layer-vfx" aria-hidden="true">
           {beat.world}
         </div>
+        <div
+          className="layer layer-choreo-debug"
+          aria-hidden="true"
+          ref={overlayRef}
+        />
         {children}
       </div>
 
