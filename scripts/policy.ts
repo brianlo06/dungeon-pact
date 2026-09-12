@@ -16,6 +16,7 @@ import { events } from "../src/content/events";
 import { EXPLOIT, WEAK, status } from "../src/engine/effects";
 import { reviveCost, standing } from "../src/engine/combat";
 import { availableNodes } from "../src/engine/map";
+import { reachError } from "../src/shared/reach";
 
 /**
  * Simulation policies. These are evaluation instruments, not game rules: the
@@ -729,3 +730,17 @@ export const policies: Record<string, Policy> = {
   tactical: tacticalPolicy,
   hoard: hoardPolicy,
 };
+// Keep evaluation agents subject to exactly the targeting rules shown in UI.
+for (const policy of Object.values(policies)) {
+  const plan = policy.plan;
+  policy.plan = (s, p) => {
+    const proposed = plan(s, p);
+    const a = usable(s, p).find((a) => a.id === proposed.ability);
+    const target = s.enemies.find((e) => e.id === proposed.target);
+    if (!a || !target || !reachError(s, p, a, target)) return proposed;
+    const reachable = living(s).find((e) => !reachError(s, p, a, e));
+    return reachable
+      ? { ability: a.id, target: reachable.id }
+      : { ability: "brace", target: p.id };
+  };
+}

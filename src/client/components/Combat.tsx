@@ -150,6 +150,7 @@ export function Combat({
     } else {
       for (const e of s.enemies) {
         if (e.hp <= 0) continue;
+        if (reachError(s, me, chosen, e)) continue;
         if (
           chosen.effects.some((effect) => effect.kind === "interrupt") &&
           (!e.intent.ability.interruptible ||
@@ -160,7 +161,7 @@ export function Combat({
       }
     }
     return ids;
-  }, [chosen, s.players, s.enemies, me.id]);
+  }, [chosen, s.players, s.enemies, s.reachVersion, me]);
   const targetValid = targetable.has(selectedTarget);
 
   // A target that stops being legal should not silently stay selected.
@@ -443,6 +444,9 @@ export function Combat({
           <div className="commit-bar" data-mode={mode}>
             <p className="commit-what">
               <strong>{chosen.name}</strong>
+              {s.reachVersion && chosen.reach && (
+                <small>{reachText(chosen)}</small>
+              )}
               <small>
                 {locked
                   ? "Locked. The round resolves when everyone has decided."
@@ -508,3 +512,4 @@ export function Combat({
     </div>
   );
 }
+import { reachError, reachText } from "../../shared/reach";

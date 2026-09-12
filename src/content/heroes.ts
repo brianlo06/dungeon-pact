@@ -2,6 +2,15 @@ import type { Ability, HeroDef } from "../shared/model";
 import { chosenUpgrades } from "./upgrades";
 import { evolution } from "./evolutions";
 import { items } from "./items";
+const actionReach: Record<string, Ability["reach"]> = {
+  bash: "melee",
+  slam: "melee",
+  rend: "melee",
+  bloodprice: "melee",
+  frenzy: "melee",
+  grapple: "reach",
+  thorn: "reach",
+};
 const a = (
   id: string,
   name: string,
@@ -13,6 +22,10 @@ const a = (
   cooldown = 0,
 ): Ability => ({
   id,
+  reach:
+    target === "enemy" || target === "enemyRow"
+      ? (actionReach[id] ?? "ranged")
+      : undefined,
   name,
   description,
   target,
@@ -662,7 +675,11 @@ export function abilities(
   // cooldowns and locked plans still line up.
   const taken = evolution(path);
   if (taken && taken.heroId === id)
-    list = list.map((a) => (a.id === taken.replaces ? taken.ability : a));
+    list = list.map((a) =>
+      a.id === taken.replaces
+        ? { ...taken.ability, reach: taken.ability.reach ?? a.reach }
+        : a,
+    );
   if (!chosen.length) return list;
   const picked = chosenUpgrades(chosen);
   return list.map((a) =>

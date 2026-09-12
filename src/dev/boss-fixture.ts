@@ -86,6 +86,7 @@ export function bossFixture(options: FixtureOptions): RunState {
       {
         id: "preview-vault",
         depth: 6,
+        biome: encounters.find((e) => e.id === options.encounter)?.biome,
         lane: 0,
         type: formation ? "combat" : "boss",
         name: formation ? "A Foundry Chamber" : "The Counting House",

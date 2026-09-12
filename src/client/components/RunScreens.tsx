@@ -259,6 +259,11 @@ export function DungeonMap(props: Props) {
                     </span>
                     <small>{label[n.type] ?? n.type.toUpperCase()}</small>
                     <strong>{n.name}</strong>
+                    {n.biome && (
+                      <small title={biomes[n.biome].description}>
+                        {biomes[n.biome].name}
+                      </small>
+                    )}
                     {votes > 0 && (
                       <span className="map-votes">
                         {"●".repeat(votes)}
@@ -592,3 +597,4 @@ export function Results({ s, onLeave }: { s: Snapshot; onLeave: () => void }) {
     </section>
   );
 }
+import { biomes } from "../../content/biomes";

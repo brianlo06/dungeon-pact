@@ -6,7 +6,7 @@ import { describeIntentEffect } from "../combat-presentation";
 import { unitPresentation, type Placement } from "../battle/layout";
 import type { Camera } from "../battle/camera";
 import type { Animators } from "../battle/useAnimators";
-import { Foundry } from "./Foundry";
+import { BiomeScene } from "./BiomeScene";
 import { useStageLayout, type StageShapes } from "../battle/unit-layout";
 import { rigFor } from "../battle/rigs";
 import { holdsWindup } from "../battle/hero-clips";
@@ -187,14 +187,11 @@ export function BattleStage({
       className={`stage ${beat.playing ? "is-replaying" : ""}`}
       data-frozen={frozen ? "" : undefined}
     >
-      <Foundry
-        district={
-          s.enemies.some((e) => ["collector", "miser"].includes(e.definition))
-            ? "ledger"
-            : (s.map.find((n) => n.id === s.currentNode)?.depth ?? 0) >= 3
-              ? "coolant"
-              : "furnace"
-        }
+      <BiomeScene
+        biome={s.map.find((n) => n.id === s.currentNode)?.biome ?? "foundry"}
+        ledger={s.enemies.some((e) =>
+          ["collector", "miser"].includes(e.definition),
+        )}
       />
 
       <div className="world" ref={camera.attach}>

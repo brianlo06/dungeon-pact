@@ -34,6 +34,10 @@ const lessons: Partial<Record<Phase, [string, string][]>> = {
       "Stay involved when downed",
       "A downed hero can grant one spirit ward or resource boost each round. Allies can revive you with gold. Open Battle history for a round recap and status explanations.",
     ],
+    [
+      "Open the back line",
+      "Melee strikes cannot pass standing front-row defenders. Clear the front, pull an enemy forward, or use ranged attacks. A front-row hero can also strike a Marked target behind its defenders; row sweeps still need the front cleared.",
+    ],
   ],
   AUCTION: [
     [

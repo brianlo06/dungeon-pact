@@ -1,7 +1,9 @@
 import type { ComponentType } from "react";
+import { EXPEDITION_ART, EXPEDITION_BOWS } from "./expedition-art";
 /** Local coordinates: weapon grip (0,0), point up; accessories centred on anchor.
  * No SVG ids, filters, bitmap sheets, or per-frame asset generation. */
 export const EQUIPMENT_ASSETS: Record<string, ComponentType> = {
+  ...EXPEDITION_ART,
   "blood-blade": () => (
     <>
       <path
@@ -238,6 +240,7 @@ export const EQUIPMENT_ASSETS: Record<string, ComponentType> = {
  * item keeps its own mechanical centre and limb silhouette, rather than
  * retaining the base bow or turning a ranged attack into a sword gesture. */
 export const BOW_LIMBS: Record<string, string> = {
+  ...EXPEDITION_BOWS,
   "blood-blade": "M-8 -34 L3 -25 -2 -18 5 -11 0 0 5 12 -2 20 3 27 -8 34",
   "storm-needle": "M-8 -34 L2 -23 4 -9 0 0 4 9 2 23 -8 34",
   "copper-siphon": "M-8 -34 H0 V-23 H5 V-12 H0 V12 H5 V23 H0 V34 H-8",

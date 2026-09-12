@@ -20,17 +20,32 @@ class AudioManager {
   private ctx: AudioContext | null = null;
   private ambience: { gain: GainNode; voices: OscillatorNode[] } | null = null;
   private scene = "";
+  private biome = "foundry";
+  private boss = false;
+  private score: ScorePlayer | null = null;
   settings = defaultSettings;
   unlock() {
     this.ctx ??= new AudioContext();
     void this.ctx.resume();
-    this.setScene(this.scene);
+    this.setScene(this.scene, this.biome, this.boss);
   }
   /** Two quiet original tones: no asset downloads or perpetual timer loop. */
-  setScene(scene: string) {
+  setScene(scene: string, biome = "foundry", boss = false) {
     this.scene = scene;
+    this.biome = biome;
+    this.boss = boss;
     if (!this.ctx) return;
     const ctx = this.ctx;
+    this.score ??= new ScorePlayer(ctx);
+    this.score.set(
+      selectScore(scene, biome, boss),
+      this.settings.master * this.settings.music,
+      !!scene &&
+        !document.hidden &&
+        !this.settings.muted &&
+        this.settings.music > 0 &&
+        this.settings.master > 0,
+    );
     if (!this.ambience) {
       const gain = ctx.createGain();
       gain.gain.value = 0;
@@ -122,3 +137,4 @@ class AudioManager {
   }
 }
 export const audio = new AudioManager();
+import { ScorePlayer, selectScore } from "./audio/score";

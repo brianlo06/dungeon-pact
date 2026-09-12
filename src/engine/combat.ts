@@ -1,4 +1,5 @@
 import { chooseEncounter } from "../content/encounters";
+import { reachError } from "../shared/reach";
 import type { RunState, Player, Enemy, Ability, Unit } from "../shared/model";
 import {
   enemies as definitions,
@@ -232,6 +233,10 @@ export function validatePlan(
     throw Error("Ability is unavailable");
   const target = [...s.players, ...s.enemies].find((u) => u.id === targetId);
   if (!target) throw Error("Unknown target");
+  if ("definition" in target) {
+    const blocked = reachError(s, p, a, target);
+    if (blocked) throw Error(blocked);
+  }
   if (a.target === "self" && target.id !== p.id) throw Error("Choose yourself");
   if (
     (a.target === "ally" || a.target === "allyRow") &&

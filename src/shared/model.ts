@@ -72,6 +72,7 @@ export type Effect =
   | { kind: "bank"; per: number; free: number }
   | { kind: "conditional"; status: StatusId; effects: Effect[] };
 export interface Ability {
+  reach?: "melee" | "reach" | "ranged";
   /** How this action looks. Never how it resolves. */
   presentation?: AbilityPresentation;
   interruptible?: boolean;
@@ -192,6 +193,7 @@ export interface EnemyDef {
   presentation?: UnitPresentation;
 }
 export interface MapNode {
+  biome?: "foundry" | "cistern" | "archive";
   id: string;
   depth: number;
   lane: number;
@@ -263,6 +265,7 @@ export interface RunState {
     downs: string[];
   };
   expeditionVersion?: 1;
+  reachVersion?: 1;
   teamRelics?: string[];
   serviceVote?: { id: string; votes: Record<string, boolean> };
   trades?: {

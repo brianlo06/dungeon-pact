@@ -33,6 +33,20 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [inventory, setInventory] = useState(false);
+  useEffect(() => {
+    // Reconnecting players may never press Join; the first gesture unlocks audio.
+    const unlock = () => {
+      audio.unlock();
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+    window.addEventListener("pointerdown", unlock);
+    window.addEventListener("keydown", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, []);
   const [settings, setSettings] = useState<Settings>(() => {
     try {
       return {
@@ -95,15 +109,28 @@ export default function App() {
     history.replaceState(null, "", location.pathname);
   }
   const s = room.state;
+  const musicBiome =
+    s?.map.find((n) => n.id === s.currentNode)?.biome ?? "foundry";
+  const musicBoss =
+    s?.enemies.some(
+      (e) => e.definition === "collector" || e.definition === "miser",
+    ) ?? false;
   useEffect(() => {
-    const update = () => audio.setScene(s?.phase ?? "");
+    const update = () =>
+      audio.setScene(
+        s?.phase === "COMPLETE" && s.outcome === "defeat"
+          ? "DEFEAT"
+          : (s?.phase ?? ""),
+        musicBiome,
+        musicBoss,
+      );
     update();
     document.addEventListener("visibilitychange", update);
     return () => {
       document.removeEventListener("visibilitychange", update);
-      audio.setScene("");
     };
-  }, [s?.phase, settings]);
+  }, [s?.phase, s?.outcome, musicBiome, musicBoss, settings]);
+  useEffect(() => () => audio.setScene(""), []);
   const disabled = room.pending || room.connection !== "online";
   const props = s ? { s, send: room.send, disabled } : null;
   return (
@@ -331,21 +358,26 @@ export default function App() {
               Close ×
             </button>
             <h2>Make yourself comfortable.</h2>
-            {(["master", "sfx", "ui", "ambient"] as const).map((key) => (
-              <label className="setting" key={key}>
-                {key.toUpperCase()}{" "}
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step=".05"
-                  value={settings[key]}
-                  onChange={(e) =>
-                    setSettings({ ...settings, [key]: Number(e.target.value) })
-                  }
-                />
-              </label>
-            ))}
+            {(["master", "music", "sfx", "ui", "ambient"] as const).map(
+              (key) => (
+                <label className="setting" key={key}>
+                  {key.toUpperCase()}{" "}
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step=".05"
+                    value={settings[key]}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        [key]: Number(e.target.value),
+                      })
+                    }
+                  />
+                </label>
+              ),
+            )}
             <label className="setting">
               Mute audio
               <input

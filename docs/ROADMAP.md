@@ -1,6 +1,6 @@
 # Repository roadmap
 
-Latest implementation delta: [Phase 1 expansion](PHASE1_EXPANSION.md). The original milestone lists below are historical and should not be read as the current inventory.
+Latest implementation deltas: [World expansion](WORLD_EXPANSION.md) and [Phase 1 expansion](PHASE1_EXPANSION.md). The original milestone lists below are historical and should not be read as the current inventory.
 
 Updated 2026-09-10
 

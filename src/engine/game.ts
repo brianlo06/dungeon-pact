@@ -20,6 +20,7 @@ import { enterAuction, nextLot, nominate, purchase } from "./auction";
 export function createRun(room: string, seed: string): RunState {
   return {
     expeditionVersion: 1,
+    reachVersion: 1,
     encounterVersion: 2,
     combatVersion: 2,
     revivals: 0,

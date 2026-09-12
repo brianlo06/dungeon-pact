@@ -1,5 +1,7 @@
 # Phase 1 expedition expansion
 
+Follow-up: [World expansion](WORLD_EXPANSION.md) replaces the shared new-item artwork and adds melee screening, two regions and music. The descriptions below record the earlier expansion.
+
 Implemented after the first public deployment. This document supersedes the older inventory and feature-gap lists in HANDOFF and ROADMAP for the features below.
 
 ## Content

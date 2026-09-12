@@ -1,5 +1,6 @@
 import type { MapNode, RunState } from "../shared/model";
 import { pick } from "./rng";
+import { biomeAtDepth, chamberName } from "../content/biomes";
 /** Depth decides which mentor archetype a node holds. */
 export function mentorTier(depth: number): 1 | 2 | 3 {
   return depth <= 2 ? 1 : depth <= 4 ? 2 : 3;
@@ -46,11 +47,12 @@ export function generateMap(s: Pick<RunState, "rng">): MapNode[] {
           depth,
           lane,
           type,
+          biome: biomeAtDepth(depth),
           // A mentor node is named for the tier it teaches, not rolled.
           name:
             type === "mentor"
               ? names.mentor[mentorTier(depth) - 1]
-              : nameFor(type),
+              : chamberName(biomeAtDepth(depth), type, nameFor(type)),
           next: [],
           visited: false,
         }) as MapNode,

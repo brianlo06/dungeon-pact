@@ -2,6 +2,8 @@
 
 A cooperative dungeon crawler built around a shared treasury, contested auctions and tactical simultaneous planning. Development expedition 0.2; full game roadmap in `docs/ROADMAP.md`.
 
+Latest playtest update: [bespoke equipment, melee reach, two new regions and original music](docs/WORLD_EXPANSION.md). Start a new room for the regional map and reach rules.
+
 Public alpha: https://dungeon-pact.violarage10.workers.dev — requires two to four players. See [Phase 1 expansion](docs/PHASE1_EXPANSION.md) for the current content, trading, provisions and combat additions.
 
 ## Run locally
