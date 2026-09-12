@@ -1,3 +1,4 @@
+import { BaseWeapon, GearMount } from "../../equipment/Equipment";
 import { useRigParts } from "../../battle/useRigParts";
 import {
   at,
@@ -146,6 +147,9 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={LINE}
           strokeLinejoin="round"
         />
+        <GearMount anchor="torso" layer="body" x={48} y={57} />
+        <GearMount anchor="waist" layer="front" x={42} y={74} />
+        <GearMount anchor="shoulderBack" layer="front" x={37} y={49} />
       </g>
 
       {/* ---- head: a heavy brow, a stitched scar, teeth gritted, the mane ---- */}
@@ -280,6 +284,7 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={DETAIL + 0.4}
           strokeLinejoin="round"
         />
+        <GearMount anchor="head" layer="front" x={48} y={29} />
       </g>
 
       {/* ---- the fist, up and bandaged ---- */}
@@ -313,48 +318,59 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
 
       {/* ---- the cleaver arm, on top: the blade drags on the floor ---- */}
       <g ref={hold("cleaver")} data-part="cleaver" style={at(bx, by)}>
-        <g transform="translate(31 67) rotate(142)">
-          {/* grip */}
-          <rect
-            x={-2}
-            y={-1.8}
-            width={10}
-            height={3.6}
-            rx={1.2}
-            fill={RAMP.leather[2]}
-            stroke={INK}
-            strokeWidth={DETAIL}
-          />
-          {/* the blade: a slab, notched along the edge, rust at the spine */}
-          <path
-            d="M8 -3 L35 -4.5 L37 3 L36 7.5 L33.5 6 L31 9 L28 7 L25 10 L22 8 L19 11 L16 9 L13 11 L8 9.5 Z"
-            fill={g.url("blade")}
-            stroke={INK}
-            strokeWidth={LINE}
-            strokeLinejoin="round"
-          />
-          <path
-            d="M10 -1 L34 -2.2"
-            stroke="#e7e3ee"
-            strokeWidth={1.1}
-            opacity={0.7}
-          />
-          <circle
-            cx={31}
-            cy={1}
-            r={1.8}
-            fill={RAMP.iron[2]}
-            stroke={INK}
-            strokeWidth={0.9}
-          />
-          <path
-            d="M16 5 L20 7.5 M24 4 L27 6.5"
-            stroke={RAMP.crimson[1]}
-            strokeWidth={1.6}
-            strokeLinecap="round"
-            opacity={0.85}
-          />
-        </g>
+        <BaseWeapon>
+          {" "}
+          <g transform="translate(31 67) rotate(142)">
+            {/* grip */}
+            <rect
+              x={-2}
+              y={-1.8}
+              width={10}
+              height={3.6}
+              rx={1.2}
+              fill={RAMP.leather[2]}
+              stroke={INK}
+              strokeWidth={DETAIL}
+            />
+            {/* the blade: a slab, notched along the edge, rust at the spine */}
+            <path
+              d="M8 -3 L35 -4.5 L37 3 L36 7.5 L33.5 6 L31 9 L28 7 L25 10 L22 8 L19 11 L16 9 L13 11 L8 9.5 Z"
+              fill={g.url("blade")}
+              stroke={INK}
+              strokeWidth={LINE}
+              strokeLinejoin="round"
+            />
+            <path
+              d="M10 -1 L34 -2.2"
+              stroke="#e7e3ee"
+              strokeWidth={1.1}
+              opacity={0.7}
+            />
+            <circle
+              cx={31}
+              cy={1}
+              r={1.8}
+              fill={RAMP.iron[2]}
+              stroke={INK}
+              strokeWidth={0.9}
+            />
+            <path
+              d="M16 5 L20 7.5 M24 4 L27 6.5"
+              stroke={RAMP.crimson[1]}
+              strokeWidth={1.6}
+              strokeLinecap="round"
+              opacity={0.85}
+            />
+          </g>
+        </BaseWeapon>
+        <GearMount
+          anchor="mainHand"
+          layer="weapon"
+          x={31}
+          y={67}
+          rotation={-128}
+          scale={0.82}
+        />
         <Limb
           d={`M${bx} ${by} Q${bx - 5} 60 31.5 66`}
           fill={RAMP.skinPallid[1]}

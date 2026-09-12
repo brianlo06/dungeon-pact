@@ -14,6 +14,9 @@ import "../stage-ui.css";
 
 export interface StageBeat {
   beatFor: (id: string) => {
+    equipment?: string[];
+    heldEquipment?: { playerId: string; itemId: string }[];
+    gearPulse?: { itemId: string; key: number };
     hp?: number;
     acting?: boolean;
     impact?: Impact;

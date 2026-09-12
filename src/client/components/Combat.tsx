@@ -124,7 +124,12 @@ export function Combat({
   const named = (id?: string) =>
     [...s.players, ...s.enemies].find((u) => u.id === id)?.name ?? "";
   const beatFor = (id: string) => {
-    if (!replay.playing || !b) return {};
+    const gear = {
+      equipment: replay.equipment?.worn[id],
+      heldEquipment: replay.equipment?.held[id],
+      gearPulse: replay.gearPulses?.[id],
+    };
+    if (!replay.playing || !b) return gear;
     let impact: Impact = null;
     if (b.target === id) {
       if (b.kind === "damage") impact = "damage";
@@ -136,6 +141,7 @@ export function Combat({
     const sign = b.kind === "heal" ? "+" : b.kind === "block" ? "⬡" : "−";
     const shows = impact !== null && impact !== "combo" && impact !== "defeat";
     return {
+      ...gear,
       hp: replay.hp?.[id],
       acting: b.actor === id,
       impact,

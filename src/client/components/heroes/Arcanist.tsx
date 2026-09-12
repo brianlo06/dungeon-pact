@@ -1,3 +1,4 @@
+import { BaseWeapon, GearMount } from "../../equipment/Equipment";
 import { useRigParts } from "../../battle/useRigParts";
 import {
   at,
@@ -180,6 +181,9 @@ export function Arcanist({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={DETAIL + 0.4}
           strokeLinejoin="round"
         />
+        <GearMount anchor="torso" layer="body" x={48} y={57} />
+        <GearMount anchor="waist" layer="front" x={42} y={74} />
+        <GearMount anchor="shoulderBack" layer="front" x={37} y={49} />
       </g>
 
       {/* ---- head: a face lost in shadow under the brim; only the eyes ---- */}
@@ -240,6 +244,7 @@ export function Arcanist({ unitId, animators, className, viewBox }: HeroProps) {
           <path d={star(42, 19.5, 1.5)} fill={RAMP.gold[0]} opacity={0.8} />
           <Lit d="M38.5 21.5 C41 17 43 14 45 12" width={1.3} />
         </g>
+        <GearMount anchor="head" layer="front" x={48} y={29} />
       </g>
 
       {/* ---- the casting hand, out front, with the long sleeve hanging ---- */}
@@ -267,21 +272,31 @@ export function Arcanist({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={DETAIL + 0.5}
           strokeLinejoin="round"
         />
-        {/* the spark it is holding */}
-        <circle
-          className="ph-arc-spark ph-glow"
-          cx={86}
-          cy={50}
-          r={7.5}
-          fill={g.url("spark")}
-        />
-        <path
-          className="ph-arc-spark"
-          d="M86 44.5 L84.8 48.5 L87.5 49 L85.5 55"
-          stroke="#ffffff"
-          strokeWidth={1.2}
-          fill="none"
-          strokeLinejoin="round"
+        <BaseWeapon>
+          {" "}
+          {/* the spark it is holding */}
+          <circle
+            className="ph-arc-spark ph-glow"
+            cx={86}
+            cy={50}
+            r={7.5}
+            fill={g.url("spark")}
+          />
+          <path
+            className="ph-arc-spark"
+            d="M86 44.5 L84.8 48.5 L87.5 49 L85.5 55"
+            stroke="#ffffff"
+            strokeWidth={1.2}
+            fill="none"
+            strokeLinejoin="round"
+          />
+        </BaseWeapon>
+        <GearMount
+          anchor="mainHand"
+          layer="weapon"
+          x={77}
+          y={53}
+          rotation={12}
         />
       </g>
     </HeroFrame>

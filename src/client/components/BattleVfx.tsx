@@ -1,3 +1,5 @@
+import { items } from "../../content/items";
+import { GearArt } from "../equipment/Equipment";
 import type { Pop, Vfx } from "../battle/director";
 import type { Placement } from "../battle/layout";
 
@@ -25,11 +27,13 @@ function Link({
   to,
   className,
   life,
+  accent,
 }: {
   from: Placement;
   to: Placement;
   className: string;
   life: number;
+  accent?: string;
 }) {
   const dx = (to.x - from.x) * 100;
   const dy = (to.y - from.y) * 100;
@@ -46,6 +50,7 @@ function Link({
           "--dx": `${dx}%`,
           "--dy": `${dy}%`,
           "--life": `${life}ms`,
+          "--projectile-accent": accent,
         } as React.CSSProperties
       }
     />
@@ -73,13 +78,47 @@ export function BattleVfx({
         const to = find(v.to);
         const style = { "--life": `${v.life}ms` } as React.CSSProperties;
         switch (v.kind) {
+          case "gearTransfer": {
+            const item = items.find((i) => i.id === v.itemId);
+            return from && to && item ? (
+              <div
+                key={v.key}
+                className="gear-transfer"
+                style={
+                  {
+                    ...style,
+                    "--travel-x": `${(to.x - from.x) * 100}%`,
+                    "--travel-y": `${(to.y - from.y) * 100}%`,
+                  } as React.CSSProperties
+                }
+              >
+                <svg
+                  data-transfer-item={item.id}
+                  viewBox="-24 -48 48 70"
+                  style={{
+                    left: `${from.x * 100}%`,
+                    top: `${from.y * 100 - 8}%`,
+                  }}
+                >
+                  <GearArt
+                    asset={
+                      item.visual?.attachments[0]?.asset ??
+                      `generic-${item.slot}`
+                    }
+                    slot={item.slot}
+                  />
+                </svg>
+              </div>
+            ) : null;
+          }
           case "projectile":
             return from && to ? (
               <Link
                 key={v.key}
                 from={from}
                 to={to}
-                className="vfx-bolt"
+                className={`vfx-bolt ${v.itemId ? "gear-bolt" : ""}`}
+                accent={items.find((i) => i.id === v.itemId)?.visual?.accent}
                 life={v.life}
               />
             ) : null;

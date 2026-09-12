@@ -1,3 +1,4 @@
+import { BaseWeapon, GearMount } from "../../equipment/Equipment";
 import { useRigParts } from "../../battle/useRigParts";
 import {
   at,
@@ -146,6 +147,9 @@ export function Vanguard({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={DETAIL + 0.5}
           strokeLinejoin="round"
         />
+        <GearMount anchor="shoulderBack" layer="front" x={37} y={49} />
+        <GearMount anchor="torso" layer="body" x={48} y={57} />
+        <GearMount anchor="waist" layer="front" x={39} y={73} />
       </g>
 
       {/* ---- head: a flat-topped great helm, crest raking back ---- */}
@@ -190,6 +194,7 @@ export function Vanguard({ unitId, animators, className, viewBox }: HeroProps) {
         <Lit d="M36 21 Q37.5 15 44 13.4" width={1.8} />
         {/* a dent, because nothing this party owns is new */}
         <path d="M38 33.5 l2.4 1.6" stroke={RAMP.steel[2]} strokeWidth={1.2} />
+        <GearMount anchor="head" layer="front" x={48} y={29} />
       </g>
 
       {/* ---- shield: a heater carried forward, the whole front a wall ---- */}
@@ -245,48 +250,57 @@ export function Vanguard({ unitId, animators, className, viewBox }: HeroProps) {
         {/* The wrist: the blade turns in the hand, so a chop can bring the
             arm over the top and still finish with the point forward. */}
         <g ref={hold("blade")} data-part="blade" style={at(31, 64)}>
-          <g transform="translate(31 64) rotate(-26)">
-            <path
-              d="M-3.4 -6 L-3.4 -36 L0 -43 L3.4 -36 L3.4 -6 Z"
-              fill={g.url("steel")}
-              stroke={INK}
-              strokeWidth={LINE}
-              strokeLinejoin="round"
-            />
-            <path
-              d="M0 -9 V-36"
-              stroke="#fffaf0"
-              strokeWidth={1.1}
-              opacity={0.75}
-            />
-            <rect
-              x={-8.5}
-              y={-8}
-              width={17}
-              height={4}
-              rx={1.2}
-              fill={g.url("gold")}
-              stroke={INK}
-              strokeWidth={DETAIL + 0.4}
-            />
-            <rect
-              x={-1.9}
-              y={-4.2}
-              width={3.8}
-              height={10}
-              fill={RAMP.leather[1]}
-              stroke={INK}
-              strokeWidth={DETAIL}
-            />
-            <circle
-              cx={0}
-              cy={7.4}
-              r={2.7}
-              fill={g.url("gold")}
-              stroke={INK}
-              strokeWidth={DETAIL}
-            />
-          </g>
+          <BaseWeapon>
+            <g transform="translate(31 64) rotate(-26)">
+              <path
+                d="M-3.4 -6 L-3.4 -36 L0 -43 L3.4 -36 L3.4 -6 Z"
+                fill={g.url("steel")}
+                stroke={INK}
+                strokeWidth={LINE}
+                strokeLinejoin="round"
+              />
+              <path
+                d="M0 -9 V-36"
+                stroke="#fffaf0"
+                strokeWidth={1.1}
+                opacity={0.75}
+              />
+              <rect
+                x={-8.5}
+                y={-8}
+                width={17}
+                height={4}
+                rx={1.2}
+                fill={g.url("gold")}
+                stroke={INK}
+                strokeWidth={DETAIL + 0.4}
+              />
+              <rect
+                x={-1.9}
+                y={-4.2}
+                width={3.8}
+                height={10}
+                fill={RAMP.leather[1]}
+                stroke={INK}
+                strokeWidth={DETAIL}
+              />
+              <circle
+                cx={0}
+                cy={7.4}
+                r={2.7}
+                fill={g.url("gold")}
+                stroke={INK}
+                strokeWidth={DETAIL}
+              />
+            </g>
+          </BaseWeapon>
+          <GearMount
+            anchor="mainHand"
+            layer="weapon"
+            x={31}
+            y={64}
+            rotation={-26}
+          />
         </g>
         <Limb
           d={`M${sx} ${sy} Q${sx - 5} 58 31.5 63`}

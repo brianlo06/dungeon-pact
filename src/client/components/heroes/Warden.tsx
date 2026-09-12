@@ -1,3 +1,4 @@
+import { BaseWeapon, GearMount } from "../../equipment/Equipment";
 import { useRigParts } from "../../battle/useRigParts";
 import {
   at,
@@ -105,56 +106,66 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
 
       {/* ---- the staff, behind: crooked, sprouting, with a lantern hung off it ---- */}
       <g ref={hold("staff")} data-part="staff" style={at(bx, by)}>
-        <path
-          d="M28 95 C29 84 26 74 28 62 C29 50 26 40 27.5 28 C28 22 26 17 22 14.5 C19 13 16.5 15 16.5 19"
-          fill="none"
-          stroke={INK}
-          strokeWidth={6}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M28 95 C29 84 26 74 28 62 C29 50 26 40 27.5 28 C28 22 26 17 22 14.5 C19 13 16.5 15 16.5 19"
-          fill="none"
-          stroke={g.url("wood")}
-          strokeWidth={3.3}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <Leaf x={28} y={34} r={2.6} a={-23} />
-        <Leaf x={27} y={46} r={2.2} a={195} />
-        <Leaf x={24} y={16} r={2.2} a={-126} />
-        {/* the lantern swings from the crook on its own */}
-        <g ref={hold("lantern")} data-part="lantern" style={at(16.5, 19)}>
-          <path d="M16.5 19 V24" stroke={INK} strokeWidth={1.3} />
-          <circle
-            className="ph-wdn-lamp ph-glow"
-            cx={16.5}
-            cy={29.5}
-            r={8}
-            fill={g.url("lamp")}
-          />
+        <BaseWeapon>
+          {" "}
           <path
-            d="M13 24.5 H20 L21 27 V33 L19.5 35 H13.5 L12 33 V27 Z"
-            fill="#ffd27a"
-            fillOpacity={0.55}
+            d="M28 95 C29 84 26 74 28 62 C29 50 26 40 27.5 28 C28 22 26 17 22 14.5 C19 13 16.5 15 16.5 19"
+            fill="none"
             stroke={INK}
-            strokeWidth={DETAIL + 0.5}
+            strokeWidth={6}
+            strokeLinecap="round"
             strokeLinejoin="round"
           />
           <path
-            d="M16.5 25 V35 M12.5 29.5 H20.5"
-            stroke={INK}
-            strokeWidth={1}
+            d="M28 95 C29 84 26 74 28 62 C29 50 26 40 27.5 28 C28 22 26 17 22 14.5 C19 13 16.5 15 16.5 19"
+            fill="none"
+            stroke={g.url("wood")}
+            strokeWidth={3.3}
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
-          <circle
-            className="ph-wdn-lamp"
-            cx={16.5}
-            cy={30}
-            r={1.8}
-            fill="#fff4c4"
-          />
-        </g>
+          <Leaf x={28} y={34} r={2.6} a={-23} />
+          <Leaf x={27} y={46} r={2.2} a={195} />
+          <Leaf x={24} y={16} r={2.2} a={-126} />
+          {/* the lantern swings from the crook on its own */}
+          <g ref={hold("lantern")} data-part="lantern" style={at(16.5, 19)}>
+            <path d="M16.5 19 V24" stroke={INK} strokeWidth={1.3} />
+            <circle
+              className="ph-wdn-lamp ph-glow"
+              cx={16.5}
+              cy={29.5}
+              r={8}
+              fill={g.url("lamp")}
+            />
+            <path
+              d="M13 24.5 H20 L21 27 V33 L19.5 35 H13.5 L12 33 V27 Z"
+              fill="#ffd27a"
+              fillOpacity={0.55}
+              stroke={INK}
+              strokeWidth={DETAIL + 0.5}
+              strokeLinejoin="round"
+            />
+            <path
+              d="M16.5 25 V35 M12.5 29.5 H20.5"
+              stroke={INK}
+              strokeWidth={1}
+            />
+            <circle
+              className="ph-wdn-lamp"
+              cx={16.5}
+              cy={30}
+              r={1.8}
+              fill="#fff4c4"
+            />
+          </g>
+        </BaseWeapon>
+        <GearMount
+          anchor="mainHand"
+          layer="weapon"
+          x={28.5}
+          y={61.5}
+          rotation={-25}
+        />
         <Limb
           d={`M${bx} ${by} Q${bx - 5} 56 29 61`}
           fill={RAMP.bone[1]}
@@ -225,6 +236,9 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
           stroke={INK}
           strokeWidth={DETAIL}
         />
+        <GearMount anchor="torso" layer="body" x={48} y={57} />
+        <GearMount anchor="waist" layer="front" x={42} y={74} />
+        <GearMount anchor="shoulderBack" layer="front" x={37} y={49} />
       </g>
 
       {/* ---- head: antlers up through the hood, an old face at peace ---- */}
@@ -347,6 +361,7 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
         <Lit d="M35 23 Q38 15.5 46 13.6" width={1.8} />
         <Leaf x={40} y={17} r={2.4} a={-138} />
         <Leaf x={60} y={17} r={2.2} a={-34} />
+        <GearMount anchor="head" layer="front" x={48} y={29} />
       </g>
 
       {/* ---- the open hand: the one that heals ---- */}

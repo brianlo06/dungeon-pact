@@ -112,6 +112,7 @@ function BossPreview() {
     <div className="app-shell preview-shell" data-combat="">
       <header className="preview-toolbar">
         <strong>LOCAL BOSS PREVIEW</strong>
+        <a href="/dev/equipment.html">Equipment workshop</a>
         <p>
           Real combat UI and rules. Changes stay in this tab. Unplanned heroes
           Brace when you finish a round.

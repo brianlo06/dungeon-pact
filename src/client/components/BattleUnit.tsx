@@ -1,4 +1,5 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { EquipmentProvider } from "../equipment/Equipment";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Enemy, Player, Unit } from "../../shared/model";
 import type { Placement } from "../battle/layout";
 import { unitPresentation } from "../battle/layout";
@@ -41,8 +42,14 @@ export function BattleUnit({
   animators,
   replaying,
   treasury,
+  equipment,
+  heldEquipment,
+  gearPulse,
 }: {
   unit: Unit;
+  equipment?: string[];
+  heldEquipment?: { playerId: string; itemId: string }[];
+  gearPulse?: { itemId: string; key: number };
   /** Where presentation space says this unit stands. */
   place: Placement;
   selectable?: boolean;
@@ -65,6 +72,7 @@ export function BattleUnit({
   /** The pact's gold, for the Miser, which is armoured in it. */
   treasury?: number;
 }) {
+  const [highlight, setHighlight] = useState<string>();
   const player = "heroId" in unit ? (unit as Player) : null;
   const enemy = "definition" in unit ? (unit as Enemy) : null;
   const look = unitPresentation(enemy?.definition, player?.heroId);
@@ -111,7 +119,7 @@ export function BattleUnit({
   }, [winding, replaying, animators, unit.id]);
   const share = Math.max(0, Math.min(1, shown / unit.maxHp));
   const barrier = unit.statuses.find((s) => s.id === "barrier")?.stacks ?? 0;
-  const held = enemy?.holding ?? [];
+  const held = heldEquipment ?? enemy?.holding ?? [];
   // The vault's state is readable before anyone reads the count.
   const vault: VaultState = down
     ? "broken"
@@ -159,6 +167,7 @@ export function BattleUnit({
             <Strongbox
               className="combatant-sprite"
               held={held.length}
+              itemIds={held.map((h) => h.itemId)}
               state={vault}
             />
           ) : look.spriteSet === "miser" ? (
@@ -170,11 +179,18 @@ export function BattleUnit({
               barrier={barrier}
             />
           ) : Art ? (
-            <Art
-              className="combatant-sprite"
-              unitId={unit.id}
-              animators={animators}
-            />
+            <EquipmentProvider
+              items={equipment ?? player?.items ?? []}
+              pulse={gearPulse?.itemId}
+              pulseKey={gearPulse?.key}
+              highlight={highlight}
+            >
+              <Art
+                className="combatant-sprite"
+                unitId={unit.id}
+                animators={animators}
+              />
+            </EquipmentProvider>
           ) : (
             <Sprite
               id={player?.heroId ?? enemy?.definition ?? "chest"}
@@ -189,6 +205,40 @@ export function BattleUnit({
           </span>
         )}
       </button>
+      {player && (
+        <details
+          className="equipment-inspector"
+          onToggle={() => setHighlight(undefined)}
+        >
+          <summary aria-label={`Inspect ${unit.name}'s equipment`}>
+            Build
+          </summary>
+          <div className="equipment-inspector-panel">
+            <strong>{unit.name}</strong>
+            {(["weapon", "armor", "relic"] as const).map((slot) => {
+              const item = (equipment ?? player.items)
+                .map((id) => items.find((i) => i.id === id))
+                .find((i) => i?.slot === slot);
+              return (
+                <button
+                  key={slot}
+                  type="button"
+                  onMouseEnter={() => setHighlight(item?.id)}
+                  onMouseLeave={() => setHighlight(undefined)}
+                  onFocus={() => setHighlight(item?.id)}
+                  onBlur={() => setHighlight(undefined)}
+                >
+                  <small>{slot.toUpperCase()}</small>
+                  <b>{item?.name ?? "Base equipment"}</b>
+                  <span>
+                    {item?.description ?? "Class signature appearance"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </details>
+      )}
       <div className="combatant-plate">
         <span className="combatant-name">
           {unit.name}

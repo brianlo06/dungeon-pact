@@ -1,3 +1,9 @@
+import { items } from "../../content/items";
+import {
+  equipmentBefore,
+  equipmentStep,
+  type EquipmentBoard,
+} from "../equipment/replay";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Beat, Snapshot } from "../../shared/model";
 import type { ClipName, SfxName } from "../../shared/presentation";
@@ -34,6 +40,7 @@ export interface Pop {
 /** A world-space effect, positioned by the stage from unit ids. */
 export interface Vfx {
   key: number;
+  itemId?: string;
   kind:
     | "impact"
     | "slash"
@@ -43,7 +50,8 @@ export interface Vfx {
     | "barrier"
     | "interrupt"
     | "seize"
-    | "reclaim";
+    | "reclaim"
+    | "gearTransfer";
   from?: string;
   to?: string;
   /** Milliseconds this effect lives for, already scaled by playback speed. */
@@ -51,6 +59,8 @@ export interface Vfx {
 }
 
 export interface DirectorCues {
+  equipment?: EquipmentBoard;
+  gearPulses?: Record<string, { itemId: string; key: number }>;
   /** Health to render while replaying; null once the round has settled. */
   hp: Record<string, number> | null;
   beat: Beat | null;
@@ -158,6 +168,14 @@ export function useDirector(
   const perform = useCallback((beat: Beat, hold: number, now: number) => {
     const cur = live.current;
     const next: DirectorCues = { ...cur, beat, frozen: false };
+    if (cur.equipment && beat.equipment)
+      next.equipment = equipmentStep(cur.equipment, beat.equipment);
+    for (const cue of beat.equipment ?? []) {
+      next.gearPulses = {
+        ...next.gearPulses,
+        [cue.ownerId]: { itemId: cue.itemId, key: ++keys.current },
+      };
+    }
     const key = () => ++keys.current;
 
     if (beat.target && beat.hp !== undefined)
@@ -172,6 +190,16 @@ export function useDirector(
       next.pops = [...next.pops, { key: key(), unit, text, tone }];
     };
 
+    for (const cue of beat.equipment ?? []) {
+      if (cue.action !== "trigger")
+        add({
+          kind: "gearTransfer",
+          itemId: cue.itemId,
+          from: cue.action === "seize" ? cue.ownerId : cue.containerId,
+          to: cue.action === "seize" ? cue.containerId : cue.ownerId,
+          life: 720,
+        });
+    }
     switch (beat.kind) {
       case "cast":
         next.title = { text: beat.label ?? "", actor: beat.actor };
@@ -185,6 +213,11 @@ export function useDirector(
         if (beat.actor && beat.target && beat.actor !== beat.target)
           add({
             kind: "projectile",
+            itemId: (
+              cur.equipment?.worn[beat.actor] ??
+              snap.current?.players.find((p) => p.id === beat.actor)?.items ??
+              []
+            ).find((id) => items.find((i) => i.id === id)?.slot === "weapon"),
             from: beat.actor,
             to: beat.target,
             life: 320,
@@ -288,7 +321,12 @@ export function useDirector(
     });
     queue.current = beats.map((beat, i) => ({ beat, hold: holds[i] }));
     waitUntil.current = 0;
-    live.current = { ...live.current, hp: { ...board.current }, playing: true };
+    live.current = {
+      ...live.current,
+      hp: { ...board.current },
+      equipment: equipmentBefore(s, beats),
+      playing: true,
+    };
     setCues(live.current);
   }, [s, reduced, finish]);
 
@@ -345,6 +383,17 @@ export function useDirector(
 
   return {
     ...cues,
+    // Rewind on the snapshot's first render too, avoiding a one-frame flash
+    // of already-seized gear before the replay effect starts.
+    equipment:
+      pending && s
+        ? equipmentBefore(
+            s,
+            s.logs
+              .filter((l) => l.seq > seen.current! && l.beat)
+              .map((l) => l.beat!),
+          )
+        : cues.equipment,
     playing: cues.playing || pending,
     speed,
     setSpeed,

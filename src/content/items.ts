@@ -141,6 +141,15 @@ export const supplies: ItemDef[] = [
 export const items: ItemDef[] = [
   {
     id: "stormglass",
+    visual: {
+      slot: "weapon",
+      accent: "#a0eff7",
+      attachments: [
+        { anchor: "mainHand", layer: "weapon", asset: "storm-needle" },
+      ],
+      replacesBaseWeapon: true,
+      attack: "lightning",
+    },
     name: "Stormglass Needle",
     rarity: "Epic",
     slot: "weapon",
@@ -156,6 +165,12 @@ export const items: ItemDef[] = [
   },
   {
     id: "shared-cup",
+    visual: {
+      reaction: "healing",
+      slot: "relic",
+      accent: "#a9e6b6",
+      attachments: [{ anchor: "waist", layer: "front", asset: "living-cup" }],
+    },
     name: "The Living Chalice",
     rarity: "Epic",
     slot: "relic",
@@ -170,6 +185,16 @@ export const items: ItemDef[] = [
   },
   {
     id: "blood-price",
+    visual: {
+      reaction: "blood",
+      slot: "weapon",
+      accent: "#f55b72",
+      attachments: [
+        { anchor: "mainHand", layer: "weapon", asset: "blood-blade" },
+      ],
+      replacesBaseWeapon: true,
+      attack: "blood",
+    },
     name: "Blood Price",
     rarity: "Legendary",
     slot: "weapon",
@@ -185,6 +210,15 @@ export const items: ItemDef[] = [
   },
   {
     id: "thornmail",
+    visual: {
+      reaction: "thorns",
+      slot: "armor",
+      accent: "#b5cd8c",
+      attachments: [
+        { anchor: "torso", layer: "body", asset: "briar-mantle" },
+        { anchor: "shoulderBack", layer: "front", asset: "briar-shoulder" },
+      ],
+    },
     name: "Briar Mantle",
     rarity: "Rare",
     slot: "armor",
@@ -199,6 +233,12 @@ export const items: ItemDef[] = [
   },
   {
     id: "wellspring",
+    visual: {
+      reaction: "healing",
+      slot: "relic",
+      accent: "#b4e5bb",
+      attachments: [{ anchor: "waist", layer: "front", asset: "spring-stone" }],
+    },
     name: "Wellspring Stone",
     rarity: "Rare",
     slot: "relic",
@@ -213,6 +253,15 @@ export const items: ItemDef[] = [
   },
   {
     id: "conductor",
+    visual: {
+      slot: "weapon",
+      accent: "#b9e8d9",
+      attachments: [
+        { anchor: "mainHand", layer: "weapon", asset: "copper-siphon" },
+      ],
+      replacesBaseWeapon: true,
+      attack: "water",
+    },
     name: "Copper Conductor",
     rarity: "Rare",
     slot: "weapon",
@@ -227,6 +276,12 @@ export const items: ItemDef[] = [
   },
   {
     id: "bounty",
+    visual: {
+      reaction: "coins",
+      slot: "relic",
+      accent: "#f4cd70",
+      attachments: [{ anchor: "waist", layer: "front", asset: "gold-fang" }],
+    },
     name: "Gilded Fang",
     rarity: "Epic",
     slot: "relic",
@@ -241,6 +296,15 @@ export const items: ItemDef[] = [
   },
   {
     id: "lens",
+    visual: {
+      slot: "weapon",
+      accent: "#f4dca1",
+      attachments: [
+        { anchor: "mainHand", layer: "weapon", asset: "quarry-sight" },
+      ],
+      replacesBaseWeapon: true,
+      attack: "precision",
+    },
     name: "Quarry Lens",
     rarity: "Rare",
     slot: "weapon",
@@ -256,6 +320,15 @@ export const items: ItemDef[] = [
   },
   {
     id: "cinder",
+    visual: {
+      slot: "weapon",
+      accent: "#ffc675",
+      attachments: [
+        { anchor: "mainHand", layer: "weapon", asset: "cinder-spindle" },
+      ],
+      replacesBaseWeapon: true,
+      attack: "ember",
+    },
     name: "Cinder Thread",
     rarity: "Rare",
     slot: "weapon",
@@ -270,6 +343,15 @@ export const items: ItemDef[] = [
   },
   {
     id: "bastion",
+    visual: {
+      reaction: "shield",
+      slot: "armor",
+      accent: "#8be0e0",
+      attachments: [
+        { anchor: "torso", layer: "body", asset: "bastion-plate" },
+        { anchor: "shoulderBack", layer: "front", asset: "bastion-shoulder" },
+      ],
+    },
     name: "Bastion Heart",
     rarity: "Epic",
     slot: "armor",
@@ -284,6 +366,12 @@ export const items: ItemDef[] = [
   },
   {
     id: "reservoir",
+    visual: {
+      reaction: "energy",
+      slot: "relic",
+      accent: "#cfb8ff",
+      attachments: [{ anchor: "waist", layer: "front", asset: "arcane-cell" }],
+    },
     name: "Arcane Reservoir",
     rarity: "Epic",
     slot: "relic",
@@ -298,6 +386,15 @@ export const items: ItemDef[] = [
   },
   {
     id: "venom",
+    visual: {
+      slot: "weapon",
+      accent: "#bdd880",
+      attachments: [
+        { anchor: "mainHand", layer: "weapon", asset: "widow-hook" },
+      ],
+      replacesBaseWeapon: true,
+      attack: "toxin",
+    },
     name: "Widow’s Promise",
     rarity: "Rare",
     slot: "weapon",

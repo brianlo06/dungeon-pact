@@ -1,3 +1,4 @@
+import { BaseWeapon, GearMount } from "../../equipment/Equipment";
 import { useRigParts } from "../../battle/useRigParts";
 import {
   at,
@@ -106,6 +107,9 @@ export function Beguiler({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={DETAIL + 0.4}
           strokeLinejoin="round"
         />
+        <GearMount anchor="torso" layer="body" x={48} y={57} />
+        <GearMount anchor="waist" layer="front" x={42} y={74} />
+        <GearMount anchor="shoulderBack" layer="front" x={37} y={49} />
       </g>
 
       {/* ---- head: a two-horned hood, a cracked half-mask, one green eye ---- */}
@@ -194,6 +198,7 @@ export function Beguiler({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={1.6}
           strokeLinecap="round"
         />
+        <GearMount anchor="head" layer="front" x={48} y={29} />
       </g>
 
       {/* ---- the mirror shard, low in the back hand ---- */}
@@ -203,25 +208,35 @@ export function Beguiler({ unitId, animators, className, viewBox }: HeroProps) {
           fill={RAMP.violet[1]}
           width={8}
         />
-        <path
-          d="M23 51 L30 49.5 L32.5 58 L29 74 L25.5 70 L21 72 L22 62 Z"
-          fill={g.url("glass")}
-          stroke={INK}
-          strokeWidth={LINE}
-          strokeLinejoin="round"
-        />
-        <path
-          className="ph-bgl-glint"
-          d="M25 55 L28.5 53.5 M24.5 60 L29 57"
-          stroke="#ffffff"
-          strokeWidth={1.2}
-          strokeLinecap="round"
-        />
-        <path
-          d="M26 64 L28 66"
-          stroke={RAMP.sickly[1]}
-          strokeWidth={1.2}
-          strokeLinecap="round"
+        <BaseWeapon>
+          {" "}
+          <path
+            d="M23 51 L30 49.5 L32.5 58 L29 74 L25.5 70 L21 72 L22 62 Z"
+            fill={g.url("glass")}
+            stroke={INK}
+            strokeWidth={LINE}
+            strokeLinejoin="round"
+          />
+          <path
+            className="ph-bgl-glint"
+            d="M25 55 L28.5 53.5 M24.5 60 L29 57"
+            stroke="#ffffff"
+            strokeWidth={1.2}
+            strokeLinecap="round"
+          />
+          <path
+            d="M26 64 L28 66"
+            stroke={RAMP.sickly[1]}
+            strokeWidth={1.2}
+            strokeLinecap="round"
+          />
+        </BaseWeapon>
+        <GearMount
+          anchor="mainHand"
+          layer="weapon"
+          x={29}
+          y={62}
+          rotation={-12}
         />
         {/* long fingers */}
         <path

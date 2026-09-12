@@ -557,7 +557,7 @@ export function Results({ s, onLeave }: { s: Snapshot; onLeave: () => void }) {
       <div className="results-party">
         {s.players.map((p) => (
           <article key={p.id}>
-            <Sprite id={p.heroId} />
+            <Sprite id={p.heroId} equipment={p.items} />
             <h3>{p.name}</h3>
             <small>
               {p.spent === Math.max(...s.players.map((p) => p.spent)) &&

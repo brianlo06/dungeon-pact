@@ -1,3 +1,4 @@
+import { RigContext, GearMount } from "../../equipment/Equipment";
 import { useId, type ReactNode } from "react";
 import type { CreatureProps } from "../../battle/useRigParts";
 import "../../creatures-party.css";
@@ -130,15 +131,19 @@ export function HeroFrame({
   children: ReactNode;
 }) {
   return (
-    <svg
-      className={`party-hero ph-${id} ${className}`}
-      viewBox={viewBox}
-      role="img"
-      aria-label={label}
-      data-hero={id}
-    >
-      {children}
-    </svg>
+    <RigContext.Provider value={id}>
+      <svg
+        className={`party-hero ph-${id} ${className}`}
+        viewBox={viewBox}
+        role="img"
+        aria-label={label}
+        data-hero={id}
+      >
+        <GearMount anchor="back" layer="back" x={40} y={50} />
+        {children}
+        <GearMount anchor="root" layer="front" x={50} y={60} />
+      </svg>
+    </RigContext.Provider>
   );
 }
 

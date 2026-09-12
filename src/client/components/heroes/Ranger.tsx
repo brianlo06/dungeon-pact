@@ -1,3 +1,4 @@
+import { BaseWeapon, GearMount, GearArrow } from "../../equipment/Equipment";
 import { useRigParts } from "../../battle/useRigParts";
 import {
   at,
@@ -189,6 +190,9 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
           stroke={INK}
           strokeWidth={DETAIL}
         />
+        <GearMount anchor="torso" layer="body" x={48} y={57} />
+        <GearMount anchor="waist" layer="front" x={42} y={74} />
+        <GearMount anchor="shoulderBack" layer="front" x={37} y={49} />
       </g>
 
       {/* ---- head: a freckled kid's face, auburn fringe, a hood with a trailing point ---- */}
@@ -287,36 +291,47 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
           stroke={RAMP.sage[2]}
           strokeWidth={1.1}
         />
+        <GearMount anchor="head" layer="front" x={48} y={29} />
       </g>
 
       {/* ---- the bow, held out front: taller than its owner ---- */}
       <g ref={hold("bow")} data-part="bow" style={at(fx, fy)}>
         <Limb d={`M${fx} ${fy} Q68 57 75 58`} fill={RAMP.sage[1]} width={8} />
-        {/* the string, clear of the body */}
-        <path d="M67.5 23.5 L67.5 92" stroke="#e9dfcf" strokeWidth={1.1} />
-        <path
-          d="M67.5 23.5 C76 32 80 44 77 58 C80 72 76 84 67.5 92"
-          fill="none"
-          stroke={INK}
-          strokeWidth={5.6}
-          strokeLinecap="round"
-        />
-        <path
-          d="M67.5 23.5 C76 32 80 44 77 58 C80 72 76 84 67.5 92"
-          fill="none"
-          stroke={g.url("wood")}
-          strokeWidth={2.8}
-          strokeLinecap="round"
-        />
-        <rect
-          x={74.5}
-          y={54.5}
-          width={5}
-          height={7.5}
-          rx={1.5}
-          fill={RAMP.leather[2]}
-          stroke={INK}
-          strokeWidth={DETAIL}
+        <BaseWeapon>
+          {" "}
+          {/* the string, clear of the body */}
+          <path d="M67.5 23.5 L67.5 92" stroke="#e9dfcf" strokeWidth={1.1} />
+          <path
+            d="M67.5 23.5 C76 32 80 44 77 58 C80 72 76 84 67.5 92"
+            fill="none"
+            stroke={INK}
+            strokeWidth={5.6}
+            strokeLinecap="round"
+          />
+          <path
+            d="M67.5 23.5 C76 32 80 44 77 58 C80 72 76 84 67.5 92"
+            fill="none"
+            stroke={g.url("wood")}
+            strokeWidth={2.8}
+            strokeLinecap="round"
+          />
+          <rect
+            x={74.5}
+            y={54.5}
+            width={5}
+            height={7.5}
+            rx={1.5}
+            fill={RAMP.leather[2]}
+            stroke={INK}
+            strokeWidth={DETAIL}
+          />
+        </BaseWeapon>
+        <GearMount
+          anchor="mainHand"
+          layer="weapon"
+          x={76.5}
+          y={58.5}
+          rotation={0}
         />
         <circle
           cx={76.5}
@@ -332,31 +347,33 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
       <g ref={hold("draw")} data-part="draw" style={at(bx, by)}>
         <g ref={hold("arrow")} data-part="arrow" style={at(35, 64)}>
           <g transform="translate(35 64) rotate(12)">
-            <path
-              d="M-4 0 H24"
-              stroke={INK}
-              strokeWidth={3}
-              strokeLinecap="round"
-            />
-            <path
-              d="M-4 0 H24"
-              stroke={RAMP.wood[0]}
-              strokeWidth={1.4}
-              strokeLinecap="round"
-            />
-            <path
-              d="M22 -2.6 L28 0 L22 2.6 Z"
-              fill={RAMP.steel[1]}
-              stroke={INK}
-              strokeWidth={DETAIL}
-              strokeLinejoin="round"
-            />
-            <path
-              d="M-6 -2.4 L-1 0 L-6 2.4 L-4 0 Z"
-              fill="#c4533f"
-              stroke={INK}
-              strokeWidth={0.9}
-            />
+            <GearArrow>
+              <path
+                d="M-4 0 H24"
+                stroke={INK}
+                strokeWidth={3}
+                strokeLinecap="round"
+              />
+              <path
+                d="M-4 0 H24"
+                stroke={RAMP.wood[0]}
+                strokeWidth={1.4}
+                strokeLinecap="round"
+              />
+              <path
+                d="M22 -2.6 L28 0 L22 2.6 Z"
+                fill={RAMP.steel[1]}
+                stroke={INK}
+                strokeWidth={DETAIL}
+                strokeLinejoin="round"
+              />
+              <path
+                d="M-6 -2.4 L-1 0 L-6 2.4 L-4 0 Z"
+                fill="#c4533f"
+                stroke={INK}
+                strokeWidth={0.9}
+              />
+            </GearArrow>{" "}
           </g>
         </g>
         <Limb

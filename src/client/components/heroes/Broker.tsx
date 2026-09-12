@@ -1,3 +1,4 @@
+import { BaseWeapon, GearMount } from "../../equipment/Equipment";
 import { useRigParts } from "../../battle/useRigParts";
 import {
   at,
@@ -157,6 +158,9 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={DETAIL + 0.4}
           strokeLinejoin="round"
         />
+        <GearMount anchor="torso" layer="body" x={48} y={57} />
+        <GearMount anchor="waist" layer="front" x={42} y={74} />
+        <GearMount anchor="shoulderBack" layer="front" x={37} y={49} />
       </g>
 
       {/* ---- coin pouches, strung on the belt; they jingle ---- */}
@@ -328,6 +332,7 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
           fill="none"
         />
         <Lit d="M37 18 Q41 14.5 47 14" width={1.6} />
+        <GearMount anchor="head" layer="front" x={48} y={29} />
       </g>
 
       {/* ---- the balance, held out front; the beam tips on its own ---- */}
@@ -394,38 +399,48 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
 
       {/* ---- the ledger arm, on top: it gets swung ---- */}
       <g ref={hold("ledger")} data-part="ledger" style={at(bx, by)}>
-        <g transform="rotate(-8 24 62)">
-          <rect
-            x={15}
-            y={50}
-            width={15}
-            height={23}
-            rx={1.5}
-            fill={g.url("leather")}
-            stroke={INK}
-            strokeWidth={LINE}
-          />
-          <rect x={27.5} y={51.5} width={2.2} height={20} fill="#efe2c2" />
-          <rect
-            x={15}
-            y={58}
-            width={15}
-            height={3.5}
-            fill={RAMP.gold[1]}
-            stroke={INK}
-            strokeWidth={0.9}
-          />
-          <rect
-            x={20.5}
-            y={57}
-            width={4}
-            height={5.5}
-            rx={0.8}
-            fill={g.url("gold")}
-            stroke={INK}
-            strokeWidth={0.9}
-          />
-        </g>
+        <BaseWeapon>
+          {" "}
+          <g transform="rotate(-8 24 62)">
+            <rect
+              x={15}
+              y={50}
+              width={15}
+              height={23}
+              rx={1.5}
+              fill={g.url("leather")}
+              stroke={INK}
+              strokeWidth={LINE}
+            />
+            <rect x={27.5} y={51.5} width={2.2} height={20} fill="#efe2c2" />
+            <rect
+              x={15}
+              y={58}
+              width={15}
+              height={3.5}
+              fill={RAMP.gold[1]}
+              stroke={INK}
+              strokeWidth={0.9}
+            />
+            <rect
+              x={20.5}
+              y={57}
+              width={4}
+              height={5.5}
+              rx={0.8}
+              fill={g.url("gold")}
+              stroke={INK}
+              strokeWidth={0.9}
+            />
+          </g>
+        </BaseWeapon>
+        <GearMount
+          anchor="mainHand"
+          layer="weapon"
+          x={29.5}
+          y={61.5}
+          rotation={-26}
+        />
         <Limb
           d={`M${bx} ${by} Q${bx - 4} 57 30 61`}
           fill={RAMP.violet[1]}

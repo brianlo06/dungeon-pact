@@ -1,3 +1,4 @@
+import { validateEquipmentVisuals } from "./equipment-validation";
 import { encounters } from "./encounters";
 import { z } from "zod";
 import type { Effect } from "../shared/model";
@@ -230,6 +231,7 @@ export function validateContent() {
   for (const id of statusId.options)
     if (!statuses[id]?.description) throw Error(`Missing status ${id}`);
   return {
+    presentationWarnings: validateEquipmentVisuals(items),
     heroes: heroes.length,
     items: items.length,
     enemies: enemies.length,

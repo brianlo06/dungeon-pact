@@ -1,3 +1,4 @@
+import { BaseWeapon, GearMount } from "../../equipment/Equipment";
 import { useRigParts } from "../../battle/useRigParts";
 import {
   at,
@@ -158,6 +159,9 @@ export function Herald({ unitId, animators, className, viewBox }: HeroProps) {
           stroke={INK}
           strokeWidth={DETAIL}
         />
+        <GearMount anchor="torso" layer="body" x={48} y={57} />
+        <GearMount anchor="waist" layer="front" x={42} y={74} />
+        <GearMount anchor="shoulderBack" layer="front" x={37} y={49} />
       </g>
 
       {/* ---- head: laurel on short dark hair, a square jaw, an open face ---- */}
@@ -295,47 +299,58 @@ export function Herald({ unitId, animators, className, viewBox }: HeroProps) {
             strokeWidth={0.7}
           />
         ))}
+        <GearMount anchor="head" layer="front" x={48} y={29} />
       </g>
 
       {/* ---- the banner, in the front hand; the flag flies forward ---- */}
       <g ref={hold("banner")} data-part="banner" style={at(fx, fy)}>
-        <path
-          d="M69 13 V96"
-          stroke={INK}
-          strokeWidth={5}
-          strokeLinecap="round"
-        />
-        <path
-          d="M69 13 V96"
-          stroke={g.url("wood")}
-          strokeWidth={2.6}
-          strokeLinecap="round"
-        />
-        {/* finial: a little gilt sun on a spike */}
-        <path
-          d="M69 10 L71 14.5 H67 Z"
-          fill={g.url("gold")}
-          stroke={INK}
-          strokeWidth={DETAIL}
-          strokeLinejoin="round"
-        />
-        <g ref={hold("flag")} data-part="flag" style={at(69, 20)}>
+        <BaseWeapon>
+          {" "}
           <path
-            d="M70 14 C77 12 83 16 90 13.5 C93 12.8 95 13 97 14 L91.5 23.5 L97 33 C90 31.5 84 34.5 77 34 C74.5 33.8 72 34.5 70 35 Z"
-            fill={g.url("flag")}
+            d="M69 13 V96"
             stroke={INK}
-            strokeWidth={LINE}
+            strokeWidth={5}
+            strokeLinecap="round"
+          />
+          <path
+            d="M69 13 V96"
+            stroke={g.url("wood")}
+            strokeWidth={2.6}
+            strokeLinecap="round"
+          />
+          {/* finial: a little gilt sun on a spike */}
+          <path
+            d="M69 10 L71 14.5 H67 Z"
+            fill={g.url("gold")}
+            stroke={INK}
+            strokeWidth={DETAIL}
             strokeLinejoin="round"
           />
-          <path
-            d="M71.5 16.8 C77 15 82 18.5 88 16.4"
-            stroke="#efe8fb"
-            strokeWidth={1.1}
-            fill="none"
-            opacity={0.7}
-          />
-          <Sun x={81} y={24} r={3} fill={RAMP.gold[0]} />
-        </g>
+          <g ref={hold("flag")} data-part="flag" style={at(69, 20)}>
+            <path
+              d="M70 14 C77 12 83 16 90 13.5 C93 12.8 95 13 97 14 L91.5 23.5 L97 33 C90 31.5 84 34.5 77 34 C74.5 33.8 72 34.5 70 35 Z"
+              fill={g.url("flag")}
+              stroke={INK}
+              strokeWidth={LINE}
+              strokeLinejoin="round"
+            />
+            <path
+              d="M71.5 16.8 C77 15 82 18.5 88 16.4"
+              stroke="#efe8fb"
+              strokeWidth={1.1}
+              fill="none"
+              opacity={0.7}
+            />
+            <Sun x={81} y={24} r={3} fill={RAMP.gold[0]} />
+          </g>
+        </BaseWeapon>
+        <GearMount
+          anchor="mainHand"
+          layer="weapon"
+          x={69}
+          y={58}
+          rotation={0}
+        />
         <Limb
           d={`M${fx} ${fy} Q64 57 68.5 58`}
           fill={RAMP.steel[1]}

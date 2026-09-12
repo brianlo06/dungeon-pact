@@ -113,7 +113,17 @@ export function release(s: RunState, holder: Enemy) {
     s,
     `${holder.name} splits open. ${held.length} piece${held.length === 1 ? "" : "s"} of equipment returns to the pact.`,
     "combo",
-    { kind: "combo", label: "RECLAIMED", target: holder.id },
+    {
+      kind: "combo",
+      label: "RECLAIMED",
+      target: holder.id,
+      equipment: held.map((h) => ({
+        action: "return",
+        ownerId: h.playerId,
+        itemId: h.itemId,
+        containerId: holder.id,
+      })),
+    },
   );
 }
 export function isEnemy(u: Unit): u is Enemy {
@@ -182,7 +192,12 @@ export function trigger(
   if (depth > 4 || actor.hp <= 0) return; // Prevent recursive proc cycles; triggered damage does not re-trigger attacks.
   for (const id of actor.items) {
     const item = items.find((i) => i.id === id)!;
-    if (item.trigger === event)
+    if (item.trigger === event) {
+      log(s, `${actor.name}: ${item.name} activates.`, "info", {
+        kind: "equipment",
+        actor: actor.id,
+        equipment: [{ action: "trigger", ownerId: actor.id, itemId: item.id }],
+      });
       effects(
         s,
         actor,
@@ -190,8 +205,15 @@ export function trigger(
         item.effects,
         depth + 1,
       );
-    if (item.cursed && event === "roundStart")
+    }
+    if (item.cursed && event === "roundStart") {
+      log(s, `${actor.name}: ${item.name} collects its price.`, "info", {
+        kind: "equipment",
+        actor: actor.id,
+        equipment: [{ action: "trigger", ownerId: actor.id, itemId: item.id }],
+      });
       hurt(s, actor, actor, 6, depth + 1);
+    }
   }
 }
 export function effects(
@@ -282,6 +304,14 @@ export function effects(
             {
               kind: "combo",
               label: "SEIZED",
+              equipment: [
+                {
+                  action: "seize",
+                  ownerId: target.id,
+                  itemId: item.id,
+                  containerId: box.id,
+                },
+              ],
               actor: actor.id,
               target: target.id,
             },

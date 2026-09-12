@@ -66,6 +66,8 @@ export function spans(beats: Beat[], opts: PaceOptions = {}): Span[] {
   let struck = false;
   return beats.map((beat) => {
     switch (beat.kind) {
+      case "equipment":
+        return { natural: 0, floor: 0 };
       case "cast":
         struck = false;
         return opts.signature?.(beat) ? SIGNATURE : MOVE;

@@ -100,6 +100,7 @@ export interface HeroDef {
   abilities: Ability[];
 }
 export interface ItemDef {
+  visual?: import("./equipment").EquipmentVisual;
   id: string;
   name: string;
   rarity: "Common" | "Rare" | "Epic" | "Legendary";
@@ -234,7 +235,8 @@ export interface Auction {
  * accurate health, instead of snapping straight to the settled state.
  */
 export interface Beat {
-  kind: "cast" | "damage" | "heal" | "block" | "combo" | "defeat";
+  equipment?: import("./equipment").EquipmentCue[];
+  kind: "cast" | "damage" | "heal" | "block" | "combo" | "defeat" | "equipment";
   actor?: string;
   target?: string;
   label?: string;

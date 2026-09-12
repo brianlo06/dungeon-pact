@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Sprite } from "./Sprite";
 import { PixelIcon } from "./PixelIcon";
 import type { Snapshot } from "../../shared/model";
@@ -12,7 +13,9 @@ export function Auction({
   send: (i: Intent) => void;
   disabled: boolean;
 }) {
+  const [preview, setPreview] = useState(false);
   const a = s.auction!;
+  useEffect(() => setPreview(false), [a.item.id, a.stage]);
   const me = s.players.find((p) => p.id === s.you)!;
   const supply = a.item.slot === "supply";
   // A supply displaces nothing, so there is no piece being surrendered to show.
@@ -91,6 +94,26 @@ export function Auction({
           )}
         </div>
         <div className="auction-aside">
+          {a.revealed && !supply && (
+            <div className="auction-try-on">
+              <Sprite
+                id={me.heroId}
+                equipment={me.items}
+                preview={preview ? a.item.id : undefined}
+              />
+              <button
+                type="button"
+                onMouseEnter={() => setPreview(true)}
+                onMouseLeave={() => setPreview(false)}
+                onFocus={() => setPreview(true)}
+                onBlur={() => setPreview(false)}
+                onClick={() => setPreview((v) => !v)}
+                aria-pressed={preview}
+              >
+                Try on · {preview ? "PREVIEW" : "hold / focus"}
+              </button>
+            </div>
+          )}
           <span className="eyebrow">
             {supply ? "YOUR PACK" : "YOUR EQUIPMENT"}
           </span>

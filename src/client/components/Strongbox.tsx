@@ -1,3 +1,6 @@
+import { useId } from "react";
+import { GearArt } from "../equipment/Equipment";
+import { items } from "../../content/items";
 /**
  * The Strongbox.
  *
@@ -15,13 +18,16 @@ export type VaultState = "empty" | "holding" | "damaged" | "broken";
 
 export function Strongbox({
   held,
+  itemIds = [],
   state,
   className = "",
 }: {
   held: number;
+  itemIds?: string[];
   state: VaultState;
   className?: string;
 }) {
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const glow = state === "broken" ? 1 : Math.min(1, held * 0.34);
   return (
     <svg
@@ -32,23 +38,29 @@ export function Strongbox({
       aria-label={`Strongbox, ${state}, holding ${held}`}
     >
       <defs>
-        <linearGradient id="vault-iron" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`${uid}-vault-iron`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#7d7486" />
           <stop offset="0.45" stopColor="#564e61" />
           <stop offset="1" stopColor="#332d3d" />
         </linearGradient>
-        <linearGradient id="vault-band" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`${uid}-vault-band`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#c9a45d" />
           <stop offset="1" stopColor="#6d5227" />
         </linearGradient>
-        <radialGradient id="vault-core">
+        <radialGradient id={`${uid}-vault-core`}>
           <stop offset="0" stopColor="#ffd98a" stopOpacity={glow} />
           <stop offset="1" stopColor="#ff9a3c" stopOpacity="0" />
         </radialGradient>
       </defs>
 
       {/* Pressure from what is inside, leaking through the seams. */}
-      <ellipse cx="50" cy="60" rx="48" ry="32" fill="url(#vault-core)" />
+      <ellipse
+        cx="50"
+        cy="60"
+        rx="48"
+        ry="32"
+        fill={`url(#${uid}-vault-core)`}
+      />
 
       <g className="vault-body">
         {/* It sits on the floor and it is heavy. */}
@@ -60,7 +72,7 @@ export function Strongbox({
           width="80"
           height="48"
           rx="3"
-          fill="url(#vault-iron)"
+          fill={`url(#${uid}-vault-iron)`}
           stroke="#15121c"
           strokeWidth="3"
         />
@@ -86,7 +98,7 @@ export function Strongbox({
           />
         </g>
         {/* Gold banding, vertical so the locks sit between the straps. */}
-        <g fill="url(#vault-band)">
+        <g fill={`url(#${uid}-vault-band)`}>
           <rect x="16" y="40" width="7" height="48" />
           <rect x="77" y="40" width="7" height="48" />
           <rect x="10" y="62" width="80" height="6" />
@@ -159,6 +171,30 @@ export function Strongbox({
         <path d="M28 48 L36 62 L31 74" />
         <path d="M72 46 L63 60 L70 76" />
         <path d="M50 46 L50 60" />
+      </g>
+      <g data-vault-items="">
+        {itemIds.slice(0, 6).map((id, index) => {
+          const item = items.find((i) => i.id === id);
+          const asset = item?.visual?.attachments[0]?.asset;
+          return asset && item ? (
+            <g
+              key={`${id}-${index}`}
+              data-held-item={id}
+              transform={`translate(${50 + (index - (Math.min(6, itemIds.length) - 1) / 2) * 13} 76) scale(${itemIds.length < 4 ? 0.6 : 0.38})`}
+              stroke="#171420"
+              strokeWidth={1.7}
+            >
+              <title>{item.name}</title>
+              <GearArt asset={asset} slot={item.slot} />
+            </g>
+          ) : null;
+        })}
+        <path
+          d="M20 48 V80 M35 48 V80 M50 48 V80 M65 48 V80 M80 48 V80"
+          stroke="#a79472"
+          strokeWidth={1.5}
+          opacity={itemIds.length ? 0.6 : 0}
+        />
       </g>
     </svg>
   );

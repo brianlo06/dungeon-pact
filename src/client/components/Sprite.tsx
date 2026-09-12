@@ -1,3 +1,4 @@
+import { EquipmentProvider } from "../equipment/Equipment";
 import type { CSSProperties } from "react";
 import { PARTY, PORTRAITS } from "./heroes";
 
@@ -51,8 +52,12 @@ export function Sprite({
   className = "",
   label,
   crop,
+  equipment = [],
+  preview,
 }: {
   id: string;
+  equipment?: readonly string[];
+  preview?: string;
   className?: string;
   label?: string;
   /** Head and shoulders, for a portrait too small for a whole figure. */
@@ -70,10 +75,12 @@ export function Sprite({
         aria-hidden={label ? undefined : true}
         className={`sprite sprite-${id} sprite-drawn ${className}`}
       >
-        <Drawn
-          unitId={`still-${id}`}
-          viewBox={crop === "portrait" ? PORTRAITS[id] : undefined}
-        />
+        <EquipmentProvider items={equipment} preview={preview}>
+          <Drawn
+            unitId={`still-${id}`}
+            viewBox={crop === "portrait" ? PORTRAITS[id] : undefined}
+          />
+        </EquipmentProvider>
       </span>
     );
   const { atlas, index } = locate(id);

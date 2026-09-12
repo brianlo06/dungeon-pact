@@ -1,0 +1,221 @@
+.gear-piece {
+  animation: gear-materialize 0.42s ease-out;
+  pointer-events: none;
+}
+.gear-piece[data-preview] {
+  opacity: 0.6;
+  animation: none;
+}
+.gear-piece[data-highlight] {
+  filter: drop-shadow(0 0 2px var(--gear-accent));
+}
+.gear-energy {
+  animation: gear-breathe 3.4s ease-in-out infinite alternate;
+}
+.gear-piece[data-cursed] .gear-energy {
+  animation-duration: 1.6s;
+}
+.gear-trigger {
+  animation: gear-trigger 0.85s ease-out both;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+[data-clip="attack"] .gear-energy,
+[data-clip="signature"] .gear-energy {
+  stroke-width: 2.7;
+}
+@keyframes gear-breathe {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes gear-materialize {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes gear-trigger {
+  0% {
+    opacity: 1;
+    transform: scale(0.7);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gear-piece,
+  .gear-energy,
+  .gear-trigger {
+    animation: none;
+  }
+}
+html[data-motion="reduced"] .gear-piece,
+html[data-motion="reduced"] .gear-energy {
+  animation: none;
+}
+.auction-try-on {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.auction-try-on .sprite {
+  width: 160px;
+  height: 160px;
+}
+.auction-try-on button {
+  font-size: 11px;
+}
+.equipment-inspector {
+  position: absolute;
+  left: -18px;
+  bottom: 12px;
+  z-index: 12;
+  font-size: 10px;
+}
+.equipment-inspector summary {
+  cursor: pointer;
+  color: #d3c191;
+  background: #28222fe8;
+  padding: 3px 6px;
+  border: 1px solid #6b5c4b;
+  border-radius: 3px;
+  list-style: none;
+}
+.equipment-inspector-panel {
+  position: absolute;
+  bottom: 22px;
+  left: 0;
+  width: 220px;
+  background: #211c29fa;
+  border: 1px solid #9a825a;
+  padding: 12px;
+  border-radius: 6px;
+  box-shadow: 0 8px 25px #0008;
+}
+.equipment-inspector-panel button {
+  display: grid;
+  width: 100%;
+  text-align: left;
+  gap: 4px;
+  padding: 8px;
+  margin-top: 5px;
+  white-space: normal;
+}
+.equipment-inspector-panel small {
+  color: #b9a075;
+  font-size: 9px;
+}
+.equipment-inspector-panel b {
+  font-size: 12px;
+}
+.equipment-inspector-panel span {
+  font-size: 10px;
+  font-weight: normal;
+  line-height: 1.4;
+}
+.gear-transfer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: gear-travel var(--life, 720ms) ease-in-out both;
+}
+.gear-transfer svg {
+  position: absolute;
+  width: 38px;
+  height: 54px;
+  overflow: visible;
+  filter: drop-shadow(0 0 5px #e8d3a2);
+}
+@keyframes gear-travel {
+  0% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  15% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(var(--travel-x), var(--travel-y));
+    opacity: 0;
+  }
+}
+.gear-attack-trail {
+  display: none;
+}
+[data-clip="attack"] .gear-attack-trail,
+[data-clip="signature"] .gear-attack-trail {
+  display: block;
+  opacity: 0.5;
+}
+.gear-bolt {
+  background: var(--projectile-accent) !important;
+  box-shadow: 0 0 7px var(--projectile-accent) !important;
+}
+.workshop-actor {
+  transition: left 0.35s ease;
+}
+.equipment-inspector {
+  pointer-events: auto;
+}
+.combatant:has(.equipment-inspector[open]) {
+  z-index: 60 !important;
+}
+.auction-room {
+  max-width: 1080px;
+  margin: 30px auto;
+  padding: 24px;
+}
+.auction-host {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin: 20px 0;
+}
+.auction-host > .sprite {
+  width: 110px;
+  height: 110px;
+  flex: none;
+}
+.auction-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px 1fr;
+  gap: 30px;
+  align-items: center;
+}
+.auction-layout .item-card {
+  padding: 24px;
+  border: 1px solid #827052;
+  background: #302938;
+  text-align: center;
+}
+.auction-layout .item-pedestal {
+  font-size: 32px;
+  margin: 18px;
+}
+.auction-aside {
+  font-size: 12px;
+}
+@media (max-width: 900px) {
+  .auction-layout {
+    grid-template-columns: 1fr;
+  }
+  .auction-room {
+    margin: 0 auto;
+  }
+  .auction-host > .sprite {
+    width: 80px;
+    height: 80px;
+  }
+}
