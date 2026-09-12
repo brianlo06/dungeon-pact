@@ -7,6 +7,7 @@ export type Phase =
   | "UPGRADE"
   | "REWARD"
   | "AUCTION"
+  | "SHOP"
   | "EVENT"
   | "CAMP"
   | "COMPLETE";
@@ -159,7 +160,7 @@ export interface Player extends Unit {
 }
 export interface Enemy extends Unit {
   definition: string;
-  intent: { ability: Ability; target: string };
+  intent: { ability: Ability; target: string; row?: Row };
   elite?: "greedy" | "vampiric" | "sapping" | "armored";
   phase: number;
   /** Equipment this unit is holding hostage, returned when it is destroyed. */
@@ -256,6 +257,18 @@ export interface GameLog {
   beat?: Beat;
 }
 export interface RunState {
+  shop?: {
+    stock: string[];
+    sold: string[];
+    sequence: number;
+    leaving: string[];
+    proposal?: {
+      item: string;
+      recipient: string;
+      price: number;
+      votes: Record<string, boolean>;
+    };
+  };
   roundSummary?: {
     round: number;
     damage: number;
@@ -302,6 +315,14 @@ export interface RunState {
   eventId: string | null;
   /** Mentor currently teaching, and who has already answered them. */
   mentorId?: string | null;
+  /**
+   * The one class this training ground will evolve, drawn from the party when
+   * the chamber is entered. Everyone else may drill for stats instead.
+   * `undefined` means a room that entered its mentor before the rule existed,
+   * where every class could still take a path; `null` means this ground has
+   * nobody to teach.
+   */
+  mentorClass?: string | null;
   trained?: string[];
   logs: GameLog[];
   eventSeq: number;

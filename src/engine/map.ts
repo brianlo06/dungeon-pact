@@ -22,7 +22,7 @@ export function generateMap(s: Pick<RunState, "rng">): MapNode[] {
     combat: ["The Ash Gate", "Broken Conveyors", "The Crucible"],
     elite: ["Iron Procession", "The Black Kiln", "The Slag Court"],
     auction: ["The Gilded Exchange", "The Long Table"],
-    mystery: ["The Veiled Exchange", "The Shuttered Stall"],
+    mystery: ["The Salvage Counter", "The Shuttered Stall"],
     event: ["A Debt Unpaid", "The Wounded Smith", "The Whispering Well"],
     camp: ["Last Warmth", "The Banked Fire"],
     mentor: ["The Whetstone", "The Reliquary", "The Cipher"],

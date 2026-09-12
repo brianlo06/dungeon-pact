@@ -536,19 +536,6 @@
   color: var(--gold);
   white-space: nowrap;
 }
-.combatant-statuses {
-  display: flex;
-  gap: 3px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.combatant-statuses i {
-  font-style: normal;
-  font-size: 9px;
-  line-height: 1;
-  color: #d7c2e0;
-}
-
 /* Intentions ride the creature instead of floating in a detached card. */
 .combatant-intent {
   margin-bottom: 3px;
@@ -1512,11 +1499,21 @@
   height: 20px;
 }
 .projectile-mote > i {
-  background: radial-gradient(circle, #f4ffe8 0 25%, #8fdc8a 50%, transparent 74%);
+  background: radial-gradient(
+    circle,
+    #f4ffe8 0 25%,
+    #8fdc8a 50%,
+    transparent 74%
+  );
   box-shadow: 0 0 16px 5px rgba(143, 220, 138, 0.6);
 }
 .projectile-ember > i {
-  background: radial-gradient(circle, #fff2c4 0 20%, #ff8a3c 48%, transparent 74%);
+  background: radial-gradient(
+    circle,
+    #fff2c4 0 20%,
+    #ff8a3c 48%,
+    transparent 74%
+  );
   box-shadow: 0 0 14px 4px rgba(255, 138, 60, 0.7);
 }
 .projectile-rivet > i {
@@ -1627,7 +1624,12 @@
   width: calc(12px + var(--k) * 26px);
   height: calc(12px + var(--k) * 26px);
   border-radius: 50%;
-  background: radial-gradient(circle, #fffbe8 0 18%, rgba(255, 214, 130, 0.8) 40%, transparent 72%);
+  background: radial-gradient(
+    circle,
+    #fffbe8 0 18%,
+    rgba(255, 214, 130, 0.8) 40%,
+    transparent 72%
+  );
   box-shadow: 0 0 calc(8px + var(--k) * 22px) rgba(255, 214, 130, 0.75);
 }
 .mark-sigil::after {
@@ -1643,7 +1645,11 @@
   width: calc(var(--w) * (0.4 + var(--k) * 0.8));
   height: calc(var(--w) * (0.4 + var(--k) * 0.8));
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(170, 245, 150, 0.7), transparent);
+  background: radial-gradient(
+    closest-side,
+    rgba(170, 245, 150, 0.7),
+    transparent
+  );
   opacity: calc(1 - max(0, var(--k) - 0.6) * 2.5);
 }
 .mark-emphasis::after {
@@ -1657,7 +1663,11 @@
   height: 2px;
   margin-top: -1px;
   transform-origin: 0 50%;
-  background: linear-gradient(90deg, rgba(238, 184, 96, 0.9), rgba(255, 240, 210, 0.9));
+  background: linear-gradient(
+    90deg,
+    rgba(238, 184, 96, 0.9),
+    rgba(255, 240, 210, 0.9)
+  );
   box-shadow: 0 0 6px rgba(238, 184, 96, 0.7);
 }
 .mark-line::after {
@@ -1673,7 +1683,9 @@
   stroke-width: 1.5;
 }
 .layer-choreo-debug text {
-  font: 10px ui-monospace, monospace;
+  font:
+    10px ui-monospace,
+    monospace;
   fill: #fff;
   paint-order: stroke;
   stroke: #120f18;

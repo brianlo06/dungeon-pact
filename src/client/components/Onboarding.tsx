@@ -24,7 +24,7 @@ const lessons: Partial<Record<Phase, [string, string][]>> = {
   COMBAT: [
     [
       "Read their intentions",
-      "Enemy chips show who they will attack. WINDUP means the action can be interrupted. Most enemies prefer the front; Snipers threaten the back.",
+      "Enemy chips show who they will attack. WINDUP means the action can be interrupted. Most enemies prefer the front; Snipers threaten the back. A chip naming a row is aimed at that row, not at a hero: move out of it and the attack lands on nobody.",
     ],
     [
       "Choose, target, lock",
@@ -47,6 +47,16 @@ const lessons: Partial<Record<Phase, [string, string][]>> = {
     [
       "Read the auction terms",
       "The first lot uses rising bids. The second uses falling asks: if everyone passes, the price drops. Simultaneous claims use a draw. Expensive purchases still require party approval.",
+    ],
+  ],
+  SHOP: [
+    [
+      "Equip the party",
+      "All stock is visible at fixed prices. Choose who receives an item, preview it, then propose a purchase. A majority and the recipient must approve.",
+    ],
+    [
+      "Keep a reserve",
+      "Money is shared. Save enough for healing, revival and training. Everyone readies up to leave the shop; a new proposal clears readiness.",
     ],
   ],
 };

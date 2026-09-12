@@ -1,3 +1,4 @@
+import { IllustratedHead, Neck, Tailoring } from "./Illustration";
 import { BaseWeapon, GearMount } from "../../equipment/Equipment";
 import { useRigParts } from "../../battle/useRigParts";
 import {
@@ -181,6 +182,8 @@ export function Arcanist({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={DETAIL + 0.4}
           strokeLinejoin="round"
         />
+        <Neck hero="arcanist" />
+        <Tailoring hero="arcanist" />
         <GearMount anchor="torso" layer="body" x={48} y={57} />
         <GearMount anchor="waist" layer="front" x={42} y={74} />
         <GearMount anchor="shoulderBack" layer="front" x={37} y={49} />
@@ -188,63 +191,65 @@ export function Arcanist({ unitId, animators, className, viewBox }: HeroProps) {
 
       {/* ---- head: a face lost in shadow under the brim; only the eyes ---- */}
       <g ref={hold("head")} data-part="head" style={at(...BODY.neck)}>
-        <path d={HEAD_PATH} fill="#1c1827" stroke={INK} strokeWidth={LINE} />
-        <Eyes x={53} y={35.5} glow="#ffd27a" />
-        {/* the brim: the widest thing on him */}
-        <path
-          d="M18 32.5 C20 26.5 32 23 48 23 C64 23 76 26 78 31.5 C74.5 33.5 68.5 33 64 32 Q56 30.5 48 31.5 Q38 33 30 33 C24 33.5 19.5 34.5 18 32.5 Z"
-          fill={g.url("robe")}
-          stroke={INK}
-          strokeWidth={LINE}
-          strokeLinejoin="round"
-        />
-        <Lit d="M24 28.5 Q35 24.5 47 24.3" />
-
-        {/* ---- the crown of the hat, with a tip that flops on its own ---- */}
-        <g ref={hold("hat")} data-part="hat" style={at(48, 26)}>
-          {/* the crown folds over backwards into a long drooping tip */}
+        <IllustratedHead>
+          <path d={HEAD_PATH} fill="#1c1827" stroke={INK} strokeWidth={LINE} />
+          <Eyes x={53} y={35.5} glow="#ffd27a" />
+          {/* the brim: the widest thing on him */}
           <path
-            d="M46 12 C40 9.5 31 10 24.5 14.5 C21.5 16.5 19 20 17.5 24.5 L22.5 22.5 C27 18 35 16.5 46 18 Z"
-            fill={RAMP.blue[1]}
-            stroke={INK}
-            strokeWidth={LINE}
-            strokeLinejoin="round"
-          />
-          <path
-            d="M40 13 C34 13 28 15 23 19.5"
-            stroke={RAMP.blue[0]}
-            strokeWidth={DETAIL}
-            fill="none"
-            opacity={0.7}
-          />
-          <circle
-            cx={18}
-            cy={25}
-            r={2.8}
-            fill={g.url("gold")}
-            stroke={INK}
-            strokeWidth={DETAIL}
-          />
-          <path
-            d="M34 27 C38 21.5 41.5 16 44.5 12 C46.5 9.8 50.5 9.6 53.5 11.5 C56.5 14 58.5 18 60.5 22 L63 27 Q48 23 34 27 Z"
+            d="M18 32.5 C20 26.5 32 23 48 23 C64 23 76 26 78 31.5 C74.5 33.5 68.5 33 64 32 Q56 30.5 48 31.5 Q38 33 30 33 C24 33.5 19.5 34.5 18 32.5 Z"
             fill={g.url("robe")}
             stroke={INK}
             strokeWidth={LINE}
             strokeLinejoin="round"
           />
-          {/* hat band */}
-          <path
-            d="M35 24.5 Q48 21 62 24.5 L62.8 27.5 Q48 24 34.2 27.5 Z"
-            fill={g.url("gold")}
-            stroke={INK}
-            strokeWidth={DETAIL}
-            strokeLinejoin="round"
-          />
-          <path d={star(52, 17.5, 2.2)} fill={RAMP.gold[0]} />
-          <path d={star(42, 19.5, 1.5)} fill={RAMP.gold[0]} opacity={0.8} />
-          <Lit d="M38.5 21.5 C41 17 43 14 45 12" width={1.3} />
-        </g>
-        <GearMount anchor="head" layer="front" x={48} y={29} />
+          <Lit d="M24 28.5 Q35 24.5 47 24.3" />
+
+          {/* ---- the crown of the hat, with a tip that flops on its own ---- */}
+          <g ref={hold("hat")} data-part="hat" style={at(48, 26)}>
+            {/* the crown folds over backwards into a long drooping tip */}
+            <path
+              d="M46 12 C40 9.5 31 10 24.5 14.5 C21.5 16.5 19 20 17.5 24.5 L22.5 22.5 C27 18 35 16.5 46 18 Z"
+              fill={RAMP.blue[1]}
+              stroke={INK}
+              strokeWidth={LINE}
+              strokeLinejoin="round"
+            />
+            <path
+              d="M40 13 C34 13 28 15 23 19.5"
+              stroke={RAMP.blue[0]}
+              strokeWidth={DETAIL}
+              fill="none"
+              opacity={0.7}
+            />
+            <circle
+              cx={18}
+              cy={25}
+              r={2.8}
+              fill={g.url("gold")}
+              stroke={INK}
+              strokeWidth={DETAIL}
+            />
+            <path
+              d="M34 27 C38 21.5 41.5 16 44.5 12 C46.5 9.8 50.5 9.6 53.5 11.5 C56.5 14 58.5 18 60.5 22 L63 27 Q48 23 34 27 Z"
+              fill={g.url("robe")}
+              stroke={INK}
+              strokeWidth={LINE}
+              strokeLinejoin="round"
+            />
+            {/* hat band */}
+            <path
+              d="M35 24.5 Q48 21 62 24.5 L62.8 27.5 Q48 24 34.2 27.5 Z"
+              fill={g.url("gold")}
+              stroke={INK}
+              strokeWidth={DETAIL}
+              strokeLinejoin="round"
+            />
+            <path d={star(52, 17.5, 2.2)} fill={RAMP.gold[0]} />
+            <path d={star(42, 19.5, 1.5)} fill={RAMP.gold[0]} opacity={0.8} />
+            <Lit d="M38.5 21.5 C41 17 43 14 45 12" width={1.3} />
+          </g>
+          <GearMount anchor="head" layer="front" x={48} y={29} />
+        </IllustratedHead>
       </g>
 
       {/* ---- the casting hand, out front, with the long sleeve hanging ---- */}

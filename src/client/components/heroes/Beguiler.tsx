@@ -1,3 +1,4 @@
+import { IllustratedHead, Neck, Tailoring } from "./Illustration";
 import { BaseWeapon, GearMount } from "../../equipment/Equipment";
 import { useRigParts } from "../../battle/useRigParts";
 import {
@@ -107,6 +108,8 @@ export function Beguiler({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={DETAIL + 0.4}
           strokeLinejoin="round"
         />
+        <Neck hero="beguiler" />
+        <Tailoring hero="beguiler" />
         <GearMount anchor="torso" layer="body" x={48} y={57} />
         <GearMount anchor="waist" layer="front" x={42} y={74} />
         <GearMount anchor="shoulderBack" layer="front" x={37} y={49} />
@@ -114,91 +117,93 @@ export function Beguiler({ unitId, animators, className, viewBox }: HeroProps) {
 
       {/* ---- head: a two-horned hood, a cracked half-mask, one green eye ---- */}
       <g ref={hold("head")} data-part="head" style={at(...BODY.neck)}>
-        {/* the hood's two horns, drooping behind */}
-        <path
-          d="M40 17 C35 12 28 10.5 22 12 C20 12.5 19 14 19.5 16 C24 15 29 16 33 20 Z"
-          fill={RAMP.violet[1]}
-          stroke={INK}
-          strokeWidth={LINE}
-          strokeLinejoin="round"
-        />
-        <path
-          d="M35 26 C28 25 22 27 18 32 C17 33.5 17.5 35 19 35.5 C22 32.5 27 31.5 33 33 Z"
-          fill={RAMP.violet[1]}
-          stroke={INK}
-          strokeWidth={LINE}
-          strokeLinejoin="round"
-        />
-        <circle
-          cx={19.5}
-          cy={15.5}
-          r={1.8}
-          fill={RAMP.sickly[1]}
-          stroke={INK}
-          strokeWidth={DETAIL}
-        />
-        <circle
-          cx={18.5}
-          cy={34.5}
-          r={1.8}
-          fill={RAMP.sickly[1]}
-          stroke={INK}
-          strokeWidth={DETAIL}
-        />
-        {/* the face behind is only shadow */}
-        <path d={HEAD_PATH} fill="#241b30" stroke={INK} strokeWidth={LINE} />
-        {/* the mask: porcelain, over the side of the face we can see */}
-        <path
-          d="M47 21 C54 20 62 22 63.5 29 C64.5 35 62 41 56 43.5 C52 43 49 40.5 48 36 C47 31 46 26 47 21 Z"
-          fill={g.url("mask")}
-          stroke={INK}
-          strokeWidth={DETAIL + 0.6}
-          strokeLinejoin="round"
-        />
-        {/* the eye hole, and what looks out of it */}
-        <path
-          d="M51.5 29.5 Q54.5 27.5 57.5 29.5 Q54.5 32 51.5 29.5 Z"
-          fill={INK}
-        />
-        <circle
-          className="ph-bgl-eye"
-          cx={54.5}
-          cy={29.8}
-          r={1.3}
-          fill="#c7f06a"
-        />
-        {/* a painted smile, too wide */}
-        <path
-          d="M51 37.5 Q56 40.5 61.5 36"
-          stroke={RAMP.crimson[1]}
-          strokeWidth={1.2}
-          fill="none"
-          strokeLinecap="round"
-        />
-        {/* the crack */}
-        <path
-          d="M58 21.5 L56.5 25 L59 27 L57 31"
-          stroke={INK}
-          strokeWidth={0.9}
-          fill="none"
-          strokeLinejoin="round"
-        />
-        {/* the hood */}
-        <path
-          d="M48 12 C58 12 66 18 66 28 C63.5 23 59 20.5 52 20.5 C46 20.5 42.5 24 41.5 31 C41 37 42.5 42 45 45.5 L35 45.5 C31.5 40 30.5 34 31.5 27 C33 17.5 39 12 48 12 Z"
-          fill={g.url("robe")}
-          stroke={INK}
-          strokeWidth={LINE}
-          strokeLinejoin="round"
-        />
-        <Lit d="M35 23 Q38 15.5 46 13.6" width={1.8} />
-        <path
-          d="M60 15 L61.5 17.5 M64 20 L66 21"
-          stroke={g.url("trim")}
-          strokeWidth={1.6}
-          strokeLinecap="round"
-        />
-        <GearMount anchor="head" layer="front" x={48} y={29} />
+        <IllustratedHead>
+          {/* the hood's two horns, drooping behind */}
+          <path
+            d="M40 17 C35 12 28 10.5 22 12 C20 12.5 19 14 19.5 16 C24 15 29 16 33 20 Z"
+            fill={RAMP.violet[1]}
+            stroke={INK}
+            strokeWidth={LINE}
+            strokeLinejoin="round"
+          />
+          <path
+            d="M35 26 C28 25 22 27 18 32 C17 33.5 17.5 35 19 35.5 C22 32.5 27 31.5 33 33 Z"
+            fill={RAMP.violet[1]}
+            stroke={INK}
+            strokeWidth={LINE}
+            strokeLinejoin="round"
+          />
+          <circle
+            cx={19.5}
+            cy={15.5}
+            r={1.8}
+            fill={RAMP.sickly[1]}
+            stroke={INK}
+            strokeWidth={DETAIL}
+          />
+          <circle
+            cx={18.5}
+            cy={34.5}
+            r={1.8}
+            fill={RAMP.sickly[1]}
+            stroke={INK}
+            strokeWidth={DETAIL}
+          />
+          {/* the face behind is only shadow */}
+          <path d={HEAD_PATH} fill="#241b30" stroke={INK} strokeWidth={LINE} />
+          {/* the mask: porcelain, over the side of the face we can see */}
+          <path
+            d="M47 21 C54 20 62 22 63.5 29 C64.5 35 62 41 56 43.5 C52 43 49 40.5 48 36 C47 31 46 26 47 21 Z"
+            fill={g.url("mask")}
+            stroke={INK}
+            strokeWidth={DETAIL + 0.6}
+            strokeLinejoin="round"
+          />
+          {/* the eye hole, and what looks out of it */}
+          <path
+            d="M51.5 29.5 Q54.5 27.5 57.5 29.5 Q54.5 32 51.5 29.5 Z"
+            fill={INK}
+          />
+          <circle
+            className="ph-bgl-eye"
+            cx={54.5}
+            cy={29.8}
+            r={1.3}
+            fill="#c7f06a"
+          />
+          {/* a painted smile, too wide */}
+          <path
+            d="M51 37.5 Q56 40.5 61.5 36"
+            stroke={RAMP.crimson[1]}
+            strokeWidth={1.2}
+            fill="none"
+            strokeLinecap="round"
+          />
+          {/* the crack */}
+          <path
+            d="M58 21.5 L56.5 25 L59 27 L57 31"
+            stroke={INK}
+            strokeWidth={0.9}
+            fill="none"
+            strokeLinejoin="round"
+          />
+          {/* the hood */}
+          <path
+            d="M48 12 C58 12 66 18 66 28 C63.5 23 59 20.5 52 20.5 C46 20.5 42.5 24 41.5 31 C41 37 42.5 42 45 45.5 L35 45.5 C31.5 40 30.5 34 31.5 27 C33 17.5 39 12 48 12 Z"
+            fill={g.url("robe")}
+            stroke={INK}
+            strokeWidth={LINE}
+            strokeLinejoin="round"
+          />
+          <Lit d="M35 23 Q38 15.5 46 13.6" width={1.8} />
+          <path
+            d="M60 15 L61.5 17.5 M64 20 L66 21"
+            stroke={g.url("trim")}
+            strokeWidth={1.6}
+            strokeLinecap="round"
+          />
+          <GearMount anchor="head" layer="front" x={48} y={29} />
+        </IllustratedHead>
       </g>
 
       {/* ---- the mirror shard, low in the back hand ---- */}

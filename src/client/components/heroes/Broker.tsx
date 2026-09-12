@@ -1,3 +1,4 @@
+import { IllustratedHead, Neck, Tailoring } from "./Illustration";
 import { BaseWeapon, GearMount } from "../../equipment/Equipment";
 import { useRigParts } from "../../battle/useRigParts";
 import {
@@ -158,6 +159,8 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={DETAIL + 0.4}
           strokeLinejoin="round"
         />
+        <Neck hero="broker" />
+        <Tailoring hero="broker" />
         <GearMount anchor="torso" layer="body" x={48} y={57} />
         <GearMount anchor="waist" layer="front" x={42} y={74} />
         <GearMount anchor="shoulderBack" layer="front" x={37} y={49} />
@@ -190,149 +193,151 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
 
       {/* ---- head: flat cap with a quill, spectacles, jowls, mutton chops ---- */}
       <g ref={hold("head")} data-part="head" style={at(...BODY.neck)}>
-        {/* a pear of a head: narrow at the temple, all jowl at the bottom */}
-        <path
-          d={FACE}
-          fill={g.url("skin")}
-          stroke={INK}
-          strokeWidth={LINE}
-          strokeLinejoin="round"
-        />
-        {/* jowl creases and the second chin, sitting on the collar */}
-        <path
-          d="M48.5 45.6 Q56 48 62.5 44.4 M62.8 39.6 Q64.6 42 63.6 44.2"
-          stroke={RAMP.skinRuddy[2]}
-          strokeWidth={1.1}
-          fill="none"
-          strokeLinecap="round"
-        />
-        {/* the port-wine flush on the cheek */}
-        <ellipse
-          cx={54}
-          cy={38}
-          rx={3.2}
-          ry={2.1}
-          fill="#df6f5e"
-          opacity={0.38}
-        />
-        {/* what is left of the hair, grey, under the back of the cap */}
-        <path
-          d="M34 24.2 C31.8 28 31.6 33.4 33.4 37.2 C35.2 36.4 36.3 34 36.6 31 C36.5 28.4 35.7 26 34 24.2 Z"
-          fill={g.url("whisker")}
-          stroke={INK}
-          strokeWidth={DETAIL}
-          strokeLinejoin="round"
-        />
-        {/* ear */}
-        <path
-          d="M40.8 27.2 C36.8 26.6 35.8 33 39.6 34.4 C40.8 32.8 41.2 30 40.8 27.2 Z"
-          fill={g.url("skin")}
-          stroke={INK}
-          strokeWidth={DETAIL}
-          strokeLinejoin="round"
-        />
-        {/* mutton chops: tufted, down from the ear and out over the jowl */}
-        <path
-          d="M41.2 26.6 C43 28.6 44 30.6 44.6 32.6 C45.6 32.8 46 34 45.4 35 C46.8 35.6 47.2 37 46.4 38 C48 38.6 48.6 40.2 47.8 41.4 C49.4 42.2 49.6 44 48.4 45 C47.4 46.6 45.4 46.8 44.2 45.8 C43 47.2 40.6 47.2 39.6 45.8 C38.2 46.6 36 46 35.6 44.4 C34 44.2 33 42.6 33.6 41.2 C32.6 40.4 32.8 39 33.8 38.4 C36.6 37.4 38.6 36 39.8 34.2 C41 32 41.4 29.4 41.2 26.6 Z"
-          fill={g.url("whisker")}
-          stroke={INK}
-          strokeWidth={DETAIL + 0.3}
-          strokeLinejoin="round"
-        />
-        <path
-          d="M42.4 31 l1 2 M41.4 36.4 l1.8 1.8 M44.2 39.4 l1.6 1.6 M38 40.6 l2 1.2 M41.6 42.6 l1.8 1.4"
-          stroke={RAMP.silver[2]}
-          strokeWidth={DETAIL - 0.2}
-          strokeLinecap="round"
-        />
-        {/* spectacles, and small eyes behind them, lids half down */}
-        <g stroke={INK} strokeWidth={1.3}>
-          <circle
-            cx={51.5}
-            cy={31.6}
-            r={3.5}
-            fill="#e8f2ff"
-            fillOpacity={0.35}
+        <IllustratedHead>
+          {/* a pear of a head: narrow at the temple, all jowl at the bottom */}
+          <path
+            d={FACE}
+            fill={g.url("skin")}
+            stroke={INK}
+            strokeWidth={LINE}
+            strokeLinejoin="round"
           />
-          <circle
-            cx={59.3}
-            cy={31.6}
-            r={3.1}
-            fill="#e8f2ff"
-            fillOpacity={0.35}
+          {/* jowl creases and the second chin, sitting on the collar */}
+          <path
+            d="M48.5 45.6 Q56 48 62.5 44.4 M62.8 39.6 Q64.6 42 63.6 44.2"
+            stroke={RAMP.skinRuddy[2]}
+            strokeWidth={1.1}
+            fill="none"
+            strokeLinecap="round"
           />
-          <path d="M55 31.4 H56.2 M48 31 L40.8 29.8" fill="none" />
-        </g>
-        <circle cx={52} cy={32.2} r={1.15} fill={INK} />
-        <circle cx={59.8} cy={32.2} r={1} fill={INK} />
-        <path
-          d="M49.8 31.3 Q52 30.2 54 31.2 M57.9 31.3 Q59.8 30.3 61.6 31.2"
-          stroke={INK}
-          strokeWidth={1}
-          fill="none"
-          strokeLinecap="round"
-        />
-        <path
-          className="ph-brk-glint"
-          d="M49.4 30.1 l2 -1.8 M57.6 30.2 l1.7 -1.5"
-          stroke="#ffffff"
-          strokeWidth={1}
-        />
-        {/* a nose with opinions: a round, red, upturned bulb */}
-        <path
-          d="M58.8 33.6 C60.6 33 62.4 33.3 63.6 33.8 C65.8 32.6 69.4 33.8 69.4 36.8 C69.4 39.6 66.4 40.8 64 39.8 C62.4 40.6 60 40.1 59.5 38.6 C59 37 59.6 35.4 58.8 33.6 Z"
-          fill={g.url("nose")}
-          stroke={INK}
-          strokeWidth={DETAIL + 0.3}
-          strokeLinejoin="round"
-        />
-        <path
-          d="M61.2 38.2 C62 39.2 63.1 39.4 64 38.9"
-          stroke={RAMP.skinRuddy[2]}
-          strokeWidth={0.9}
-          fill="none"
-          strokeLinecap="round"
-        />
-        <circle cx={66.2} cy={35.2} r={0.9} fill="#fff3dc" opacity={0.7} />
-        {/* a small mouth pursed under it, very pleased with the deal */}
-        <path
-          d="M57.2 42.6 Q59.7 43.8 62.1 41.9"
-          stroke={INK}
-          strokeWidth={1.2}
-          fill="none"
-          strokeLinecap="round"
-        />
-        {/* bushy grey brows, just under the brim, over the rims */}
-        <path
-          d="M48.4 28 C49.8 26 53.6 25.8 55.2 27.4 C53.6 27.6 51 28 48.4 28 Z M57 27.2 C58.6 25.8 61.8 26 63.2 27.7 C61.2 27.6 59 27.7 57 27.2 Z"
-          fill={RAMP.silver[0]}
-          stroke={INK}
-          strokeWidth={DETAIL}
-          strokeLinejoin="round"
-        />
-        {/* flat cap, brim to the front, quill tucked in the band */}
-        <path
-          d="M40 19 L28 10.5 L31 10.2 L42 17 Z"
-          fill="#f1e6cf"
-          stroke={INK}
-          strokeWidth={DETAIL}
-          strokeLinejoin="round"
-        />
-        <path
-          d="M33 24 C33 16.5 40 13 49 13 C57 13 63 16 64 21 C67 21.5 70 23 70.5 25 Q60 26.5 49 25.5 Q40 25 33 24 Z"
-          fill={g.url("leather")}
-          stroke={INK}
-          strokeWidth={LINE}
-          strokeLinejoin="round"
-        />
-        <path
-          d="M34 22 Q48 24.5 63.5 22"
-          stroke={RAMP.leather[2]}
-          strokeWidth={1.6}
-          fill="none"
-        />
-        <Lit d="M37 18 Q41 14.5 47 14" width={1.6} />
-        <GearMount anchor="head" layer="front" x={48} y={29} />
+          {/* the port-wine flush on the cheek */}
+          <ellipse
+            cx={54}
+            cy={38}
+            rx={3.2}
+            ry={2.1}
+            fill="#df6f5e"
+            opacity={0.38}
+          />
+          {/* what is left of the hair, grey, under the back of the cap */}
+          <path
+            d="M34 24.2 C31.8 28 31.6 33.4 33.4 37.2 C35.2 36.4 36.3 34 36.6 31 C36.5 28.4 35.7 26 34 24.2 Z"
+            fill={g.url("whisker")}
+            stroke={INK}
+            strokeWidth={DETAIL}
+            strokeLinejoin="round"
+          />
+          {/* ear */}
+          <path
+            d="M40.8 27.2 C36.8 26.6 35.8 33 39.6 34.4 C40.8 32.8 41.2 30 40.8 27.2 Z"
+            fill={g.url("skin")}
+            stroke={INK}
+            strokeWidth={DETAIL}
+            strokeLinejoin="round"
+          />
+          {/* mutton chops: tufted, down from the ear and out over the jowl */}
+          <path
+            d="M41.2 26.6 C43 28.6 44 30.6 44.6 32.6 C45.6 32.8 46 34 45.4 35 C46.8 35.6 47.2 37 46.4 38 C48 38.6 48.6 40.2 47.8 41.4 C49.4 42.2 49.6 44 48.4 45 C47.4 46.6 45.4 46.8 44.2 45.8 C43 47.2 40.6 47.2 39.6 45.8 C38.2 46.6 36 46 35.6 44.4 C34 44.2 33 42.6 33.6 41.2 C32.6 40.4 32.8 39 33.8 38.4 C36.6 37.4 38.6 36 39.8 34.2 C41 32 41.4 29.4 41.2 26.6 Z"
+            fill={g.url("whisker")}
+            stroke={INK}
+            strokeWidth={DETAIL + 0.3}
+            strokeLinejoin="round"
+          />
+          <path
+            d="M42.4 31 l1 2 M41.4 36.4 l1.8 1.8 M44.2 39.4 l1.6 1.6 M38 40.6 l2 1.2 M41.6 42.6 l1.8 1.4"
+            stroke={RAMP.silver[2]}
+            strokeWidth={DETAIL - 0.2}
+            strokeLinecap="round"
+          />
+          {/* spectacles, and small eyes behind them, lids half down */}
+          <g stroke={INK} strokeWidth={1.3}>
+            <circle
+              cx={51.5}
+              cy={31.6}
+              r={3.5}
+              fill="#e8f2ff"
+              fillOpacity={0.35}
+            />
+            <circle
+              cx={59.3}
+              cy={31.6}
+              r={3.1}
+              fill="#e8f2ff"
+              fillOpacity={0.35}
+            />
+            <path d="M55 31.4 H56.2 M48 31 L40.8 29.8" fill="none" />
+          </g>
+          <circle cx={52} cy={32.2} r={1.15} fill={INK} />
+          <circle cx={59.8} cy={32.2} r={1} fill={INK} />
+          <path
+            d="M49.8 31.3 Q52 30.2 54 31.2 M57.9 31.3 Q59.8 30.3 61.6 31.2"
+            stroke={INK}
+            strokeWidth={1}
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            className="ph-brk-glint"
+            d="M49.4 30.1 l2 -1.8 M57.6 30.2 l1.7 -1.5"
+            stroke="#ffffff"
+            strokeWidth={1}
+          />
+          {/* a nose with opinions: a round, red, upturned bulb */}
+          <path
+            d="M58.8 33.6 C60.6 33 62.4 33.3 63.6 33.8 C65.8 32.6 69.4 33.8 69.4 36.8 C69.4 39.6 66.4 40.8 64 39.8 C62.4 40.6 60 40.1 59.5 38.6 C59 37 59.6 35.4 58.8 33.6 Z"
+            fill={g.url("nose")}
+            stroke={INK}
+            strokeWidth={DETAIL + 0.3}
+            strokeLinejoin="round"
+          />
+          <path
+            d="M61.2 38.2 C62 39.2 63.1 39.4 64 38.9"
+            stroke={RAMP.skinRuddy[2]}
+            strokeWidth={0.9}
+            fill="none"
+            strokeLinecap="round"
+          />
+          <circle cx={66.2} cy={35.2} r={0.9} fill="#fff3dc" opacity={0.7} />
+          {/* a small mouth pursed under it, very pleased with the deal */}
+          <path
+            d="M57.2 42.6 Q59.7 43.8 62.1 41.9"
+            stroke={INK}
+            strokeWidth={1.2}
+            fill="none"
+            strokeLinecap="round"
+          />
+          {/* bushy grey brows, just under the brim, over the rims */}
+          <path
+            d="M48.4 28 C49.8 26 53.6 25.8 55.2 27.4 C53.6 27.6 51 28 48.4 28 Z M57 27.2 C58.6 25.8 61.8 26 63.2 27.7 C61.2 27.6 59 27.7 57 27.2 Z"
+            fill={RAMP.silver[0]}
+            stroke={INK}
+            strokeWidth={DETAIL}
+            strokeLinejoin="round"
+          />
+          {/* flat cap, brim to the front, quill tucked in the band */}
+          <path
+            d="M40 19 L28 10.5 L31 10.2 L42 17 Z"
+            fill="#f1e6cf"
+            stroke={INK}
+            strokeWidth={DETAIL}
+            strokeLinejoin="round"
+          />
+          <path
+            d="M33 24 C33 16.5 40 13 49 13 C57 13 63 16 64 21 C67 21.5 70 23 70.5 25 Q60 26.5 49 25.5 Q40 25 33 24 Z"
+            fill={g.url("leather")}
+            stroke={INK}
+            strokeWidth={LINE}
+            strokeLinejoin="round"
+          />
+          <path
+            d="M34 22 Q48 24.5 63.5 22"
+            stroke={RAMP.leather[2]}
+            strokeWidth={1.6}
+            fill="none"
+          />
+          <Lit d="M37 18 Q41 14.5 47 14" width={1.6} />
+          <GearMount anchor="head" layer="front" x={48} y={29} />
+        </IllustratedHead>
       </g>
 
       {/* ---- the balance, held out front; the beam tips on its own ---- */}

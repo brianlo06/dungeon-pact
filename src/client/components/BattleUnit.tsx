@@ -8,7 +8,7 @@ import { Sprite } from "./Sprite";
 import { Strongbox, type VaultState } from "./Strongbox";
 import { Miser } from "./Miser";
 import { CREATURES } from "./creatures";
-import { statuses } from "../../content/statuses";
+import { StatusReadout } from "./StatusReadout";
 import { items } from "../../content/items";
 import { holdsWindup } from "../battle/hero-clips";
 
@@ -285,21 +285,7 @@ export function BattleUnit({
             ⚿ {held.length} held
           </span>
         )}
-        {!!unit.statuses.length && (
-          <span className="combatant-statuses">
-            {unit.statuses.map((s) => (
-              <i
-                key={s.id}
-                tabIndex={0}
-                aria-label={`${statuses[s.id].name}: ${s.stacks} stacks, ${s.duration} rounds. ${statuses[s.id].description}`}
-                title={`${statuses[s.id].name}: ${statuses[s.id].description} ${s.duration} rounds.`}
-              >
-                {statuses[s.id].icon}
-                {s.stacks > 1 ? s.stacks : ""}
-              </i>
-            ))}
-          </span>
-        )}
+        <StatusReadout unit={unit} replaying={replaying} />
       </div>
     </div>
   );

@@ -33,7 +33,7 @@ export function chamberName(
           elite: "Pressure Wardens",
           camp: "The Dry Lock",
           auction: "The Sluice Exchange",
-          mystery: "Salvager’s Veil",
+          mystery: "Salvager’s Counter",
           boss: "The Pressure Vault",
         }
       : {
@@ -42,7 +42,7 @@ export function chamberName(
           elite: "The Foreclosure Procession",
           camp: "The Silent Reading Room",
           auction: "The Probate Exchange",
-          mystery: "The Sealed Catalogue",
+          mystery: "The Clerk’s Counter",
           boss: "The Counting House",
         };
   return names[type];

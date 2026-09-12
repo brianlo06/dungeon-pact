@@ -47,7 +47,7 @@ export function selectScore(
   boss = false,
 ): ScoreId {
   if (scene === "COMBAT") return boss ? "boss" : "battle";
-  if (scene === "AUCTION") return "auction";
+  if (scene === "AUCTION" || scene === "SHOP") return "auction";
   if (scene === "COMPLETE") return "victory";
   return biome === "cistern" || biome === "archive" ? biome : "foundry";
 }

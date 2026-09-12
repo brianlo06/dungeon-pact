@@ -2,14 +2,59 @@
 
 Latest expansion: see [PHASE1_EXPANSION.md](PHASE1_EXPANSION.md) for the 32-item equipment catalog, eight events, spirit aid, trading, provisions, team relics, descending lots, boss phase changes and onboarding. The inventory and completed-work lists below predate this expansion and the public deployment.
 
-Updated 2026-09-11 · `main`
+Updated 2026-09-12 · `attack-choreography`
+
+## Read this first: the playtest answers
+
+The game has been played by the user and their friends, and the last round of
+work answers what they said. Their words, and where each one went:
+
+1. _"last turn when beating enemy, it doesnt show the animation of the enemy
+   getting defeated"_ — fixed. The client used to unmount combat the instant
+   the server said the chamber was won. See `battle/useCombatExit.ts`.
+2. _"the gilded one is just plainly bad and theres no reason to pick that
+   one"_ — fixed, and **measured for the first time**. Both simulation
+   policies hard-coded the other pact, so the Gilded had never appeared in any
+   number this project has printed. `--pact=` reaches it now.
+3. _"we moved to the other lane so we wouldnt get hit... the monster hit us
+   anyway"_ — fixed. Row attacks resolved against their target's _current_
+   row. They now resolve against the row announced with the intention.
+4. _"i dont like the auction system... rather... just name it a shop system"_ —
+   done. `engine/shop.ts` replaced it; `engine/auction.ts` stays only for rooms
+   that entered an auction before the change.
+5. _"the character sprites could use a rework"_ — a first pass, in the
+   direction they chose (_dark illustrated cutouts, sharper silhouettes, less
+   chibi_). Proportions, necks and build; `ART_DIRECTION.md` has what was done
+   and what was deliberately left. **This is the item most likely to want
+   another round**, because it is the only one whose "done" is a matter of
+   taste rather than a measurement.
+6. _"the buffs/debuffs/barrier indicators in battle are not very clear"_ —
+   Barrier is named and numbered, statuses summarise, and either opens a panel.
+7. _"you automatically lock the same move as the previous turn, and every turn
+   you have to press the back button"_ — fixed. The ability, target and fan
+   mode were component state that outlived the round. Each round now starts at
+   the ability list.
+8. _"the evolutions are locked and tied to their specific character/class...
+   for my teammates, they can train to increase their stats but not evolve"_ —
+   done, and the premise is worth recording because it was half wrong. Paths
+   were _already_ class-locked by identity: no Ranger could ever take the
+   Vanguard's. What was wrong is that every mentor taught all eight classes, so
+   everyone evolved at every mentor and a path felt like nobody's. A ground now
+   draws one class from the party; everyone else drills for stats. This also
+   moved duos from 75% to 84% — see item 2 below, which it half answers.
+
+`CHANGELOG.md` 0.13 has the detail. What follows below was written before this
+branch and describes the state at `main`; read it for the reasoning that still
+holds, not for the inventory.
 
 **Read this first, then `BALANCE.md`.** Everything below is current as of the
 last commit. Counts come from `validateContent()`, not memory.
 
 ## Where the work lives
 
-Everything is on `main`: the route, upgrade and healing work, then boss
+The playtest answers and four earlier commits (equipment art, the choreography
+system, the expedition expansion, and biomes and music) are on
+`attack-choreography`, not yet merged. Everything before them is on `main`: the route, upgrade and healing work, then boss
 objectives, supplies, the reliability pass and the presentation and art pass,
 merged from `boss-objectives` in PR #1 with a merge commit so each commit's
 reasoning survives. The repository is a private GitHub repo,
@@ -45,8 +90,10 @@ SVG cutout rigs with named moving parts. Only the auctioneer and the reward
 chest still come from the generated atlas. `ART_DIRECTION.md` has the direction
 for each figure and why the medium changed.
 
-Verified at the last commit: 300 unit tests across 25 files, 493 browser
-checks across four resolutions (plus three informational frame-time checks
+Verified at the playtest answers (2026-09-12): 358 unit tests across 32 files,
+524 browser checks across four resolutions, a production build, and the run
+matrix at 10 seeds under both pacts. Verified at the last commit on `main`:
+300 unit tests across 25 files, 493 browser checks across four resolutions (plus three informational frame-time checks
 that run only at 1920×1080), a production build, and 13 real-WebSocket checks
 against a local Worker — the thirteenth added after the room server was found
 throwing on every ordinary socket close, so the party was never told when
@@ -58,7 +105,35 @@ and unit tests.
 
 ## What is worth doing next
 
-### 0. Presentation loose ends
+### 0. The playtest answers, continued
+
+- **The hero art is one pass, not a finished direction.** Proportions, necks
+  and build are done and shared; faces, palette and per-hero silhouette are
+  not. The Reaver's head is the weakest — a great deal of authored detail that
+  turns to noise once the head is scaled to 0.62. Ask the user whether the
+  roster is now what they wanted before spending another day on it.
+- **The enemies are still on the old build**, so the monsters are chunkier
+  than the party. Deliberate for now; see `ART_DIRECTION.md`.
+- **Two chamber types now enter the same shop.** `auction` and `mystery` nodes
+  both open the fixed-price shop, and only their names differ. The veiled lot's
+  fiction went with the auction, so the names were changed to counters and
+  stalls rather than veils. If the route wants two kinds of shop, that is a
+  design decision nobody has made yet — a salvage stall that discounts a
+  shorter shelf is the obvious shape.
+- **The auction is unreachable but still tested.** `engine/auction.ts`, its
+  screen, its four intents and the tests around them are all still here, for
+  rooms that entered an auction before the change and for the save-compatibility
+  rule this project keeps. Nothing on the route enters one any more. When the
+  last of those rooms has expired — they are deleted 24 hours after they are
+  touched — the whole subsystem can go, and roughly a third of what
+  `tests-browser/expedition.spec.ts` covers goes with it.
+- **An exchange can now sell five things, where the auction sold three.** The
+  shop's shelves are one weapon, one armour, one relic and two supplies, and a
+  rich party can clear all of them. Win rates did not move alarmingly, but the
+  gold sink and the equipment ceiling both changed in the same release as the
+  pact, and nothing has separated the two.
+
+### 0a. Presentation loose ends (from before this branch)
 
 The art pass is finished and its first round of fixes is in: the bosses hold
 their wind-ups and land signatures, targeting marks legal targets instead of
@@ -129,6 +204,17 @@ that a healer specifically cannot answer, the way the Strongbox is one that a
 tank cannot.
 
 ### 2. Two-hero parties still trail, and the container was not why
+
+**Half-answered, by accident, on 2026-09-12.** Class-locked training grounds
+moved duos from 75% to 84% against 92% at four, because two heroes used to pay
+two tuitions at one mentor and now pay one tuition and one drill. Nobody
+designed that; the change was made because a path should belong to a class. It
+is more evidence for the paragraph below: the cause was never the container,
+and it was never the boss. It was the purse. What remains of the gap is worth
+splitting by chamber type before anything else is tried.
+
+The measurements below predate the shop, the per-hero Gilded purse and the
+training-ground change, and none of them are directly comparable any more.
 
 Duos sit at 67% against 89% at four. Pricing the Strongbox against party
 actions rather than headcount — the fix the last handoff proposed — was worth
@@ -224,16 +310,19 @@ The runner counts plans the server rejected, and now records **why**. A non-zero
 count means the policy proposed something illegal and braced instead, and every
 number from that run is worthless. It also counts supplies bought and used.
 
-### Four traps, recorded because each one cost real time
+### Five traps, recorded because each one cost real time
 
 **An instrument that cannot reach a system reports that the system does
-nothing.** This has now happened four times: the route branching hid evolutions;
+nothing.** This has now happened five times: the route branching hid evolutions;
 the tactical bot arrives broke, so a treasury-scaled shield read as inert until
 the `hoard` policy was written; the bot knew only the Warden's Unravel by name,
 so the Broker's Liquidate did not count as counterplay; and supplies mixed into
 the general lot pool were bought once a run and moved nothing until the tray and
-the case made them reachable. Whenever a new system measures as doing nothing,
-suspect the instrument first.
+the case made them reachable; and both policies hard-coded the Unbroken pact,
+so the Gilded pact was never once measured and stayed strictly worse for as
+long as it existed. Whenever a new system measures as doing nothing, suspect
+the instrument first — and when a system has never been measured _at all_,
+that is the same failure wearing a better disguise.
 
 **Never read a fight's history out of `s.logs`.** The chronicle is capped at 100
 entries, so any question of the form "did this happen in this run" silently gets

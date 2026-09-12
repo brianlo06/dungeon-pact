@@ -24,6 +24,8 @@ export const intentSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("upgrade"), choice: id }),
   z.object({ type: z.literal("train"), accept: z.boolean() }),
   z.object({ type: z.literal("continue") }),
+  z.object({ type: z.literal("shopOffer"), item: id, recipient: id }),
+  z.object({ type: z.literal("shopApprove"), approve: z.boolean() }),
   z.object({ type: z.literal("interest"), interested: z.boolean() }),
   z.object({ type: z.literal("bid"), stay: z.boolean() }),
   z.object({ type: z.literal("approve"), approve: z.boolean() }),
@@ -44,6 +46,7 @@ export interface Decision {
   currentNode: string | null;
   eventId?: string | null;
   serviceVote?: { id: string };
+  shop?: { sequence: number };
   mentorId?: string | null;
   auction: { lot?: number; stage: string; round: number } | null;
 }
@@ -71,6 +74,7 @@ export function epoch(s: Decision): string {
     s.eventId ?? "",
     s.mentorId ?? "",
     s.serviceVote?.id ?? "",
+    s.shop?.sequence ?? "",
   ].join("|");
 }
 export const commandSchema = z

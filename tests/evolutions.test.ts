@@ -8,9 +8,15 @@ import {
   pathFor,
   resourceCap,
   className,
+  drillFor,
 } from "../src/content/evolutions";
 import type { RunState } from "../src/shared/model";
 
+/**
+ * A training ground teaching the first hero's class. The class is drawn on
+ * entry in real play; it is set here so these tests exercise the rule rather
+ * than the legacy branch kept for rooms that entered a mentor before it.
+ */
 function atMentor(heroIds: string[], tier: 1 | 2 | 3 = 1): RunState {
   let s = createRun("PATHS", "test-paths");
   heroIds.forEach((_, i) => addPlayer(s, `p${i}`, `Hero ${i}`));
@@ -20,6 +26,7 @@ function atMentor(heroIds: string[], tier: 1 | 2 | 3 = 1): RunState {
   s.map = generateMap(s);
   s.phase = "MENTOR";
   s.mentorId = mentors[tier - 1].id;
+  s.mentorClass = heroIds[0];
   s.trained = [];
   s.gold = 2000;
   return s;
@@ -70,29 +77,43 @@ it("charges tuition to the shared purse and refuses what it cannot cover", () =>
   expect(s.gold).toBe(mentors[0].tuition - 1);
 });
 
-it("lets a hero train once per run and only answer once per mentor", () => {
+it("evolves a hero once per run, and drills them after that", () => {
   let s = atMentor(["vanguard", "warden"], 1);
   s = reduce(s, "p0", { type: "train", accept: true }, 0);
+  const path = s.players[0].evolution;
+  expect(path).toBeTruthy();
   expect(() => reduce(s, "p0", { type: "train", accept: false }, 0)).toThrow(
     "already answered",
   );
-  // A later mentor cannot re-train the same hero.
+  // A later ground cannot give the same hero a second path. It can work them.
   s.mentorId = mentors[1].id;
+  s.mentorClass = "vanguard";
   s.trained = [];
-  expect(() => reduce(s, "p0", { type: "train", accept: true }, 0)).toThrow(
-    "already taken a path",
-  );
+  const power = s.players[0].power;
+  s = reduce(s, "p0", { type: "train", accept: true }, 0);
+  expect(s.players[0].evolution).toBe(path);
+  expect(s.players[0].power).toBe(power + drillFor(mentors[1].tier).power);
+});
+
+it("offers a path only to the class the ground teaches", () => {
+  let s = atMentor(["vanguard", "warden"], 1);
+  const gold = s.gold;
+  // The Warden is not what this ground raises, so the Warden drills.
+  s = reduce(s, "p1", { type: "train", accept: true }, 0);
+  expect(s.players[1].evolution).toBeUndefined();
+  expect(s.gold).toBe(gold - drillFor(mentors[0].tier).fee);
 });
 
 it("returns to the map once every hero has answered", () => {
-  let s = atMentor(["vanguard", "warden"], 2);
-  s = reduce(s, "p0", { type: "train", accept: false }, 0);
+  let s = atMentor(["warden", "vanguard"], 2);
+  s = reduce(s, "p1", { type: "train", accept: false }, 0);
   expect(s.phase).toBe("MENTOR");
-  s = reduce(s, "p1", { type: "train", accept: true }, 0);
+  s = reduce(s, "p0", { type: "train", accept: true }, 0);
   expect(s.phase).toBe("MAP");
   expect(s.mentorId).toBeNull();
-  expect(s.players[0].evolution).toBeUndefined();
-  expect(s.players[1].evolution).toBeTruthy();
+  expect(s.mentorClass).toBeNull();
+  expect(s.players[1].evolution).toBeUndefined();
+  expect(s.players[0].evolution).toBeTruthy();
 });
 
 it("raises the resource cap only for paths that pay for it", () => {

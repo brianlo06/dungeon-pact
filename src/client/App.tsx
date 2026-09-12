@@ -1,4 +1,5 @@
 import { GuildScene } from "./components/GuildScene";
+import { useCombatExit } from "./battle/useCombatExit";
 import { ExpeditionGuide } from "./components/ExpeditionGuide";
 import { Onboarding } from "./components/Onboarding";
 import { mixer } from "./audio/engine";
@@ -9,6 +10,7 @@ import { useRoom, savedCredentials, type Credentials } from "./useRoom";
 import { audio, defaultSettings, type Settings } from "./audio";
 import { Combat } from "./components/Combat";
 import { Auction } from "./components/Auction";
+import { Shop } from "./components/Shop";
 import {
   Lobby,
   Pact,
@@ -108,7 +110,8 @@ export default function App() {
     setCredentials(null);
     history.replaceState(null, "", location.pathname);
   }
-  const s = room.state;
+  const combatExit = useCombatExit(room.state);
+  const s = combatExit.state;
   const musicBiome =
     s?.map.find((n) => n.id === s.currentNode)?.biome ?? "foundry";
   const musicBoss =
@@ -131,7 +134,8 @@ export default function App() {
     };
   }, [s?.phase, s?.outcome, musicBiome, musicBoss, settings]);
   useEffect(() => () => audio.setScene(""), []);
-  const disabled = room.pending || room.connection !== "online";
+  const disabled =
+    room.pending || room.connection !== "online" || combatExit.ending;
   const props = s ? { s, send: room.send, disabled } : null;
   return (
     <div
@@ -250,9 +254,11 @@ export default function App() {
                 key={s.currentNode}
                 {...props!}
                 reducedMotion={settings.reducedMotion}
+                onSettled={combatExit.ending ? combatExit.finish : undefined}
               />
             )}{" "}
             {s.phase === "AUCTION" && <Auction {...props!} />}{" "}
+            {s.phase === "SHOP" && <Shop {...props!} />}
             {s.phase === "EVENT" && <EventRoom {...props!} />}{" "}
             {s.phase === "CAMP" && <Camp {...props!} />}{" "}
             {s.phase === "MENTOR" && <Mentor {...props!} />}{" "}

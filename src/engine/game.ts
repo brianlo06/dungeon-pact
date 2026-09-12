@@ -15,8 +15,15 @@ import {
   standing,
 } from "./combat";
 import { upgradeOffer } from "../content/upgrades";
-import { mentors, pathFor, resourceCap } from "../content/evolutions";
-import { enterAuction, nextLot, nominate, purchase } from "./auction";
+import { drillFor, mentors, pathFor, resourceCap } from "../content/evolutions";
+// The auction remains only for rooms that entered one before the shop replaced it.
+import { nextLot, nominate, purchase } from "./auction";
+import { enterShop, proposePurchase, approvePurchase } from "./shop";
+import {
+  VITALITY_MAX_HP,
+  WEALTH_MAX_HP,
+  WEALTH_PER_HERO,
+} from "../content/pacts";
 export function createRun(room: string, seed: string): RunState {
   return {
     expeditionVersion: 1,
@@ -109,19 +116,38 @@ function voteResult(s: RunState): string | undefined {
     }
   }
 }
+/**
+ * Which class a training ground will evolve.
+ *
+ * Drawn from the party, not from the world, so a mentor chamber is never a
+ * dead room: somebody always has a path on offer. Heroes who have already
+ * taken one are passed over first, because a ground that offers its only path
+ * to the one hero who cannot use it teaches nobody. The draw uses the run's
+ * RNG, so the same route from the same seed always teaches the same class.
+ */
+function teachableClass(s: RunState, mentorId: string) {
+  const canTake = (p: RunState["players"][number]) =>
+    !!pathFor(mentorId, p.heroId);
+  const fresh = s.players.filter((p) => !p.evolution && canTake(p));
+  const pool = fresh.length ? fresh : s.players.filter(canTake);
+  return pool.length ? pick(s, pool).heroId : null;
+}
+
 function finishVote(s: RunState, result: string) {
   s.votes = {};
   if (s.phase === "PACT") {
     s.pact = result;
     if (result === "wealth") {
-      gain(s, 160);
+      // Per hero, not per party: a flat purse against a per-hero health price
+      // was a duo's bargain and a quartet's mistake. See `content/pacts.ts`.
+      gain(s, WEALTH_PER_HERO * s.players.length);
       for (const p of s.players) {
-        p.maxHp -= 12;
+        p.maxHp -= WEALTH_MAX_HP;
         p.hp = p.maxHp;
       }
     } else
       for (const p of s.players) {
-        p.maxHp += 10;
+        p.maxHp += VITALITY_MAX_HP;
         p.hp = p.maxHp;
       }
     s.map = generateMap(s);
@@ -135,13 +161,14 @@ function finishVote(s: RunState, result: string) {
     log(s, `Entered ${n.name}.`);
     if (n.type === "combat" || n.type === "elite" || n.type === "boss")
       enterCombat(s, n.type === "boss", n.type === "elite");
-    else if (n.type === "auction" || n.type === "mystery")
-      enterAuction(s, n.type === "mystery");
+    else if (n.type === "auction" || n.type === "mystery") enterShop(s);
     else if (n.type === "event") {
       s.eventId = pick(s, events).id;
       s.phase = "EVENT";
     } else if (n.type === "mentor") {
-      s.mentorId = mentors[mentorTier(n.depth) - 1].id;
+      const teaching = mentors[mentorTier(n.depth) - 1];
+      s.mentorId = teaching.id;
+      s.mentorClass = teachableClass(s, teaching.id);
       s.trained = [];
       s.phase = "MENTOR";
     } else s.phase = "CAMP";
@@ -427,32 +454,58 @@ export function reduce(
       if ((s.trained ?? []).includes(p.id))
         throw Error("You have already answered the mentor");
       const teaching = mentors.find((m) => m.id === s.mentorId)!;
-      const path = pathFor(teaching.id, p.heroId);
+      // A ground teaches one class. Rooms that entered a mentor before that
+      // rule existed have no class recorded, and keep the old open teaching.
+      const mine = s.mentorClass === undefined || s.mentorClass === p.heroId;
+      const path =
+        mine && !p.evolution ? pathFor(teaching.id, p.heroId) : undefined;
+      const drill = drillFor(teaching.tier);
       if (intent.accept) {
-        if (p.evolution) throw Error("This hero has already taken a path");
-        if (!path) throw Error("This mentor teaches nothing for your class");
-        // Tuition leaves the shared purse the moment a hero commits, so the
-        // party watches it drain and argues over who goes next.
-        spend(s, teaching.tuition);
-        p.evolution = path.id;
-        p.maxHp += path.stats.hp ?? 0;
-        p.hp = Math.max(1, Math.min(p.maxHp, p.hp + (path.stats.hp ?? 0)));
-        p.power = Math.max(0, p.power + (path.stats.power ?? 0));
-        p.guard = Math.max(0, p.guard + (path.stats.guard ?? 0));
-        p.speed = Math.max(0, p.speed + (path.stats.speed ?? 0));
-        p.resource = Math.min(p.resource, resourceCap(p));
-        log(s, `${p.name} walks out a ${path.name}. ${path.title}`);
+        if (path) {
+          // Tuition leaves the shared purse the moment a hero commits, so the
+          // party watches it drain and argues over who goes next.
+          spend(s, teaching.tuition);
+          p.evolution = path.id;
+          p.maxHp += path.stats.hp ?? 0;
+          p.hp = Math.max(1, Math.min(p.maxHp, p.hp + (path.stats.hp ?? 0)));
+          p.power = Math.max(0, p.power + (path.stats.power ?? 0));
+          p.guard = Math.max(0, p.guard + (path.stats.guard ?? 0));
+          p.speed = Math.max(0, p.speed + (path.stats.speed ?? 0));
+          p.resource = Math.min(p.resource, resourceCap(p));
+          log(s, `${p.name} walks out a ${path.name}. ${path.title}`);
+        } else {
+          // Everyone this ground cannot evolve may still drill, so a mentor
+          // chamber is worth entering for a party it has no path for.
+          spend(s, drill.fee);
+          p.maxHp += drill.hp;
+          p.hp += drill.hp;
+          p.power += drill.power;
+          log(
+            s,
+            `${p.name} drills at ${teaching.name}: +${drill.power} Power, +${drill.hp} maximum HP.`,
+          );
+        }
       } else log(s, `${p.name} declines the ${teaching.name}.`);
       s.trained = [...(s.trained ?? []), p.id];
       if (s.players.every((x) => (s.trained ?? []).includes(x.id))) {
         s.mentorId = null;
+        s.mentorClass = null;
         s.trained = [];
         s.phase = "MAP";
       }
       break;
     }
     case "continue":
-      requirePhase("REWARD", "AUCTION");
+      requirePhase("REWARD", "AUCTION", "SHOP");
+      if (s.phase === "SHOP") {
+        if (s.shop!.proposal)
+          throw Error("Finish the purchase decision before leaving");
+        if (s.shop!.leaving.includes(p.id))
+          throw Error("Already ready to leave");
+        s.shop!.leaving.push(p.id);
+        if (s.shop!.leaving.length < s.players.length) break;
+        delete s.shop;
+      }
       if (s.phase === "AUCTION") {
         if (s.auction?.stage !== "sold") throw Error("Auction is not complete");
         // An exchange runs several lots; only the last one returns to the map.
@@ -460,6 +513,14 @@ export function reduce(
       }
       s.phase = "MAP";
       s.auction = null;
+      break;
+    case "shopOffer":
+      requirePhase("SHOP");
+      proposePurchase(s, intent.item, intent.recipient);
+      break;
+    case "shopApprove":
+      requirePhase("SHOP");
+      approvePurchase(s, p.id, intent.approve);
       break;
     case "interest": {
       requirePhase("AUCTION");

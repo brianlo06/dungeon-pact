@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { gildedPurse } from "../src/content/pacts";
 import { createRun, addPlayer, reduce, snapshot } from "../src/engine/game";
 import {
   applyStatus,
@@ -68,7 +69,9 @@ describe("authoritative rules", () => {
     s = dispatch(s, "p1", { type: "vote", choice: "vitality" });
     expect(s.pact).toBe("wealth");
     expect(s.tieCursor).toBe(1);
-    expect(s.gold).toBe(580);
+    // The Gilded purse is paid by the head, so a duo carries two shares.
+    expect(s.gold).toBe(gildedPurse(420, s.players.length));
+    for (const p of s.players) expect(p.maxHp).toBe(p.hp);
   });
   it("deterministically generates connected maps", () => {
     for (let n = 0; n < 100; n++) {

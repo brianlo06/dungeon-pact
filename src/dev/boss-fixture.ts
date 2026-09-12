@@ -30,6 +30,13 @@ export interface FixtureOptions {
   encounter?: string;
   /** Which classes the party fields, in seat order. */
   heroes?: string[];
+  /**
+   * One enemy left on one hit point and the rest already down, so the blow
+   * that ends a chamber can be struck on purpose. The stage used to cut to the
+   * upgrade screen the instant the server called it, and there was no way to
+   * stage that moment without playing a whole fight to reach it.
+   */
+  finisher?: boolean;
 }
 
 /** Supply the remaining players' legal Brace plans through the real reducer. */
@@ -131,6 +138,19 @@ export function bossFixture(options: FixtureOptions): RunState {
           { kind: "damage", amount: box.hp + 100 },
         ]);
       prepareIntents(s);
+    }
+    if (options.finisher) {
+      s.enemies.forEach((e, i) => {
+        e.hp = i === 0 ? 1 : 0;
+        e.statuses = [];
+      });
+      s.players.forEach((p) => {
+        p.items = [];
+        p.statuses = [];
+      });
+      s.players
+        .slice(1)
+        .forEach((p) => (s.plans[p.id] = { ability: "brace", target: p.id }));
     }
     return s;
   }

@@ -16,6 +16,13 @@ import { hero } from "./heroes";
  *
  * A hero evolves at most once per run, so taking the first mentor means
  * declining whatever the later ones would have taught.
+ *
+ * A training ground teaches exactly one class, drawn from the party when the
+ * chamber is entered — the reference game ties a subclass to the encounter
+ * that grants it, and this file used to claim that while every mentor quietly
+ * taught all eight. Everyone the ground cannot evolve may drill instead; see
+ * `DrillDef`. Which paths a run can even reach is therefore a matter of which
+ * chambers it walks into and who it walked in with.
  */
 export interface MentorDef {
   id: string;
@@ -49,6 +56,29 @@ export const mentors: MentorDef[] = [
     tuition: 220,
   },
 ];
+
+/**
+ * Drill: what a mentor sells to the heroes it cannot evolve.
+ *
+ * A training ground teaches one class. Everyone else used to walk out of it
+ * with nothing, which made a mentor chamber worth visiting only if the party
+ * happened to field the right hero. Drilling is the consolation and the gold
+ * sink: small, permanent, no downside, and available to anyone — but it is
+ * never a path. A path changes what a hero *does*; a drill only changes a
+ * number, and that difference is the whole point of keeping both.
+ */
+export interface DrillDef {
+  fee: number;
+  power: number;
+  hp: number;
+}
+/** Keyed by mentor tier, so a later training ground drills harder. */
+export const drills: Record<1 | 2 | 3, DrillDef> = {
+  1: { fee: 60, power: 1, hp: 6 },
+  2: { fee: 90, power: 1, hp: 10 },
+  3: { fee: 120, power: 2, hp: 12 },
+};
+export const drillFor = (tier: 1 | 2 | 3) => drills[tier];
 
 export interface EvolutionDef {
   id: string;

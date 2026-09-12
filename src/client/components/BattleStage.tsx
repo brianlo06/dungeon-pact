@@ -86,7 +86,7 @@ export function BattleStage({
     const a = e.intent.ability;
     const aim =
       a.target === "enemyRow"
-        ? `${s.players.find((p) => p.id === e.intent.target)?.row ?? ""} row`
+        ? `${e.intent.row ?? s.players.find((p) => p.id === e.intent.target)?.row ?? ""} row · locked`
         : ([...s.players, ...s.enemies].find((u) => u.id === e.intent.target)
             ?.name ?? "");
     const reads = a.effects

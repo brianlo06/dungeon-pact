@@ -1,3 +1,4 @@
+import { IllustratedHead, Neck, Tailoring } from "./Illustration";
 import { BaseWeapon, GearMount } from "../../equipment/Equipment";
 import { useRigParts } from "../../battle/useRigParts";
 import {
@@ -148,53 +149,61 @@ export function Vanguard({ unitId, animators, className, viewBox }: HeroProps) {
           strokeLinejoin="round"
         />
         <GearMount anchor="shoulderBack" layer="front" x={37} y={49} />
+        <Neck hero="vanguard" />
+        <Tailoring hero="vanguard" />
         <GearMount anchor="torso" layer="body" x={48} y={57} />
         <GearMount anchor="waist" layer="front" x={39} y={73} />
       </g>
 
       {/* ---- head: a flat-topped great helm, crest raking back ---- */}
       <g ref={hold("head")} data-part="head" style={at(...BODY.neck)}>
-        {/* a horsehair crest, ragged, thrown back */}
-        <path
-          d="M52 13 C47 8.5 36 9 28 15 L32 15.5 C27 17.5 24 21 23 25 L27.5 23 C26 26 26 28.5 26.5 31 C31 25 37 21 44 19 Z"
-          fill={g.url("rust")}
-          stroke={INK}
-          strokeWidth={DETAIL + 0.7}
-          strokeLinejoin="round"
-        />
-        <path
-          d="M33 20.5 C35.5 18 39 16 43 14.6"
-          stroke="#e07a61"
-          strokeWidth={DETAIL}
-          fill="none"
-          opacity={0.7}
-        />
-        <path
-          d="M33 21 C33 14.5 39.5 11.5 48.5 11.5 C57.5 11.5 64 14.5 64 21 L64 38.5 Q64 45 57 45 H40 Q33 45 33 38.5 Z"
-          fill={g.url("steel")}
-          stroke={INK}
-          strokeWidth={LINE}
-          strokeLinejoin="round"
-        />
-        {/* the visor band faces the enemy */}
-        <path
-          d="M46 25 H65 V35 H46 Z"
-          fill={RAMP.steel[2]}
-          stroke={INK}
-          strokeWidth={DETAIL}
-        />
-        <rect x={48.5} y={28.2} width={17} height={3.2} rx={0.6} fill={INK} />
-        <path
-          d="M49 39 H63"
-          stroke={INK}
-          strokeWidth={1.1}
-          strokeDasharray="1.3 1.7"
-        />
-        <path d="M46 12 V25" stroke={RAMP.steel[2]} strokeWidth={DETAIL} />
-        <Lit d="M36 21 Q37.5 15 44 13.4" width={1.8} />
-        {/* a dent, because nothing this party owns is new */}
-        <path d="M38 33.5 l2.4 1.6" stroke={RAMP.steel[2]} strokeWidth={1.2} />
-        <GearMount anchor="head" layer="front" x={48} y={29} />
+        <IllustratedHead>
+          {/* a horsehair crest, ragged, thrown back */}
+          <path
+            d="M52 13 C47 8.5 36 9 28 15 L32 15.5 C27 17.5 24 21 23 25 L27.5 23 C26 26 26 28.5 26.5 31 C31 25 37 21 44 19 Z"
+            fill={g.url("rust")}
+            stroke={INK}
+            strokeWidth={DETAIL + 0.7}
+            strokeLinejoin="round"
+          />
+          <path
+            d="M33 20.5 C35.5 18 39 16 43 14.6"
+            stroke="#e07a61"
+            strokeWidth={DETAIL}
+            fill="none"
+            opacity={0.7}
+          />
+          <path
+            d="M33 21L39 13L51 9L63 16L65 33L59 44L49 48L36 41Z"
+            fill={g.url("steel")}
+            stroke={INK}
+            strokeWidth={LINE}
+            strokeLinejoin="round"
+          />
+          {/* the visor band faces the enemy */}
+          <path
+            d="M43 24L66 22L65 34L49 39L43 34Z"
+            fill={RAMP.steel[2]}
+            stroke={INK}
+            strokeWidth={DETAIL}
+          />
+          <rect x={48.5} y={28.2} width={17} height={3.2} rx={0.6} fill={INK} />
+          <path
+            d="M49 39 H63"
+            stroke={INK}
+            strokeWidth={1.1}
+            strokeDasharray="1.3 1.7"
+          />
+          <path d="M46 12 V25" stroke={RAMP.steel[2]} strokeWidth={DETAIL} />
+          <Lit d="M36 21 Q37.5 15 44 13.4" width={1.8} />
+          {/* a dent, because nothing this party owns is new */}
+          <path
+            d="M38 33.5 l2.4 1.6"
+            stroke={RAMP.steel[2]}
+            strokeWidth={1.2}
+          />
+          <GearMount anchor="head" layer="front" x={48} y={29} />
+        </IllustratedHead>
       </g>
 
       {/* ---- shield: a heater carried forward, the whole front a wall ---- */}

@@ -9,7 +9,7 @@ User feedback: the first presentation felt AI-generated and lacked an indie game
 - Ink-purple shadows (#211e2c), dusty violet stone, rust-orange fire, bone text and amber coins. Sage and blue distinguish hero identities without becoming the sole status signal.
 - Silkscreen headings, locally hosted under its SIL Open Font License; system Verdana for longer gameplay text. Pixel type is restrained to names, labels and buttons. No remote font dependency.
 - Hard 2–4 px outlines, offset shadows, small flat highlights. Gradients are used only to draw repeating stone seams, never as glossy card lighting.
-- Scruffy small adventurers with distinct silhouettes and equipment. Every combatant is now authored SVG drawn in source — see _Art medium_ below. Only the auctioneer and the reward chest still come from the generated atlas. None of it is commissioned or hand-painted by an artist, and it should not be described that way.
+- Adventurers with distinct silhouettes and equipment, at roughly four heads tall. They were drawn at under three, and a friend playtest called the result chibi; see _Proportions_. Every combatant is now authored SVG drawn in source — see _Art medium_ below. Only the auctioneer and the reward chest still come from the generated atlas. None of it is commissioned or hand-painted by an artist, and it should not be described that way.
 - Source-authored pixel-grid tavern environment and 16×16 UI icons. These can be edited as geometry without regenerating character art.
 - Idle motion uses small stepped translations. Reduced motion disables animation and transitions globally.
 
@@ -35,7 +35,7 @@ contribution across a band and feathers alpha through it.
 Style is held by the prompt in `scripts/generate-sprites.ts` plus two cropped
 v1 cells supplied as visual reference. The reference is what fixes proportions:
 described in words alone the model produces slim modern figures, and shown a
-cell it matches the chunky big-head builds. Two further rules matter — ask for
+cell it matches the chunky build. (The heroes have since been taken off those proportions in source — see _Proportions_ below — but the atlas cells it seeds, the auctioneer and the chest, have not.) Two further rules matter — ask for
 exactly one character alone in frame, since a multi-character reference makes
 it compose a scene; and state the whole body from head to feet must be visible,
 or it crops to a bust.
@@ -46,6 +46,41 @@ bearer with laurel circlet, sun-sigil banner and horn in pale gold and bone.
 Reaver, a scarred bare-armed berserker with bandaged forearms and a notched
 cleaver in crimson and iron. Beguiler, a hooded figure in a cracked porcelain
 half-mask with puppet strings and a mirror shard in violet and sickly green.
+
+## Proportions
+
+Playtest feedback, 2026-09-12: the character designs and art style were not
+liked, and the direction chosen in reply was _dark illustrated cutouts —
+sharper silhouettes, less chibi_.
+
+What was actually wrong was measurable. Every hero is drawn in a shared
+100×100 box with a head between y 13 and y 45: a 31-unit head on an 84-unit
+figure, under three heads tall. That is a mascot.
+
+Moving the hip and the shoulders would have been the honest fix and the
+expensive one — it would re-author eight hero files and every equipment
+mount, since all gear art is drawn around its mount point. Three shared
+changes bought most of it instead, and none of them touch a joint:
+
+- `IllustratedHead` scales each head to 0.62 inside its own animated part and
+  lifts it 4 units. The pivot, the rig and anything mounted on the head are
+  unaffected; a helm scales with the head it sits on.
+- `Neck` fills the throat the shrink opens up. It belongs to the body, so a
+  hero who turns their head does not take their neck with them. Each hero's is
+  their own collar — a gorget, a hood's shadow, bare skin.
+- `BUILD`, a 0.85 factor on limb widths and hand radii, plus slimmer legs and
+  smaller boots. Arm widths are authored per hero, so a factor keeps a
+  Reaver's arms thicker than a Beguiler's while taking the line off toddler
+  proportions.
+
+The party now reads at about four heads. The cost is that faces are smaller,
+and at the 60px the stage draws them at, a hero reads by silhouette and colour
+rather than by expression — which is what the direction asked for.
+
+**The enemies were not part of this pass.** They are drawn against their own
+kits and are still on the older build, so the monsters are now chunkier than
+the party. On current evidence that reads as intended rather than broken, but
+it is a deliberate inconsistency, not an oversight.
 
 ## Screen decisions
 

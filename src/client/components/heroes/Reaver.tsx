@@ -1,3 +1,4 @@
+import { IllustratedHead, Neck, Tailoring } from "./Illustration";
 import { BaseWeapon, GearMount } from "../../equipment/Equipment";
 import { useRigParts } from "../../battle/useRigParts";
 import {
@@ -147,6 +148,8 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={LINE}
           strokeLinejoin="round"
         />
+        <Neck hero="reaver" />
+        <Tailoring hero="reaver" />
         <GearMount anchor="torso" layer="body" x={48} y={57} />
         <GearMount anchor="waist" layer="front" x={42} y={74} />
         <GearMount anchor="shoulderBack" layer="front" x={37} y={49} />
@@ -154,137 +157,139 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
 
       {/* ---- head: a heavy brow, a stitched scar, teeth gritted, the mane ---- */}
       <g ref={hold("head")} data-part="head" style={at(...BODY.neck)}>
-        {/* the mane, behind the face; it whips on its own */}
-        <g ref={hold("hair")} data-part="hair" style={at(46, 24)}>
+        <IllustratedHead>
+          {/* the mane, behind the face; it whips on its own */}
+          <g ref={hold("hair")} data-part="hair" style={at(46, 24)}>
+            <path
+              d="M36 38 L25 39 L31 33 L20 30 L29 26 L21 18 L32 20 L30 11 L38 16 L42 10 L46 15 L52 10.5 L54 16 L61 12 L60 18 L67 17 L63 22 C58 19 53 19 48 20.5 C43 22 40 27 40 34 Z"
+              fill="#241d26"
+              stroke={INK}
+              strokeWidth={LINE}
+              strokeLinejoin="round"
+            />
+          </g>
+          {/* a broad, heavy block of a head, the jaw jutting */}
           <path
-            d="M36 38 L25 39 L31 33 L20 30 L29 26 L21 18 L32 20 L30 11 L38 16 L42 10 L46 15 L52 10.5 L54 16 L61 12 L60 18 L67 17 L63 22 C58 19 53 19 48 20.5 C43 22 40 27 40 34 Z"
-            fill="#241d26"
+            d={FACE}
+            fill={g.url("skin")}
             stroke={INK}
             strokeWidth={LINE}
             strokeLinejoin="round"
           />
-        </g>
-        {/* a broad, heavy block of a head, the jaw jutting */}
-        <path
-          d={FACE}
-          fill={g.url("skin")}
-          stroke={INK}
-          strokeWidth={LINE}
-          strokeLinejoin="round"
-        />
-        {/* stubble over the jaw */}
-        <path
-          d="M38.5 41 C44 44 50.5 44.6 56.5 44.2 C60.5 43.9 64 42.6 66.3 40.2 C66 44.2 62.4 46.8 56.2 47 C50 47.2 43.8 46.4 39.6 44 Z"
-          fill={RAMP.iron[2]}
-          opacity={0.28}
-        />
-        {/* the ear, with a notch taken out of it */}
-        <path
-          d="M40.4 28.4 L39.2 29.9 L37.8 28.6 C35.4 29.6 35.2 34.4 37.6 36 C38.6 36.7 39.9 36.4 40.6 35.6 Z"
-          fill={g.url("skin")}
-          stroke={INK}
-          strokeWidth={DETAIL}
-          strokeLinejoin="round"
-        />
-        {/* small eyes, deep in the shadow of the brow, glaring */}
-        <path
-          d="M47.8 30.2 C52 32.4 58.5 32.4 65 30.6 L64.6 34.2 C58.5 35.2 52.2 34.9 48.4 32.8 Z"
-          fill={RAMP.skinPallid[2]}
-          opacity={0.65}
-        />
-        <g stroke={INK} strokeWidth={0.9}>
+          {/* stubble over the jaw */}
           <path
-            d="M50.6 32.6 Q53.2 31.2 55.8 32.4 Q53.2 33.9 50.6 32.6 Z"
-            fill="#f4ecd8"
+            d="M38.5 41 C44 44 50.5 44.6 56.5 44.2 C60.5 43.9 64 42.6 66.3 40.2 C66 44.2 62.4 46.8 56.2 47 C50 47.2 43.8 46.4 39.6 44 Z"
+            fill={RAMP.iron[2]}
+            opacity={0.28}
+          />
+          {/* the ear, with a notch taken out of it */}
+          <path
+            d="M40.4 28.4 L39.2 29.9 L37.8 28.6 C35.4 29.6 35.2 34.4 37.6 36 C38.6 36.7 39.9 36.4 40.6 35.6 Z"
+            fill={g.url("skin")}
+            stroke={INK}
+            strokeWidth={DETAIL}
+            strokeLinejoin="round"
+          />
+          {/* small eyes, deep in the shadow of the brow, glaring */}
+          <path
+            d="M47.8 30.2 C52 32.4 58.5 32.4 65 30.6 L64.6 34.2 C58.5 35.2 52.2 34.9 48.4 32.8 Z"
+            fill={RAMP.skinPallid[2]}
+            opacity={0.65}
+          />
+          <g stroke={INK} strokeWidth={0.9}>
+            <path
+              d="M50.6 32.6 Q53.2 31.2 55.8 32.4 Q53.2 33.9 50.6 32.6 Z"
+              fill="#f4ecd8"
+            />
+            <path
+              d="M58.2 32.3 Q60.4 31.1 62.6 32.1 Q60.4 33.5 58.2 32.3 Z"
+              fill="#f4ecd8"
+            />
+          </g>
+          <circle cx={54} cy={32.6} r={0.95} fill={INK} />
+          <circle cx={61.2} cy={32.3} r={0.85} fill={INK} />
+          {/* the brow: a shelf of bone that juts past the face */}
+          <path
+            d="M46 29.2 C49.5 26 57 25.3 62 26 C64.8 26.4 67 27.4 68 29 C67 31 64.4 31.4 61.8 31 C59.4 30.7 57.8 31.4 56.2 31.6 C53 32 49.2 31.4 46 29.2 Z"
+            fill={g.url("skin")}
           />
           <path
-            d="M58.2 32.3 Q60.4 31.1 62.6 32.1 Q60.4 33.5 58.2 32.3 Z"
-            fill="#f4ecd8"
+            d="M49.6 31.1 C52.4 31.9 54.4 31.8 56.2 31.6 C57.8 31.4 59.4 30.7 61.8 31"
+            stroke={RAMP.skinPallid[2]}
+            strokeWidth={1.1}
+            fill="none"
+            strokeLinecap="round"
           />
-        </g>
-        <circle cx={54} cy={32.6} r={0.95} fill={INK} />
-        <circle cx={61.2} cy={32.3} r={0.85} fill={INK} />
-        {/* the brow: a shelf of bone that juts past the face */}
-        <path
-          d="M46 29.2 C49.5 26 57 25.3 62 26 C64.8 26.4 67 27.4 68 29 C67 31 64.4 31.4 61.8 31 C59.4 30.7 57.8 31.4 56.2 31.6 C53 32 49.2 31.4 46 29.2 Z"
-          fill={g.url("skin")}
-        />
-        <path
-          d="M49.6 31.1 C52.4 31.9 54.4 31.8 56.2 31.6 C57.8 31.4 59.4 30.7 61.8 31"
-          stroke={RAMP.skinPallid[2]}
-          strokeWidth={1.1}
-          fill="none"
-          strokeLinecap="round"
-        />
-        <path
-          d="M57 25.6 C59 25.6 60.6 25.7 62 26 C64.8 26.4 67 27.4 68 29 C67 31 64.4 31.4 61.8 31"
-          stroke={INK}
-          strokeWidth={DETAIL + 0.6}
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M56.4 31.4 C56.8 30.2 57.6 29.4 58.6 29"
-          stroke={RAMP.skinPallid[2]}
-          strokeWidth={1}
-          fill="none"
-          strokeLinecap="round"
-        />
-        <Lit d="M49 28 Q54 26.2 59 26.4" width={1.3} />
-        {/* a broad nose, broken and set crooked */}
-        <path
-          d="M61.8 31.2 C63.6 32 63.4 33.4 64.6 34.4 C66.4 35.4 66.8 37.4 65 38.4 C63.8 39 62.2 38.8 61.2 38.4 C60 38.8 58.8 38.4 58.6 37.4"
-          fill={g.url("skin")}
-          stroke={INK}
-          strokeWidth={DETAIL + 0.2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* teeth gritted, lips pulled back, one of them gone */}
-        <path
-          d="M50.6 40.6 L53 39.2 H62.6 L64.6 40.4 L62.8 43.6 H53 Z"
-          fill="#4a1c20"
-          stroke={INK}
-          strokeWidth={1.2}
-          strokeLinejoin="round"
-        />
-        <path d="M53.2 39.8 H62.2 V41.3 H53.2 Z" fill="#efe6cf" />
-        <path d="M53.6 41.7 H61.8 V43 H53.6 Z" fill="#e2d6ba" />
-        <rect x={57.2} y={39.8} width={1.2} height={1.5} fill="#4a1c20" />
-        <path
-          d="M55.4 39.8 V43 M59.8 39.8 V43"
-          stroke={INK}
-          strokeWidth={0.6}
-        />
-        {/* scars: one down through the eye, stitched; one on the chin */}
-        <path
-          d="M51 23.5 L58.5 37.2 M57.2 44.2 L60 46.6"
-          stroke={scar}
-          strokeWidth={1.8}
-          strokeLinecap="round"
-        />
-        <path
-          d="M51 23.5 L58.5 37.2"
-          stroke={RAMP.crimson[1]}
-          strokeWidth={0.7}
-          strokeLinecap="round"
-        />
-        <path
-          d="M51.8 26.3 l1.8 -0.9 M53.4 29.2 l1.8 -0.9 M55.4 32.9 l1.8 -0.9 M56.9 35.6 l1.8 -0.9"
-          stroke={INK}
-          strokeWidth={0.7}
-          strokeLinecap="round"
-        />
-        {/* the fringe, chopped short above the brow */}
-        <path
-          d="M38 19 C45 15 56 15 63 21 L61 23.6 L59 21.8 L57 25 L54.5 22 L52 25.4 L49.5 22.3 L46.5 25.4 L44.5 22 L41.6 25 Z"
-          fill="#241d26"
-          stroke={INK}
-          strokeWidth={DETAIL + 0.4}
-          strokeLinejoin="round"
-        />
-        <GearMount anchor="head" layer="front" x={48} y={29} />
+          <path
+            d="M57 25.6 C59 25.6 60.6 25.7 62 26 C64.8 26.4 67 27.4 68 29 C67 31 64.4 31.4 61.8 31"
+            stroke={INK}
+            strokeWidth={DETAIL + 0.6}
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M56.4 31.4 C56.8 30.2 57.6 29.4 58.6 29"
+            stroke={RAMP.skinPallid[2]}
+            strokeWidth={1}
+            fill="none"
+            strokeLinecap="round"
+          />
+          <Lit d="M49 28 Q54 26.2 59 26.4" width={1.3} />
+          {/* a broad nose, broken and set crooked */}
+          <path
+            d="M61.8 31.2 C63.6 32 63.4 33.4 64.6 34.4 C66.4 35.4 66.8 37.4 65 38.4 C63.8 39 62.2 38.8 61.2 38.4 C60 38.8 58.8 38.4 58.6 37.4"
+            fill={g.url("skin")}
+            stroke={INK}
+            strokeWidth={DETAIL + 0.2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* teeth gritted, lips pulled back, one of them gone */}
+          <path
+            d="M50.6 40.6 L53 39.2 H62.6 L64.6 40.4 L62.8 43.6 H53 Z"
+            fill="#4a1c20"
+            stroke={INK}
+            strokeWidth={1.2}
+            strokeLinejoin="round"
+          />
+          <path d="M53.2 39.8 H62.2 V41.3 H53.2 Z" fill="#efe6cf" />
+          <path d="M53.6 41.7 H61.8 V43 H53.6 Z" fill="#e2d6ba" />
+          <rect x={57.2} y={39.8} width={1.2} height={1.5} fill="#4a1c20" />
+          <path
+            d="M55.4 39.8 V43 M59.8 39.8 V43"
+            stroke={INK}
+            strokeWidth={0.6}
+          />
+          {/* scars: one down through the eye, stitched; one on the chin */}
+          <path
+            d="M51 23.5 L58.5 37.2 M57.2 44.2 L60 46.6"
+            stroke={scar}
+            strokeWidth={1.8}
+            strokeLinecap="round"
+          />
+          <path
+            d="M51 23.5 L58.5 37.2"
+            stroke={RAMP.crimson[1]}
+            strokeWidth={0.7}
+            strokeLinecap="round"
+          />
+          <path
+            d="M51.8 26.3 l1.8 -0.9 M53.4 29.2 l1.8 -0.9 M55.4 32.9 l1.8 -0.9 M56.9 35.6 l1.8 -0.9"
+            stroke={INK}
+            strokeWidth={0.7}
+            strokeLinecap="round"
+          />
+          {/* the fringe, chopped short above the brow */}
+          <path
+            d="M38 19 C45 15 56 15 63 21 L61 23.6 L59 21.8 L57 25 L54.5 22 L52 25.4 L49.5 22.3 L46.5 25.4 L44.5 22 L41.6 25 Z"
+            fill="#241d26"
+            stroke={INK}
+            strokeWidth={DETAIL + 0.4}
+            strokeLinejoin="round"
+          />
+          <GearMount anchor="head" layer="front" x={48} y={29} />
+        </IllustratedHead>
       </g>
 
       {/* ---- the fist, up and bandaged ---- */}

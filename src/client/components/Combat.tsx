@@ -53,11 +53,13 @@ export function Combat({
   disabled,
   reducedMotion = false,
   lab,
+  onSettled,
 }: {
   s: Snapshot;
   send: (i: Intent) => void;
   disabled: boolean;
   reducedMotion?: boolean;
+  onSettled?: () => void;
   /** The Battle Lab's hooks into the stage. Never set in the game. */
   lab?: LabHooks;
 }) {
@@ -103,6 +105,13 @@ export function Combat({
     { loop, stagehand },
   );
   const replayRef = useRef(replay);
+  // Tell whoever is holding the stage that the round has finished playing.
+  // `replay.playing` is true from the render a round arrives in, not from the
+  // effect that starts it — see the director's `pending` — so this cannot fire
+  // in the gap and release the hold before the last blow has been shown.
+  useEffect(() => {
+    if (onSettled && !replay.playing) onSettled();
+  }, [onSettled, replay.playing]);
   replayRef.current = replay;
   useEffect(() => {
     lab?.attach?.({
@@ -132,6 +141,25 @@ export function Combat({
   const [mode, setMode] = useState<"ability" | "target">("ability");
   const chosen = list.find((a) => a.id === ability) ?? list[0];
   const locked = s.locked.includes(me.id);
+
+  /*
+   * Every round starts where the first one did: choosing an ability, with
+   * nothing aimed at anyone.
+   *
+   * This state outlived the round it was made in. A player who struck an enemy
+   * came back next round already in target mode, with last round's move named
+   * in the commit bar and "Lock action" live under a target they had not
+   * chosen this round — so playing the same move twice took one click and
+   * playing anything else took a trip through "← Back" first. Unlocking
+   * mid-round is untouched: that is a decision being edited, not a new one.
+   */
+  const [plannedRound, setPlannedRound] = useState(s.round);
+  if (plannedRound !== s.round) {
+    setPlannedRound(s.round);
+    setAbility(list[0].id);
+    setTarget("");
+    setMode("ability");
+  }
   const selectedTarget = chosen.target === "self" ? me.id : target;
 
   /** Every unit the chosen ability may legally be aimed at. */

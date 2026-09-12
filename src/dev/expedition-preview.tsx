@@ -4,6 +4,10 @@ import { createRun, addPlayer, reduce, snapshot } from "../engine/game";
 import { enterAuction, nextLot } from "../engine/auction";
 import { ExpeditionGuide } from "../client/components/ExpeditionGuide";
 import { Auction } from "../client/components/Auction";
+import { Shop } from "../client/components/Shop";
+import { Mentor } from "../client/components/RunScreens";
+import { mentors } from "../content/evolutions";
+import { enterShop } from "../engine/shop";
 import { Onboarding } from "../client/components/Onboarding";
 import type { Intent } from "../shared/protocol";
 import "../client/style.css";
@@ -18,6 +22,18 @@ function Lab() {
     if (new URLSearchParams(location.search).has("auction")) {
       enterAuction(state, false);
       nextLot(state);
+    }
+    if (new URLSearchParams(location.search).has("shop")) enterShop(state);
+    if (new URLSearchParams(location.search).has("mentor")) {
+      // A ground that raises Vanguards, with a Warden standing in it: the two
+      // offers this screen has to tell apart.
+      state.players[0].heroId = "vanguard";
+      state.players[1].heroId = "warden";
+      state.phase = "MENTOR";
+      state.mentorId = mentors[0].id;
+      state.mentorClass = "vanguard";
+      state.trained = [];
+      state.gold = 600;
     }
     return state;
   });
@@ -49,7 +65,11 @@ function Lab() {
           {p.name}: {p.items.join(", ")}
         </p>
       ))}
-      {s.phase === "AUCTION" ? (
+      {s.phase === "MENTOR" ? (
+        <Mentor s={snap} send={send} disabled={false} />
+      ) : s.phase === "SHOP" ? (
+        <Shop s={snap} send={send} disabled={false} />
+      ) : s.phase === "AUCTION" ? (
         <Auction s={snap} send={send} disabled={false} />
       ) : (
         <ExpeditionGuide s={snap} send={send} disabled={false} />

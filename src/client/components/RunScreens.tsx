@@ -1,4 +1,10 @@
 import { Sprite } from "./Sprite";
+import {
+  gildedPurse,
+  VITALITY_MAX_HP,
+  WEALTH_MAX_HP,
+  WEALTH_PER_HERO,
+} from "../../content/pacts";
 import { PixelIcon } from "./PixelIcon";
 import type { Snapshot } from "../../shared/model";
 import type { Intent } from "../../shared/protocol";
@@ -11,6 +17,7 @@ import {
   evolution,
   mentor,
   pathFor,
+  drillFor,
 } from "../../content/evolutions";
 import { abilities, hero } from "../../content/heroes";
 type Props = { s: Snapshot; send: (i: Intent) => void; disabled: boolean };
@@ -135,6 +142,9 @@ function Choice({
   );
 }
 export function Pact(props: Props) {
+  // The Gilded purse is per hero, so the screen has to do the arithmetic the
+  // party would otherwise do wrong: a duo and a quartet swear different deals.
+  const purse = gildedPurse(props.s.gold, props.s.players.length);
   return (
     <section className="center-screen">
       <span className="eyebrow">BEFORE THE DESCENT</span>
@@ -147,13 +157,13 @@ export function Pact(props: Props) {
           {...props}
           id="vitality"
           title="The Unbroken"
-          text="Every hero gains 10 maximum HP. Enter with 420 gold."
+          text={`Every hero gains ${VITALITY_MAX_HP} maximum HP. Enter with ${props.s.gold} team gold.`}
         />
         <Choice
           {...props}
           id="wealth"
           title="The Gilded"
-          text="Gain 160 team gold. Every hero sacrifices 12 maximum HP for this run."
+          text={`Enter with ${purse} team gold — ${WEALTH_PER_HERO} more for every hero who swears it. Each of them sacrifices ${WEALTH_MAX_HP} maximum HP for the run. Buys an early build at the shop.`}
         />
       </div>
       <p className="muted">
@@ -168,7 +178,7 @@ export function DungeonMap(props: Props) {
   const icons: Record<string, string> = {
     combat: "sword",
     elite: "skull",
-    auction: "gavel",
+    auction: "coin",
     mystery: "gem",
     event: "question",
     camp: "fire",
@@ -176,9 +186,9 @@ export function DungeonMap(props: Props) {
     boss: "crown",
   };
   const label: Record<string, string> = {
-    mystery: "VEILED LOT",
+    mystery: "SALVAGE SHOP",
     mentor: "TRAINING",
-    auction: "EXCHANGE",
+    auction: "GEAR SHOP",
   };
   const depth = Math.max(0, ...s.map.map((n) => n.depth)) + 1;
   const rows = Array.from({ length: depth }, (_, d) =>
@@ -342,10 +352,17 @@ export function Camp(props: Props) {
 export function Mentor({ s, send, disabled }: Props) {
   const me = s.players.find((p) => p.id === s.you)!;
   const teacher = mentor(s.mentorId ?? "");
-  const path = teacher ? pathFor(teacher.id, me.heroId) : undefined;
+  // One class is taught here. Everyone else is offered the drill instead, so
+  // the screen has to say which of the two this hero is looking at.
+  const mine = s.mentorClass === undefined || s.mentorClass === me.heroId;
+  const path = teacher && mine ? pathFor(teacher.id, me.heroId) : undefined;
+  const taught = s.mentorClass ? hero(s.mentorClass).name : null;
   const answered = (s.trained ?? []).includes(me.id);
   const already = evolution(me.evolution);
-  const affordable = !!teacher && s.gold >= teacher.tuition;
+  const drill = teacher ? drillFor(teacher.tier) : undefined;
+  const offering = path && !already ? "path" : "drill";
+  const fee = offering === "path" ? (teacher?.tuition ?? 0) : (drill?.fee ?? 0);
+  const affordable = s.gold >= fee;
   const stat = (label: string, n?: number) =>
     n ? `${label} ${n > 0 ? "+" : ""}${n}` : null;
   return (
@@ -366,11 +383,28 @@ export function Mentor({ s, send, disabled }: Props) {
         <div className="mentor-offer">
           {already ? (
             <p>
-              You already walk the {already.name} path. A hero trains once per
-              expedition.
+              You already walk the {already.name} path. A hero evolves once per
+              expedition; you may still drill here.
             </p>
           ) : !path ? (
-            <p>This mentor has nothing to teach a {hero(me.heroId).name}.</p>
+            <>
+              <small>{hero(me.heroId).name} → </small>
+              <h2>Drill</h2>
+              <p className="lore">
+                {taught
+                  ? `This ground raises ${taught}s. It has no path for a ${hero(me.heroId).name} — but it will work one.`
+                  : `This ground has no path for a ${hero(me.heroId).name} — but it will work one.`}
+              </p>
+              <p>
+                No new ability, and nothing given up. Drilling is a permanent
+                gain in condition, not a change of role.
+              </p>
+              <p className="mentor-stats">
+                {[stat("Power", drill?.power), stat("HP", drill?.hp)]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            </>
           ) : (
             <>
               <small>{hero(me.heroId).name} → </small>
@@ -399,12 +433,21 @@ export function Mentor({ s, send, disabled }: Props) {
           )}
         </div>
         <div className="mentor-terms">
-          <span className="eyebrow">THE FEE</span>
-          <h3>{teacher?.tuition} gold</h3>
+          <span className="eyebrow">
+            {offering === "path" ? "TUITION" : "THE DRILL FEE"}
+          </span>
+          <h3>{fee} gold</h3>
           <p>
             Paid from the shared treasury the moment you commit. {s.gold} gold
             remains; the purse will not stretch to everyone.
           </p>
+          {taught && (
+            <p>
+              <strong>This ground raises {taught}s.</strong> Only a {taught} may
+              take a path here; a path belongs to its class and cannot be bought
+              by another. Everyone else may drill for {drill?.fee} gold.
+            </p>
+          )}
           <div className="bidder-list">
             {s.players.map((p) => (
               <div key={p.id}>
@@ -430,16 +473,14 @@ export function Mentor({ s, send, disabled }: Props) {
           <>
             <button
               className="primary"
-              disabled={disabled || !path || !!already || !affordable}
+              disabled={disabled || !affordable}
               onClick={() => send({ type: "train", accept: true })}
             >
-              {already
-                ? "Already trained"
-                : !path
-                  ? "Nothing on offer"
-                  : !affordable
-                    ? "Treasury cannot cover it"
-                    : `Train · ${teacher?.tuition} gold`}
+              {!affordable
+                ? "Treasury cannot cover it"
+                : offering === "path"
+                  ? `Take the ${path!.name} path · ${fee} gold`
+                  : `Drill · ${fee} gold`}
             </button>
             <button
               disabled={disabled}

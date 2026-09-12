@@ -9,7 +9,7 @@ import type {
 } from "../src/shared/model";
 import { abilities } from "../src/content/heroes";
 import { upgradeOffer } from "../src/content/upgrades";
-import { mentors, pathFor } from "../src/content/evolutions";
+import { drillFor, mentors, pathFor } from "../src/content/evolutions";
 import { items } from "../src/content/items";
 import { isObject } from "../src/content/enemies";
 import { events } from "../src/content/events";
@@ -29,11 +29,31 @@ export interface Policy {
   plan(s: RunState, p: Player): { ability: string; target: string };
   upgrade(s: RunState, p: Player): string;
   train(s: RunState, p: Player): boolean;
+  /**
+   * The shop that replaced the auction: which item to put to the party, and
+   * for whom, or null to leave. Returning a purchase the same policy would
+   * then decline in `approve` would loop the runner, so both read one budget.
+   */
+  shop(s: RunState): { item: string; recipient: string } | null;
   interest(s: RunState, p: Player): boolean;
   bid(s: RunState, p: Player): boolean;
   approve(s: RunState, p: Player): boolean;
   reveal(s: RunState): boolean;
 }
+
+/**
+ * Which starting pact the bots swear.
+ *
+ * Both policies used to hard-code `vitality`, so every number this harness has
+ * ever printed described a run that refused the Gilded pact — and the pact
+ * that was never measured was the one playtesters found worthless. The runner
+ * sets this from `--pact=`, so the two can be compared against each other
+ * rather than argued about.
+ */
+export let pactChoice: "vitality" | "wealth" = "vitality";
+export const setPact = (choice: "vitality" | "wealth") => {
+  pactChoice = choice;
+};
 
 /** Gold an ability bills to the shared treasury. */
 const price = (a: Ability) =>
@@ -125,7 +145,7 @@ function threats(s: RunState): Threats {
     if (!aim || isEnemy(aim)) continue;
     const victims =
       a.target === "enemyRow"
-        ? standing(s).filter((p) => p.row === aim!.row)
+        ? standing(s).filter((p) => p.row === (e.intent.row ?? aim!.row))
         : [aim as Player];
     for (const v of victims) {
       let amount = 0;
@@ -158,11 +178,18 @@ function partyCan(s: RunState, want: (e: Effect) => boolean) {
     ),
   );
 }
-/** What a hero could see of an unrevealed lot: rarity, slot, tags, clue. */
-function lotFit(s: RunState, p: Player) {
-  const a = s.auction!;
-  const item = items.find((i) => i.id === a.itemId)!;
-  const tags = a.revealed ? item.tags : item.tags.filter((t) => t !== "Cursed");
+/**
+ * What one item is worth to one hero. The shop shows everything, so `revealed`
+ * is only false for an old auction's veiled lot, where a bidder could still
+ * read rarity, slot and tags but not the curse.
+ */
+function itemFit(
+  s: RunState,
+  p: Player,
+  item: (typeof items)[number],
+  revealed = true,
+) {
+  const tags = revealed ? item.tags : item.tags.filter((t) => t !== "Cursed");
   // A supply is stock, not a slot: holding one is no reason to decline another.
   const owns =
     item.slot !== "supply" &&
@@ -200,6 +227,16 @@ function lotFit(s: RunState, p: Player) {
   if (owns) n -= 2;
   return n;
 }
+/** The auction's view of the lot on the block. */
+function lotFit(s: RunState, p: Player) {
+  const a = s.auction!;
+  return itemFit(
+    s,
+    p,
+    items.find((i) => i.id === a.itemId)!,
+    a.revealed,
+  );
+}
 
 /**
  * Gold the party keeps back for recovery. It shrinks as the run progresses:
@@ -216,7 +253,7 @@ const valuation = (fit: number) => fit * 70;
 export const attackPolicy: Policy = {
   name: "attack",
   vote(s, _p) {
-    if (s.phase === "PACT") return "vitality";
+    if (s.phase === "PACT") return pactChoice;
     if (s.phase === "MAP")
       return (
         availableNodes(s).find(
@@ -252,6 +289,14 @@ export const attackPolicy: Policy = {
     return upgradeOffer(p)[0]?.id ?? "none";
   },
   train: () => false,
+  shop(s) {
+    // As blunt as its bidding was: the first thing it can comfortably afford.
+    const item = s
+      .shop!.stock.filter((id) => !s.shop!.sold.includes(id))
+      .map((id) => items.find((i) => i.id === id)!)
+      .find((i) => i.price < s.gold * 0.5);
+    return item ? { item: item.id, recipient: s.players[0].id } : null;
+  },
   interest(s, p) {
     return p.id === s.players[0].id && s.auction!.price < s.gold * 0.5;
   },
@@ -267,7 +312,7 @@ export const attackPolicy: Policy = {
 export const tacticalPolicy: Policy = {
   name: "tactical",
   vote(s, _p) {
-    if (s.phase === "PACT") return "vitality";
+    if (s.phase === "PACT") return pactChoice;
     if (s.phase === "MAP") {
       const open = availableNodes(s);
       const hurt = wounded(s) > 0.35;
@@ -665,12 +710,35 @@ export const tacticalPolicy: Policy = {
     return (offer.find((u) => u.kind === want) ?? offer[0]).id;
   },
   train(s, p) {
-    if (p.evolution) return false;
     const teacher = mentors.find((m) => m.id === s.mentorId);
-    if (!teacher || !pathFor(teacher.id, p.heroId)) return false;
+    if (!teacher) return false;
+    // A ground teaches one class; everyone else is offered the drill. The bot
+    // has to be able to take either, or whichever it cannot reach measures as
+    // doing nothing — the oldest trap in this project.
+    const mine = s.mentorClass === undefined || s.mentorClass === p.heroId;
+    const path =
+      mine && !p.evolution ? pathFor(teacher.id, p.heroId) : undefined;
+    const fee = path ? teacher.tuition : drillFor(teacher.tier).fee;
     // Training competes with equipment and recovery for one purse, so only
     // commit while the treasury still covers the reserve afterwards.
-    return s.gold - teacher.tuition >= reserve(s);
+    return s.gold - fee >= reserve(s);
+  },
+  shop(s) {
+    const shop = s.shop!;
+    const budget = s.gold - reserve(s);
+    let best: { item: string; recipient: string; fit: number } | null = null;
+    for (const id of shop.stock) {
+      if (shop.sold.includes(id)) continue;
+      const item = items.find((i) => i.id === id)!;
+      if (item.price > budget) continue;
+      for (const p of s.players.filter((x) => !x.fallen)) {
+        const fit = itemFit(s, p, item);
+        // The same bar the paddle used, so shop and auction runs compare.
+        if (fit < 3 || item.price > valuation(fit)) continue;
+        if (!best || fit > best.fit) best = { item: id, recipient: p.id, fit };
+      }
+    }
+    return best && { item: best.item, recipient: best.recipient };
   },
   interest(s, p) {
     const a = s.auction!;
@@ -684,7 +752,8 @@ export const tacticalPolicy: Policy = {
     return next <= s.gold - reserve(s) && next <= valuation(lotFit(s, p));
   },
   approve(s, _p) {
-    return s.auction!.price <= s.gold - reserve(s);
+    const price = s.shop?.proposal?.price ?? s.auction!.price;
+    return price <= s.gold - reserve(s);
   },
   reveal(s) {
     const a = s.auction!;
@@ -705,6 +774,8 @@ export const tacticalPolicy: Policy = {
 export const hoardPolicy: Policy = {
   ...tacticalPolicy,
   name: "hoard",
+  shop: () => null,
+  approve: (s, p) => !s.shop && tacticalPolicy.approve(s, p),
   interest: () => false,
   bid: () => false,
   reveal: () => false,

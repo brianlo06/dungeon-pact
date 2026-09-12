@@ -1570,3 +1570,142 @@ body:has(.app-shell[data-combat]) {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+/* Cooperative shop and readable combat status details. */
+.shop-room {
+  max-width: 1180px;
+  margin: auto;
+  padding: 28px;
+}
+.shop-layout {
+  display: grid;
+  grid-template-columns: 230px 1fr;
+  gap: 24px;
+}
+.shop-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.shop-preview .sprite {
+  width: 210px;
+  height: 250px;
+}
+.shop-preview select {
+  width: 100%;
+}
+.shop-stock {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.shop-item,
+.shop-decision {
+  border: 1px solid #71624d;
+  background: #211d2b;
+  padding: 16px;
+}
+.shop-item h2 {
+  font-size: 20px;
+}
+.shop-item button {
+  margin: 8px 8px 0 0;
+}
+.shop-item[data-sold] {
+  opacity: 0.6;
+}
+.shop-decision {
+  margin: 20px 0;
+  border-color: #dab875;
+}
+.shop-votes {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 10px 0;
+  padding: 0;
+  font-size: 13px;
+}
+.shop-votes li {
+  color: #c2b7a5;
+}
+.shop-votes li[data-vote="true"] {
+  color: #9bd6b8;
+}
+.shop-votes li[data-vote="false"] {
+  color: #e29979;
+}
+.status-readout {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 4px;
+  max-width: 165px;
+}
+.status-readout button {
+  font:
+    600 11px/1.3 system-ui,
+    sans-serif;
+  padding: 3px 5px;
+  min-height: 23px;
+  border: 1px solid #827687;
+  color: #fff1d5;
+  background: #282536;
+  white-space: nowrap;
+}
+.status-readout .barrier-readout {
+  color: #d6f5ff;
+  border-color: #74c5df;
+  background: #173747;
+}
+.status-readout .status-debuff {
+  border-color: #e29979;
+  background: #422c36;
+}
+.status-dialog {
+  color: #f4e4d2;
+  background: #211d2b;
+  border: 2px solid #c7a879;
+  width: min(520px, 90vw);
+  max-height: 80vh;
+  padding: 24px;
+}
+.status-dialog::backdrop {
+  background: #080911bb;
+}
+.status-dialog header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.status-dialog h2 {
+  font-size: 20px;
+}
+.status-dialog article {
+  border-left: 3px solid #9bd6b8;
+  padding: 10px 14px;
+  margin: 12px 0;
+  background: #2a2935;
+}
+.status-dialog .status-debuff {
+  border-color: #e29979;
+}
+.status-dialog h3 {
+  margin: 0 0 6px;
+}
+.status-dialog h3 span {
+  font-size: 14px;
+  color: #c2b7a5;
+}
+@media (max-width: 720px) {
+  .shop-layout {
+    grid-template-columns: 1fr;
+  }
+  .shop-stock {
+    grid-template-columns: 1fr;
+  }
+  .shop-preview .sprite {
+    height: 160px;
+  }
+}

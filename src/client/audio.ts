@@ -60,7 +60,11 @@ class AudioManager {
       this.ambience = { gain, voices };
     }
     const frequency =
-      scene === "COMBAT" ? 55 : scene === "AUCTION" ? 82.4 : 65.4;
+      scene === "COMBAT"
+        ? 55
+        : scene === "AUCTION" || scene === "SHOP"
+          ? 82.4
+          : 65.4;
     this.ambience.voices.forEach((voice, i) =>
       voice.frequency.setTargetAtTime(
         frequency * (i ? 1.502 : 1),

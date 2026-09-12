@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import { Combat } from "../client/components/Combat";
+import { useCombatExit } from "../client/battle/useCombatExit";
 import { items } from "../content/items";
 import { encounters } from "../content/encounters";
 import { reduce, snapshot } from "../engine/game";
@@ -55,6 +56,7 @@ function fromUrl(): {
       longNames: q.get("longNames") === "1",
       encounter: q.get("encounter") ?? undefined,
       heroes: q.get("heroes")?.split(",").filter(Boolean),
+      finisher: q.has("finisher"),
     },
     viewport: q.get("viewport") ?? "fit",
     you: num("you", 0),
@@ -93,11 +95,19 @@ function BossPreview() {
   useEffect(() => {
     document.documentElement.dataset.tempo = tempo;
   }, [tempo]);
-  const s = snapshot(
-    run,
-    you,
-    run.players.map((p) => p.id),
+  // Memoised because the exit hold compares snapshots by identity: a fresh
+  // object every render would read as a new board arriving every frame.
+  const live = useMemo(
+    () =>
+      snapshot(
+        run,
+        you,
+        run.players.map((p) => p.id),
+      ),
+    [run, you],
   );
+  const exit = useCombatExit(live);
+  const s = exit.state!;
   const [panel, setPanel] = useState(initial.choreo);
   const lab = useChoreoLab(s, run, setRun, initial.debug);
   function load(next: FixtureOptions) {
@@ -285,7 +295,8 @@ function BossPreview() {
               key={`${generation}-${you}`}
               s={s}
               send={send}
-              disabled={false}
+              disabled={exit.ending}
+              onSettled={exit.ending ? exit.finish : undefined}
               reducedMotion={!motion}
               lab={lab.hooks}
             />

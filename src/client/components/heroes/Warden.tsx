@@ -1,3 +1,4 @@
+import { IllustratedHead, Neck, Tailoring } from "./Illustration";
 import { BaseWeapon, GearMount } from "../../equipment/Equipment";
 import { useRigParts } from "../../battle/useRigParts";
 import {
@@ -236,6 +237,8 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
           stroke={INK}
           strokeWidth={DETAIL}
         />
+        <Neck hero="warden" />
+        <Tailoring hero="warden" />
         <GearMount anchor="torso" layer="body" x={48} y={57} />
         <GearMount anchor="waist" layer="front" x={42} y={74} />
         <GearMount anchor="shoulderBack" layer="front" x={37} y={49} />
@@ -243,125 +246,127 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
 
       {/* ---- head: antlers up through the hood, an old face at peace ---- */}
       <g ref={hold("head")} data-part="head" style={at(...BODY.neck)}>
-        {/* antlers, behind the hood */}
-        {[
-          // back antler: a long beam raking out behind, three tines up
-          "M42 18.5 C36 15 27 14 15 16.5 M36.5 15.8 L33.5 10.5 M29 14.6 L24.5 10.4 M21 15 L14.5 11 M15 16.5 C12 17.5 10 19.5 9 22.5",
-          // front antler: shorter, forward, curling at the tip
-          "M55 17.5 C61 14.5 70 13.5 81 15.5 M62 15.2 L64 10.4 M69.5 14.2 L73.5 10.4 M81 15.5 C84 16.5 86 18.5 87 21.5",
-        ].map((d) => (
-          <g key={d}>
-            <path
-              d={d}
-              fill="none"
-              stroke={INK}
-              strokeWidth={5.6}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d={d}
-              fill="none"
-              stroke={RAMP.wood[0]}
-              strokeWidth={2.8}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+        <IllustratedHead>
+          {/* antlers, behind the hood */}
+          {[
+            // back antler: a long beam raking out behind, three tines up
+            "M42 18.5 C36 15 27 14 15 16.5 M36.5 15.8 L33.5 10.5 M29 14.6 L24.5 10.4 M21 15 L14.5 11 M15 16.5 C12 17.5 10 19.5 9 22.5",
+            // front antler: shorter, forward, curling at the tip
+            "M55 17.5 C61 14.5 70 13.5 81 15.5 M62 15.2 L64 10.4 M69.5 14.2 L73.5 10.4 M81 15.5 C84 16.5 86 18.5 87 21.5",
+          ].map((d) => (
+            <g key={d}>
+              <path
+                d={d}
+                fill="none"
+                stroke={INK}
+                strokeWidth={5.6}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d={d}
+                fill="none"
+                stroke={RAMP.wood[0]}
+                strokeWidth={2.8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </g>
+          ))}
+          {/* a long, weathered face, the jaw running down into the beard */}
+          <path
+            d={FACE}
+            fill={g.url("skin")}
+            stroke={INK}
+            strokeWidth={LINE}
+            strokeLinejoin="round"
+          />
+          {/* lines: across the brow, off the eyes, down the cheek */}
+          <g
+            stroke={RAMP.skinUmber[2]}
+            strokeWidth={0.9}
+            fill="none"
+            strokeLinecap="round"
+          >
+            <path d="M47 23.6 Q52 22.6 57.5 23.5 M48.5 25.4 Q52.5 24.7 56 25.3" />
+            <path d="M49.3 31.2 l-2 -0.9 M49.3 32 l-2.2 0.3 M49.6 32.8 l-1.8 1.3" />
+            <path d="M51 34.4 Q53.2 35.4 55.4 34.3 M58.6 34.2 Q60.2 35 61.8 34.1" />
           </g>
-        ))}
-        {/* a long, weathered face, the jaw running down into the beard */}
-        <path
-          d={FACE}
-          fill={g.url("skin")}
-          stroke={INK}
-          strokeWidth={LINE}
-          strokeLinejoin="round"
-        />
-        {/* lines: across the brow, off the eyes, down the cheek */}
-        <g
-          stroke={RAMP.skinUmber[2]}
-          strokeWidth={0.9}
-          fill="none"
-          strokeLinecap="round"
-        >
-          <path d="M47 23.6 Q52 22.6 57.5 23.5 M48.5 25.4 Q52.5 24.7 56 25.3" />
-          <path d="M49.3 31.2 l-2 -0.9 M49.3 32 l-2.2 0.3 M49.6 32.8 l-1.8 1.3" />
-          <path d="M51 34.4 Q53.2 35.4 55.4 34.3 M58.6 34.2 Q60.2 35 61.8 34.1" />
-        </g>
-        {/* eyes closed, the lids heavy and at rest */}
-        <path
-          d="M50.3 31.3 Q53 33.8 55.8 31.2 M58.2 31 Q60.1 33.2 62 31"
-          stroke={INK}
-          strokeWidth={1.5}
-          fill="none"
-          strokeLinecap="round"
-        />
-        {/* a leaf marked on the cheek */}
-        <path
-          d={leafD(1.6)}
-          transform={place(52, 36.4, 20)}
-          fill={RAMP.moss[0]}
-          opacity={0.9}
-        />
-        {/* the beard, silver and long, tapering forward onto the mantle */}
-        <path
-          d="M43.5 36 C46 40.5 50 41.8 53.5 40.8 C56.5 40 59.5 40.6 61.8 39.6 C62.9 39.1 63.6 38.1 64.1 37 C65 42 64 47 61.5 51.5 C59.5 55 57 58 54 60.5 C53 57 50.5 54.5 47.5 52.5 C44 50 42 46 42 41 Z"
-          fill={g.url("beard")}
-          stroke={INK}
-          strokeWidth={LINE}
-          strokeLinejoin="round"
-        />
-        <path
-          d="M49.5 44.5 C51 48.5 52.5 52.5 53.5 56.5 M55.5 43.5 C56.8 47.5 56.6 51.5 55.6 55 M60.5 43 C61 46 60.5 49 59.3 51.5"
-          stroke={RAMP.silver[2]}
-          strokeWidth={DETAIL}
-          fill="none"
-          strokeLinecap="round"
-        />
-        {/* a drooping moustache, and a small smile under it */}
-        <path
-          d="M54.5 39.5 C56.5 37.3 60.5 37 63.6 37.8 C64.6 39 64.4 41 63 42.4 C62 40.6 59.5 39.8 57.3 40.6 C56.3 41 55.2 40.8 54.5 39.5 Z"
-          fill={RAMP.silver[0]}
-          stroke={INK}
-          strokeWidth={DETAIL}
-          strokeLinejoin="round"
-        />
-        <path
-          d="M57.5 42.6 Q59.6 43.6 61.6 42.4"
-          stroke={INK}
-          strokeWidth={1}
-          fill="none"
-          strokeLinecap="round"
-        />
-        {/* a long straight nose, past the line of the cheek */}
-        <path
-          d="M62.4 29.8 C63.4 32 65.6 33.6 66.4 35.6 C66.8 37.2 65.2 38 63.6 37.4 C62.8 37.8 61.9 37.5 61.6 36.8"
-          fill={g.url("skin")}
-          stroke={INK}
-          strokeWidth={DETAIL + 0.2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* white brows, bushy, drooping at the ends */}
-        <path
-          d="M49 29 C50.2 26.6 54 26 56.3 27.4 C54.8 27.9 53 28 51.6 28.7 C50.6 29.2 49.6 29.6 49 29 Z M58 27.3 C59.6 26 62.3 26.2 63.6 28 C62.2 28 60.4 28.2 59 28.8 C58.3 28.7 57.9 28 58 27.3 Z"
-          fill={RAMP.silver[0]}
-          stroke={INK}
-          strokeWidth={DETAIL}
-          strokeLinejoin="round"
-        />
-        {/* the hood */}
-        <path
-          d="M48 12 C58 12 66 18 66 28 C63 23 58 21 51 21 C44 21 40 25 39 33 C39 38 40.5 42 43 45.5 L35 45.5 C31.5 40 30.5 34 31.5 27 C33 17.5 39 12 48 12 Z"
-          fill={g.url("mantle")}
-          stroke={INK}
-          strokeWidth={LINE}
-          strokeLinejoin="round"
-        />
-        <Lit d="M35 23 Q38 15.5 46 13.6" width={1.8} />
-        <Leaf x={40} y={17} r={2.4} a={-138} />
-        <Leaf x={60} y={17} r={2.2} a={-34} />
-        <GearMount anchor="head" layer="front" x={48} y={29} />
+          {/* eyes closed, the lids heavy and at rest */}
+          <path
+            d="M50.3 31.3 Q53 33.8 55.8 31.2 M58.2 31 Q60.1 33.2 62 31"
+            stroke={INK}
+            strokeWidth={1.5}
+            fill="none"
+            strokeLinecap="round"
+          />
+          {/* a leaf marked on the cheek */}
+          <path
+            d={leafD(1.6)}
+            transform={place(52, 36.4, 20)}
+            fill={RAMP.moss[0]}
+            opacity={0.9}
+          />
+          {/* the beard, silver and long, tapering forward onto the mantle */}
+          <path
+            d="M43.5 36 C46 40.5 50 41.8 53.5 40.8 C56.5 40 59.5 40.6 61.8 39.6 C62.9 39.1 63.6 38.1 64.1 37 C65 42 64 47 61.5 51.5 C59.5 55 57 58 54 60.5 C53 57 50.5 54.5 47.5 52.5 C44 50 42 46 42 41 Z"
+            fill={g.url("beard")}
+            stroke={INK}
+            strokeWidth={LINE}
+            strokeLinejoin="round"
+          />
+          <path
+            d="M49.5 44.5 C51 48.5 52.5 52.5 53.5 56.5 M55.5 43.5 C56.8 47.5 56.6 51.5 55.6 55 M60.5 43 C61 46 60.5 49 59.3 51.5"
+            stroke={RAMP.silver[2]}
+            strokeWidth={DETAIL}
+            fill="none"
+            strokeLinecap="round"
+          />
+          {/* a drooping moustache, and a small smile under it */}
+          <path
+            d="M54.5 39.5 C56.5 37.3 60.5 37 63.6 37.8 C64.6 39 64.4 41 63 42.4 C62 40.6 59.5 39.8 57.3 40.6 C56.3 41 55.2 40.8 54.5 39.5 Z"
+            fill={RAMP.silver[0]}
+            stroke={INK}
+            strokeWidth={DETAIL}
+            strokeLinejoin="round"
+          />
+          <path
+            d="M57.5 42.6 Q59.6 43.6 61.6 42.4"
+            stroke={INK}
+            strokeWidth={1}
+            fill="none"
+            strokeLinecap="round"
+          />
+          {/* a long straight nose, past the line of the cheek */}
+          <path
+            d="M62.4 29.8 C63.4 32 65.6 33.6 66.4 35.6 C66.8 37.2 65.2 38 63.6 37.4 C62.8 37.8 61.9 37.5 61.6 36.8"
+            fill={g.url("skin")}
+            stroke={INK}
+            strokeWidth={DETAIL + 0.2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* white brows, bushy, drooping at the ends */}
+          <path
+            d="M49 29 C50.2 26.6 54 26 56.3 27.4 C54.8 27.9 53 28 51.6 28.7 C50.6 29.2 49.6 29.6 49 29 Z M58 27.3 C59.6 26 62.3 26.2 63.6 28 C62.2 28 60.4 28.2 59 28.8 C58.3 28.7 57.9 28 58 27.3 Z"
+            fill={RAMP.silver[0]}
+            stroke={INK}
+            strokeWidth={DETAIL}
+            strokeLinejoin="round"
+          />
+          {/* the hood */}
+          <path
+            d="M48 12 C58 12 66 18 66 28 C63 23 58 21 51 21 C44 21 40 25 39 33 C39 38 40.5 42 43 45.5 L35 45.5 C31.5 40 30.5 34 31.5 27 C33 17.5 39 12 48 12 Z"
+            fill={g.url("mantle")}
+            stroke={INK}
+            strokeWidth={LINE}
+            strokeLinejoin="round"
+          />
+          <Lit d="M35 23 Q38 15.5 46 13.6" width={1.8} />
+          <Leaf x={40} y={17} r={2.4} a={-138} />
+          <Leaf x={60} y={17} r={2.2} a={-34} />
+          <GearMount anchor="head" layer="front" x={48} y={29} />
+        </IllustratedHead>
       </g>
 
       {/* ---- the open hand: the one that heals ---- */}

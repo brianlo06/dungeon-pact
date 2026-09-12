@@ -9,9 +9,11 @@ import "../../creatures-party.css";
  * Eight heroes stand in one line, so they have to be built the same way even
  * though no two of them may share a silhouette. Everything that makes them a
  * family lives here rather than in eight copies: the ink, the outline weights,
- * the palette, and the one body they are all drawn on — a big head, a short
- * chunky trunk and stubby legs planted on the same ground line, facing right,
- * towards whatever they are fighting.
+ * the palette, and the one body they are all drawn on — a head, a chunky
+ * trunk and legs planted on the same ground line, facing right, towards
+ * whatever they are fighting. The build was big-headed and stubby until a
+ * playtest called it chibi; `IllustratedHead` and `BUILD` are where it was
+ * taken down, in one place rather than eight.
  *
  * What makes each hero *themselves* is what they wear and carry, and that is
  * the part each file draws: a helm and a shield, a hat and a staff, a banner.
@@ -23,10 +25,25 @@ import "../../creatures-party.css";
 
 /** Every outline in the party is this colour, and nothing else is. */
 export const INK = "#171420";
-/** Silhouette outline. Chunky, so a hero still reads at 60px. */
-export const LINE = 2.4;
+/**
+ * Silhouette outline. Heavy enough that a hero still reads at 60px, and no
+ * heavier: it was 2.4, which at these proportions drew a sticker rather than
+ * an illustration.
+ */
+export const LINE = 1.7;
 /** Interior detail: seams, straps, folds. */
 export const DETAIL = 1.3;
+
+/**
+ * A shared trim on limbs, hands and legs.
+ *
+ * Every arm width and mitt radius in the party was drawn for the big-headed
+ * build the heads have since left behind, and each is authored per hero. One
+ * factor here keeps the differences between them — a Reaver's arms are still
+ * thicker than a Beguiler's — while taking the whole line off the toddler
+ * proportions the playtest called out.
+ */
+export const BUILD = 0.85;
 
 /** Three-stop ramps: lit, body, shadow. Shared so the party is one palette. */
 export const RAMP = {
@@ -48,14 +65,14 @@ export const RAMP = {
   /** Whiskers, brows and beards gone grey. */
   silver: ["#eef0f4", "#c3c5cf", "#858897"],
   leather: ["#a3714a", "#704b31", "#3f2a1d"],
-  steel: ["#d4d1dc", "#9893a6", "#57526a"],
+  steel: ["#adb4b8", "#697582", "#343d4b"],
   iron: ["#6f687c", "#4a4456", "#2a2533"],
   gold: ["#f3d487", "#c9973f", "#7d5a23"],
   rust: ["#c4533f", "#8d3027", "#521a17"],
   bone: ["#f1e6cf", "#cdbd9c", "#877a61"],
-  sage: ["#9bb279", "#6c8552", "#3d4f31"],
+  sage: ["#8c9d82", "#536958", "#293d36"],
   moss: ["#7d9a52", "#55703a", "#2f4022"],
-  blue: ["#7d9bd6", "#4f6aa8", "#2c3a66"],
+  blue: ["#8497af", "#465874", "#283448"],
   violet: ["#8e73b4", "#5f4a84", "#352850"],
   crimson: ["#c8414a", "#8c2230", "#4f1320"],
   sickly: ["#c7d98a", "#95ad5b", "#566a32"],
@@ -67,10 +84,16 @@ export type Ramp = readonly [string, string, string];
  * The one body.
  *
  * Coordinates are in the shared 100×100 viewBox. Ground is y 97 at the centre;
- * the top ten units stay clear for intent chips and damage numbers. The head
- * is roughly a third of the figure's height — the chunky big-head build the
- * art direction asks for — and every hero's joints sit at the same places, so
- * one rig vocabulary moves all of them sensibly.
+ * the top ten units stay clear for intent chips and damage numbers. Every
+ * hero's joints sit at the same places, so one rig vocabulary moves all of
+ * them sensibly.
+ *
+ * These joints are load-bearing far beyond the eight hero files: equipment
+ * mounts against them, and every piece of gear art is authored around its
+ * mount. That is why the proportion pass scaled heads inside their own part
+ * and trimmed limbs by a factor, rather than moving the hip or the shoulders.
+ * A hero drawn here is still a head-shaped thing between y 13 and y 45 — what
+ * changed is the transform it is drawn through.
  */
 export const BODY = {
   ground: 97,
@@ -99,12 +122,21 @@ export function useShades(prefix: string) {
   };
 }
 
-/** A lit-to-shadow ramp. Light comes from the upper left, for everyone. */
+/**
+ * A lit-to-shadow ramp. Light comes from the upper left, for everyone.
+ *
+ * The stops are doubled at each boundary so the ramp bands into three flat
+ * planes instead of blending. A gradient reads as rendered plastic; three
+ * planes read as a cut-out, which is the direction.
+ */
 export function Shade({ id, ramp }: { id: string; ramp: Ramp }) {
   return (
     <linearGradient id={id} x1="0.15" y1="0" x2="0.75" y2="1">
       <stop offset="0" stopColor={ramp[0]} />
-      <stop offset="0.5" stopColor={ramp[1]} />
+      <stop offset="0.48" stopColor={ramp[0]} />
+      <stop offset="0.49" stopColor={ramp[1]} />
+      <stop offset="0.78" stopColor={ramp[1]} />
+      <stop offset="0.79" stopColor={ramp[2]} />
       <stop offset="1" stopColor={ramp[2]} />
     </linearGradient>
   );
@@ -161,13 +193,14 @@ export function Limb({
   fill: string;
   width?: number;
 }) {
+  const w = width * BUILD;
   return (
     <>
       <path
         d={d}
         fill="none"
         stroke={INK}
-        strokeWidth={width + LINE * 2}
+        strokeWidth={w + LINE * 2}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -175,7 +208,7 @@ export function Limb({
         d={d}
         fill="none"
         stroke={fill}
-        strokeWidth={width}
+        strokeWidth={w}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -183,7 +216,7 @@ export function Limb({
   );
 }
 
-/** A mitt. Hands are big and round, like everything else on these people. */
+/** A hand: a faceted block rather than a ball, cut down with the rest. */
 export function Hand({
   x,
   y,
@@ -195,14 +228,23 @@ export function Hand({
   fill?: string;
   r?: number;
 }) {
+  r *= BUILD;
   return (
-    <circle cx={x} cy={y} r={r} fill={fill} stroke={INK} strokeWidth={LINE} />
+    <path
+      d={`M${x - r} ${y - r * 0.5}L${x - r * 0.3} ${y - r}L${x + r * 0.8} ${y - r * 0.7}L${x + r} ${y + r * 0.4}L${x} ${y + r}L${x - r} ${y + r * 0.4}Z`}
+      fill={fill}
+      stroke={INK}
+      strokeWidth={LINE}
+    />
   );
 }
 
 /**
- * The shared legs: two stubby legs and chunky boots with the toes pointing
- * at the enemy. `spread` widens the stance; `lead` pushes the front foot out.
+ * The shared legs: two legs and boots with the toes pointing at the enemy.
+ * `spread` widens the stance; `lead` pushes the front foot out. They were
+ * stubbier and the boots wider, which read as a child in armour once the
+ * heads came down; the ground line and the hip are unchanged, so nothing
+ * mounted on either has moved.
  */
 export function Legs({
   trousers,
@@ -218,11 +260,11 @@ export function Legs({
   /** A band of colour at the top of each boot. */
   cuff?: string;
 }) {
-  const back = 41 - spread;
-  const front = 56 + spread + lead;
+  const back = 42 - spread;
+  const front = 55 + spread + lead;
   const leg = (x: number) => (
     <path
-      d={`M${x - 5.2} ${BODY.hip - 2} H${x + 5.2} L${x + 4.6} 89 H${x - 4.6} Z`}
+      d={`M${x - 4.3} ${BODY.hip - 2} H${x + 4.3} L${x + 3.8} 90 H${x - 3.8} Z`}
       fill={trousers}
       stroke={INK}
       strokeWidth={LINE}
@@ -232,7 +274,7 @@ export function Legs({
   const boot = (x: number) => (
     <>
       <path
-        d={`M${x - 6.5} 85.5 H${x + 5} Q${x + 11.5} 87 ${x + 12} 92.5 V97 H${x - 7} Z`}
+        d={`M${x - 5.2} 86.5 H${x + 4} Q${x + 9} 88 ${x + 9.4} 93 V97 H${x - 5.6} Z`}
         fill={boots}
         stroke={INK}
         strokeWidth={LINE}
@@ -240,17 +282,17 @@ export function Legs({
       />
       {cuff && (
         <rect
-          x={x - 6.5}
-          y={84.5}
-          width={11.5}
-          height={3}
+          x={x - 5.2}
+          y={85.5}
+          width={9.2}
+          height={2.8}
           fill={cuff}
           stroke={INK}
           strokeWidth={DETAIL}
         />
       )}
       {/* A sole, so the boot sits on the floor rather than hovering. */}
-      <path d={`M${x - 6} 95.6 H${x + 11.5}`} stroke={INK} strokeWidth={1.6} />
+      <path d={`M${x - 4.8} 95.7 H${x + 9}`} stroke={INK} strokeWidth={1.5} />
     </>
   );
   return (
@@ -320,5 +362,10 @@ export function Lit({ d, width = 1.6 }: { d: string; width?: number }) {
   );
 }
 
-/** The default head-and-shoulders crop, for the small HUD portrait. */
-export const PORTRAIT = "24 9 52 52";
+/**
+ * The default head-and-shoulders crop, for the small HUD portrait. Retightened
+ * when the heads came down: the old frame was built around a head half again
+ * this size and now left a portrait mostly of empty air. Wide enough to keep
+ * the Arcanist's brim, which is the widest thing any of them wears.
+ */
+export const PORTRAIT = "28 11 40 40";

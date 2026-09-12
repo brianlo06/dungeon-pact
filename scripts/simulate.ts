@@ -3,7 +3,7 @@ import { heroes } from "../src/content/heroes";
 import { items } from "../src/content/items";
 import type { RunState } from "../src/shared/model";
 import type { Intent } from "../src/shared/protocol";
-import { policies, type Policy } from "./policy";
+import { policies, type Policy, setPact } from "./policy";
 
 export type Party = string[];
 export type PolicyName = keyof typeof policies;
@@ -20,6 +20,7 @@ export interface RunResult {
   depth: number;
   revives: number;
   campSpend: number;
+  /** Gold spent on gear. The exchange is a shop now; the name outlived it. */
   auctionSpend: number;
   /** Supplies bought and spent. Counted by diffing packs: the chronicle is
    * capped at 100 entries and cannot be asked what happened in a long run. */
@@ -82,8 +83,9 @@ export function run(
   });
   send("p0", { type: "start" });
   while (s.phase !== "COMPLETE" && steps++ < 900) {
-    if (s.phase === "AUCTION" && auctionEntry === null) auctionEntry = s.spent;
-    if (s.phase !== "AUCTION" && auctionEntry !== null) {
+    const shopping = s.phase === "AUCTION" || s.phase === "SHOP";
+    if (shopping && auctionEntry === null) auctionEntry = s.spent;
+    if (!shopping && auctionEntry !== null) {
       auctionSpend += s.spent - auctionEntry;
       auctionEntry = null;
     }
@@ -112,6 +114,27 @@ export function run(
     } else if (s.phase === "UPGRADE") {
       const p = s.players.find((p) => !s.votes[p.id])!;
       send(p.id, { type: "upgrade", choice: policy.upgrade(s, p) });
+    } else if (s.phase === "SHOP") {
+      const shop = s.shop!;
+      if (shop.proposal) {
+        const voter = s.players.find((p) => !(p.id in shop.proposal!.votes))!;
+        send(voter.id, {
+          type: "shopApprove",
+          approve: policy.approve(s, voter),
+        });
+      } else {
+        const buy = policy.shop(s);
+        if (buy)
+          send(s.players[0].id, {
+            type: "shopOffer",
+            item: buy.item,
+            recipient: buy.recipient,
+          });
+        else
+          send(s.players.find((p) => !shop.leaving.includes(p.id))!.id, {
+            type: "continue",
+          });
+      }
     } else if (s.phase === "AUCTION") {
       const a = s.auction!;
       if (a.stage === "interest") {
@@ -280,6 +303,9 @@ if (process.argv[1]?.endsWith("simulate.ts")) {
   const only = flag("party")
     ?.split(",")
     .map((n) => byShort[n.toLowerCase()] ?? n);
+  const pact = flag("pact");
+  if (pact === "wealth" || pact === "vitality") setPact(pact);
+  else if (pact) throw Error(`Unknown pact ${pact}`);
   const matrix = args.includes("--matrix");
   const full = args.includes("--full");
   for (const policyName of names) {

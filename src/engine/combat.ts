@@ -101,7 +101,11 @@ export function prepareIntents(s: RunState) {
       e.definition === "collector"
         ? targets[0]
         : pick(s, targets);
-    e.intent = { ability, target: target?.id ?? "" };
+    e.intent = {
+      ability,
+      target: target?.id ?? "",
+      row: ability.target === "enemyRow" ? target?.row : undefined,
+    };
   }
 }
 export function enterCombat(s: RunState, boss = false, elite = false) {
@@ -294,6 +298,10 @@ export function enterUpgrade(s: RunState) {
   log(s, "The pact deepens. Each hero sharpens one ability.");
 }
 export function resolveRound(s: RunState) {
+  // Older saved intentions predate row anchors; capture them before any hero moves.
+  for (const e of s.enemies)
+    if (e.intent.ability.target === "enemyRow" && !e.intent.row)
+      e.intent.row = s.players.find((p) => p.id === e.intent.target)?.row;
   s.roundSummary = {
     round: s.round,
     damage: 0,
@@ -385,6 +393,7 @@ export function resolveRound(s: RunState) {
       continue;
     }
     const a = e.intent.ability;
+    const announcedRow = e.intent.row;
     let t = [...s.players, ...s.enemies].find((u) => u.id === e.intent.target);
     if (!t || t.hp <= 0)
       t =
@@ -408,7 +417,7 @@ export function resolveRound(s: RunState) {
         target: t.id,
       });
     }
-    if (!t) continue;
+    if (!t && !(a.target === "enemyRow" && announcedRow && !turned)) continue;
     const pool = turned
       ? a.target === "ally"
         ? standing(s)
@@ -417,11 +426,24 @@ export function resolveRound(s: RunState) {
         ? s.enemies.filter((x) => x.hp > 0)
         : standing(s);
     const targets =
-      a.target === "enemyRow" ? pool.filter((p) => p.row === t!.row) : [t];
+      a.target === "enemyRow"
+        ? pool.filter(
+            (p) => p.row === (!turned && announcedRow ? announcedRow : t!.row),
+          )
+        : [t!];
+    if (!targets.length) {
+      log(
+        s,
+        `${e.name}: ${a.name} misses the empty ${announcedRow ?? t?.row} row.`,
+        "info",
+        { kind: "cast", actor: e.id, label: `${a.name} · MISS` },
+      );
+      continue;
+    }
     log(s, `${e.name}: ${a.name}.`, "info", {
       kind: "cast",
       actor: e.id,
-      target: t.id,
+      target: targets[0].id,
       label: a.name,
     });
     for (const target of targets) {

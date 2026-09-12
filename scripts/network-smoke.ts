@@ -5,6 +5,7 @@ import { epoch } from "../src/shared/protocol";
 import type { Intent, Command } from "../src/shared/protocol";
 import { abilities } from "../src/content/heroes";
 import { upgradeOffer } from "../src/content/upgrades";
+import { items } from "../src/content/items";
 const base = process.env.PACT_TEST_URL ?? "http://127.0.0.1:8787";
 async function post(path: string, body?: unknown) {
   const r = await fetch(base + path, {
@@ -207,6 +208,68 @@ try {
       1,
       "Each hero keeps exactly one branch",
     );
+  /*
+   * The shop, over real sockets. It replaced the auction, which means two new
+   * intents and a new field in the decision epoch, and none of that had ever
+   * left a single process: the unit tests call the reducer directly and the
+   * browser suite runs against a lab with no server in it.
+   */
+  // One hand leaves the reward screen; the shop needs every hand to leave it.
+  await resumed.send({ type: "continue" });
+  await resumed.wait(() => phase(resumed!) === "MAP");
+  // Reached from where the party actually stands, not by depth: a route that
+  // does not link to the node would refuse the vote and hang the harness.
+  const here = resumed.state.map.find(
+    (n) => n.id === resumed!.state.currentNode,
+  )!;
+  const exchange = resumed.state.map.find(
+    (n) =>
+      here.next.includes(n.id) &&
+      (n.type === "auction" || n.type === "mystery"),
+  )!;
+  assert.ok(exchange, "The route past the first chamber reaches an exchange");
+  for (const [client] of pair)
+    await client.send({ type: "vote", choice: exchange.id });
+  await resumed.wait(() => phase(resumed!) === "SHOP");
+  const shop = resumed.state.shop!;
+  assert.equal(shop.stock.length, 5, "Every shelf is stocked");
+  const affordable = shop.stock.find(
+    (id) => items.find((i) => i.id === id)!.price <= resumed!.state.gold,
+  )!;
+  const cost = items.find((i) => i.id === affordable)!.price;
+  const treasury = resumed.state.gold;
+  await resumed.send({
+    type: "shopOffer",
+    item: affordable,
+    recipient: two.player,
+  });
+  await b.wait(() => !!b.state.shop?.proposal);
+  assert.equal(resumed.state.gold, treasury, "A proposal spends nothing");
+  // The proposal moved the epoch on, so a decision made before it is refused.
+  const stale = b.messages.length;
+  b.ws.send(
+    JSON.stringify({
+      version: 1,
+      id: crypto.randomUUID(),
+      revision: b.state.revision,
+      epoch: epoch({ ...b.state, shop: { sequence: shop.sequence } }),
+      intent: { type: "shopApprove", approve: true },
+    }),
+  );
+  await b.wait(() => b.messages.slice(stale).some((m) => m.code === "STALE"));
+  await resumed.send({ type: "shopApprove", approve: true });
+  await b.send({ type: "shopApprove", approve: true });
+  await resumed.wait(() => !resumed!.state.shop?.proposal);
+  assert.equal(resumed.state.gold, treasury - cost, "The treasury pays once");
+  assert.ok(
+    b.state.players
+      .find((p) => p.id === two.player)!
+      .items.includes(affordable),
+    "The recipient the party chose is the one who receives it",
+  );
+  for (const [client] of pair) await client.send({ type: "continue" });
+  await resumed.wait(() => phase(resumed!) === "MAP");
+
   console.log(
     JSON.stringify({
       ok: true,
@@ -225,6 +288,7 @@ try {
         "windup/interrupt resolution and cooldown",
         "encounter victory reaches the branch-upgrade phase",
         "each hero locks one branch and the party advances",
+        "the shop proposes, refuses a passed moment, and charges once",
       ],
     }),
   );

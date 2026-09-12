@@ -1,5 +1,96 @@
 # Changelog
 
+## 0.13 playtest feedback — 2026-09-12
+
+Everything here answers one friend playtest: five complaints and a follow-up
+about status indicators, quoted in `HANDOFF.md`. What follows is what each one
+turned out to be.
+
+- **The killing blow was never shown.** The client unmounted combat the moment
+  the server reported the chamber won, so the last round's replay — including
+  the enemy's defeat — was cut off and the upgrade screen appeared instead.
+  Combat is now held on screen until the replay it is already playing settles.
+  The hold is presentation only: the snapshot is authoritative the whole time,
+  other players carry on, and the held player simply cannot act until the
+  animation finishes.
+- **Row attacks followed heroes who dodged them.** An enemy announced "front
+  row" but resolved against _its target's current row_, so a party that moved
+  to the back was hit anyway — the move the announcement invites was the one
+  thing it did not reward. An enemy now records the row when it announces the
+  intention, and resolves against that row whoever is standing in it. Leaving
+  it empty makes the attack miss, and says so in the chronicle. Intentions
+  carried over from a round announced before this change are anchored before
+  anyone moves, so a room mid-fight does not change rules underneath it.
+- **The auction is gone; the exchange is a shop.** Lots that suited one hero
+  and nobody else gave the party no reason to bid against each other, which
+  left bidding as theatre over a purse everyone shares. Stock is now visible at
+  posted prices: one weapon, one armour, one relic and two supplies, preferring
+  gear nobody owns. A purchase names its recipient and needs a majority plus
+  that recipient's own consent, and one decision runs at a time. What made the
+  exchange worth playing was never the bidding — it was one treasury and a
+  revival to keep gold back for — and that is untouched.
+- **The Gilded pact was strictly worse, and now is not.** It paid a flat purse
+  against a per-hero health price, so it cost a quartet twice what it cost a
+  duo while buying each hero less. Nobody had caught it because _the bots could
+  not take it_: both policies hard-coded the other pact, so every number this
+  project has ever printed described a run that refused the Gilded. The runner
+  takes either now (`--pact=`), which is how the rest of this was measured
+  rather than guessed at. 486 compositions, 10 seeds, tactical policy, win rate
+  at 2/3/4 players:
+
+  | pact                   | 2   | 3   | 4   |
+  | ---------------------- | --- | --- | --- |
+  | Unbroken               | 75% | 90% | 92% |
+  | Gilded, flat 300 purse | 78% | 88% | 85% |
+  | Gilded, 120 a hero     | 78% | 87% | 91% |
+
+  A flat purse was already a duo's bargain and a quartet's mistake; paying by
+  the head puts the two pacts within three points at every size. The price is
+  6 maximum HP a hero, unchanged from the flat version and half what the
+  original asked.
+
+- **Statuses were unreadable.** Barrier is named and carries its value instead
+  of sitting in a row of anonymous glyphs; other statuses show the leading one
+  with its stacks and rounds and a count of the rest. Either opens a panel
+  listing every effect with what it does and how long it lasts, and closing it
+  hands the keyboard back to the badge it was opened from.
+- **The heroes were chibi, and are not now.** Under three heads tall is a
+  mascot. Heads are scaled inside their own animated part and lifted, the gap
+  that opens is a neck belonging to the body, and limbs, hands, legs and boots
+  are trimmed by a shared factor. No joint moved, so no equipment mount or gear
+  asset was re-authored. The party reads at about four heads. `ART_DIRECTION.md`
+  has the reasoning and what it cost.
+
+- **Every round started on last round's move.** The chosen ability, its target
+  and the fan's mode were component state that outlived the round they were
+  made in, so round two opened already in target mode with the previous move
+  named and "Lock action" live under a target nobody had chosen this round.
+  Repeating a move took one click; doing anything else took a trip through
+  "← Back" first. Each round now starts where the first one did. Unlocking
+  mid-round is untouched — that is a decision being edited, not a new one.
+- **A training ground teaches one class.** Paths were always class-locked by
+  identity — a Ranger could never take the Vanguard's — but every mentor taught
+  all eight, so the whole party walked out of every mentor changed and a path
+  belonged to nobody. A ground now draws one class from the party when the
+  chamber is entered, and only that hero may take a path. Everyone else may
+  drill: a small permanent gain in Power and maximum HP for a smaller fee, no
+  new ability and nothing given up. A hero still evolves once a run, but an
+  evolved hero can still drill, so a mentor chamber is never a dead room.
+
+  Measured before designing anything further: duos went from **75% to 84%**,
+  trios 90% to 91%, quartets 92% to 92%. The gain is almost entirely a duo's
+  purse — two heroes used to pay two tuitions at one ground, and now pay one
+  tuition and one drill. This closes about half of the two-player gap the
+  handoff has been carrying as open work, and it was not the intent of the
+  change; the intent was that a path should belong to a class.
+
+Two instrument changes came out of this and matter more than any single fix.
+The bots can now swear either pact, and they buy at the shop using the same
+judgement the auction bot bid with, rather than taking the first affordable
+thing on the shelf. The trap the handoff records — an instrument that cannot
+reach a system reports that the system does nothing — caught a fifth victim
+here, and it was the pact nobody had ever measured.
+
 ## 0.12 reliability — 2026-09-10
 
 - Commands carry a decision epoch instead of matching an exact revision. Two
