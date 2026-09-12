@@ -1,4 +1,5 @@
 import type { Ability, ItemDef } from "../shared/model";
+import { expeditionItems } from "./expedition-items";
 /**
  * A supply is an item whose whole value is one action. `trigger: "use"` is
  * never fired by the trigger loop, so a supply has no passive: carrying it
@@ -412,4 +413,5 @@ export const items: ItemDef[] = [
   // only source of, for one action and one payment. They are consumed by use,
   // several fit at once, and none of them replaces equipment.
   ...supplies,
+  ...expeditionItems,
 ];

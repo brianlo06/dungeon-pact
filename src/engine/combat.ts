@@ -4,6 +4,7 @@ import {
   enemies as definitions,
   enemyAbilities,
   isObject,
+  phaseTwoIntents,
 } from "../content/enemies";
 import { abilities, supplyFor } from "../content/heroes";
 import { resourceCap } from "../content/evolutions";
@@ -18,6 +19,7 @@ import {
   gain,
   release,
   status,
+  applyStatus,
 } from "./effects";
 export function standing(s: RunState) {
   return s.players.filter((p) => p.hp > 0 && !p.fallen);
@@ -58,9 +60,13 @@ export function prepareIntents(s: RunState) {
       e.phase = phase;
       log(s, `${e.name} enters phase II — attacks intensify.`);
     }
-    const rotation = enemyAbilities(def, s.combatVersion);
+    const authoredPhase =
+      s.expeditionVersion === 1 && e.phase === 2
+        ? phaseTwoIntents[e.definition]
+        : undefined;
+    const rotation = authoredPhase ?? enemyAbilities(def, s.combatVersion);
     const ability = structuredClone(rotation[(s.round - 1) % rotation.length]);
-    if (e.phase === 2)
+    if (e.phase === 2 && !authoredPhase)
       for (const effect of ability.effects)
         if (effect.kind === "damage") effect.amount += 7;
     if (impatience)
@@ -100,6 +106,7 @@ export function prepareIntents(s: RunState) {
 export function enterCombat(s: RunState, boss = false, elite = false) {
   s.phase = "COMBAT";
   s.round = 1;
+  for (const p of s.players) delete p.spiritRound;
   s.plans = {};
   s.enemies = [];
   const count = boss ? 1 : Math.min(4, s.players.length);
@@ -132,7 +139,16 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
       statuses: [],
       intent: { ability: d.abilities[0], target: "" },
       phase: 1,
-      ...(elite ? { elite: pick(s, ["greedy", "vampiric"] as const) } : {}),
+      ...(elite
+        ? {
+            elite: pick(
+              s,
+              s.expeditionVersion === 1
+                ? (["greedy", "vampiric", "sapping", "armored"] as const)
+                : (["greedy", "vampiric"] as const),
+            ),
+          }
+        : {}),
     };
     s.enemies.push(e);
   }
@@ -157,7 +173,13 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
   for (const p of s.players) {
     p.cooldowns = {};
     p.resource = Math.min(resourceCap(p), p.resource + 2);
+    if (p.hp > 0 && s.teamRelics?.includes("pact-lantern"))
+      applyStatus(p, "barrier", 6, 2);
+    if (p.hp > 0 && s.teamRelics?.includes("ration-engine"))
+      p.hp = Math.min(p.maxHp, p.hp + 6);
   }
+  if (s.teamRelics?.length)
+    log(s, "The pact's shared relics prepare the party for battle.");
   startRound(s);
   log(
     s,
@@ -175,6 +197,8 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
     }
 }
 function startRound(s: RunState) {
+  for (const e of s.enemies)
+    if (e.hp > 0 && e.elite === "armored") applyStatus(e, "barrier", 8, 1);
   for (const p of standing(s)) trigger(s, p, p, "roundStart");
   if (s.combatVersion === 2 && s.round === PATIENCE + 1)
     log(
@@ -265,6 +289,14 @@ export function enterUpgrade(s: RunState) {
   log(s, "The pact deepens. Each hero sharpens one ability.");
 }
 export function resolveRound(s: RunState) {
+  s.roundSummary = {
+    round: s.round,
+    damage: 0,
+    healing: 0,
+    blocked: 0,
+    triggers: 0,
+    downs: [],
+  };
   const queue = standing(s)
     .map((p) => ({
       p,
@@ -392,6 +424,10 @@ export function resolveRound(s: RunState) {
       effects(s, e, target, a.effects);
       if (e.elite === "greedy" && target.hp < before)
         effects(s, e, target, [{ kind: "gold", amount: -10 }]);
+      if (e.elite === "sapping" && target.hp < before && isPlayer(target)) {
+        target.resource = Math.max(0, target.resource - 1);
+        log(s, `${e.name} drains 1 resource from ${target.name}.`);
+      }
       if (e.elite === "vampiric")
         e.hp = Math.min(e.maxHp, e.hp + Math.floor((before - target.hp) / 2));
     }

@@ -170,47 +170,47 @@ export function BattleUnit({
           the animator's. Nothing here is ever positioned by React.
         */}
         <span className="combatant-travel">
-        <span className="combatant-shadow" aria-hidden="true" />
-        {marked && <span className="combatant-mark" aria-hidden="true" />}
-        <span className="combatant-lift">
-        <span className="combatant-rig" ref={sprite}>
-          {look.spriteSet === "strongbox" ? (
-            <Strongbox
-              className="combatant-sprite"
-              held={held.length}
-              itemIds={held.map((h) => h.itemId)}
-              state={vault}
-            />
-          ) : look.spriteSet === "miser" ? (
-            <Miser
-              className="combatant-sprite"
-              unitId={unit.id}
-              animators={animators}
-              treasury={treasury}
-              barrier={barrier}
-            />
-          ) : Art ? (
-            <EquipmentProvider
-              items={equipment ?? player?.items ?? []}
-              pulse={gearPulse?.itemId}
-              pulseKey={gearPulse?.key}
-              highlight={highlight}
-            >
-              <Art
-                className="combatant-sprite"
-                unitId={unit.id}
-                animators={animators}
-              />
-            </EquipmentProvider>
-          ) : (
-            <Sprite
-              id={player?.heroId ?? enemy?.definition ?? "chest"}
-              className="combatant-sprite"
-            />
-          )}
-        </span>
-        </span>
-        {selected && <span className="combatant-ring" aria-hidden="true" />}
+          <span className="combatant-shadow" aria-hidden="true" />
+          {marked && <span className="combatant-mark" aria-hidden="true" />}
+          <span className="combatant-lift">
+            <span className="combatant-rig" ref={sprite}>
+              {look.spriteSet === "strongbox" ? (
+                <Strongbox
+                  className="combatant-sprite"
+                  held={held.length}
+                  itemIds={held.map((h) => h.itemId)}
+                  state={vault}
+                />
+              ) : look.spriteSet === "miser" ? (
+                <Miser
+                  className="combatant-sprite"
+                  unitId={unit.id}
+                  animators={animators}
+                  treasury={treasury}
+                  barrier={barrier}
+                />
+              ) : Art ? (
+                <EquipmentProvider
+                  items={equipment ?? player?.items ?? []}
+                  pulse={gearPulse?.itemId}
+                  pulseKey={gearPulse?.key}
+                  highlight={highlight}
+                >
+                  <Art
+                    className="combatant-sprite"
+                    unitId={unit.id}
+                    animators={animators}
+                  />
+                </EquipmentProvider>
+              ) : (
+                <Sprite
+                  id={player?.heroId ?? enemy?.definition ?? "chest"}
+                  className="combatant-sprite"
+                />
+              )}
+            </span>
+          </span>
+          {selected && <span className="combatant-ring" aria-hidden="true" />}
         </span>
         {pop && (
           <span className={`combatant-pop pop-${impact ?? "damage"}`}>
@@ -290,6 +290,8 @@ export function BattleUnit({
             {unit.statuses.map((s) => (
               <i
                 key={s.id}
+                tabIndex={0}
+                aria-label={`${statuses[s.id].name}: ${s.stacks} stacks, ${s.duration} rounds. ${statuses[s.id].description}`}
                 title={`${statuses[s.id].name}: ${statuses[s.id].description} ${s.duration} rounds.`}
               >
                 {statuses[s.id].icon}

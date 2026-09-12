@@ -1,5 +1,7 @@
 # Handoff
 
+Latest expansion: see [PHASE1_EXPANSION.md](PHASE1_EXPANSION.md) for the 32-item equipment catalog, eight events, spirit aid, trading, provisions, team relics, descending lots, boss phase changes and onboarding. The inventory and completed-work lists below predate this expansion and the public deployment.
+
 Updated 2026-09-11 · `main`
 
 **Read this first, then `BALANCE.md`.** Everything below is current as of the

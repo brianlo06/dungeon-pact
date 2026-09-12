@@ -139,6 +139,7 @@ export interface Unit {
   statuses: Status[];
 }
 export interface Player extends Unit {
+  spiritRound?: number;
   heroId: string;
   ready: boolean;
   /** Chosen ability branches. Absent in saves written before upgrades existed. */
@@ -158,7 +159,7 @@ export interface Player extends Unit {
 export interface Enemy extends Unit {
   definition: string;
   intent: { ability: Ability; target: string };
-  elite?: "greedy" | "vampiric";
+  elite?: "greedy" | "vampiric" | "sapping" | "armored";
   phase: number;
   /** Equipment this unit is holding hostage, returned when it is destroyed. */
   holding?: { playerId: string; itemId: string }[];
@@ -212,6 +213,8 @@ export interface Plan {
   target: string;
 }
 export interface Auction {
+  mode?: "ascending" | "descending";
+  floor?: number;
   itemId: string;
   revealed: boolean;
   price: number;
@@ -251,6 +254,24 @@ export interface GameLog {
   beat?: Beat;
 }
 export interface RunState {
+  roundSummary?: {
+    round: number;
+    damage: number;
+    healing: number;
+    blocked: number;
+    triggers: number;
+    downs: string[];
+  };
+  expeditionVersion?: 1;
+  teamRelics?: string[];
+  serviceVote?: { id: string; votes: Record<string, boolean> };
+  trades?: {
+    from: string;
+    to: string;
+    item: string;
+    returnItem?: string;
+    node: string | null;
+  }[];
   /** Missing means legacy random formations; new rooms use authored v2 packs. */
   encounterVersion?: 2;
   combatVersion?: 2;

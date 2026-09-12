@@ -26,6 +26,20 @@ export function log(
   kind: RunState["logs"][number]["kind"] = "info",
   beat?: Beat,
 ) {
+  const summary = s.roundSummary;
+  if (summary && summary.round === s.round && beat) {
+    if (beat.kind === "damage") summary.damage += beat.amount ?? 0;
+    if (beat.kind === "heal") summary.healing += beat.amount ?? 0;
+    if (beat.kind === "block") summary.blocked += beat.amount ?? 0;
+    if (
+      beat.kind === "defeat" &&
+      beat.target &&
+      !summary.downs.includes(beat.target)
+    )
+      summary.downs.push(beat.target);
+    summary.triggers +=
+      beat.equipment?.filter((e) => e.action === "trigger").length ?? 0;
+  }
   s.logs.push({ seq: ++s.eventSeq, text, kind, ...(beat ? { beat } : {}) });
   s.logs = s.logs.slice(-100);
 }

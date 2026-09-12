@@ -147,6 +147,13 @@ export function Auction({
         </div>
       </div>
       <div className="price">
+        {a.mode === "descending" && (
+          <p>
+            DESCENDING AUCTION · If everyone passes, the ask falls by 30 gold to
+            a floor of {a.floor}. At the floor, passing closes the lot.
+            Simultaneous claims use a draw; party approval still applies.
+          </p>
+        )}
         <small>CURRENT ASK</small>
         <strong>
           {a.price}
@@ -171,7 +178,9 @@ export function Auction({
               disabled={disabled}
               onClick={() => send({ type: "interest", interested: false })}
             >
-              Pass this lot
+              {a.mode === "descending" && a.price > (a.floor ?? 30)
+                ? "Wait for a lower ask"
+                : "Pass this lot"}
             </button>
           </>
         )}

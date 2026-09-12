@@ -3,9 +3,10 @@ import type { Intent } from "../shared/protocol";
 import { hero } from "../content/heroes";
 import { items } from "../content/items";
 import { events } from "../content/events";
+import { services } from "../content/services";
 import { hashSeed, pick } from "./rng";
 import { generateMap, availableNodes, mentorTier } from "./map";
-import { log, spend, gain } from "./effects";
+import { log, spend, gain, applyStatus } from "./effects";
 import {
   enterCombat,
   enterUpgrade,
@@ -18,6 +19,7 @@ import { mentors, pathFor, resourceCap } from "../content/evolutions";
 import { enterAuction, nextLot, nominate, purchase } from "./auction";
 export function createRun(room: string, seed: string): RunState {
   return {
+    expeditionVersion: 1,
     encounterVersion: 2,
     combatVersion: 2,
     revivals: 0,
@@ -150,8 +152,11 @@ function finishVote(s: RunState, result: string) {
       .choices.find((c) => c.id === result)!;
     spend(s, c.cost);
     if (c.gold) gain(s, c.gold);
-    for (const p of s.players)
+    for (const p of s.players) {
       if (p.hp > 0) p.hp = Math.max(1, Math.min(p.maxHp, p.hp + c.heal));
+      if (c.cleanse) p.statuses = [];
+      if (c.supply) p.items.push(c.supply);
+    }
     log(s, `The party chose ${c.name}.`);
     s.phase = "MAP";
     return;
@@ -228,6 +233,7 @@ export function reduce(
       break;
     case "vote": {
       requirePhase("PACT", "MAP", "EVENT", "CAMP");
+      if (s.serviceVote) throw Error("Finish the provision vote first");
       if (s.votes[p.id]) throw Error("Your vote is already locked");
       const choices =
         s.phase === "PACT"
@@ -265,6 +271,139 @@ export function reduce(
       requirePhase("COMBAT");
       delete s.plans[p.id];
       break;
+    case "spirit": {
+      requirePhase("COMBAT");
+      if (p.hp > 0 || p.spiritRound === s.round)
+        throw Error("Spirit support is available once per round while downed");
+      const ally = s.players.find(
+        (x) => x.id === intent.target && x.hp > 0 && !x.fallen,
+      );
+      if (!ally) throw Error("Choose a standing ally");
+      p.spiritRound = s.round;
+      if (intent.aid === "ward") applyStatus(ally, "barrier", 4, 1);
+      else ally.resource = Math.min(resourceCap(ally), ally.resource + 1);
+      log(
+        s,
+        `${p.name}'s spirit ${intent.aid === "ward" ? "wards" : "inspires"} ${ally.name}.`,
+        "info",
+        {
+          kind: intent.aid === "ward" ? "block" : "combo",
+          actor: p.id,
+          target: ally.id,
+          label: "SPIRIT AID",
+          amount: intent.aid === "ward" ? 4 : undefined,
+        },
+      );
+      break;
+    }
+    case "offerTrade": {
+      requirePhase("MAP", "CAMP", "REWARD", "MENTOR", "UPGRADE");
+      if (!p.items.includes(intent.item))
+        throw Error("You do not own this item");
+      if (
+        intent.target === p.id ||
+        !s.players.some((x) => x.id === intent.target)
+      )
+        throw Error("Choose another hero");
+      const slot = items.find((i) => i.id === intent.item)!.slot;
+      const returnItem =
+        slot === "supply"
+          ? undefined
+          : s.players
+              .find((x) => x.id === intent.target)!
+              .items.find(
+                (id) => items.find((i) => i.id === id)?.slot === slot,
+              );
+      s.trades = [
+        ...(s.trades ?? []).filter((t) => t.from !== p.id),
+        {
+          from: p.id,
+          to: intent.target,
+          item: intent.item,
+          returnItem,
+          node: s.currentNode,
+        },
+      ];
+      break;
+    }
+    case "proposeService": {
+      requirePhase("MAP");
+      if (s.serviceVote || Object.keys(s.votes).length)
+        throw Error("Finish the current party decision first");
+      const service = services.find((x) => x.id === intent.service);
+      if (!service || service.price > s.gold)
+        throw Error("Provision unavailable or unaffordable");
+      if ("relic" in service && s.teamRelics?.includes(service.relic))
+        throw Error("The pact already owns this relic");
+      s.serviceVote = { id: service.id, votes: {} };
+      log(s, `${p.name} proposes ${service.name} for ${service.price} gold.`);
+      break;
+    }
+    case "serviceVote": {
+      requirePhase("MAP");
+      const proposal = s.serviceVote;
+      if (!proposal || p.id in proposal.votes)
+        throw Error("No unanswered provision vote");
+      proposal.votes[p.id] = intent.approve;
+      const yes = Object.values(proposal.votes).filter(Boolean).length;
+      const no = Object.values(proposal.votes).filter((v) => !v).length;
+      if (yes > s.players.length / 2) {
+        const service = services.find((x) => x.id === proposal.id)!;
+        spend(s, service.price);
+        if ("supply" in service)
+          for (const hero of s.players) hero.items.push(service.supply);
+        if ("heal" in service)
+          for (const hero of s.players)
+            if (hero.hp > 0)
+              hero.hp = Math.min(hero.maxHp, hero.hp + service.heal);
+        if ("relic" in service)
+          s.teamRelics = [...(s.teamRelics ?? []), service.relic];
+        log(s, `The pact buys ${service.name}.`);
+        delete s.serviceVote;
+      } else if (no >= Math.ceil(s.players.length / 2)) {
+        log(s, "The pact declines the provisions.");
+        delete s.serviceVote;
+      }
+      break;
+    }
+    case "answerTrade": {
+      requirePhase("MAP", "CAMP", "REWARD", "MENTOR", "UPGRADE");
+      const offer = s.trades?.find(
+        (t) =>
+          t.from === intent.from &&
+          t.item === intent.item &&
+          t.to === p.id &&
+          t.node === s.currentNode,
+      );
+      if (!offer) throw Error("This offer has expired");
+      s.trades = s.trades!.filter((t) => t !== offer);
+      if (!intent.accept) break;
+      const owner = s.players.find((x) => x.id === offer.from)!;
+      const item = items.find((i) => i.id === offer.item)!;
+      if (!owner.items.includes(item.id))
+        throw Error("The offered item is no longer available");
+      // Exchange the recipient's occupied slot back to the sender. Nobody
+      // loses a piece silently, and supplies transfer one copy at a time.
+      const replaced =
+        item.slot === "supply"
+          ? undefined
+          : p.items.find(
+              (id) => items.find((i) => i.id === id)?.slot === item.slot,
+            );
+      if (replaced !== offer.returnItem)
+        throw Error("Equipment changed. Ask for a new trade offer");
+      owner.items.splice(owner.items.indexOf(item.id), 1);
+      if (replaced) {
+        p.items.splice(p.items.indexOf(replaced), 1);
+        owner.items.push(replaced);
+      }
+      p.items.push(item.id);
+      log(
+        s,
+        `${owner.name} trades ${item.name} to ${p.name}${replaced ? " in exchange for their equipped " + item.slot : ""}.`,
+      );
+      break;
+    }
     case "upgrade": {
       requirePhase("UPGRADE");
       if (s.votes[p.id]) throw Error("Your upgrade is already chosen");
@@ -383,9 +522,17 @@ export function reduce(
       log(s, "The veil lifts. Information cost 35 gold.");
       break;
     }
-    case "ping":
-      log(s, `${p.name}: ${intent.message}`);
+    case "ping": {
+      const target = intent.target
+        ? [...s.players, ...s.enemies].find((u) => u.id === intent.target)
+        : undefined;
+      if (intent.target && !target) throw Error("Unknown ping target");
+      log(
+        s,
+        `${p.name}: ${intent.message}${target ? " → " + target.name : ""}`,
+      );
       break;
+    }
   }
   s.revision++;
   if (s.phase === "COMPLETE" && !s.endedAt) s.endedAt = now;

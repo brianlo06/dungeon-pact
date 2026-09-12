@@ -1,4 +1,7 @@
 import { GuildScene } from "./components/GuildScene";
+import { ExpeditionGuide } from "./components/ExpeditionGuide";
+import { Onboarding } from "./components/Onboarding";
+import { mixer } from "./audio/engine";
 import { PixelIcon } from "./components/PixelIcon";
 import { useEffect, useState } from "react";
 import { z } from "zod";
@@ -42,6 +45,10 @@ export default function App() {
   });
   useEffect(() => {
     audio.settings = settings;
+    mixer.setMuted(settings.muted);
+    mixer.setLevel("master", settings.master);
+    mixer.setLevel("sfx", settings.sfx);
+    mixer.setLevel("ui", settings.ui);
     localStorage.setItem("pact.settings", JSON.stringify(settings));
     document.documentElement.dataset.motion = settings.reducedMotion
       ? "reduced"
@@ -88,6 +95,15 @@ export default function App() {
     history.replaceState(null, "", location.pathname);
   }
   const s = room.state;
+  useEffect(() => {
+    const update = () => audio.setScene(s?.phase ?? "");
+    update();
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      document.removeEventListener("visibilitychange", update);
+      audio.setScene("");
+    };
+  }, [s?.phase, settings]);
   const disabled = room.pending || room.connection !== "online";
   const props = s ? { s, send: room.send, disabled } : null;
   return (
@@ -218,6 +234,7 @@ export default function App() {
             {s.phase === "COMPLETE" && <Results s={s} onLeave={leave} />}
           </main>
           <footer className="run-footer">
+            <ExpeditionGuide {...props!} />
             <div className="pings">
               {(
                 [
@@ -297,6 +314,7 @@ export default function App() {
           </section>
         </div>
       )}
+      {s && <Onboarding phase={s.phase} />}
       {settingsOpen && (
         <div className="modal-backdrop">
           <section
@@ -313,7 +331,7 @@ export default function App() {
               Close ×
             </button>
             <h2>Make yourself comfortable.</h2>
-            {(["master", "sfx", "ui"] as const).map((key) => (
+            {(["master", "sfx", "ui", "ambient"] as const).map((key) => (
               <label className="setting" key={key}>
                 {key.toUpperCase()}{" "}
                 <input
@@ -349,8 +367,9 @@ export default function App() {
               />
             </label>
             <p className="muted">
-              Original synthesized feedback sounds. Music and biome ambience are
-              scheduled for the audio production pass.
+              Original synthesized feedback and quiet chamber ambience. Ambient
+              volume can be set to zero independently. Music is still in
+              development.
             </p>
           </section>
         </div>

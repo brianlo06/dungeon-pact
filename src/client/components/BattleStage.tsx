@@ -187,7 +187,15 @@ export function BattleStage({
       className={`stage ${beat.playing ? "is-replaying" : ""}`}
       data-frozen={frozen ? "" : undefined}
     >
-      <Foundry />
+      <Foundry
+        district={
+          s.enemies.some((e) => ["collector", "miser"].includes(e.definition))
+            ? "ledger"
+            : (s.map.find((n) => n.id === s.currentNode)?.depth ?? 0) >= 3
+              ? "coolant"
+              : "furnace"
+        }
+      />
 
       <div className="world" ref={camera.attach}>
         <div className="layer layer-units" ref={unitsRef}>

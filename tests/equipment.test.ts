@@ -19,8 +19,8 @@ const fixture = () =>
     legacy: false,
   });
 describe("equipment presentation contract", () => {
-  it("all twelve equipped items have valid registered assets", () => {
-    expect(items.filter((i) => i.slot !== "supply")).toHaveLength(12);
+  it("all equipped items have valid registered assets", () => {
+    expect(items.filter((i) => i.slot !== "supply")).toHaveLength(32);
     expect(
       validateEquipmentVisuals(items, new Set(Object.keys(EQUIPMENT_ASSETS))),
     ).toEqual([]);

@@ -90,8 +90,12 @@ export function Combat({
       onSound: (name) => mixer.play(name),
       geometry: (alive) => {
         const g = geometry.current;
-        return stageGeometry(g.places, g.shapes, stagehand.stageSize(), alive, (id) =>
-          bulk(g.s.enemies.find((e) => e.id === id)?.definition),
+        return stageGeometry(
+          g.places,
+          g.shapes,
+          stagehand.stageSize(),
+          alive,
+          (id) => bulk(g.s.enemies.find((e) => e.id === id)?.definition),
         );
       },
       plan: choreoPlan,
@@ -136,9 +140,24 @@ export function Combat({
     if (chosen.target === "self") {
       ids.add(me.id);
     } else if (chosen.target === "ally" || chosen.target === "allyRow") {
-      for (const p of s.players) if (!p.fallen) ids.add(p.id);
+      for (const p of s.players) {
+        if (p.fallen || (chosen.id === "revive" ? p.hp > 0 : p.hp <= 0))
+          continue;
+        if (chosen.effects.some((e) => e.kind === "protect") && p.id === me.id)
+          continue;
+        ids.add(p.id);
+      }
     } else {
-      for (const e of s.enemies) if (e.hp > 0) ids.add(e.id);
+      for (const e of s.enemies) {
+        if (e.hp <= 0) continue;
+        if (
+          chosen.effects.some((effect) => effect.kind === "interrupt") &&
+          (!e.intent.ability.interruptible ||
+            e.statuses.some((st) => st.id === "interrupted"))
+        )
+          continue;
+        ids.add(e.id);
+      }
     }
     return ids;
   }, [chosen, s.players, s.enemies, me.id]);
@@ -230,7 +249,8 @@ export function Combat({
   };
 
   const cost = (a: (typeof list)[number]) => {
-    if (a.id === "revive") return "90 gold";
+    if (a.id === "revive")
+      return `${90 + (s.combatVersion === 2 ? 60 * (s.revivals ?? 0) : 0)} gold`;
     const supply = supplyFor(a.id);
     if (supply)
       return `${me.items.filter((id) => id === supply.id).length} left`;
@@ -384,10 +404,41 @@ export function Combat({
       <div className="battle-controls" data-locked={locked ? "" : undefined}>
         <PartyHud s={s} />
         {me.hp <= 0 ? (
-          <p className="control-note">
+          <div className="control-note">
             Your pact still holds. Ping priorities and help choose the route.
             Allies can revive you; the camp restores fallen heroes.
-          </p>
+            <p>
+              Spirit aid: once per round, give a standing ally 4 Barrier or 1
+              class resource. The party can continue without waiting for you.
+            </p>
+            {s.players
+              .filter((p) => p.hp > 0 && !p.fallen)
+              .map((p) => (
+                <span key={p.id}>
+                  {p.name}
+                  <button
+                    disabled={
+                      disabled || replay.playing || me.spiritRound === s.round
+                    }
+                    onClick={() =>
+                      send({ type: "spirit", aid: "ward", target: p.id })
+                    }
+                  >
+                    Ward +4
+                  </button>
+                  <button
+                    disabled={
+                      disabled || replay.playing || me.spiritRound === s.round
+                    }
+                    onClick={() =>
+                      send({ type: "spirit", aid: "inspire", target: p.id })
+                    }
+                  >
+                    Inspire +1
+                  </button>
+                </span>
+              ))}
+          </div>
         ) : (
           <div className="commit-bar" data-mode={mode}>
             <p className="commit-what">
@@ -403,6 +454,20 @@ export function Combat({
                         ? "Choose an enemy on the field to hit its row."
                         : "Choose a target on the field."}
               </small>
+              {selectedTarget && (
+                <button
+                  disabled={disabled}
+                  onClick={() =>
+                    send({
+                      type: "ping",
+                      message: "Focus target",
+                      target: selectedTarget,
+                    })
+                  }
+                >
+                  Ping {named(selectedTarget)}
+                </button>
+              )}
             </p>
             {mode === "target" && !locked && (
               <button className="commit-back" onClick={cancel}>

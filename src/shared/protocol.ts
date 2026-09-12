@@ -7,6 +7,20 @@ export const intentSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("vote"), choice: id }),
   z.object({ type: z.literal("plan"), ability: id, target: id }),
   z.object({ type: z.literal("unlock") }),
+  z.object({
+    type: z.literal("spirit"),
+    aid: z.enum(["ward", "inspire"]),
+    target: id,
+  }),
+  z.object({ type: z.literal("offerTrade"), item: id, target: id }),
+  z.object({
+    type: z.literal("answerTrade"),
+    from: id,
+    item: id,
+    accept: z.boolean(),
+  }),
+  z.object({ type: z.literal("proposeService"), service: id }),
+  z.object({ type: z.literal("serviceVote"), approve: z.boolean() }),
   z.object({ type: z.literal("upgrade"), choice: id }),
   z.object({ type: z.literal("train"), accept: z.boolean() }),
   z.object({ type: z.literal("continue") }),
@@ -17,6 +31,7 @@ export const intentSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("ping"),
     message: z.enum(["Save gold", "Buy this", "Need healing", "Focus target"]),
+    target: id.optional(),
   }),
 ]);
 /**
@@ -28,6 +43,7 @@ export interface Decision {
   round: number;
   currentNode: string | null;
   eventId?: string | null;
+  serviceVote?: { id: string };
   mentorId?: string | null;
   auction: { lot?: number; stage: string; round: number } | null;
 }
@@ -54,6 +70,7 @@ export function epoch(s: Decision): string {
       : "",
     s.eventId ?? "",
     s.mentorId ?? "",
+    s.serviceVote?.id ?? "",
   ].join("|");
 }
 export const commandSchema = z

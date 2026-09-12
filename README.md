@@ -2,6 +2,8 @@
 
 A cooperative dungeon crawler built around a shared treasury, contested auctions and tactical simultaneous planning. Development expedition 0.2; full game roadmap in `docs/ROADMAP.md`.
 
+Public alpha: https://dungeon-pact.violarage10.workers.dev — requires two to four players. See [Phase 1 expansion](docs/PHASE1_EXPANSION.md) for the current content, trading, provisions and combat additions.
+
 ## Run locally
 
 Use Node 24 LTS and npm.
@@ -27,7 +29,7 @@ npm run simulate -- 25 --matrix  # all 486 class combinations (--full for every 
 npm run test:network             # requires the local server
 ```
 
-The network script creates disposable two-player test rooms. Production deployment is not configured or claimed. Wrangler config is ready for an explicit staging deployment after security/reliability gates and Cloudflare account selection.
+The network script creates disposable two-player test rooms. `PACT_TEST_URL` selects a test server. The public alpha deploys with `npm run build` followed by `npx wrangler deploy`; use an isolated local Worker for mutation-heavy test runs.
 
 ## Implemented loop
 

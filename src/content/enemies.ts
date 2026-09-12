@@ -349,6 +349,35 @@ export const tacticalIntents: Record<string, Ability[]> = {
   ],
 };
 /** Containers are scenery with health: they never count as enemies to clear. */
+export const phaseTwoIntents: Record<string, Ability[]> = {
+  collector: [
+    attack("appraise", "Final notice", 22, "enemy", [
+      { kind: "status", status: "marked", stacks: 1, duration: 2 },
+    ]),
+    windup(
+      attack("account", "Enforce the notice", 33, "enemy", [
+        {
+          kind: "conditional",
+          status: "marked",
+          effects: [{ kind: "damage", amount: 10, pierce: true }],
+        },
+      ]),
+    ),
+    windup(collateral),
+  ],
+  miser: [
+    ledger,
+    windup({
+      ...attack("levy", "Audit the shielded", 25, "enemyRow"),
+      effects: [
+        { kind: "removeStatus", status: "barrier" },
+        { kind: "damage", amount: 25 },
+        { kind: "gold", amount: -10 },
+      ],
+    }),
+  ],
+};
+
 export function isObject(definition: string) {
   return !!enemies.find((d) => d.id === definition)?.object;
 }

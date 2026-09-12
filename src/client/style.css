@@ -838,6 +838,55 @@ body:has(.app-shell[data-combat]) {
   border-top: 4px solid #17131f;
   padding: 15px 4% 20px;
 }
+.expedition-guide {
+  max-width: 1040px;
+  margin: 0 auto 18px;
+  line-height: 1.65;
+}
+.expedition-guide summary {
+  cursor: pointer;
+  color: #e5c697;
+  padding: 10px 0;
+}
+.expedition-guide section {
+  margin: 18px 0;
+  border-top: 1px solid #665163;
+  padding-top: 14px;
+}
+.expedition-guide p {
+  margin: 10px 0;
+}
+.expedition-guide button {
+  margin: 4px;
+}
+.expedition-guide select {
+  max-width: 100%;
+  color: #f3e4c7;
+  background: #211d2b;
+  padding: 10px;
+  margin: 6px;
+  border: 1px solid #9c7a7e;
+}
+.battle-reference {
+  padding: 16px;
+  line-height: 1.5;
+  overflow-y: auto;
+  max-height: 55%;
+  flex-shrink: 0;
+}
+.battle-reference p {
+  margin: 10px 0;
+}
+.tutorial {
+  z-index: 200;
+}
+.tutorial p {
+  margin: 18px 0;
+  line-height: 1.65;
+}
+.tutorial button {
+  margin: 6px;
+}
 .pings {
   display: flex;
   gap: 10px;

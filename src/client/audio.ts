@@ -18,10 +18,46 @@ export const defaultSettings: Settings = {
 };
 class AudioManager {
   private ctx: AudioContext | null = null;
+  private ambience: { gain: GainNode; voices: OscillatorNode[] } | null = null;
+  private scene = "";
   settings = defaultSettings;
   unlock() {
     this.ctx ??= new AudioContext();
     void this.ctx.resume();
+    this.setScene(this.scene);
+  }
+  /** Two quiet original tones: no asset downloads or perpetual timer loop. */
+  setScene(scene: string) {
+    this.scene = scene;
+    if (!this.ctx) return;
+    const ctx = this.ctx;
+    if (!this.ambience) {
+      const gain = ctx.createGain();
+      gain.gain.value = 0;
+      gain.connect(ctx.destination);
+      const voices = [0, 1].map(() => {
+        const voice = ctx.createOscillator();
+        voice.type = "sine";
+        voice.connect(gain);
+        voice.start();
+        return voice;
+      });
+      this.ambience = { gain, voices };
+    }
+    const frequency =
+      scene === "COMBAT" ? 55 : scene === "AUCTION" ? 82.4 : 65.4;
+    this.ambience.voices.forEach((voice, i) =>
+      voice.frequency.setTargetAtTime(
+        frequency * (i ? 1.502 : 1),
+        ctx.currentTime,
+        0.6,
+      ),
+    );
+    const volume =
+      this.settings.muted || !scene || document.hidden
+        ? 0
+        : this.settings.master * this.settings.ambient * 0.035;
+    this.ambience.gain.gain.setTargetAtTime(volume, ctx.currentTime, 0.15);
   }
   /** Short filtered noise burst: gives impacts a body a pure tone cannot. */
   private noise(level: number, duration: number, freq: number) {

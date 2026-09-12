@@ -98,6 +98,13 @@ export function Lobby({ s, send, disabled }: Props) {
           >
             Begin expedition →
           </button>
+          <p role="status">
+            {s.players.length < 2
+              ? "Invite one more player to begin."
+              : !s.players.every((p) => p.ready)
+                ? "Waiting for every hero to ready up."
+                : "Everyone is ready. Begin when you’re set."}
+          </p>
         </div>
       </section>
     </>

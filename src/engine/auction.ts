@@ -58,6 +58,8 @@ function openLot(
     : catalogue.filter((i) => !offered.includes(i.id));
   const item = pick(s, pool.length ? pool : catalogue);
   s.auction = {
+    mode: s.expeditionVersion === 1 && lot === 2 ? "descending" : "ascending",
+    floor: Math.max(30, Math.floor((item.price * 0.5) / 10) * 10),
     itemId: item.id,
     revealed: !mystery,
     price: Math.floor((item.price * ASK) / 10) * 10,
@@ -83,6 +85,23 @@ export function nextLot(s: RunState) {
 }
 export function nominate(s: RunState) {
   const a = s.auction!;
+  if (a.mode === "descending") {
+    if (!a.active.length && a.price > (a.floor ?? 30)) {
+      a.price = Math.max(a.floor ?? 30, a.price - 30);
+      a.round++;
+      a.acted = [];
+      log(s, `No takers. The descending ask falls to ${a.price} gold.`);
+      return;
+    }
+    // Simultaneous claims share a seeded draw, not a network-speed race.
+    if (a.active.length > 1) {
+      a.active = [pick(s, a.active)];
+      log(
+        s,
+        "Multiple claims: the auctioneer draws one paddle at the posted price.",
+      );
+    }
+  }
   if (a.active.length === 0) {
     a.stage = "sold";
     log(s, "No sale. “Prudence. How disappointing.”");

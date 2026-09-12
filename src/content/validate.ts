@@ -6,7 +6,7 @@ import { heroes, abilities } from "./heroes";
 import { upgrades, lines, upgradeOffer } from "./upgrades";
 import { evolutions, mentors, pathFor } from "./evolutions";
 import { items } from "./items";
-import { enemies, enemyAbilities } from "./enemies";
+import { enemies, enemyAbilities, phaseTwoIntents } from "./enemies";
 import { events } from "./events";
 import { statuses } from "./statuses";
 const nonnegative = z.number().int().min(0).max(10000);
@@ -216,17 +216,29 @@ export function validateContent() {
       guard: nonnegative,
       speed: nonnegative,
     }).parse(e);
-    for (const a of [...e.abilities, ...enemyAbilities(e, 2)])
+    for (const a of [
+      ...e.abilities,
+      ...enemyAbilities(e, 2),
+      ...(phaseTwoIntents[e.id] ?? []),
+    ])
       abilitySchema.parse(a);
   }
   for (const event of events) {
     unique(event.choices, "event choice");
-    for (const c of event.choices)
+    for (const c of event.choices) {
       z.object({
         cost: nonnegative,
         heal: z.number().int(),
         gold: nonnegative,
+        supply: z.string().optional(),
+        cleanse: z.boolean().optional(),
       }).parse(c);
+      if (
+        c.supply &&
+        !items.some((i) => i.id === c.supply && i.slot === "supply")
+      )
+        throw Error(`Unknown event supply ${c.supply}`);
+    }
   }
   for (const id of statusId.options)
     if (!statuses[id]?.description) throw Error(`Missing status ${id}`);

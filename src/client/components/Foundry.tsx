@@ -9,7 +9,11 @@
  * Parallax depth is declared per layer and applied by the stage, so the camera
  * stays the only thing that decides how far anything moves.
  */
-export function Foundry() {
+export function Foundry({
+  district = "furnace",
+}: {
+  district?: "furnace" | "coolant" | "ledger";
+}) {
   return (
     <>
       {/* ---------------------------------------------------------- far -- */}
@@ -18,8 +22,26 @@ export function Foundry() {
           <defs>
             <linearGradient id="hall" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stopColor="#2b2033" />
-              <stop offset="0.52" stopColor="#43262e" />
-              <stop offset="1" stopColor="#7a3c28" />
+              <stop
+                offset="0.52"
+                stopColor={
+                  district === "coolant"
+                    ? "#203e42"
+                    : district === "ledger"
+                      ? "#41302a"
+                      : "#43262e"
+                }
+              />
+              <stop
+                offset="1"
+                stopColor={
+                  district === "coolant"
+                    ? "#34575a"
+                    : district === "ledger"
+                      ? "#6e522c"
+                      : "#7a3c28"
+                }
+              />
             </linearGradient>
             <radialGradient id="mouth">
               <stop offset="0" stopColor="#ffc070" stopOpacity="0.85" />
@@ -32,6 +54,26 @@ export function Foundry() {
             </radialGradient>
           </defs>
           <rect width="1600" height="700" fill="url(#hall)" />
+          {district === "coolant" && (
+            <g fill="none" stroke="#547b79" strokeWidth="18" opacity=".55">
+              <path d="M80 0V320H390V600M1510 0V270H1220V620" />
+              <circle cx="390" cy="390" r="38" />
+              <circle cx="1220" cy="380" r="38" />
+            </g>
+          )}
+          {district === "ledger" && (
+            <g fill="#79603c" stroke="#b69a61" strokeWidth="3" opacity=".65">
+              {[180, 680, 1180].map((x) => (
+                <g key={x}>
+                  <path d={`M${x} 80h130v260l-65-40-65 40Z`} />
+                  <path
+                    d={`M${x + 25} 140h80m-80 30h80m-80 30h50`}
+                    fill="none"
+                  />
+                </g>
+              ))}
+            </g>
+          )}
           {/* The hall's vault, receding */}
           <path
             d="M0 250 Q800 90 1600 250 V700 H0 Z"
