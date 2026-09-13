@@ -4,17 +4,20 @@
  *
  * A lip at the top, six steps down, and the basin floor. The fire's path is
  * measured along the steps' edge: down a riser, along a tread, down the
- * next, so a distance along it is a place on the stone.
+ * next, then out across the floor, so a distance along it is a place on the
+ * stone.
  */
 
-export const LIP = { x: 560, y: 330 };
-export const TREAD = 90;
-export const RISER = 80;
+export const LIP = { x: 540, y: 426 };
+export const TREAD = 96;
+export const RISER = 64;
 export const STEPS = 6;
 /** The basin floor, where the row stands. */
 export const FLOOR = LIP.y + STEPS * RISER;
-/** Where the last tread meets the floor. */
+/** Where the last tread begins. */
 export const FOOT = LIP.x + (STEPS - 1) * TREAD;
+/** Where the last tread meets the floor. */
+export const FLOOR_START = FOOT + TREAD;
 /** The whole length of the steps' edge. */
 export const LENGTH = STEPS * (RISER + TREAD);
 
@@ -38,18 +41,28 @@ export const PIECES: Piece[] = Array.from({ length: STEPS }, (_, i) => {
   ];
 }).flat();
 
-/** A point on the steps' edge, `d` units from the lip. Past the end, along the floor. */
-export function along(d: number) {
-  if (d <= 0) return { x: LIP.x, y: LIP.y };
-  if (d >= LENGTH) return { x: FOOT + TREAD + (d - LENGTH), y: FLOOR };
-  const piece = PIECES.find((p) => {
-    const len = p.kind === "riser" ? RISER : TREAD;
-    return d >= p.d && d <= p.d + len;
-  })!;
-  const len = piece.kind === "riser" ? RISER : TREAD;
-  const k = (d - piece.d) / len;
-  return { x: piece.x0 + (piece.x1 - piece.x0) * k, y: piece.y0 + (piece.y1 - piece.y0) * k };
+export interface EdgePoint {
+  x: number;
+  y: number;
+  kind: "platform" | "riser" | "tread" | "floor";
+  /** How far through its piece, 0…1. */
+  k: number;
 }
+
+/** A point on the steps' edge, `d` units from the lip: the platform before it, the floor after. */
+export function edgeAt(d: number): EdgePoint {
+  if (d < 0) return { x: LIP.x + d, y: LIP.y, kind: "platform", k: 0 };
+  if (d >= LENGTH) return { x: FLOOR_START + (d - LENGTH), y: FLOOR, kind: "floor", k: 0 };
+  const i = Math.floor(d / (RISER + TREAD));
+  const r = d - i * (RISER + TREAD);
+  const x = LIP.x + i * TREAD;
+  const y = LIP.y + i * RISER;
+  if (r < RISER) return { x, y: y + r, kind: "riser", k: r / RISER };
+  return { x: x + (r - RISER), y: y + RISER, kind: "tread", k: (r - RISER) / TREAD };
+}
+
+/** The distance along the path of a point on the floor. */
+export const floorD = (x: number) => LENGTH + (x - FLOOR_START);
 
 /** The steps' edge as a path, from the lip platform to the floor's far end. */
 export const EDGE_PATH =

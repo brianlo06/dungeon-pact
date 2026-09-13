@@ -1,6 +1,6 @@
 import type { ComponentType, ReactNode } from "react";
 import { seeded } from "../../cinematic/vfx";
-import { EDGE_PATH, FLOOR, FOOT, LIP, PIECES, RISER, RISES, TREAD, VP, edgeX } from "./weir";
+import { EDGE_PATH, FLOOR, FLOOR_START, FOOT, LIP, PIECES, RISER, RISES, TREAD, VP, edgeX } from "./weir";
 import "./style.css";
 
 /**
@@ -141,80 +141,146 @@ function cracks(x0: number, x1: number, y0: number, y1: number, seed: number) {
 
 /* ── the whole spillway, side-on ─────────────────────────────────────── */
 
+/** How high the water once stood: above it the wall is dry stone, below it stained. */
+const HIGH_WATER = 336;
+
+/**
+ * Silt dried into plates: a jittered grid whose rows crowd together towards
+ * the back of the basin, every crack a dark line with the lifted edge of its
+ * plate caught in a paler one.
+ */
+function mudCracks(x0: number, x1: number, y0: number, y1: number, seed: number) {
+  const rand = seeded(seed);
+  const rows: number[] = [];
+  for (let y = y0, j = 0; y < y1; j++) {
+    rows.push(y);
+    y += 16 + j * 8;
+  }
+  const grid = rows.map((y, j) => {
+    const w = 46 + j * 20;
+    return Array.from({ length: Math.ceil((x1 - x0) / w) + 2 }, (_, i) => [
+      x0 + (i + (j % 2) * 0.5) * w + (rand() - 0.5) * w * 0.5,
+      y + (rand() - 0.5) * (8 + j * 4),
+    ]);
+  });
+  let dark = "";
+  let lip = "";
+  grid.forEach((row, j) => {
+    row.forEach(([x, y], i) => {
+      const right = row[i + 1];
+      if (right) {
+        const mx = (x + right[0]) / 2;
+        const my = (y + right[1]) / 2 + (rand() - 0.5) * 6;
+        dark += `M${x.toFixed(0)} ${y.toFixed(0)} L${mx.toFixed(0)} ${my.toFixed(0)} L${right[0].toFixed(0)} ${right[1].toFixed(0)} `;
+        lip += `M${(x + 5).toFixed(0)} ${(y - 3).toFixed(0)} L${(right[0] - 5).toFixed(0)} ${(right[1] - 3).toFixed(0)} `;
+      }
+      const below = grid[j + 1];
+      if (below) {
+        const b = below.reduce((best, p) => (Math.abs(p[0] - x) < Math.abs(best[0] - x) ? p : best), below[0]);
+        dark += `M${x.toFixed(0)} ${y.toFixed(0)} L${((x + b[0]) / 2 + (rand() - 0.5) * 10).toFixed(0)} ${((y + b[1]) / 2).toFixed(0)} L${b[0].toFixed(0)} ${b[1].toFixed(0)} `;
+      }
+    });
+  });
+  return { dark, lip };
+}
+
 function Weir() {
-  const tides: [number, number, number][] = [
-    [420, 5, 0.2],
-    [468, 6, 0.26],
-    [515, 7, 0.34],
-    [566, 6, 0.3],
-    [612, 9, 0.46],
-    [664, 6, 0.36],
-    [706, 8, 0.5],
-    [752, 6, 0.4],
+  const rings: [number, number, number][] = [
+    [HIGH_WATER, 16, 0.6],
+    [520, 6, 0.24],
+    [676, 8, 0.3],
   ];
+  const mud = mudCracks(FLOOR_START - 20, 2400, FLOOR + 10, 1350, 17);
   const rand = seeded(91);
   return (
     <Svg>
       <rect x="-800" y="-450" width="3200" height="1800" fill={VAULT} />
-      {/* the far wall of the cistern, and its vault's springing */}
-      <rect x="-800" y="-120" width="3200" height={FLOOR + 120} fill={WALL} />
-      <Courses x0={-800} x1={2400} y0={-120} y1={FLOOR} h={148} w={380} stroke="#150e08" />
-      <path d="M-800 -120 H2400" stroke="#2a1d13" strokeWidth="10" />
-      <g fill="none" stroke="#221810" strokeWidth="16">
-        <path d="M-640 -120 C-560 -420 -60 -420 20 -120" />
-        <path d="M420 -120 C500 -420 1000 -420 1080 -120" />
-        <path d="M1480 -120 C1560 -420 2060 -420 2140 -120" />
-      </g>
-      {/* the water's lines: every height it stood at */}
-      {tides.map(([y, w, a], i) => (
-        <Tide key={y} x0={LIP.x - 40 + i * 30} x1={2400} y={y} width={w} alpha={a} seed={200 + i} />
-      ))}
-      <Tide x0={-800} x1={LIP.x} y={180} width={4} alpha={0.1} seed={231} />
-      <Tide x0={-800} x1={LIP.x} y={236} width={6} alpha={0.16} seed={232} />
-      <Tide x0={-800} x1={LIP.x} y={284} width={5} alpha={0.2} seed={233} />
-
-      {/* the culvert's mouth behind the lip, and the stain the water left over it */}
-      <path d={`M60 ${LIP.y} V120 C60 -20 460 -20 460 120 V${LIP.y} Z`} fill="#040302" />
-      <path d={`M40 ${LIP.y} V120 C40 -44 480 -44 480 120 V${LIP.y}`} fill="none" stroke="#34261a" strokeWidth="18" />
-      <g stroke="#140d08" strokeWidth="5">
-        {[-60, -30, 0, 30, 60].map((a) => (
-          <path key={a} d={`M${260 + Math.sin((a * Math.PI) / 180) * 220} ${40 - Math.cos((a * Math.PI) / 180) * 70} l${Math.sin((a * Math.PI) / 180) * 26} ${-Math.cos((a * Math.PI) / 180) * 26}`} />
+      {/* the far wall: dry stone above the highest water, stained below it */}
+      <rect x="-800" y="-160" width="3200" height={HIGH_WATER + 160} fill="#3a2d21" />
+      <path d="M-800 -160 H2400" stroke="#4a3a2a" strokeWidth="12" />
+      <g stroke="#302419" strokeWidth="5">
+        {Array.from({ length: 8 }, (_, i) => (
+          <path key={i} d={`M${-640 + i * 430} -160 V${HIGH_WATER}`} />
         ))}
       </g>
-      <path d={`M180 ${LIP.y} C200 ${LIP.y - 70} 300 ${LIP.y - 70} 330 ${LIP.y}`} fill={TIDE} fillOpacity="0.05" />
+      {/* below it, stained dark from years under water, and ringed where the water sat */}
+      <rect x="-800" y={HIGH_WATER} width="3200" height={FLOOR - HIGH_WATER} fill="#1e1811" />
+      <rect x="-800" y={HIGH_WATER} width="3200" height="90" fill="#2a2117" />
+      {rings.map(([y, w, a], i) => (
+        <Tide key={`ring-${y}`} x0={-800} x1={2400} y={y} width={w} alpha={a} seed={200 + i} drips={i === 0} />
+      ))}
+      {/* the long stains running down from the high-water line */}
+      <path
+        d={Array.from({ length: 34 }, () => {
+          const x = -800 + rand() * 3200;
+          return `M${x.toFixed(0)} ${HIGH_WATER + 6} v${(40 + rand() * 150).toFixed(0)}`;
+        }).join(" ")}
+        stroke={TIDE}
+        strokeOpacity="0.12"
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
+      {/* a depth gauge painted on the wall, its numbers long worn off */}
+      <g>
+        <rect x="1622" y="200" width="36" height={FLOOR - 200} fill={TIDE} fillOpacity="0.14" />
+        <path
+          d={Array.from({ length: Math.floor((FLOOR - 206) / 30) }, (_, i) => `M1622 ${206 + i * 30} h${i % 5 === 0 ? 36 : 16}`).join(" ")}
+          stroke={TIDE}
+          strokeOpacity="0.5"
+          strokeWidth="5"
+        />
+        <rect x="1614" y="190" width="52" height="12" fill="#2a2018" />
+      </g>
 
-      {/* the spillway's stone, cut side-on, and the basin */}
-      <path d={`${EDGE_PATH} V1350 H-800 Z`} fill={STONE} />
-      <Courses x0={-800} x1={FOOT + TREAD} y0={LIP.y} y1={1350} h={RISER} w={TREAD * 2} stroke="#1c140d" />
-      {/* the steps' faces, each a shade lighter than the stone under it */}
+      {/* the culvert the water came out of, behind the lip, its grate still in it */}
+      <path d={`M130 ${LIP.y} V230 C130 120 470 120 470 230 V${LIP.y} Z`} fill="#060403" />
+      <path d={`M112 ${LIP.y} V230 C112 100 488 100 488 230 V${LIP.y}`} fill="none" stroke="#4a3a2a" strokeWidth="20" />
+      <g stroke="#2b2622" strokeWidth="11">
+        {[170, 214, 258, 302, 346, 390, 434].map((x) => (
+          <path key={x} d={`M${x} ${x < 200 || x > 400 ? 200 : 148} V${LIP.y - 4}`} />
+        ))}
+        <path d={`M130 250 H470 M130 ${LIP.y - 60} H470`} />
+      </g>
+      <path d={weed(150, LIP.y - 60, 300, 280, 1.2)} stroke={WEED} strokeWidth="4" fill="none" strokeLinecap="round" />
+
+      {/* the spillway: one mass of poured stone, its steps worn round at the nose */}
+      <path d={`${EDGE_PATH} V1350 H-800 Z`} fill="#34291e" />
       {PIECES.filter((p) => p.kind === "riser").map((p, i) => (
         <g key={i}>
-          <rect x={p.x0} y={p.y0} width={TREAD} height={RISER} fill={FACE} />
-          <path d={`M${p.x0} ${p.y0} H${p.x0 + TREAD}`} stroke={NOSE} strokeWidth="7" />
-          <path d={weed(p.x0 - 4, p.y0 + 2, 34, 300 + i)} stroke={WEED} strokeWidth="4" fill="none" strokeLinecap="round" />
-          <path d={`M${p.x0 + 20 + rand() * 50} ${p.y0 + 8} v${24 + rand() * 30} M${p.x0 + 12 + rand() * 60} ${p.y0 + 10} v${14 + rand() * 20}`} stroke={TIDE} strokeOpacity="0.14" strokeWidth="4" strokeLinecap="round" />
+          <rect x={p.x0} y={p.y0} width={TREAD} height={RISER} fill="#4a3a29" />
+          {/* where the water ran thinnest it left a dark skin of dead growth */}
+          <path d={`M${p.x0} ${p.y0 + RISER * 0.3} Q${p.x0 + TREAD * 0.5} ${p.y0 + RISER * 0.42} ${p.x0 + TREAD} ${p.y0 + RISER * 0.34} V${p.y1} H${p.x0} Z`} fill="#1d1b0f" fillOpacity="0.75" />
+          <path d={`M${p.x0 - 3} ${p.y0 + 3} H${p.x0 + TREAD}`} stroke="#9c7f58" strokeWidth="7" strokeLinecap="round" />
+          <path d={weed(p.x0 - 4, p.y0 + 5, 40, 300 + i, 1.1)} stroke={WEED} strokeWidth="4" fill="none" strokeLinecap="round" />
+          <path d={weed(p.x0 + 50, p.y0 + 5, 30, 320 + i, 0.8)} stroke={WEED} strokeWidth="3" fill="none" strokeLinecap="round" />
         </g>
       ))}
-      <path d={`M-800 ${LIP.y} H${LIP.x}`} stroke={NOSE} strokeWidth="8" />
-      <path d={weed(LIP.x - 30, LIP.y + 3, 30, 290, 1.4)} stroke={WEED} strokeWidth="5" fill="none" strokeLinecap="round" />
-      <path d={EDGE_PATH} fill="none" stroke="#0c0805" strokeWidth="5" />
+      <path d={`M-800 ${LIP.y + 3} H${LIP.x}`} stroke="#806749" strokeWidth="8" />
+      <path d={weed(LIP.x - 40, LIP.y + 6, 44, 290, 1.5)} stroke={WEED} strokeWidth="5" fill="none" strokeLinecap="round" />
 
-      {/* the basin floor: silt, dried into plates, and the rings of the last puddles */}
-      <rect x={FOOT} y={FLOOR} width={2400 - FOOT} height={1350 - FLOOR} fill={SILT} />
-      <rect x={FOOT} y={FLOOR} width={2400 - FOOT} height="26" fill="#4a3a2a" />
-      <path d={cracks(FOOT + 40, 2400, FLOOR + 30, 1300, 17)} stroke={CRACK} strokeWidth="4" fill="none" strokeLinejoin="round" />
+      {/* the basin floor: silt dried and cracked into plates */}
+      <rect x={FOOT} y={FLOOR} width={2400 - FOOT} height={1350 - FLOOR} fill="#54412d" />
+      <rect x={FOOT} y={FLOOR} width={2400 - FOOT} height="8" fill="#6b5640" />
+      <path d={mud.lip} stroke="#6f5a43" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <path d={mud.dark} stroke="#2a1d12" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      {/* the rings of the last puddles */}
       {[
-        [1520, FLOOR + 90, 180],
-        [2040, FLOOR + 60, 120],
-        [1210, FLOOR + 220, 240],
+        [1990, FLOOR + 70, 150],
+        [1380, FLOOR + 200, 220],
       ].map(([x, y, r]) => (
-        <ellipse key={x} cx={x} cy={y} rx={r} ry={r * 0.16} fill="none" stroke={TIDE} strokeOpacity="0.12" strokeWidth="5" />
+        <ellipse key={x} cx={x} cy={y} rx={r} ry={r * 0.14} fill="none" stroke={TIDE} strokeOpacity="0.3" strokeWidth="6" />
       ))}
-      {/* a few sticks of drift, dry as tinder */}
-      <g stroke="#221710" strokeWidth="9" strokeLinecap="round">
-        <path d={`M1760 ${FLOOR + 40} l120 -16`} />
-        <path d={`M1180 ${FLOOR + 130} l-90 22`} />
-        <path d={`M2140 ${FLOOR + 150} l70 30`} />
+      {/* the basin's drain, grated */}
+      <g transform={`translate(1840 ${FLOOR + 58})`}>
+        <path d="M-90 -18 L90 -18 L110 18 L-110 18 Z" fill="#0d0906" stroke="#4a3a2a" strokeWidth="6" />
+        <path d="M-60 -18 L-70 18 M-30 -18 L-35 18 M0 -18 V18 M30 -18 L35 18 M60 -18 L70 18" stroke="#3a2e24" strokeWidth="7" />
+      </g>
+      {/* and something that was living in the water when it went */}
+      <g transform={`translate(1560 ${FLOOR + 118}) rotate(-6)`} stroke={TIDE} strokeOpacity="0.55" strokeWidth="4" strokeLinecap="round" fill="none">
+        <path d="M-46 0 H34" />
+        <path d="M-30 0 l-6 -12 M-30 0 l-6 12 M-14 0 l-6 -14 M-14 0 l-6 14 M2 0 l-6 -14 M2 0 l-6 14 M18 0 l-5 -11 M18 0 l-5 11" />
+        <path d="M34 -12 L56 0 L34 12 Z" />
+        <path d="M-46 0 l-14 -12 M-46 0 l-14 12" />
       </g>
     </Svg>
   );

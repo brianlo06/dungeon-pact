@@ -3,10 +3,10 @@ import type { ReactNode } from "react";
 /**
  * How Dry Flood draws fire, the same everywhere in the film.
  *
- * A tongue of flame is four flat layers, deep red, orange, gold and a pale
- * core, scaled down into one another from the same base so the heat sits
- * low, with a small drop of the spark's blue at the root: the fire is the
- * Arcanist's spark let go. Each tongue has three drawings (its tip leaning
+ * A tongue of flame (for the small fires: the flame in the glove, a burning
+ * figure, the fingers along the pour) is four flat layers, deep red, orange,
+ * gold and a pale core, scaled down into one another from the same base so
+ * the heat sits low. Each tongue has three drawings (its tip leaning
  * one way, standing up, leaning the other, each with a lick off one side)
  * and boils between them on its own beat, the way a drawn flame does, so it
  * never needs a blur to look alive. A tongue is 100 units tall and stands on
@@ -22,7 +22,6 @@ export const FIRE = {
   orange: "#ff8a2a",
   gold: "#ffc63d",
   core: "#fff1c8",
-  root: "#5fb2ff",
   smoke: "#1d1418",
   smokeEdge: "#3b2b2c",
 };
@@ -45,7 +44,6 @@ export function FireDefs({ id }: { id: string }): ReactNode {
           <path d={d} fill={FIRE.deep} />
           <path d={d} fill={FIRE.orange} transform="scale(0.8 0.83)" />
           <path d={d} fill={FIRE.gold} transform="scale(0.58 0.6)" />
-          <ellipse cx="0" cy="-5" rx="12" ry="6.5" fill={FIRE.root} opacity="0.9" />
           <path d={d} fill={FIRE.core} transform="translate(0 -4) scale(0.32 0.34)" />
         </g>
       ))}

@@ -31,16 +31,20 @@ const GOLD = "#ffc63d";
 const SOOT = "#140d09";
 const BARS = 0.11;
 
-const flood = (band: "back" | "front", scale: number, surge: number): VfxCue => ({
+const flood = (band: "back" | "front", scale: number): VfxCue => ({
   kind: "dry-fire",
   at: 0,
   until: 1,
   layer: band,
   scale,
-  seed: band === "back" ? 11 : 12,
-  // Already down the steps at the cut; through the row on the hit (0.1).
-  params: { band, from: 1000, to: 2600, go: 0, end: 0.4, ease: "linear", floorSurge: surge, surge: 1.2, smoke: band === "back" },
+  // Coming off the last step at the cut; just past the first figure on the hit (0.1).
+  params: { band, from: 700, to: 2500, go: 0, end: 0.4, ease: "linear", smoke: band === "back" },
 });
+
+/** The pour still falling from the Pyromancer's glove onto the lip, feeding the flood. */
+const feed = (size: number): VfxCue => ({ kind: "dry-pour", at: 0, until: 1, layer: "back", seed: 6, params: { tip: 0, land: 492, size } });
+
+const pouring = (size: number): ActorCue => ({ role: "caster", at: [470, 426], size, clip: "ult:dry-send", then: "ult:dry-send", look: "rim", rim: FIRE, z: 1 });
 
 const struck = (at: [number, number], size: number, spread: [number, number], shove: number): ActorCue => ({
   role: "targets",
@@ -122,19 +126,19 @@ export const dryFlood: Cinematic = {
       id: "basin",
       kind: "target",
       purpose:
-        "Stakes and target. The real enemy row stands on the cracked silt of the basin, the tide-lines of every height the water stood at on the wall above them; at the top of the steps the fire's first light comes over, and they look up at it.",
+        "Stakes and target. The empty channel first: a grated culvert, weed-hung steps, a stained wall ringed with every level the water stood at and a depth gauge with nothing to measure, and the real enemy row on the cracked silt of the basin. Then the flood's front comes over the lip at the top of the steps, and they look up at it.",
       space: "cinematic",
       ms: 900,
       fastMs: 0,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 1230, y: 600, zoom: 1.34 },
-        to: { x: 1200, y: 585, zoom: 1.44 },
+        from: { x: 1060, y: 630, zoom: 1.1 },
+        to: { x: 1050, y: 620, zoom: 1.16 },
         ease: "inOut",
       },
       background: "dry-weir",
-      lighting: { exposure: 0.5, under: [FIRE, 0.06], back: [FIRE, 0.08], vignette: 0.5, letterbox: BARS },
-      toLighting: { exposure: 0.6, under: [FIRE, 0.18], back: [FIRE, 0.16], vignette: 0.45, letterbox: BARS },
+      lighting: { exposure: 0.74, under: [FIRE, 0.04], back: [FIRE, 0.04], vignette: 0.42, letterbox: BARS },
+      toLighting: { exposure: 0.7, under: [FIRE, 0.18], back: [FIRE, 0.14], vignette: 0.42, letterbox: BARS },
       actors: [
         {
           role: "targets",
@@ -151,7 +155,7 @@ export const dryFlood: Cinematic = {
         },
       ],
       vfx: [
-        { kind: "dry-fire", at: 0, until: 1, layer: "front", seed: 21, params: { band: "all", from: -30, to: 600, go: 0.3, end: 1, ease: "linear", smoke: true } },
+        { kind: "dry-fire", at: 0, until: 1, layer: "front", seed: 21, params: { band: "all", from: -40, to: 400, go: 0.34, end: 1, ease: "in", smoke: true } },
       ],
       sound: [
         { at: 0.04, sfx: "dry-motif" },
@@ -168,15 +172,15 @@ export const dryFlood: Cinematic = {
       framing: {
         large: {
           camera: {
-            from: { x: 1240, y: 570, zoom: 1.16 },
-            to: { x: 1210, y: 560, zoom: 1.24 },
+            from: { x: 1080, y: 600, zoom: 1.02 },
+            to: { x: 1070, y: 592, zoom: 1.07 },
             ease: "inOut",
           },
         },
         boss: {
           camera: {
-            from: { x: 1240, y: 500, zoom: 0.98 },
-            to: { x: 1215, y: 495, zoom: 1.04 },
+            from: { x: 1120, y: 520, zoom: 0.92 },
+            to: { x: 1110, y: 515, zoom: 0.97 },
             ease: "inOut",
           },
           actors: [
@@ -203,21 +207,21 @@ export const dryFlood: Cinematic = {
       id: "run",
       kind: "projectile-follow",
       purpose:
-        "Escalation. The camera races down the spillway with the fire's front: tall tongues leaning the way it runs, a sheet of flame spilling over every riser as it passes, smoke trailing behind; it goes faster step by step, faster than the water ever did. Smoke rolls across the lens.",
+        "Escalation. The camera races down the spillway with the flood's front: one body of fire, its head curling over each nose and tumbling down the riser, the sheet behind it pouring off every step, licks riding its surface, smoke curling up behind; faster than the water ever ran. Smoke rolls across the lens.",
       space: "cinematic",
       ms: 560,
       fastMs: 380,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 700, y: 520, zoom: 1.8, rotate: -12 },
-        to: { x: 1240, y: 800, zoom: 1.7, rotate: -16 },
+        from: { x: 620, y: 480, zoom: 1.8, rotate: -12 },
+        to: { x: 1160, y: 780, zoom: 1.7, rotate: -16 },
         ease: "linear",
       },
       background: "dry-weir",
       lighting: { exposure: 0.5, under: [FIRE, 0.3], back: [FIRE, 0.12], vignette: 0.5, letterbox: BARS },
       toLighting: { exposure: 0.62, under: [FIRE, 0.45], back: [FIRE, 0.2], vignette: 0.45, letterbox: BARS },
       vfx: [
-        { kind: "dry-fire", at: 0, until: 1, layer: "front", seed: 31, params: { band: "all", from: 170, to: 1100, go: 0, end: 1, ease: "linear", surge: 1.8, smoke: true } },
+        { kind: "dry-fire", at: 0, until: 1, layer: "front", seed: 31, params: { band: "all", from: 60, to: 1040, go: 0, end: 1, ease: "linear", smoke: true } },
         { kind: "dry-smoke-wipe", at: 0.72, until: 1, layer: "screen", params: { half: "out" } },
       ],
       sound: [
@@ -233,12 +237,12 @@ export const dryFlood: Cinematic = {
       id: "draw",
       kind: "over-the-shoulder",
       purpose:
-        "The quiet. From behind the row, looking up the spillway: the enemies black against the light coming along the top step, the fire itself not yet in sight. Nothing moves but the air, drawn up the steps past them towards the fire, and one dry leaf lifted after it. No music; one breath in, then nothing.",
+        "The quiet. From behind the row, looking up the spillway: the enemies black against the flood's front cresting the top step like a wave about to come down, its lip already rolling over the nose. It rises slowly; nothing else moves but the air, drawn up the steps past them into it, and one dry leaf lifted after it. No music; one breath in, then nothing.",
       space: "cinematic",
       ms: 520,
       fastMs: 380,
       transition: { kind: "cut" },
-      camera: { from: { x: 800, y: 440, zoom: 1.24 }, to: { x: 800, y: 432, zoom: 1.27 }, ease: "linear" },
+      camera: { from: { x: 800, y: 408, zoom: 1.24 }, to: { x: 800, y: 400, zoom: 1.27 }, ease: "linear" },
       background: "dry-steps",
       lighting: { exposure: 0.34, back: [FIRE, 0.28], vignette: 0.8, letterbox: 0.15 },
       toLighting: { exposure: 0.28, back: [FIRE, 0.42], vignette: 0.82, letterbox: 0.15 },
@@ -286,28 +290,25 @@ export const dryFlood: Cinematic = {
       id: "flood",
       kind: "impact",
       purpose:
-        "Impact. The whole spillway on a slant, from the small Pyromancer on the lip, its arm flung down after the fire, to the row at the foot of the steps: the fire comes over the last step and floods the basin through them on an orange two-tone frame; after it the row stands struck in a basin of flame, tall tongues behind them and low ones before them, a column going up the target, and the damage on the frame.",
+        "Impact. The whole spillway on a slant, from the Pyromancer on the lip, the pour still falling from its glove, down the burning steps to the row: the flood comes off the last step and through them on an orange two-tone frame; after it the row stands struck in a pool of fire piled up their legs, flame thrown up over them like spray, and the damage on the frame.",
       space: "cinematic",
       ms: 780,
       fastMs: 560,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 975, y: 530, zoom: 1.3, rotate: -5 },
-        to: { x: 1005, y: 545, zoom: 1.2, rotate: -2 },
+        from: { x: 960, y: 560, zoom: 1.1, rotate: -5 },
+        to: { x: 985, y: 570, zoom: 1.04, rotate: -2 },
         ease: "out",
       },
       background: "dry-weir",
-      lighting: { exposure: 0.8, under: [FIRE, 0.55], vignette: 0.35, letterbox: BARS },
-      toLighting: { exposure: 0.6, under: [FIRE, 0.38], vignette: 0.45, letterbox: BARS },
-      actors: [
-        { role: "caster", at: [528, 332], size: 180, clip: "ult:dry-send", then: "ult:dry-send", look: "rim", rim: FIRE, z: 1 },
-        struck([1250, 836], 290, [210, 6], 70),
-      ],
+      lighting: { exposure: 0.8, under: [FIRE, 0.55], rim: [FIRE, 1, 1], vignette: 0.35, letterbox: BARS },
+      toLighting: { exposure: 0.6, under: [FIRE, 0.38], rim: [FIRE, 0.9, 1], vignette: 0.45, letterbox: BARS },
+      actors: [pouring(220), struck([1250, 836], 290, [210, 6], 70)],
       vfx: [
-        flood("back", 1, 2.6),
-        { kind: "dry-flare", at: 0, until: 0.7, follow: "target", layer: "back", scale: 1.25, seed: 7, params: { hit: 0.07 } },
-        flood("front", 1, 1.5),
-        { kind: "dry-smoke", at: 0.28, until: 1, layer: "back", seed: 4, scale: 1.1, params: { at: "1230,700;1470,690;760,420" } },
+        feed(0.5),
+        flood("back", 1.6),
+        flood("front", 1.5),
+        { kind: "dry-smoke", at: 0.28, until: 1, layer: "back", seed: 4, scale: 1.1, params: { at: "1230,700;1470,690;820,520" } },
       ],
       screen: [
         { kind: "two-tone", at: 0.1, ms: 70, color: FIRE },
@@ -330,30 +331,30 @@ export const dryFlood: Cinematic = {
       framing: {
         large: {
           camera: {
-            from: { x: 1070, y: 545, zoom: 1.14, rotate: -5 },
-            to: { x: 1100, y: 555, zoom: 1.06, rotate: -2 },
+            from: { x: 1000, y: 545, zoom: 1.04, rotate: -5 },
+            to: { x: 1020, y: 555, zoom: 0.99, rotate: -2 },
             ease: "out",
           },
           actors: [
-            { role: "caster", at: [528, 332], size: 170, clip: "ult:dry-send", then: "ult:dry-send", look: "rim", rim: FIRE, z: 1 },
+            pouring(210),
             struck([1270, 840], 280, [230, 6], 45),
           ],
         },
         boss: {
           camera: {
-            from: { x: 1130, y: 470, zoom: 0.96, rotate: -4 },
-            to: { x: 1150, y: 480, zoom: 0.9, rotate: -2 },
+            from: { x: 1100, y: 500, zoom: 0.95, rotate: -4 },
+            to: { x: 1115, y: 505, zoom: 0.9, rotate: -2 },
             ease: "out",
           },
           actors: [
-            { role: "caster", at: [528, 332], size: 160, clip: "ult:dry-send", then: "ult:dry-send", look: "rim", rim: FIRE, z: 1 },
+            pouring(210),
             struck([1350, 842], 260, [260, 6], 18),
           ],
           vfx: [
-            flood("back", 1.35, 3),
-            { kind: "dry-flare", at: 0, until: 0.7, follow: "target", layer: "back", scale: 2, seed: 7, params: { hit: 0.07 } },
-            flood("front", 1.3, 1.6),
-            { kind: "dry-smoke", at: 0.28, until: 1, layer: "back", seed: 4, scale: 1.6, params: { at: "1330,560;1600,620;760,420" } },
+            feed(0.5),
+            flood("back", 1.7),
+            flood("front", 1.4),
+            { kind: "dry-smoke", at: 0.28, until: 1, layer: "back", seed: 4, scale: 1.6, params: { at: "1330,560;1600,620;820,520" } },
           ],
         },
       },
