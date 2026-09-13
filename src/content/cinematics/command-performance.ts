@@ -354,8 +354,8 @@ export const commandPerformance: Cinematic = {
         boss: {
           // Too heavy to swing: yanked forward and down by its own weight, onto whatever is beside it.
           camera: {
-            from: { x: 850, y: 585, zoom: 1.08, rotate: 3 },
-            to: { x: 870, y: 585, zoom: 1.0, rotate: 1 },
+            from: { x: 850, y: 625, zoom: 1.04, rotate: 3 },
+            to: { x: 870, y: 625, zoom: 0.97, rotate: 1 },
             ease: "out",
           },
           actors: [
