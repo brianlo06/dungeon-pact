@@ -68,38 +68,41 @@ const catchIt: Clip = {
  * trembling up there, and the head tips down to watch it go.
  */
 const pour: Clip = {
-  duration: 700,
+  duration: 640,
   poses: [
     { at: 0, x: 0, y: 0, rotate: 0 },
-    { at: 0.4, x: 0.008, y: 0, rotate: 1.5 },
+    { at: 0.32, x: 0.008, y: 0, rotate: 1.5 },
     { at: 1, x: 0.012, y: 0.004, rotate: 2.5, squash: 1.01 },
   ],
   parts: {
     hand: [
       { at: 0, rotate: OUT - 4, scale: 1.04 },
-      { at: 0.3, rotate: OUT, scale: 1.1 },
-      { at: 0.4, rotate: OUT - 5, scale: 1.12 },
-      { at: 0.48, rotate: TIPPED + 6, scale: 1.1 },
-      { at: 0.62, rotate: TIPPED - 3, scale: 1.08 },
+      { at: 0.22, rotate: OUT, scale: 1.1 },
+      { at: 0.3, rotate: OUT - 5, scale: 1.12 },
+      { at: 0.38, rotate: TIPPED + 6, scale: 1.1 },
+      { at: 0.52, rotate: TIPPED - 3, scale: 1.08 },
       { at: 1, rotate: TIPPED, scale: 1.08 },
     ],
     spark: [
       { at: 0, scale: 1.3 },
-      { at: 0.3, scale: 1.8 },
-      { at: 0.42, scale: 2.2 },
-      { at: 0.46, scale: 0 },
+      { at: 0.22, scale: 1.8 },
+      { at: 0.33, scale: 2.2 },
+      { at: 0.345, scale: 0 },
       { at: 1, scale: 0 },
     ],
-    hat: turn([0, 4], [0.3, 8], [0.5, LIFTED + 3], [0.6, LIFTED - 2], [0.7, LIFTED + 2], [0.82, LIFTED - 1], [1, LIFTED]),
-    head: turn([0, -2], [0.4, 1], [0.6, 7], [1, 6]),
-    book: turn([0, 0], [0.45, -8], [1, -5]),
+    hat: turn([0, 4], [0.25, 8], [0.42, LIFTED + 3], [0.54, LIFTED - 2], [0.66, LIFTED + 2], [0.8, LIFTED - 1], [1, LIFTED]),
+    head: turn([0, -2], [0.3, 1], [0.5, 7], [1, 6]),
+    book: turn([0, 0], [0.38, -8], [1, -5]),
     body: [
       { at: 0, squash: 1 },
-      { at: 0.5, squash: 1.02 },
+      { at: 0.4, squash: 1.02 },
       { at: 1, squash: 1.02 },
     ],
   },
 };
+
+/** When, in the pour, the spark leaves the glove: the effects read it in ms. */
+export const POUR_TIP_MS = 0.345 * 640;
 
 /**
  * Send, small on the lip over the flood. The arm, drawn back, is flung down
