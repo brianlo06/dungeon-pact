@@ -293,7 +293,7 @@ export const falseFooting: Cinematic = {
       background: "ff-field",
       lighting: { exposure: 1, tint: [SNOWLIGHT, 0.12], back: [SNOWLIGHT, 0.55], under: [COLD, 0.3], vignette: 0.3, letterbox: BARS },
       toLighting: { exposure: 0.66, tint: [SNOWLIGHT, 0], back: [COLD, 0.15], under: [COLD, 0.25], vignette: 0.45, letterbox: BARS },
-      actors: [HAULER, snared([1030, 800], 400, [-80, -14], -20)],
+      actors: [HAULER, snared([1030, 800], 400, [-110, -10], -20)],
       vfx: springVfx(1, 1),
       screen: [
         { kind: "two-tone", at: 0, ms: 40 },

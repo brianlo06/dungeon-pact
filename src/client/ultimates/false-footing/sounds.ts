@@ -59,16 +59,16 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       const steps: [number, number, number][] = [
-        [0, 57, 0.11],
-        [0.2, 64, 0.1],
-        [0.3, 62, 0.1],
-        [0.55, 45, 0.16],
+        [0, 57, 0.09],
+        [0.2, 64, 0.08],
+        [0.3, 62, 0.08],
+        [0.55, 45, 0.12],
       ];
       for (const [dt, midi, gain] of steps) {
         bar(c, o, t + dt, midi, gain, midi < 50 ? 0.7 : 0.32);
         crunch(c, o, t + dt, 0.06, 1.1);
       }
-      hit(c, o, t + 0.55, { type: "sine", from: 90, to: 45, gain: 0.28, decay: 0.3 });
+      hit(c, o, t + 0.55, { type: "sine", from: 90, to: 45, gain: 0.12, decay: 0.3 });
       swell(c, o, t + 0.55, { type: "triangle", freq: hz(45), gain: 0.035, attack: 0.05, hold: 0.25, release: 0.6 });
     },
   },

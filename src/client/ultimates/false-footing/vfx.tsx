@@ -543,14 +543,24 @@ const Spray = ({ cue }: VfxProps) => {
   return (
     <div className="ff-spray" data-mode={String(cue.params?.mode ?? "in")}>
       <i className="ff-spray-sheet" />
-      {Array.from({ length: 26 }, (_, i) => (
+      {Array.from({ length: 34 }, (_, i) => (
         <b
           key={i}
           style={v({
-            "--y": `${-10 + rand() * 120}%`,
-            "--x": `${-30 + rand() * 60}%`,
-            "--s": (0.5 + rand() * 1.4).toFixed(2),
-            "--o": (0.55 + rand() * 0.45).toFixed(2),
+            "--y": `${-8 + (i / 33) * 116 + (rand() - 0.5) * 6}%`,
+            "--x": `${(rand() - 0.5) * 22}vw`,
+            "--s": (0.7 + rand() * 1.1).toFixed(2),
+            "--o": (0.7 + rand() * 0.3).toFixed(2),
+          })}
+        />
+      ))}
+      {Array.from({ length: 14 }, (_, i) => (
+        <u
+          key={i}
+          style={v({
+            "--y": `${rand() * 100}%`,
+            "--x": `${8 + rand() * 30}vw`,
+            "--s": (0.3 + rand() * 0.6).toFixed(2),
           })}
         />
       ))}
