@@ -10,6 +10,7 @@ import {
   ultimates,
 } from "../src/content/ultimates";
 import { heroes } from "../src/content/heroes";
+import { evolutions } from "../src/content/evolutions";
 import type { RunState } from "../src/shared/model";
 
 /** A two-hero fight on the tactical rules, with Ultimates. */
@@ -254,10 +255,17 @@ describe("Evolutions and Ultimates", () => {
     expect(ultimateFor({ heroId: "vanguard", evolution: "van-breaker" })?.id).toBe(
       "gatebreaker",
     );
-    // A path that has not authored one keeps the class's.
-    expect(ultimateFor({ heroId: "vanguard", evolution: "van-aegis" })?.id).toBe(
-      "lantern-wall",
+    // A path that has not authored one keeps the class's. Found rather than
+    // named, so authoring one more path never breaks this.
+    const unauthored = evolutions.find(
+      (e) => !ultimates.some((u) => u.evolution === e.id),
     );
+    if (unauthored) {
+      const base = ultimateFor({ heroId: unauthored.heroId })!;
+      expect(
+        ultimateFor({ heroId: unauthored.heroId, evolution: unauthored.id })?.id,
+      ).toBe(base.id);
+    }
     const base = ultimateFor({ heroId: "vanguard" })!;
     const evolved = ultimateFor({ heroId: "vanguard", evolution: "van-breaker" })!;
     expect(evolved.target).not.toBe(base.target);
