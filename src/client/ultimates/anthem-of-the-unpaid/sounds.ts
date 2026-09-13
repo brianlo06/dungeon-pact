@@ -38,9 +38,11 @@ function sing(
   depth.gain.linearRampToValueAtTime(f * 0.008, t + attack + hold * 0.6);
   lfo.connect(depth).connect(src.frequency);
   const amp = c.createGain();
+  // Two narrow formant bands keep only a sliver of the source: make it up.
+  const level = gain * 2.8;
   amp.gain.setValueAtTime(0.0001, t);
-  amp.gain.exponentialRampToValueAtTime(gain, t + attack);
-  amp.gain.setValueAtTime(gain, t + attack + hold);
+  amp.gain.exponentialRampToValueAtTime(level, t + attack);
+  amp.gain.setValueAtTime(level, t + attack + hold);
   amp.gain.exponentialRampToValueAtTime(0.0001, t + attack + hold + release);
   const [f1, f2] = vowel === "ah" ? [760, 1180] : [520, 900];
   for (const [freq, q, g] of [
@@ -86,7 +88,7 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       horn(c, o, t, 57, { gain: 0.12, hold: 0.42, release: 0.55 });
-      // The air in the hall of the sky answering it, very far off.
+      // The open sky giving it back, very far off.
       swell(c, o, t + 0.25, { type: "sine", freq: hz(69), gain: 0.02, attack: 0.2, hold: 0.2, release: 0.6 });
     },
   },
@@ -149,7 +151,7 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       for (let i = 0; i < 6; i++)
-        crash(c, o, t + i * 0.055 + (i % 2) * 0.015, { seconds: 0.05, gain: 0.07 - i * 0.008, freq: 1600 - i * 120, q: 2 });
+        crash(c, o, t + i * 0.055 + (i % 2) * 0.015, { seconds: 0.05, gain: 0.2 - i * 0.024, freq: 1600 - i * 120, q: 2 });
     },
   },
   /** The motif, hummed back by the party as the fight resumes: A, E, F♯, D. */

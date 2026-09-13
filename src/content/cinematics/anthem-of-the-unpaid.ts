@@ -189,14 +189,14 @@ export const anthemOfTheUnpaid: Cinematic = {
         {
           role: "allies",
           at: [640, 830],
-          spread: [-205, -22],
+          spread: [-205, 22],
           size: 360,
           look: "lit",
           z: 1,
           clip: "ult:anthem-roar",
           then: "ult:anthem-roar",
         },
-        { role: "caster", at: [900, 860], size: 440, clip: "ult:anthem-cry", then: "ult:anthem-cry", look: "rim", rim: ROSE, z: 3 },
+        { role: "caster", at: [900, 860], size: 440, clip: "ult:anthem-cry", then: "ult:anthem-cry", look: "lit", rim: ROSE, z: 3 },
       ],
       vfx: [
         { kind: "anthem-banner", at: 0, until: 1, layer: "back", params: { y: 250, sag: 50 } },
