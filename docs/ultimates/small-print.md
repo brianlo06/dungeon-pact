@@ -46,6 +46,19 @@ notice* finds nothing to enforce.
 for price, so the Small Print is never refused: a short treasury is emptied and
 the cover is paid in full. That is written into the description.
 
+Quick balance (`scripts/ultimate-report.ts 4 --sample=6`, 324 runs, same
+machine), against the same sample with this path still on Foreclosure:
+
+| Win rate | off | on, Foreclosure | **on, The Small Print** |
+| --- | ---: | ---: | ---: |
+| 2 players | 75% | 83% | 83% |
+| 3 players | 94% | 95% | 95% |
+| 4 players | 92% | 94% | 93% |
+| all | 91% | 93% | **93%** |
+
+"all" does not move; duos do not move; quartets lose a point. Broker uses per
+run 2.33 before, 2.36 after (charge earned 258 / 261).
+
 Tests: `tests/ultimates-small-print.test.ts` (4): it replaces Foreclosure,
 touches no enemy and only spends; it takes 40 gold, covers all four with 30,
 strikes out a Mark and gives 2 Credit; a treasury of 15 is emptied and the
@@ -111,12 +124,71 @@ Usurer the loan.
 
 | # | Shot | ms (FAST) | Camera | Pose | Background / light | VFX | Audio | Target | Transition in | Purpose |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 0 | Call | 400 (240) | battle camera | real Broker `ult:print-produce` — the ledger hand goes into the coat and comes out with a fat folded policy | real battlefield sinks to umber, bars close | carbon call aura; the folded policy flicks open a fold at the Broker's hand (`print-slip`, anchored) | call; paper drawn out and riffled (`print-rustle`); music ducks | on board | — | break the round: the Broker has paperwork |
-| 1 | Riffle · detail | 600 (380) | low, up past the policy at the face, Dutch 8° → 5°, pushing in | `ult:print-riffle` — the policy held up to the lens in the ledger hand, the thumb riffling; head tipped down over it, brows knit amiably, a salesman's purse of the mouth | the page, near dark; cream bounce light from below | the fan-fold wad, its folds flicking past the thumb one by one, each with a carbon border (`print-wad`) | the riffle, speeding up (`print-riffle`) | no | black 70ms | identity: the underwriter and its very long form |
-| 2 | Policy · wide on the party | 1000 (520) | wide and level on the page, a slow truck along the line | `ult:print-cast` — the Broker at the left edge lets the strip go out of its hand; allies `ult:print-look`, looking down at the fold landing at their feet, one after another | the page, lit | the strip flips open along the page fold over fold (`print-policy`), a carbon signature line writing itself on the fold at each ally's feet | the flaps running out (`print-unfold`); **the motif** on the last three entries | **the real party**, gear and all | the first fold flips over the lens (`print-turn`, in-folder occlusion) | stakes and escalation: everyone is on it; title |
-| 3 | Small print · the spectacles | 620 (400) | extreme close-up on both lenses and the brows, dead level, still | `ult:print-read` (root off) — eyes run along the lines; brows come down onto the rims and knit; eyes narrow; the mouth tightens, then one corner settles | the page, near black; cream under-light on the lenses | lines of small print scrolling across both lenses (`print-lens`); the page's edge in the foreground (`print-margin`) | music to 4%; the watch ticking (`print-tick`, `-fast`); a breath | no | cut | the quiet: the catch, read and accepted |
-| 4 | Covered · impact | 780 (560) | low on the page along the party line, Dutch −6° → −2°, easing out | `ult:print-snap` (contact 0.05) — up on the toes, the ledger arm cracking the strip out and up, a shout; allies brace (`block`) | exposure spike to cream, then settling; carbon rim | **carbon-and-ink two-tone** (70ms); the crease across the frame (`print-crack`); every fold stands up into a screen in front of its ally, the Broker's first (`print-screens`); paper slivers | layered crease impact (`print-impact`) + room; **140ms stop**, heavy shake | **the real party**, covered | cut on the two-tone | impact: everyone covered at once; wards revealed; "Covered! Every last one of you!" |
-| 5 | Cover · return | 820 (520) | battle camera | real Broker `ult:print-settle` — pats the policy into its coat and straightens | real battlefield; bars open | a paper screen stands up at the enemy-facing side of every real party member, staggered (`print-cover`); the bill flies into the treasury (`print-bill`) | a card thump per ally, rising (`print-stand`); tail | on board | flash 70ms | release: where the cover stands, and what it cost |
+| 0 | Call | 400 (240) | battle camera | real Broker `ult:print-produce` — the ledger hand goes into the coat and comes out with a fat folded policy | real battlefield sinks to umber, bars close | carbon call aura; the folded policy flicks open a fold at the Broker's hand (`print-slip`, anchored) | call; paper drawn out and flicked (`print-rustle`); music ducks | on board | — | break the round: the Broker has paperwork |
+| 1 | Riffle · detail | 600 (380) | on the face and the policy under it, Dutch 8° → 5°, pushing in | `ult:print-riffle` — the policy held at the chest in the ledger hand, trembling as the thumb runs over it; head tipped down to the lens, brows knit kindly, a salesman's purse of the mouth; the balance let down out of frame | the page, near dark; cream bounce light from below | the fan-fold block, its folds flicked open and slapping back in two waves (`print-wad`); at the end a sheet turns over the lens (`print-turn` out) | the riffle, speeding up (`print-riffle`); the turn (`print-turn`) | no | black 110ms (hides the copy blending into the riffle) | identity: the underwriter and its very long form |
+| 2 | Policy · wide on the party | 1000 (520) | wide and level on the page, a slow truck right | `ult:print-cast` — the Broker at the left lets the policy go out of its hand and stands back pleased; allies `ult:print-look` — lean over and look down at it, then settle back unconvinced | the page, lit | the sheet turns off the lens (`print-turn` in); the policy opens behind the whole party fold after fold, a leaf behind each and on past the last of them, a carbon signature writing itself on each fold (`print-policy`) | the folds running out (`print-unfold`); **the motif** | **the real party**, gear and all | the sheet across the lens (in-folder occlusion) | stakes and escalation: everyone is on it; title |
+| 3 | Small print · the spectacles | 620 (400) | extreme close-up: both lenses, the brows and the mouth, dead level, still | `ult:print-read` (`root: false`) — eyes run along a line and back; brows come down onto the rims and knit; eyes to slits; lips press; the mouth settles into a small smile | the page, near black; cream under-light | lines of small print scrolling up across both lenses (`print-lens`); the page's edge with its small print just above the letterbox (`print-margin`) | music to 4%; the watch ticking (`print-tick`, `-fast`); a breath through the nose | no | cut | the quiet: the catch, read and accepted |
+| 4 | Covered · impact | 780 (560) | low on the page along the party line, which recedes up the frame; Dutch −8° → −3°, easing out | `ult:print-snap` (contact 0.05) — out of a crouch up onto the toes, the ledger arm cracked forward, a shout; the balance thrown down out of the way; allies brace (`block`) | exposure 1 → 0.88; carbon back light and rim | **carbon-and-ink two-tone** (70ms); the crease zig-zags across the frame and throws paper slivers (`print-crack`); every screen stands on the drawn frame itself, the Broker's too, and the crease runs taut from the Broker's hand along the top of every one and out of frame; after the stop each springs past its height and settles, from the Broker outward (`print-screens`) | layered crease impact (`print-impact`) + room; **140ms stop**, heavy shake | **the real party**, covered | cut on the two-tone | impact: everyone covered at once; wards revealed; "Covered! Every last one of you!" |
+| 5 | Cover · return | 820 (520) | battle camera | real Broker `ult:print-settle` — pats the policy into its coat and straightens | real battlefield; bars open | a paper screen stands up beside every real party member, staggered (`print-cover`); the premium's bill flies from the Broker into the treasury (`print-bill`) | a card thump per ally, rising (`print-stand`); tail | on board | flash 70ms | release: where the cover stands, and what it cost; "Cover lapses when the round ends. It's all in the small print." |
+
+## Notes from the lab
+
+- **The result is on the drawn frame.** The first cut raised the screens after
+  the contact, so the hit-stop held a frame with nothing standing: every screen
+  is now full height on the two-tone frame, and the spring and the stagger
+  happen after the stop. A flash after the two-tone washed the held frame out
+  and was removed.
+- **The taut crease** from the Broker's hand along the screens' tops is what
+  ties the gesture to the result; without it the snap read as the Broker
+  presenting something.
+- **The policy is longer than the party.** In a duo the folds run on past the
+  one ally to the edge of the frame, and at the impact the crease runs out of
+  the frame: the joke, and no empty half of a picture.
+- **The balance stays down.** The Broker always holds its balance; this film
+  lets it down out of the picture in every Cinematic shot, because the
+  weighing is Foreclosure's.
+- **The quiet's mouth.** The page's edge first sat over the mouth, and then
+  under the letterbox; it now sits just above the bar with the camera low
+  enough that the smile is the last thing in the frame.
+- **Sounds were rendered offline and measured** (peaks): the impact 1.25–1.29
+  (Foreclosure's 1.44, the Anthem's chord 1.23, The Hundredth Mark's 1.21);
+  the motif 0.15 (Foreclosure's 0.16); the quiet's ticks 0.06. The clicks are
+  tones, not noise: short high-passed noise bursts peaked anywhere from 0.1 to
+  0.85 from one render to the next.
+
+## Whole-body motion
+
+Root keys, authored for the size each clip plays at: `ult:print-snap` (a
+crouch, squash 1.1, to up on the toes, y −0.05, squash 0.86, scale 1.05, lean
+6°), `ult:print-cast` (a throw, x 0.03, lean −3° → 5°), `ult:print-riffle`
+(lean ≤ 3.6°), and on the board `ult:print-produce` and `ult:print-settle`.
+`ult:print-read` plays with `root: false`, and holds its root flat anyway.
+The allies' `ult:print-look` moves parts only. Nothing moves `.cine-look`.
+
+## What the engine could not do, and what was built instead
+
+- **An occlusion with another object.** The occluder is always the cape, so
+  the sheet turning over the lens is two screen-layer cues of `print-turn`
+  straddling a plain cut (`out` at the end of the riffle, `in` at the start of
+  the policy). The engine would need `transition.object` to render a named
+  in-folder effect.
+- **Staggered reactions.** An actor cue's clips land on every ally at once, so
+  the allies all lean over the policy together rather than as it reaches each,
+  and the screens' settle after the stop is staggered in `print-screens`. The
+  engine would need `react[].stagger` (or per-slot delay on `clipAt`).
+- **The catch has no beat.** A `ward` beat carries the Barrier's amount but not
+  its duration, so the film cannot draw "until the end of the round" on each
+  ally from the result; the catch is read in the quiet and said in the
+  after-line. The engine would need the status duration on the beat.
+- **Gold has no beat.** The premium is the bill flying into the treasury,
+  timed by the return shot rather than revealed, and it flies whether the
+  treasury paid 40 or was short.
+- **Stripping a status logs no beat.** The Mark struck off an ally is not
+  shown: the film cannot know who was Marked.
+- **A self-targeted Ultimate always frames `normal`.** Nothing here needs a
+  boss framing, since no enemy is cast; the boss room changes only the board.
+- **A clip plays at one rate in FULL and FAST.** The read clip's acting is
+  timed to FAST's 400ms and holds in FULL; the ticks have a `-fast` cue.
 
 ### Framing
 
