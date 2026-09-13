@@ -195,7 +195,7 @@ export const debtOfThunder: Cinematic = {
       background: "storm-ledger",
       lighting: { exposure: 0.35, back: [STORM, 0.35], rim: [PALE, 0.9, 1], vignette: 0.5, letterbox: BARS },
       toLighting: { exposure: 0.55, back: [STORM, 0.7], rim: [PALE, 1, 1], vignette: 0.45, letterbox: BARS },
-      actors: [{ role: "caster", at: [760, 960], size: 780, clip: "ult:command", then: "ult:command", look: "rim", rim: STORM }],
+      actors: [{ role: "caster", at: [760, 960], size: 780, clip: "ult:command", then: "ult:command", look: "rim", rim: STORM, root: false }],
       vfx: [
         { kind: "rune-circle", at: 0, until: 1, x: 820, y: 120, scale: 2.2, color: STORM, layer: "back" },
         { kind: "gather", at: 0.35, until: 1, follow: "caster", x: 130, y: -740, scale: 1.2, color: PALE, layer: "front" },

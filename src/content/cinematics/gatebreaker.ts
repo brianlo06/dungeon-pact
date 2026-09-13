@@ -158,6 +158,8 @@ export const gatebreaker: Cinematic = {
           look: "rim",
           rim: MOLTEN,
           z: 3,
+          // Framed over the shoulder and shield; the crouch itself is shot 3's.
+          root: false,
         },
       ],
       vfx: [

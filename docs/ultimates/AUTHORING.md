@@ -103,6 +103,18 @@ so tilting it (`knit`) more than about 5° shows the socket under it; lift and
 lower it instead. A close-up without any face acting, on one of these five, is
 below the bar.
 
+## Whole-body motion
+
+A clip's root track (its top-level `poses`: x, y, rotate, squash, scale) moves
+the whole figure in a film, as it does in combat. Before 2026-09-13 it did not
+play in films, and the first twelve films were tuned without it. A root
+`flash` is never drawn in a film; flash with a screen accent instead. Author
+root keys for the shot size they play at: a crouch that reads in a wide shot
+carries a face out of a close-up. Where one clip serves both, set
+`root: false` on the close-up's actor cue and that shot moves only the parts.
+Do not also rebuild whole-body motion as a transform on `.cine-look`; it will
+stack with the root track.
+
 ## Gameplay, for a path's Ultimate
 
 Read the path in `content/evolutions.ts` — what it trades away and what it

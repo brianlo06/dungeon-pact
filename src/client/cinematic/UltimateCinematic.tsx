@@ -169,7 +169,10 @@ const CastLayer = memo(function CastLayer({
             data-look="lit"
             style={{ display: "none" }}
           >
-            <div className="cine-rig" ref={(el) => animators.attach(id, el)}>
+            <div
+              className="cine-rig"
+              ref={(el) => animators.attach(id, el?.parentElement?.dataset.root === "0" ? null : el)}
+            >
               <div className="cine-look">
                 <CloseUpContext.Provider value={true}>
                   <Figure
@@ -401,6 +404,14 @@ export function UltimateCinematic({
             `scale(${(scale * mirror).toFixed(4)}, ${scale.toFixed(4)})`;
           const want = cue.look ?? "lit";
           if (node.dataset.look !== want) node.dataset.look = want;
+          // Whether the clip's root track moves the whole figure in this shot.
+          const rooted = cue.root === false ? "0" : "1";
+          if (node.dataset.root !== rooted) {
+            node.dataset.root = rooted;
+            const rig = node.querySelector<HTMLElement>(".cine-rig");
+            animators.attach(unitId(c), rooted === "1" ? rig : null);
+            if (rig && rooted === "0") rig.style.transform = "";
+          }
           if (cue.rim) set(node, "--rim-c", cue.rim);
         }
 
@@ -515,7 +526,7 @@ export function UltimateCinematic({
           whip.style.opacity = ms && into < ms ? (1 - into / ms).toFixed(3) : "0";
         }
       }),
-    [loop, run, cast, cueFor, debug],
+    [loop, run, cast, cueFor, debug, animators],
   );
 
   // Register the presentation copies' animators, and dispose of them after.
@@ -526,6 +537,11 @@ export function UltimateCinematic({
         isPlayer(c.unit) ? c.unit.heroId : undefined,
       );
       animators.register(unitId(c), look.spriteSet);
+      // The rig node's ref ran before this animator existed, so its attach was
+      // a no-op and the clip's root track (the whole figure) was never written.
+      const node = actors.current.get(c.id);
+      if (node?.dataset.root !== "0")
+        animators.attach(unitId(c), node?.querySelector<HTMLElement>(".cine-rig") ?? null);
     }
     return () => {
       for (const c of cast) animators.release(unitId(c));

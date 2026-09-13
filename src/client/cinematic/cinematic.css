@@ -179,6 +179,9 @@
   width: 100%;
   height: 100%;
   transform-origin: 50% 92%;
+  /* A clip's root flash is an inline filter; on a figure that fills the screen
+     it is an offscreen pass every frame. Films flash with screen accents. */
+  filter: none !important;
 }
 .cine-look {
   width: 100%;
@@ -456,6 +459,15 @@
   transform: translate(-50%, 0);
   opacity: min(1, calc(var(--p) * 5));
   text-shadow: 0 2px 0 #000;
+}
+/* Over the real board the bars are open and the line lands on the hand tray.
+   Lifting it would cover the result chips the return exists to show, so it
+   stays on the tray, on a plate that hides the card text under it. */
+.ult-cinematic[data-space="battlefield"] .cine-text-voice {
+  padding: 0.3em 0.9em;
+  border-radius: 0.3em;
+  background: rgb(8 6 10 / 0.94);
+  box-shadow: 0 0 0 1px rgb(255 243 216 / 0.12);
 }
 .cine-text-voice span::before {
   content: "“";

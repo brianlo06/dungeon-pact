@@ -155,7 +155,7 @@ export const anthemOfTheUnpaid: Cinematic = {
       lighting: { exposure: 0.1, rim: [ROSE, 0.3, -1], vignette: 0.9, letterbox: 0.14 },
       toLighting: { exposure: 0.08, rim: [ROSE, 0.45, -1], vignette: 0.92, letterbox: 0.14 },
       actors: [
-        { role: "caster", at: [900, 1030], size: 820, face: -1, clip: "ult:anthem-breathe", then: "ult:anthem-breathe", look: "rim", rim: ROSE },
+        { role: "caster", at: [900, 1030], size: 820, face: -1, clip: "ult:anthem-breathe", then: "ult:anthem-breathe", look: "rim", rim: ROSE, root: false },
       ],
       vfx: [{ kind: "anthem-voices", at: 0, until: 1, layer: "back", params: { mode: "hang", cx: 820, cy: 430, span: 760 } }],
       duck: [{ at: 0, level: 0.03, ms: 580 }],

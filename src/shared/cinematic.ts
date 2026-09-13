@@ -156,6 +156,12 @@ export interface ActorCue {
   tilt?: number;
   /** Rotate the figure at the shot's end. */
   toTilt?: number;
+  /**
+   * `false`: in this shot only the clip's parts move, not the whole figure
+   * (its root track). For a tight close-up framed on a feature that a crouch
+   * or a stretch would carry out of the picture.
+   */
+  root?: boolean;
 }
 
 /** Temporary lighting. Nothing here outlives its shot. */

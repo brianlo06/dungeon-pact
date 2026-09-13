@@ -1,6 +1,6 @@
 # Ultimates
 
-Updated 2026-09-12 · branch `ultimates` (off `attack-choreography` at `a8fb81e`)
+Updated 2026-09-13 · branch `ultimates` (off `attack-choreography` at `a8fb81e`)
 
 Every hero now has an Ultimate: a charged, extra action that resolves before
 the round and plays as a short film. This document is the design, the schemas,
@@ -154,13 +154,15 @@ Ultimate if authored, else the class's.
 | Vanguard · Aegis Knight | **Breakwater** | Takes every ally's next direct hit this round, 14 Barrier +10 per ally; every enemy Weak and takes 6; the target 14 more through armour, Vulnerable | **authored** |
 | Arcanist | **Debt of Thunder** | All enemies Wet; 26 lightning on the target (sets off Chain Shock, the rest stay Wet for the party) | **authored** |
 | Ranger | **The Hundredth Mark** | Mark every enemy; 24 precision through armour on the target (cashes its Mark; the others stay Marked) | **authored** |
-| Warden | Green Reckoning | Every ally incl. the downed: heal 18, Regen, clear Burn/Poison/Weak; every enemy Poisoned 4/round | generic |
-| Broker | Foreclosure | Strip the target's Barrier, 26, Vulnerable; +30 gold; every ally +8 Barrier | generic |
-| Herald | Anthem of the Unpaid | The whole party Empowered this round and next, +8 Barrier, clear Weak/Vulnerable | generic |
-| Reaver | Red Ledger | Pay 14 HP; 40 through armour on the target; 12 to the rest of its row | generic |
+| Warden | **Green Reckoning** | Every ally incl. the downed: heal 18, Regen, clear Burn/Poison/Weak; every enemy Poisoned 4/round | **authored** |
+| Broker | **Foreclosure** | Strip the target's Barrier, 26, Vulnerable; +30 gold; every ally +8 Barrier | **authored** |
+| Herald | **Anthem of the Unpaid** | The whole party Empowered this round and next, +8 Barrier, clear Weak/Vulnerable | **authored** |
+| Herald · Warcaller | **Into the Din** | Warcaller Empowered 3 rounds, then 24 on the target, Vulnerable; every ally sheds Weak and is Empowered this round; +2 Verse | **authored** |
+| Reaver | **Red Ledger** | Pay 14 HP; 40 through armour on the target; 12 to the rest of its row | **authored** |
 | Beguiler | **Hall of Mirrors** | Every enemy is cut by the glass and strikes its own side this round; 10 more arcane on the target | **authored** |
+| Beguiler · Mindflayer | **The Open Mind** | 24 arcane through armour on the target, WINDUP broken, Vulnerable; every other enemy grazed, and any already Vulnerable holed for 10 more and interrupted; +2 Sway | **authored** |
 
-The other 22 paths keep their class's Ultimate until authored (their `ultimate-defs/` files are `null` stubs). Every one of
+The other 20 paths keep their class's Ultimate until authored (their `ultimate-defs/` files are `null` stubs). Every one of
 these was designed against the kit it belongs to and interacts with the
 existing reaction system (Wet → Chain Shock, Mark → Exploit, Vulnerable,
 guard links), so an Ultimate is a team play, not a solo mini-game.
@@ -363,6 +365,14 @@ Arcanist 1.24 / 167 · Ranger 1.29 / 170 · Warden 0.87 / 139 · Broker 1.11 /
 that reached the boss used Ultimates there: 3.6 per boss fight. Ultimates did
 13% of all hero damage, and 76 healing and Barrier a run.
 
+**Latest quick measure** (`ultimate-report.ts 6 --sample=3`, 972 runs, on
+`4a901cb` with 12 films, including the Mindflayer and Warcaller paths): all
+93% off / 93% on; 2 players 72/74, 3 players 96/97, 4 players 94/94. Uses per
+run: Vanguard 2.27, Arcanist 2.71, Ranger 3.10, Warden 1.69, Broker 2.28,
+Herald 2.78, Reaver 2.34, Beguiler 2.44; 6.76 Ultimates per boss fight; 16% of
+hero damage. The Ranger sits just over the 1–3 target, and duos gained two
+points with the two paths: both worth re-checking in the full matrix.
+
 **How it got there — the numbers worth remembering:**
 
 - The first cut took the matrix from **89% to 99%**. Measured one class at a
@@ -448,7 +458,10 @@ Chromium on the real GPU (`GPU=1 scripts/profile-ultimate.ts`), dev build.
   calling Ultimates.
 
 - `tests-browser/ultimates/<id>.spec.ts`: one per authored film (Debt of
-  Thunder 3, Hall of Mirrors 7, Breakwater 6, The Hundredth Mark 4).
+  Thunder 3, Hall of Mirrors 7, Breakwater 6, The Hundredth Mark 4, Anthem of
+  the Unpaid 7, Foreclosure 6, Green Reckoning 5, Red Ledger 7, The Open Mind
+  8, Into the Din 7). `tests/ultimates-open-mind.test.ts` (4) covers the
+  Mindflayer's gameplay.
 
 On `a4fa312` (production `cecf3f6` merged in): the unit suite passes (424; the
 simulation tests time out only when the machine is saturated). The whole
@@ -469,16 +482,34 @@ on the battlefield too, so a round's figure had parts the animator never wrote
 
 ## 12. Placeholders and known gaps
 
-- **6 of 32 films are authored** (Lantern Wall, Gatebreaker, Breakwater, Debt
-  of Thunder, Hall of Mirrors, The Hundredth Mark). The Warden, Broker, Herald
-  and Reaver play the generic film (call → hero with name → blow → return,
-  accent-coloured, combat clips) over their designed gameplay; 22 paths use
+- **12 of 32 films are authored**: every class's base Ultimate, plus the
+  Breaker, Aegis Knight, Mindflayer and Warcaller paths. The other 20 paths use
   their class's Ultimate until authored.
+- **Root tracks now play in films** (fixed 2026-09-13). The rig node was
+  attached before its animator existed, so until then only `parts` moved and
+  every film was tuned without whole-body motion. Turning it on moved three
+  shots off their approved framing (Anthem's hush, Debt of Thunder's command,
+  Gatebreaker's over-the-shoulder), which now set `root: false`. A root
+  `flash` is not drawn in films (`filter: none` on `.cine-rig`): films flash
+  with screen accents. Authors of Green Reckoning, Red Ledger, The Open Mind
+  and Into the Din built whole-body motion on `.cine-look` in their own
+  modules while root tracks were dead; that now stacks with their root keys
+  (listed in each storyboard) and may be halved on a later tuning pass.
+- The after-line (`$voice.after`) over the battlefield sits on a plate over the
+  hand tray, so it no longer reads into a card.
 - Engine limits the authors worked around, each noted in its storyboard: an
   enemy that only takes a status (no damage) is not in the cast; only the
   `reflection` effect gets a figure slot; a line of enemies shares one facing;
-  the occlusion object is always a cape; a row's reactions land together; a
-  ranged contact-vs-reveal check needs a marker on the follow-through pose.
+  the occlusion object is always a cape (Foreclosure and Green Reckoning built
+  their own wipes); a row's reactions land together (Anthem, Red Ledger and
+  The Open Mind staggered them in their modules — a `react[].stagger` or
+  `each` stagger would replace that); a ranged contact-vs-reveal check needs a
+  marker on the follow-through pose; battlefield clips reach only caster and
+  targets; stripping a status logs no beat, and a segment does not carry the
+  targets' statuses from before the cast; a self-targeted Ultimate always
+  frames `normal`; one reveal covers every target (Red Ledger's price lands
+  with its hits); a clip plays at one rate in FULL and FAST; `iris` is still
+  not rendered (The Open Mind built its own).
 - No recorded voice; subtitles only. Motifs and all sounds are synthesis.
 - Faces: the Vanguard's helm hides a face, so "facial performance" is helm
   angle, crest/cape lag and the visor lighting. The five visible-face heroes
