@@ -6,10 +6,13 @@ import type {
   ClipName,
   CreatureChoreography,
   Delivery,
+  ImpactWeight,
   Locomotion,
+  MoveSounds,
   ProjectileLook,
   TimingHints,
   UnitChoreography,
+  VfxTheme,
 } from "../../shared/presentation";
 import { FOOTPRINT_SCALE } from "../../shared/presentation";
 import { abilities } from "../../content/heroes";
@@ -60,6 +63,12 @@ export interface MoveMeta {
    * are things the blow set off, not more blows.
    */
   strikes: number;
+  /** How hard it lands, when annotated: heavy and signature hold longer. */
+  weight?: ImpactWeight;
+  /** Its visual family, when annotated: tints its charge. */
+  theme?: VfxTheme;
+  /** Sounds for its moments, over the generic ones. */
+  sounds?: MoveSounds;
 }
 
 /** Blows an ability deals each target: its damage and heal effects. */
@@ -267,6 +276,9 @@ export function moveMeta(s: Snapshot | null, cast: Beat): MoveMeta {
     source,
     abilityId: ability?.id,
     strikes: strikesOf(ability),
+    weight: note?.weight,
+    theme: note?.theme,
+    sounds: note?.sounds ?? {},
   };
 }
 

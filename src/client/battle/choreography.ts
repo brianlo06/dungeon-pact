@@ -7,6 +7,7 @@ import type {
   ProjectileLook,
   SfxName,
 } from "../../shared/presentation";
+import { IMPACT } from "../../shared/presentation";
 import { hitStop } from "./pacing";
 import {
   contactTimes,
@@ -104,6 +105,8 @@ export interface ProjectilePlan {
   end: Vec;
   startAnchor?: Anchor;
   endAnchor?: Anchor;
+  /** For a cone: how wide it opens where it lands, stage widths. */
+  spread?: number;
 }
 
 export type MarkStyle =
@@ -113,7 +116,9 @@ export type MarkStyle =
   | "sigil"
   | "bloom"
   | "emphasis"
-  | "line";
+  | "line"
+  /** A muzzle's report: one bright flash where the shot left. */
+  | "flash";
 
 export type Cue =
   /** `by`: the actor whose move shows it, once laid into a round. */
@@ -156,7 +161,16 @@ export type Cue =
       /** For a line: the unit it runs to. */
       to?: string;
       until: number;
-    };
+      /** Ride this point of the unit's drawing rather than a generic one. */
+      anchor?: Anchor;
+      /** The visual family it is tinted by. */
+      tone?: string;
+    }
+  /**
+   * A blow heavier than its number: the scene holds a little longer and the
+   * camera shakes harder, from the move's annotated weight.
+   */
+  | { t: number; kind: "impact"; stopMs: number; shake: number };
 
 /** What the debug overlay draws for a move. */
 export interface MoveDebug {
@@ -442,6 +456,32 @@ function beatCues(t: number, beats: Beat[]): Cue[] {
   return beats.map((beat, i) => ({ t: t + i * 0.01, kind: "beat", beat }));
 }
 
+/**
+ * What a contact adds over its beats, from the move's annotation: the sound
+ * layered on the moment it lands, and — for a heavy or signature blow that
+ * actually hurt someone — a longer hold and a harder shake than its number
+ * alone would earn. The beats' own hit-stop still applies; overlapping stops
+ * do not add up, so this only ever lengthens one.
+ */
+export function landingCues(t: number, meta: MoveMeta, beats: Beat[]): Cue[] {
+  const cues: Cue[] = [];
+  const lands = beats.some((b) => b.kind === "damage" || b.kind === "heal");
+  if (lands && meta.sounds?.impact)
+    cues.push({ t, kind: "sound", name: meta.sounds.impact });
+  const hurt = beats.filter((b) => b.kind === "damage" && (b.amount ?? 0) > 0);
+  if (hurt.length && (meta.weight === "heavy" || meta.weight === "signature")) {
+    const w = IMPACT[meta.weight];
+    const own = Math.max(...hurt.map((b) => hitStop(b.amount ?? 0)));
+    cues.push({
+      t: t + 0.02,
+      kind: "impact",
+      stopMs: Math.max(w.stopMs, own),
+      shake: w.shake,
+    });
+  }
+  return cues;
+}
+
 /** The longest hit-stop among a contact's hits. */
 const stopOf = (c: Contact) =>
   Math.max(0, ...c.beats.map((b) => (b.kind === "damage" ? hitStop(b.amount ?? 0) : 0)));
@@ -660,7 +700,7 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
       ) {
         const step = meta.locomotion === "charge" ? 190 : 260;
         for (let t = ant + step * 0.6; t < arrive - 40; t += step)
-          cues.push({ t, kind: "sound", name: "footstep-heavy" });
+          cues.push({ t, kind: "sound", name: meta.sounds?.step ?? "footstep-heavy" });
       }
     }
     // Arrival: a beat to land on its feet, then the strike.
@@ -674,7 +714,9 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
     contactsAt = plan.at;
     phase("strike", strikeAt, contactsAt[0]);
     for (const [i, t] of contactsAt.entries()) {
-      cues.push({ t: Math.max(strikeAt, t - 120), kind: "sound", name: "swing-heavy" });
+      const swing = meta.sounds?.swing === undefined ? "swing-heavy" : meta.sounds.swing;
+      if (swing) cues.push({ t: Math.max(strikeAt, t - 120), kind: "sound", name: swing });
+      cues.push(...landingCues(t, meta, cons.contacts[i]?.beats ?? []));
       if (i === 0) {
         phase("contact", t, t);
         cues.push({
@@ -788,6 +830,9 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
     contactsAt = plan.at;
     phase("strike", 0, contactsAt[0]);
     phase("contact", contactsAt[0], contactsAt[0]);
+    if (meta.sounds?.charge) cues.push({ t: 0, kind: "sound", name: meta.sounds.charge });
+    if (meta.sounds?.impact)
+      cues.push({ t: contactsAt[0], kind: "sound", name: meta.sounds.impact });
     for (const [i, t] of contactsAt.entries())
       cues.push(...beatCues(t, cons.contacts[i]?.beats ?? []));
     const f = followCues(contactsAt, cons, pace, 0);
@@ -853,13 +898,19 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
         t = r + 80;
       }
     } else {
+      // A move annotated with a sound for its build-up has one to show, too:
+      // a Mender's weld gathers at the clamp before the repair leaves it.
       const building =
-        archetype === "spell" || archetype === "beam" || archetype === "area" || meta.charge === "long";
-      const lead = building ? pick(TIMING.build, pace) * (meta.charge === "long" ? 1.8 : 1) : 0;
-      if (building) {
-        cues.push({ t: 0, kind: "mark", style: "charge", unit: actorId, until: lead + 200 });
-        cues.push({ t: 0, kind: "sound", name: "charge-rise" });
-      }
+        archetype === "spell" ||
+        archetype === "beam" ||
+        archetype === "area" ||
+        meta.charge === "long" ||
+        !!meta.sounds?.charge;
+      // An annotated build-up wins: a clip that raises the hand and gathers
+      // the orb itself wants little or none in front of it.
+      const lead = building
+        ? (meta.timing.anticipation ?? pick(TIMING.build, pace) * (meta.charge === "long" ? 1.8 : 1))
+        : 0;
       const plan = strikeSchedule(strike, neutral, hitTargets.length, lead);
       plan.starts.forEach((t) =>
         cues.push({ t, kind: "clip", unit: actorId, clip: strikeName }),
@@ -874,6 +925,21 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
               const s0 = plan.starts[Math.min(i, plan.starts.length - 1)];
               return s0 + marker * strike.duration;
             });
+      if (building) {
+        // Power gathers where the shot will leave — the hand, the barrel,
+        // the horn — and holds until the moment it does.
+        cues.push({
+          t: 0,
+          kind: "mark",
+          style: "charge",
+          unit: actorId,
+          until: Math.max(lead + 200, releases[0]),
+          anchor: meta.unit.anchors?.muzzle,
+          tone: meta.theme,
+        });
+        const charge = meta.sounds?.charge === undefined ? "charge-rise" : meta.sounds.charge;
+        if (charge) cues.push({ t: 0, kind: "sound", name: charge });
+      }
       phase("anticipation", 0, Math.max(lead, 1));
       phase("strike", lead, releases[0]);
       clipEnd = plan.end;
@@ -891,7 +957,56 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
       const r = releases[Math.min(k, releases.length - 1)];
       let arrive = r;
       const flying: ProjectilePlan[] = [];
-      for (const [j, id] of ids.entries()) {
+      let flew = false;
+      if (delivery === "cone") {
+        // One breath across all of them: aimed at the middle of what it hit,
+        // reaching a little past it, landing on everyone at once.
+        const standing = ids.filter((id) => stage.units.has(id));
+        const ends = standing.map((id) => hitPoint(stage.units.get(id)!, input.targetAnchor?.(id)));
+        if (ends.length) {
+          const mid = {
+            x: ends.reduce((n, p) => n + p.x, 0) / ends.length,
+            y: ends.reduce((n, p) => n + p.y, 0) / ends.length,
+          };
+          const end = { x: muzzle.x + (mid.x - muzzle.x) * 1.12, y: muzzle.y + (mid.y - muzzle.y) * 1.12 };
+          if (!debug.hit) debug.hit = frac(stage, mid);
+          // How wide it must open where it reaches them: every target's
+          // distance off its centre line, both sides, plus a body's width.
+          const dx = mid.x - muzzle.x;
+          const dy = mid.y - muzzle.y;
+          const len = Math.hypot(dx, dy) || 1;
+          const off = Math.max(0, ...ends.map((p) => Math.abs(dx * (p.y - muzzle.y) - dy * (p.x - muzzle.x)) / len));
+          const body = Math.max(
+            ...standing.map((id) => {
+              const u = stage.units.get(id)!;
+              return u.figure.right - u.figure.left;
+            }),
+          );
+          const spread = (2 * off + body * 0.6) / stage.width;
+          const trajectory = "beam" as const;
+          const time =
+            look.duration ??
+            flightTime({ trajectory, start: frac(stage, muzzle), end: frac(stage, end), aspect }, look.speed ?? 1.6);
+          const plan: ProjectilePlan = {
+            id: `${actorId}:${k}:cone`,
+            from: actorId,
+            to: standing[0],
+            look: { ...look, trajectory },
+            spawn: r,
+            arrive: r + time,
+            start: frac(stage, muzzle),
+            end: frac(stage, end),
+            startAnchor: meta.unit.anchors?.muzzle,
+            spread,
+          };
+          flying.push(plan);
+          projectiles.push(plan);
+          cues.push({ t: r, kind: "projectile", plan });
+          arrive = plan.arrive;
+          flew = true;
+        }
+      }
+      for (const [j, id] of (delivery === "cone" ? [] : ids).entries()) {
         const u = stage.units.get(id);
         if (!u) continue;
         const end = hitPoint(u, input.targetAnchor?.(id));
@@ -950,14 +1065,28 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
         flying.push(plan);
         projectiles.push(plan);
         cues.push({ t: r, kind: "projectile", plan });
-        if (!bowed) cues.push({ t: r, kind: "sound", name: "projectile-release" });
-        else cues.push({ t: r + 40, kind: "sound", name: "arrow-whoosh" });
+        flew = true;
+        if (delivery === "mote" && archetype === "support")
+          // A repair arriving: light opens on the ally as it lands.
+          cues.push({ t: plan.arrive - 30, kind: "mark", style: "bloom", unit: id, until: plan.arrive + 460 });
+      }
+      if (flew) {
+        // Once per release, however many things leave together.
+        const released = bowed
+          ? meta.sounds?.release === undefined ? null : meta.sounds.release
+          : meta.sounds?.release === undefined ? "projectile-release" : meta.sounds.release;
+        if (released) cues.push({ t: r, kind: "sound", name: released });
+        const travel = meta.sounds?.travel ?? (bowed ? "arrow-whoosh" : undefined);
+        if (travel) cues.push({ t: r + 40, kind: "sound", name: travel });
+        if (look.muzzleFlash)
+          cues.push({ t: r, kind: "mark", style: "flash", unit: actorId, until: r + 140, anchor: meta.unit.anchors?.muzzle, tone: meta.theme });
       }
       // One contact is one impact: everything this release sends lands
       // together, so a row struck by a volley or a shockwave reacts as one,
       // and nothing arrives early and vanishes before its target reacts.
       for (const plan of flying) plan.arrive = arrive;
       contactsAt.push(arrive);
+      cues.push(...landingCues(arrive, meta, cons.contacts[k]?.beats ?? []));
       cues.push(...beatCues(arrive, cons.contacts[k]?.beats ?? []));
     });
     if (tgt)

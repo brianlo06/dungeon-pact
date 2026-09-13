@@ -12,6 +12,7 @@ import {
   type Segment,
 } from "./choreography";
 import { flightPoint, type Vec } from "./trajectory";
+import type { Anchor } from "../../shared/presentation";
 import { feet, scaleAt, type StageGeom, type UnitGeom } from "./stage-geometry";
 import type { Tracer } from "./trace";
 
@@ -61,6 +62,8 @@ interface Live {
   gone?: number;
   /** Where it was last drawn, stage pixels. */
   at?: Vec;
+  /** A beam's drawn width before it is stretched, measured once. */
+  unit?: number;
 }
 
 interface LiveMark {
@@ -70,6 +73,8 @@ interface LiveMark {
   from: number;
   until: number;
   el: HTMLElement;
+  /** A point on the unit's drawing it rides, measured live. */
+  anchor?: Anchor;
 }
 
 export interface StagehandOptions {
@@ -171,7 +176,12 @@ export class Stagehand {
         this.spawn(cue.plan, at);
         break;
       case "mark":
-        this.mark(cue.style, cue.unit, at, this.startAt + cue.until, cue.to);
+        this.mark(cue.style, cue.unit, at, this.startAt + cue.until, cue.to, cue.anchor, cue.tone);
+        break;
+      case "impact":
+        // Heavier than its number: hold the scene and shake the camera.
+        this.loop.clock.hold(cue.stopMs);
+        if (!this.still) this.camera.shake(cue.shake);
         break;
       case "camera":
         this.frameCamera(cue);
@@ -454,9 +464,19 @@ export class Stagehand {
     if (look.trail) el.dataset.trail = "";
     el.dataset.from = plan.from;
     el.dataset.to = plan.to;
+    if (plan.spread)
+      el.style.setProperty("--spread", px(plan.spread * (this.size.width || this.geom?.width || 1)));
     el.innerHTML = PROJECTILE_ART[look.visual ?? "bolt"] ?? "";
     this.projectiles.appendChild(el);
-    const live: Live = { plan, el, start, end: plan.end };
+    // A beam is stretched to its length. A wide one — a cone, drawn at a
+    // real width so its edges stay smooth — is stretched by less.
+    const live: Live = {
+      plan,
+      el,
+      start,
+      end: plan.end,
+      unit: look.trajectory === "beam" ? el.offsetWidth || 1 : undefined,
+    };
     this.live.push(live);
     this.place(live, at);
     if (this.debug) {
@@ -493,7 +513,7 @@ export class Stagehand {
     if (trajectory === "beam") {
       const len = Math.hypot((end.x - p.start.x) * W, (end.y - p.start.y) * H);
       const ang = Math.atan2((end.y - p.start.y) * H, (end.x - p.start.x) * W);
-      el.style.transform = `translate3d(${px(p.start.x * W)}, ${px(p.start.y * H)}, 0) rotate(${ang.toFixed(4)}rad) scaleX(${(len * Math.min(1, u * 1.6)).toFixed(2)})`;
+      el.style.transform = `translate3d(${px(p.start.x * W)}, ${px(p.start.y * H)}, 0) rotate(${ang.toFixed(4)}rad) scaleX(${((len * Math.min(1, u * 1.6)) / (p.unit ?? 1)).toFixed(3)})`;
     } else {
       const rot =
         plan.look.rotate === "none"
@@ -558,13 +578,16 @@ export class Stagehand {
     from: number,
     until: number,
     to?: string,
+    anchor?: Anchor,
+    tone?: string,
   ) {
     if (!this.projectiles) return;
     const el = document.createElement("span");
     el.className = `stage-mark mark-${style}`;
     el.dataset.unit = unit;
+    if (tone) el.dataset.tone = tone;
     this.projectiles.appendChild(el);
-    const m: LiveMark = { style, unit, to, from, until, el };
+    const m: LiveMark = { style, unit, to, from, until, el, anchor };
     this.marks.push(m);
     this.placeMark(m, from);
   }
@@ -615,7 +638,11 @@ export class Stagehand {
         : m.style === "charge"
           ? "muzzle"
           : "chest";
-    const p = this.anchorOf(u, where, time);
+    // A mark on a drawn point — power gathering in the hand, a report at the
+    // barrel — follows that point as the rig moves it, once it is showing.
+    const drawn =
+      m.anchor && time >= m.from ? this.probe(m.unit, m.anchor.at, m.anchor.part) : null;
+    const p = drawn ?? this.anchorOf(u, where, time);
     m.el.style.transform = `translate3d(${px(p.x * W)}, ${px(p.y * H)}, 0)`;
     // A mark on the ground paints just under the unit standing on it.
     const own = Number(this.nodeFor(u.id)?.root.style.zIndex || u.z);
@@ -740,6 +767,12 @@ export const PROJECTILE_ART: Record<string, string> = {
   rivet: `<i></i>`,
   shard: `<i></i>`,
   wave: `<i></i>`,
+  /* A forked stroke, head at the origin, tail trailing back up the sky. */
+  lightning: `<svg viewBox="-60 -9 64 18" width="64" height="18"><path d="M2 0 L-12 -5 L-20 3 L-34 -4 L-42 4 L-58 -2" stroke="#3a5bd0" stroke-width="6" fill="none" stroke-linejoin="round" stroke-linecap="round" opacity="0.55"/><path d="M2 0 L-12 -5 L-20 3 L-34 -4 L-42 4 L-58 -2" stroke="#e8f6ff" stroke-width="2.4" fill="none" stroke-linejoin="round" stroke-linecap="round"/><path d="M-20 3 L-26 8" stroke="#bfe8ff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+  /* Slanted drops falling together, not turned. */
+  rain: `<svg viewBox="-24 -30 48 40" width="48" height="40"><g stroke="#9fd6ff" stroke-width="2.2" stroke-linecap="round"><path d="M-16 -24 l-3 9"/><path d="M-6 -16 l-3 9"/><path d="M4 -26 l-3 9"/><path d="M13 -14 l-3 9"/><path d="M-11 -6 l-3 9"/><path d="M8 -2 l-3 9"/></g><g stroke="#e8f6ff" stroke-width="1" stroke-linecap="round"><path d="M-16 -24 l-1.5 4.5"/><path d="M4 -26 l-1.5 4.5"/><path d="M-11 -6 l-1.5 4.5"/></g></svg>`,
+  weld: `<i></i><b></b>`,
+  cone: `<i></i>`,
 };
 
 /** The stage's stagehand, for as long as the stage is mounted. */
