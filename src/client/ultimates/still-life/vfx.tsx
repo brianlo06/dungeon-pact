@@ -284,6 +284,8 @@ function partInWorld(el: HTMLElement, selector: string) {
   const wrap = el.getBoundingClientRect();
   const origin = m.transformPoint(new DOMPoint(wrap.left - root.left, wrap.top - root.top));
   const r = part.getBoundingClientRect();
+  // A spark that is not drawn (a worn weapon takes its place) has no flicker.
+  if (!r.width && !r.height) return null;
   const c = m.transformPoint(new DOMPoint(r.left + r.width / 2 - root.left, r.top + r.height / 2 - root.top));
   return { x: c.x - origin.x, y: c.y - origin.y };
 }
@@ -301,6 +303,7 @@ const flicker: Frame = (el, p) => {
   if (on && svg.dataset.spark !== undefined) {
     const at = partInWorld(el, '[data-part="spark"]');
     if (at) svg.style.translate = `${at.x.toFixed(1)}px ${at.y.toFixed(1)}px`;
+    else svg.style.visibility = "hidden";
   }
 };
 

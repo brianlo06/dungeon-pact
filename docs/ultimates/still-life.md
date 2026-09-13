@@ -151,3 +151,85 @@ book. It acts with **the hand** (the sweep and the pinch, the flung sleeve),
 tip** (the lag that stops) and **the eye-lights**, drawn over the profile in
 the quiet. No part was added to `Arcanist.tsx`; the combat `spark` part is
 used as it is.
+
+## Notes from the lab
+
+- **Shot list as built** (FULL / FAST ms): call 420/240, pinch 620/380,
+  windup 900/—, sleeve 520/360, stopped 560/380, release 740/520, given
+  680/460. 4,440ms FULL, 2,340ms FAST (53%). The quiet (`stopped`) is shot 4,
+  directly before the impact. It is framed as a `profile`, not a face
+  close-up: the Arcanist has no face to act with, so its quiet is a
+  silhouette whose only moving things are the two eye-lights.
+- Placed from probes: the caster at (800, 900), size 760 puts the spark at
+  (1046, 396) at the end of the pinch; at (760, 1080), size 1100 in the quiet
+  the eye-lights are at (800, 398) and the hat's crown at (679, 294).
+  The eye-light halos and the spark's flicker are placed every frame from the
+  drawing's own eyes and spark, not from numbers.
+- **The stills are posed by the clip, not by the frame.** A still is a copy of
+  the stage's actor node, and the lab's seek (and any stalled frame) can take
+  it a few hundred milliseconds late. The hand's stills in the pinch are
+  therefore re-posed from `ult:still-pinch` at the instant they were due, so
+  the three stills are always three different moments of the sweep.
+- **Screen flashes are drawn at full strength** (a flash's `amount` is not
+  read), so the shutter's flickers in the windup are gentle by colour: a dark
+  amber screened over the frame. A HOT flash just after the two-tone first
+  blew the FAST impact frame out to white; it was cut.
+- **The impact was hazy** until the caster stopped being rim-lit (its rim glow
+  is behind it but in front of the target, at a size of 920) and the back
+  light was taken off; the stills now fade out of the target on a square.
+- **A boss's stills** grow as they stream into the sleeve to about the same
+  size as a hound's, rather than arriving as a wall.
+- With a worn weapon (`gear=kit`) the Arcanist's spark is not drawn; the pinch
+  then shows the weapon in the glove and its stills, and the flicker is
+  skipped.
+- **Sounds, rendered offline and measured** (peak range over five renders,
+  and RMS): the impact 1.48–1.60, RMS 0.113 (Foreclosure's 1.42–1.53, RMS
+  0.109); the motif 0.18; the quiet 0.13; a still taken 0.27–0.36; the call
+  0.48–0.75. The shutter's clicks are noise bursts, which vary render to
+  render, so they were set low.
+
+## Whole-body motion
+
+Root keys, authored for the size each clip plays at: `ult:still-gather`
+(lean back, x −0.035, rotate −5°, squash 1.02), `ult:still-hold` (the same
+pose held), `ult:still-release` (the throw, x 0.07, rotate 6°, squash 0.92,
+scale 1.04 at contact, then settling), and on the board `ult:still-pinch`
+(x −0.012, y −0.014, rotate −2°) and `ult:still-settle`. `root: false` is
+set on the pinch's extreme close-up (the hand would drift) and on the quiet
+(nothing may move). Nothing moves `.cine-look`.
+
+## Performance
+
+`GPU=1 scripts/profile-ultimate.ts 5501 1920x1080`: the film p50 16.7ms /
+p95 33.4ms, the round after it p50 16.7ms / p95 33.3ms; 6 frames over 34ms in
+each. No filtered elements. The film's peak is 1,862 nodes (1,741 in SVG),
+about twice a film without stills: every still is a full copy of a figure.
+The copies are made once each, at a flicker, and only their wrappers move.
+The film has more frames over 20ms than the round (43 against 22), all at
+the flickers that copy a line of figures at once.
+
+## What the engine could not do, and what was built instead
+
+- **A figure slot for anyone but the primary target, at any moment.** Only
+  `reflection` gets one, and it is a still of the primary. The stills need
+  every member of the cast at the instant each is taken, so `still-plates`
+  clones the stage's own `.cine-actor` nodes into its wrapper and strips
+  `data-part`, ids and the actor classes. On the board, `still-held` and
+  `still-given` clone `.combatant-rig`. The engine would need a `slot` that
+  hands an effect a still (or a live copy) of any cast member, posed at a
+  given time.
+- **Pose at a time.** A clone is as the rig was on the frame it was made; the
+  pinch re-poses its copies from the clip. An engine `still(actor, t)` would
+  replace both.
+- **A row's reactions land together.** Every other enemy's still arrives in it
+  staggered (0.05 apart) in the effect, but its `hurt` plays for all at 0.36.
+- **The occlusion is always a cape.** The brim across the lens is an
+  in-folder screen effect, two cues straddling the cut.
+- **An enemy that only takes a status is not in the cast.** Every other enemy
+  takes a 0-base arcane sliver so the film can show the whole line held.
+- **Stripping or extending a status logs no beat.** The held Wet, Mark or
+  Empowered is not in the segment's beats, so the return cannot show *which*
+  statuses were held; it shows a still held on every enemy and given to every
+  ally instead. An engine `hold` beat (status, from, to) would let it draw
+  exactly what was kept.
+- **A screen flash ignores `amount`** (see above).
