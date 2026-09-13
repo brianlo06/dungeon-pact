@@ -5,8 +5,9 @@ Updated 2026-09-12 · branch `ultimates` (off `attack-choreography` at `a8fb81e`
 Every hero now has an Ultimate: a charged, extra action that resolves before
 the round and plays as a short film. This document is the design, the schemas,
 the architecture, the two benchmark storyboards and the measurements. The
-benchmark is **the Vanguard's Lantern Wall** and **the Breaker's Gatebreaker**;
-everything else is deliberately a placeholder until those two are judged.
+benchmark is **the Vanguard's Lantern Wall** and **the Breaker's Gatebreaker**.
+Both were approved, and the rest are being authored to that bar one film at a
+time (`docs/ultimates/AUTHORING.md`); §4 says which are done.
 
 ---
 
@@ -144,21 +145,22 @@ New effects (general, not Ultimate-only):
 Combat never checks an Ultimate id. `ultimateFor(player)` picks the path's
 Ultimate if authored, else the class's.
 
-### The nine Ultimates
+### The authored Ultimates
 
 | Hero / path | Ultimate | Gameplay | Cinematic |
 | --- | --- | --- | --- |
 | Vanguard | **Lantern Wall** | Every ally +12 Barrier and guarded by the Vanguard this round (Vanguard gains Barrier per ally); Vanguard +8 Barrier; charge the target for 20, break its WINDUP, Vulnerable; +2 Resolve | **authored** |
 | Vanguard · Breaker | **Gatebreaker** | Enemy row: strip Barrier, 24 through armour, break WINDUPs, Vulnerable, dragged into the front line; Breaker Vulnerable 1 round; +3 Resolve | **authored** |
-| Arcanist | Debt of Thunder | All enemies Wet; 26 lightning on the target (sets off Chain Shock, the rest stay Wet for the party) | generic |
-| Ranger | The Hundredth Mark | Mark every enemy; 24 precision through armour on the target (cashes its Mark; the others stay Marked) | generic |
+| Vanguard · Aegis Knight | **Breakwater** | Takes every ally's next direct hit this round, 14 Barrier +10 per ally; every enemy Weak and takes 6; the target 14 more through armour, Vulnerable | **authored** |
+| Arcanist | **Debt of Thunder** | All enemies Wet; 26 lightning on the target (sets off Chain Shock, the rest stay Wet for the party) | **authored** |
+| Ranger | **The Hundredth Mark** | Mark every enemy; 24 precision through armour on the target (cashes its Mark; the others stay Marked) | **authored** |
 | Warden | Green Reckoning | Every ally incl. the downed: heal 18, Regen, clear Burn/Poison/Weak; every enemy Poisoned 4/round | generic |
 | Broker | Foreclosure | Strip the target's Barrier, 26, Vulnerable; +30 gold; every ally +8 Barrier | generic |
 | Herald | Anthem of the Unpaid | The whole party Empowered this round and next, +8 Barrier, clear Weak/Vulnerable | generic |
 | Reaver | Red Ledger | Pay 14 HP; 40 through armour on the target; 12 to the rest of its row | generic |
-| Beguiler | Hall of Mirrors | Every enemy strikes its own side this round; 14 arcane on the target | generic |
+| Beguiler | **Hall of Mirrors** | Every enemy is cut by the glass and strikes its own side this round; 10 more arcane on the target | **authored** |
 
-The other 22 paths keep their class's Ultimate until authored. Every one of
+The other 22 paths keep their class's Ultimate until authored (their `ultimate-defs/` files are `null` stubs). Every one of
 these was designed against the kit it belongs to and interacts with the
 existing reaction system (Wet → Chain Shock, Mark → Exploit, Vulnerable,
 guard links), so an Ultimate is a team play, not a solo mini-game.
@@ -454,14 +456,21 @@ uncommitted edits to those spec files).
 
 ## 12. Placeholders and known gaps
 
-- **30 of 32 cinematics are the generic film** (call → hero with name →
-  blow → return, accent-coloured, combat clips). Seven base Ultimates have
-  designed gameplay; 22 paths use their class's Ultimate. Nothing claims to be
-  finished.
+- **6 of 32 films are authored** (Lantern Wall, Gatebreaker, Breakwater, Debt
+  of Thunder, Hall of Mirrors, The Hundredth Mark). The Warden, Broker, Herald
+  and Reaver play the generic film (call → hero with name → blow → return,
+  accent-coloured, combat clips) over their designed gameplay; 22 paths use
+  their class's Ultimate until authored.
+- Engine limits the authors worked around, each noted in its storyboard: an
+  enemy that only takes a status (no damage) is not in the cast; only the
+  `reflection` effect gets a figure slot; a line of enemies shares one facing;
+  the occlusion object is always a cape; a row's reactions land together; a
+  ranged contact-vs-reveal check needs a marker on the follow-through pose.
 - No recorded voice; subtitles only. Motifs and all sounds are synthesis.
 - Faces: the Vanguard's helm hides a face, so "facial performance" is helm
-  angle, crest/cape lag and the visor lighting. Heroes with visible faces will
-  want an expression layer (brows/eyes swap) before their close-ups.
+  angle, crest/cape lag and the visor lighting. The five visible-face heroes
+  have `brow`/`eyes`/`mouth` parts, registered only in close-ups
+  (`battle/face.ts`).
 - Presentation copies are drawn at rest state (statuses, seized items, HP) as
   of the start of the round; a status aura on the target is not shown in film.
 - Balance compensation is on the boss only; elites were not separately priced.
