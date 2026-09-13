@@ -139,6 +139,25 @@ export const openMind: Cinematic = {
         { at: 0.8, label: "into it" },
       ],
       framing: {
+        large: {
+          camera: {
+            from: { x: 1080, y: 480, zoom: 1.06 },
+            to: { x: 1060, y: 530, zoom: 1.14 },
+            ease: "inOut",
+          },
+          actors: [
+            {
+              role: "targets",
+              at: [900, 830],
+              spread: [255, -14],
+              size: 285,
+              face: -1,
+              look: "lit",
+              z: 2,
+              react: [{ at: 0.22, clip: "anticipate", then: "idle" }],
+            },
+          ],
+        },
         boss: {
           camera: {
             from: { x: 1010, y: 420, zoom: 0.96 },
@@ -304,6 +323,31 @@ export const openMind: Cinematic = {
         { at: 0.34, label: "the line" },
       ],
       framing: {
+        large: {
+          camera: {
+            from: { x: 1000, y: 575, zoom: 1.18 },
+            to: { x: 1020, y: 565, zoom: 1.28 },
+            ease: "out",
+          },
+          actors: [
+            { role: "caster", at: [500, 1000], size: 540, clip: "ult:mind-pierce", look: "rim", rim: GREEN, z: 3 },
+            {
+              role: "targets",
+              at: [1000, 870],
+              spread: [220, -30],
+              size: 280,
+              face: -1,
+              look: "lit",
+              z: 2,
+              react: [
+                { at: 0.04, clip: "hurt" },
+                { at: 0.34, clip: "hurt" },
+              ],
+              shove: { at: 0.04, by: [45, -4] },
+              toTilt: 3,
+            },
+          ],
+        },
         boss: {
           camera: {
             from: { x: 920, y: 520, zoom: 1.05 },

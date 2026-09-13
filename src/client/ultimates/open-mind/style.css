@@ -264,6 +264,10 @@
 .mind-hole .mind-disc-hole {
   transform: scale(calc(var(--fast) * 1.1));
 }
+/* The target's is the one the drawn frame is about: wider, and it opens further. */
+.mind-hole:not([data-echo]) .mind-disc-hole {
+  transform: scale(calc(var(--fast) * (1.5 + var(--hqe) * 0.25)));
+}
 .mind-hole .mind-hole-rim {
   stroke-width: calc(12 - var(--hqe) * 7);
 }
