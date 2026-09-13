@@ -94,7 +94,7 @@ export const ultimate: UltimateDef = {
   presentation: {
     cinematic: "command-performance",
     theme: "sway",
-    accent: "#ffb45c",
+    accent: "#ff5aa5",
     voice: {
       activation: "Up you get. You're in the next act.",
       impact: "There. Just as we rehearsed.",

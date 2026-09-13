@@ -21,7 +21,7 @@
   stroke-linecap: round;
 }
 .perf-string-glow {
-  stroke: #ffb45c;
+  stroke: #ff5aa5;
   stroke-width: calc(var(--sw) * 4.5px);
   opacity: 0.16;
 }
@@ -71,7 +71,7 @@
   width: calc(var(--u) * 0.44);
   height: calc(var(--u) * 0.44);
   border-radius: 50%;
-  background: radial-gradient(closest-side, #fff4dc 0%, #ffb45c 45%, rgba(255, 180, 92, 0) 100%);
+  background: radial-gradient(closest-side, #fff4dc 0%, #ff8cc2 45%, rgba(255, 90, 165, 0) 100%);
   opacity: calc(clamp(0, 1 - var(--q) * 6, 1));
   transform: scale(calc(0.6 + var(--q) * 5));
 }
@@ -147,7 +147,7 @@
 .perf-drop[data-mode="drop"] .perf-drop-string {
   box-shadow:
     0 0 0 1px rgba(26, 15, 10, 0.45),
-    0 0 calc(var(--snap) * 10px) calc(var(--snap) * 3px) rgba(255, 180, 92, 0.7);
+    0 0 calc(var(--snap) * 10px) calc(var(--snap) * 3px) rgba(255, 90, 165, 0.8);
 }
 
 /* ---- the snip ---- */

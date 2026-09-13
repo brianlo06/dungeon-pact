@@ -405,6 +405,8 @@ const stringsFrame: Frame = (el, p, age, ctx) => {
   }
 
   writeLook(figs[0], puppet, move);
+  // The puppet is drawn over the line it is worked into (the stage paints the line in slot order).
+  if (figs[0].style.zIndex !== "39") figs[0].style.zIndex = "39";
   others.forEach((o, i) => writeLook(o.fig, o.b, otherMoves[i]));
 
   // Where the strings come from: the bar, if the caster is in the shot and asked for; else the dark above.
@@ -443,7 +445,7 @@ const stringsFrame: Frame = (el, p, age, ctx) => {
 /* ── perf-splinters ────────────────────────────────────────────────────── */
 
 const WOOD = ["#e2bf86", "#c99a5c", "#8a5f36", "#f3dcb0"];
-const CHIPS = ["#ffb45c", "#1a100b", "#58706c", "#fff1d6"];
+const CHIPS = ["#ff5aa5", "#1a100b", "#58706c", "#fff1d6"];
 const BURSTS = 4;
 
 /** A burst of splinters and chips. Params: `count`, `size` (world px), `anchored`. */

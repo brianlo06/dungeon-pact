@@ -70,8 +70,8 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       crash(c, o, t, { seconds: 0.2, gain: 0.05, type: "bandpass", freq: 3200, sweepTo: 6400, q: 4 });
-      crash(c, o, t + 0.22, { seconds: 0.014, gain: 0.34, type: "highpass", freq: 4500, q: 0.8 });
-      crash(c, o, t + 0.238, { seconds: 0.01, gain: 0.22, type: "highpass", freq: 6000, q: 0.8 });
+      crash(c, o, t + 0.22, { seconds: 0.014, gain: 0.22, type: "highpass", freq: 4500, q: 0.8 });
+      crash(c, o, t + 0.238, { seconds: 0.01, gain: 0.14, type: "highpass", freq: 6000, q: 0.8 });
       hit(c, o, t + 0.222, { type: "sine", from: 5200, to: 4700, gain: 0.05, attack: 0.002, decay: 0.12 });
       gut(c, o, t + 0.23, 1250, 620, 0.1, 0.34);
       gut(c, o, t + 0.24, 1660, 900, 0.06, 0.26);
@@ -89,14 +89,14 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       const notes: [number, number, number, number][] = [
-        [0, 62, 0.22, 0.34],
-        [0.15, 69, 0.2, 0.3],
-        [0.37, 65, 0.2, 0.34],
-        [0.52, 73, 0.22, 1.1],
+        [0, 62, 0.16, 0.34],
+        [0.15, 69, 0.14, 0.3],
+        [0.37, 65, 0.14, 0.34],
+        [0.52, 73, 0.16, 1.1],
       ];
       for (const [at, midi, gain, decay] of notes) bar(c, o, t + at, midi, gain, decay);
-      gut(c, o, t, hz(38), hz(38) * 0.995, 0.12, 0.5);
-      gut(c, o, t + 0.52, hz(37), hz(37) * 0.995, 0.1, 0.8);
+      gut(c, o, t, hz(38), hz(38) * 0.995, 0.09, 0.5);
+      gut(c, o, t + 0.52, hz(37), hz(37) * 0.995, 0.08, 0.8);
     },
   },
   /** The strings biting: three short taut plucks rising, each with a tick of the hook. */
@@ -104,8 +104,8 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       [76, 79, 83].forEach((midi, i) => {
-        gut(c, o, t + i * 0.05, hz(midi) * 0.96, hz(midi), 0.09, 0.16);
-        crash(c, o, t + i * 0.05, { seconds: 0.01, gain: 0.12, type: "bandpass", freq: 4200, q: 3 });
+        gut(c, o, t + i * 0.05, hz(midi) * 0.96, hz(midi), 0.1, 0.16);
+        crash(c, o, t + i * 0.05, { seconds: 0.01, gain: 0.08, type: "bandpass", freq: 4200, q: 3 });
       });
     },
   },
@@ -114,8 +114,8 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       [0.17, 0.34, 0.51].forEach((at, i) => {
-        wood(c, o, t + at, 300 + i * 30, 0.32, 0.12);
-        wood(c, o, t + at + 0.022, 520 + i * 20, 0.12, 0.05);
+        wood(c, o, t + at, 300 + i * 30, 0.22, 0.12);
+        wood(c, o, t + at + 0.022, 520 + i * 20, 0.08, 0.05);
       });
       creak(c, o, t + 0.02, 0.14, 0.05, 3);
       creak(c, o, t + 0.2, 0.12, 0.04, 5);
@@ -150,9 +150,9 @@ export const voices: Record<string, Voice> = {
   "perf-impact": {
     bus: "sfx",
     render: (c, o, t) => {
-      crash(c, o, t, { seconds: 0.022, gain: 0.75, type: "highpass", freq: 2600, q: 0.6 });
-      wood(c, o, t, 520, 0.5, 0.08);
-      hit(c, o, t, { type: "sine", from: 130, to: 30, gain: 0.9, attack: 0.002, decay: 0.8 });
+      crash(c, o, t, { seconds: 0.022, gain: 0.66, type: "highpass", freq: 2600, q: 0.6 });
+      wood(c, o, t, 520, 0.42, 0.08);
+      hit(c, o, t, { type: "sine", from: 130, to: 30, gain: 0.82, attack: 0.002, decay: 0.8 });
       hit(c, o, t, { type: "triangle", from: 240, to: 70, gain: 0.24, attack: 0.002, decay: 0.26 });
       crash(c, o, t + 0.004, { seconds: 0.4, gain: 0.42, type: "bandpass", freq: 1400, sweepTo: 320, q: 0.9 });
       const rand = jitter(21);
@@ -170,8 +170,8 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       [0, 0.12].forEach((at, i) => {
-        wood(c, o, t + at, 360 - i * 40, 0.36, 0.1);
-        hit(c, o, t + at, { type: "sine", from: 110, to: 45, gain: 0.3, attack: 0.002, decay: 0.2 });
+        wood(c, o, t + at, 360 - i * 40, 0.26, 0.1);
+        hit(c, o, t + at, { type: "sine", from: 110, to: 45, gain: 0.22, attack: 0.002, decay: 0.2 });
         crash(c, o, t + at + 0.004, { seconds: 0.12, gain: 0.16, type: "bandpass", freq: 2400, sweepTo: 900, q: 1.5 });
       });
     },
@@ -190,8 +190,8 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       const rand = jitter(7);
-      for (let i = 0; i < 7; i++) wood(c, o, t + i * 0.035 + rand() * 0.01, 1700 + rand() * 700, 0.05, 0.035);
-      crash(c, o, t, { seconds: 0.36, gain: 0.08, type: "bandpass", freq: 400, sweepTo: 1100, q: 0.6 });
+      for (let i = 0; i < 7; i++) wood(c, o, t + i * 0.035 + rand() * 0.01, 1700 + rand() * 700, 0.08, 0.035);
+      crash(c, o, t, { seconds: 0.36, gain: 0.14, type: "bandpass", freq: 400, sweepTo: 1100, q: 0.6 });
     },
   },
   /** Release: the motif's last two notes, softer and slower, and one clack of the bar. */

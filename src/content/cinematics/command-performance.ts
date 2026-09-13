@@ -28,7 +28,10 @@ import type { Cinematic } from "../../shared/cinematic";
  * The storyboard is `docs/ultimates/command-performance.md`.
  */
 
+/** The lamp: the only light in the theatre, and it is warm. */
 const AMBER = "#ffb45c";
+/** The strings' colour, and the drawn frame's: the one thing in the room that is not wood, cloth or lamplight. */
+const CARMINE = "#ff5aa5";
 const UMBER = "#140c0a";
 const BARS = 0.11;
 
@@ -51,7 +54,7 @@ export const commandPerformance: Cinematic = {
       toLighting: { tint: [UMBER, 0.62], letterbox: BARS },
       actors: [{ role: "caster", at: [0, 0], size: 0, clip: "ult:perf-call" }],
       vfx: [
-        { kind: "call-aura", at: 0, until: 1, anchor: "caster", color: AMBER },
+        { kind: "call-aura", at: 0, until: 1, anchor: "caster", color: CARMINE },
         { kind: "perf-drop", at: 0.25, until: 1, anchor: "targets", params: { mode: "drop" } },
       ],
       sound: [{ at: 0, sfx: "perf-call" }],
@@ -323,7 +326,7 @@ export const commandPerformance: Cinematic = {
         { kind: "perf-curtain", at: 0.86, until: 1, layer: "screen", params: { phase: "in" } },
       ],
       screen: [
-        { kind: "two-tone", at: 0, ms: 70, color: AMBER },
+        { kind: "two-tone", at: 0, ms: 70, color: CARMINE },
         { kind: "chromatic", at: 0.05, ms: 90, amount: 0.35 },
       ],
       stop: [{ at: 0.04, ms: 140 }],
