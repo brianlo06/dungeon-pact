@@ -41,8 +41,25 @@ const SABLE = "#0b0a0e";
 const OR = "#e7b54a";
 const BARS = 0.1;
 
-/** Where the weapon lands in the blow, world units (probed). */
-const CONTACT = { x: 960, y: 650 };
+/**
+ * The blow, laid out from probed positions (world units). The Warcaller
+ * comes down out of a leap of `LEAP` onto its ground point; `PIVOT` is its
+ * front shoulder, where the weapon swings from, on the held frame; `CONTACT`
+ * is where the weapon head is on that frame, on the enemy's head; the smear
+ * of the swing runs round `PIVOT` from `SWING.from` to `SWING.to` degrees.
+ */
+const CASTER = { x: 690, y: 860 };
+const LEAP = 170;
+const PIVOT = { x: 760, y: 575 };
+const CONTACT = { x: 962, y: 628 };
+const SWING = { r: 212, from: -95, to: 14, width: 42 };
+const BOSS = {
+  caster: { x: 790, y: 900 },
+  leap: 150,
+  pivot: { x: 862, y: 640 },
+  contact: { x: 1046, y: 697 },
+  swing: { r: 190, width: 38 },
+};
 
 export const intoTheDin: Cinematic = {
   id: "into-the-din",
@@ -273,14 +290,14 @@ export const intoTheDin: Cinematic = {
       id: "blow",
       kind: "impact",
       purpose:
-        "Impact. One two-tone frame and the weapon is down on the real enemy: a hit-stop, the blow drawn as a struck disc and wedges, and a ring out of it — and every stroke of the din it passes is pulled straight into an arc round the blow. The enemy reels, Vulnerable, and the damage lands on the frame.",
+        "Impact. Out of the quiet the Warcaller comes down out of a leap with the weapon over its head; two frames of two-tone, and the hit-stop holds the struck moment in full colour — the weapon head landed on the real enemy's head, a bone smear of the swing behind it, the blow drawn as a struck disc and a ring. Then it follows on through, down past the enemy, and lands; the enemy is thrown back reeling, Vulnerable, and every stroke of the din the ring passes is pulled straight into an arc round the blow.",
       space: "cinematic",
       ms: 740,
       fastMs: 540,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 900, y: 580, zoom: 1.55, rotate: -6 },
-        to: { x: 910, y: 575, zoom: 1.38, rotate: -2 },
+        from: { x: 880, y: 590, zoom: 1.55, rotate: -6 },
+        to: { x: 900, y: 590, zoom: 1.38, rotate: -2 },
         ease: "out",
       },
       background: "din-field",
@@ -293,104 +310,105 @@ export const intoTheDin: Cinematic = {
           size: 440,
           face: -1,
           z: 1,
-          react: [{ at: 0.04, clip: "hurt" }],
-          shove: { at: 0.04, by: [110, -6] },
-          toTilt: 7,
+          react: [{ at: 0.06, clip: "hurt" }],
+          shove: { at: 0.26, by: [190, -4] },
+          toTilt: 11,
         },
-        { role: "caster", at: [700, 860], to: [715, 860], ease: "out", size: 470, clip: "ult:din-blow", then: "ult:din-blow", look: "lit", rim: BONE, z: 2 },
+        { role: "caster", at: [CASTER.x, CASTER.y - LEAP], to: [CASTER.x + 30, CASTER.y], ease: "out", size: 470, clip: "ult:din-blow", then: "ult:din-blow", react: [{ at: 0.16, clip: "ult:din-follow", then: "ult:din-follow" }], look: "lit", rim: BONE, z: 2 },
       ],
       vfx: [
-        { kind: "din-noise", at: 0, until: 1, layer: "back", seed: 51, params: { mode: "tune", around: "caster,targets", field: 110, dense: 1.2, ox: CONTACT.x, oy: CONTACT.y, speed: 1500, from: 0.04 } },
-        { kind: "din-ring", at: 0.04, until: 1, layer: "front", params: { ox: CONTACT.x, oy: CONTACT.y, speed: 1700, gap: 60, rings: 5 } },
-        { kind: "din-clang", at: 0.03, until: 0.32, x: CONTACT.x, y: CONTACT.y, scale: 0.62, layer: "front", seed: 4 },
-        { kind: "sparks", at: 0.04, until: 0.6, x: CONTACT.x, y: CONTACT.y, scale: 1.3, color: HOT, seed: 17, layer: "front" },
+        { kind: "din-noise", at: 0, until: 1, layer: "back", seed: 51, params: { mode: "tune", around: "caster,targets", field: 110, dense: 1.2, ox: CONTACT.x, oy: CONTACT.y, speed: 1500, from: 0.05 } },
+        { kind: "din-swing", at: 0.03, until: 0.34, layer: "back", params: { cx: PIVOT.x, cy: PIVOT.y, r: SWING.r, from: SWING.from, to: SWING.to, width: SWING.width } },
+        { kind: "din-ring", at: 0.05, until: 1, layer: "front", params: { ox: CONTACT.x, oy: CONTACT.y, speed: 1700, gap: 60, rings: 5 } },
+        { kind: "din-clang", at: 0.045, until: 0.3, x: CONTACT.x + 34, y: CONTACT.y - 14, scale: 0.46, layer: "front", seed: 4 },
+        { kind: "sparks", at: 0.05, until: 0.6, x: CONTACT.x, y: CONTACT.y, scale: 1.3, color: HOT, seed: 17, layer: "front" },
         { kind: "din-body", at: 0, until: 1, layer: "back", params: { mode: "blow" } },
       ],
       screen: [
-        { kind: "two-tone", at: 0, ms: 70, color: BONE, mode: "full" },
-        { kind: "invert", at: 0, ms: 50, mode: "fast" },
-        { kind: "flash", at: 0.1, ms: 90, amount: 0.6, color: HOT },
-        { kind: "chromatic", at: 0.04, ms: 160, amount: 0.9 },
-        { kind: "radial", at: 0.03, ms: 240, amount: 0.8, color: BONE },
+        { kind: "two-tone", at: 0, ms: 34, color: BONE, mode: "full" },
+        { kind: "invert", at: 0, ms: 24, mode: "fast" },
+        { kind: "chromatic", at: 0.05, ms: 160, amount: 0.9 },
+        { kind: "radial", at: 0.05, ms: 240, amount: 0.8, color: BONE },
       ],
-      stop: [{ at: 0.04, ms: 150 }],
+      stop: [{ at: 0.05, ms: 150 }],
       shake: [
-        { at: 0.04, amount: 0.042 },
-        { at: 0.3, amount: 0.014 },
+        { at: 0.05, amount: 0.042 },
+        { at: 0.3, amount: 0.016 },
       ],
       sound: [
-        { at: 0.035, sfx: "din-clang" },
-        { at: 0.05, sfx: "ult-boom" },
+        { at: 0.045, sfx: "din-clang" },
+        { at: 0.06, sfx: "ult-boom" },
       ],
-      reveal: [{ at: 0.04, reveal: "impact" }],
+      reveal: [{ at: 0.05, reveal: "impact" }],
       text: [
-        { kind: "impact", at: 0.06, until: 0.9, text: "$damage", x: 0.62, y: 0.24, rotate: 5 },
-        { kind: "voice", at: 0.3, until: 1, text: "$voice.impact" },
+        { kind: "impact", at: 0.06, until: 0.9, text: "$damage", x: 0.66, y: 0.22, rotate: 5 },
+        { kind: "voice", at: 0.34, until: 1, text: "$voice.impact" },
       ],
-      markers: [{ at: 0.04, label: "contact" }],
+      markers: [{ at: 0.05, label: "contact" }],
       framing: {
         large: {
           camera: {
-            from: { x: 900, y: 540, zoom: 1.4, rotate: -5 },
-            to: { x: 910, y: 535, zoom: 1.26, rotate: -2 },
+            from: { x: 880, y: 550, zoom: 1.4, rotate: -5 },
+            to: { x: 900, y: 550, zoom: 1.26, rotate: -2 },
             ease: "out",
           },
         },
         boss: {
           camera: {
-            from: { x: 920, y: 530, zoom: 1.14, rotate: -4 },
-            to: { x: 930, y: 520, zoom: 1.04, rotate: -1.5 },
+            from: { x: 900, y: 520, zoom: 1.14, rotate: -4 },
+            to: { x: 920, y: 515, zoom: 1.04, rotate: -1.5 },
             ease: "out",
           },
           actors: [
             {
               role: "target",
-              at: [1120, 900],
+              at: [1150, 900],
               size: 400,
               face: -1,
               z: 1,
-              react: [{ at: 0.04, clip: "hurt" }],
-              shove: { at: 0.04, by: [30, 0] },
-              toTilt: 2,
+              react: [{ at: 0.06, clip: "hurt" }],
+              shove: { at: 0.26, by: [50, 0] },
+              toTilt: 3,
             },
-            { role: "caster", at: [600, 900], to: [615, 900], ease: "out", size: 400, clip: "ult:din-blow", then: "ult:din-blow", look: "lit", rim: BONE, z: 2 },
+            { role: "caster", at: [BOSS.caster.x, BOSS.caster.y - BOSS.leap], to: [BOSS.caster.x + 30, BOSS.caster.y], ease: "out", size: 420, clip: "ult:din-blow", then: "ult:din-blow", react: [{ at: 0.16, clip: "ult:din-follow", then: "ult:din-follow" }], look: "lit", rim: BONE, z: 2 },
           ],
           vfx: [
-            { kind: "din-noise", at: 0, until: 1, layer: "back", seed: 51, params: { mode: "tune", around: "caster,targets", field: 110, dense: 1.2, ox: 790, oy: 720, speed: 1700, from: 0.04 } },
-            { kind: "din-ring", at: 0.04, until: 1, layer: "front", params: { ox: 790, oy: 720, speed: 1900, gap: 70, rings: 5 } },
-            { kind: "din-clang", at: 0.03, until: 0.32, x: 790, y: 720, scale: 0.85, layer: "front", seed: 4 },
-            { kind: "sparks", at: 0.04, until: 0.6, x: 790, y: 720, scale: 1.5, color: HOT, seed: 17, layer: "front" },
+            { kind: "din-noise", at: 0, until: 1, layer: "back", seed: 51, params: { mode: "tune", around: "caster,targets", field: 110, dense: 1.2, ox: BOSS.contact.x, oy: BOSS.contact.y, speed: 1700, from: 0.05 } },
+            { kind: "din-swing", at: 0.03, until: 0.34, layer: "back", params: { cx: BOSS.pivot.x, cy: BOSS.pivot.y, r: BOSS.swing.r, from: SWING.from, to: SWING.to, width: BOSS.swing.width } },
+            { kind: "din-ring", at: 0.05, until: 1, layer: "front", params: { ox: BOSS.contact.x, oy: BOSS.contact.y, speed: 1900, gap: 70, rings: 5 } },
+            { kind: "din-clang", at: 0.045, until: 0.3, x: BOSS.contact.x + 34, y: BOSS.contact.y - 14, scale: 0.6, layer: "front", seed: 4 },
+            { kind: "sparks", at: 0.05, until: 0.6, x: BOSS.contact.x, y: BOSS.contact.y, scale: 1.5, color: HOT, seed: 17, layer: "front" },
             { kind: "din-body", at: 0, until: 1, layer: "back", params: { mode: "blow" } },
           ],
         },
       },
     },
 
-    /* 5 · COURAGE — low on the real party: the ring reaches them, all at once. */
+    /* 5 · COURAGE — looking up at the real party: the ring reaches them, all at once. */
     {
       id: "courage",
       kind: "low-angle",
       purpose:
-        "Courage from the blow. The ring rolls back from the Warcaller, far out in front, over the real party; the din around them is tuned as it passes, and every one of them comes forward at once — weapons up, lit, a ring of or carried before each. Empowered, on everyone.",
+        "Courage from the blow. From down at the party's feet, looking up past them at the hatched sky, with the Warcaller small on the horizon far out in front: the ring of the blow rolls back over the real party in hand-cut bone, and as it reaches them the noise round each of them is tuned into a broken gold ring round its chest, and every one of them comes forward at once. Empowered, on everyone.",
       space: "cinematic",
       ms: 560,
       fastMs: 360,
       transition: { kind: "whip", ms: 100, dir: -1 },
       camera: {
-        from: { x: 700, y: 560, zoom: 1.34 },
-        to: { x: 690, y: 572, zoom: 1.44 },
+        from: { x: 720, y: 440, zoom: 1.3, rotate: 1.5 },
+        to: { x: 700, y: 452, zoom: 1.38, rotate: 2.5 },
         ease: "out",
       },
       background: "din-field",
       lighting: { exposure: 0.4, rim: [BONE, 0.3, 1], vignette: 0.55, letterbox: BARS },
       toLighting: { exposure: 0.85, rim: [OR, 0.95, 1], vignette: 0.35, letterbox: BARS },
       actors: [
-        { role: "caster", at: [1110, 700], size: 230, clip: "ult:din-front", then: "ult:din-front", look: "rim", rim: BONE, z: 1 },
+        { role: "caster", at: [1150, 610], size: 150, clip: "ult:din-front", then: "ult:din-front", look: "rim", rim: BONE, z: 1 },
         {
           role: "allies",
-          at: [650, 880],
-          spread: [-210, 14],
-          size: 500,
+          at: [650, 830],
+          spread: [-215, 16],
+          size: 580,
           look: "lit",
           rim: OR,
           z: 2,
@@ -399,8 +417,8 @@ export const intoTheDin: Cinematic = {
         },
       ],
       vfx: [
-        { kind: "din-noise", at: 0, until: 1, layer: "back", seed: 61, params: { mode: "tune", around: "allies", field: 90, dense: 1, ox: 1110, oy: 580, speed: 1500, from: 0 } },
-        { kind: "din-ring", at: 0, until: 1, layer: "back", params: { ox: 1110, oy: 580, speed: 1600, gap: 90, rings: 4 } },
+        { kind: "din-noise", at: 0, until: 1, layer: "back", seed: 61, params: { mode: "tune", around: "allies", field: 70, dense: 1.3, ox: 1150, oy: 520, speed: 1500, from: 0, gold: 1 } },
+        { kind: "din-ring", at: 0, until: 1, layer: "back", params: { ox: 1150, oy: 520, speed: 1600, gap: 90, rings: 3 } },
         { kind: "din-courage", at: 0, until: 1, layer: "front", params: { arrive: 0.13 } },
       ],
       sound: [{ at: 0.04, sfx: "din-surge" }],
@@ -412,7 +430,7 @@ export const intoTheDin: Cinematic = {
       id: "carried",
       kind: "return",
       purpose:
-        "Release. The film hands back to the fight and what it did is where it matters: the struck enemy still ringing, a ring of or carried before every real ally, and the Warcaller out in front with its weapon planted.",
+        "Release. The film hands back to the fight and what it did is where it matters: the struck enemy still ringing in broken bone rings, a broken gold ring round every real ally, and the Warcaller out in front with its weapon planted.",
       space: "battlefield",
       ms: 660,
       fastMs: 440,

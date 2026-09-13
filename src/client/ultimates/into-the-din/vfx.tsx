@@ -21,16 +21,17 @@ import "./style.css";
  *
  *   din-noise    the din, round the cast and across the field
  *                (`mode`: loud | freeze | tune)
- *   din-ring     the ring itself: clean circles leaving a point, or sweeping
- *                in from off the frame (`sweep`)
+ *   din-ring     the ring itself: broken circles of hand-cut bands leaving a point
+ *   din-swing    the swing smeared: hand-cut bands round the shoulder
  *   din-clang    the blow drawn: a struck disc, wedges of ink and bone, and
  *                broken rings, boiling between three drawings
  *   din-body     the Warcaller's stride, coil and lean, written on its
  *                copy's `.cine-look` (`mode`: walk | draw | blow)
  *   din-courage  the ring reaching the party: every ally lurches forward at
- *                once and carries a ring of or before it
- *   din-board    on the real board: the din over a unit, the target still
- *                ringing, or the ring of or an ally carries
+ *                once (the din round them is tuned into gold by `din-noise`)
+ *   din-board    on the real board: the din over a unit, or its note still
+ *                ringing round it in broken hand-cut rings — bone round the
+ *                struck enemy, gold round an ally
  *
  * Nothing here uses a filter or a keyframe. Paths are rebuilt on the combat
  * clock (one `d` per layer, not one per stroke), and everything else moves on
@@ -74,7 +75,6 @@ const dataOf = (params: Record<string, unknown> | undefined, defaults: Record<st
 /* ── The din ───────────────────────────────────────────────────────────── */
 
 type Pt = [number, number];
-type Placed = { x: number; y: number; h: number };
 
 interface Stroke {
   /** Whose noise it is: a cast id, or "" for the open field. */
@@ -179,13 +179,14 @@ function Din({ cue }: VfxProps) {
       className="din-sky din-noise"
       viewBox="0 0 1600 900"
       aria-hidden="true"
-      {...dataOf(p, { mode: "loud", around: "caster,targets,allies", field: 60, dense: 1, ox: 800, oy: 450, speed: 1900, from: 0, width: 1 })}
+      {...dataOf(p, { mode: "loud", around: "caster,targets,allies", field: 60, dense: 1, ox: 800, oy: 450, speed: 1900, from: 0, width: 1, gold: 0 })}
       data-seed={String(cue.seed ?? 7)}
       style={v({ "--w": Number(p.width ?? 1) })}
     >
       <path className="din-ink" />
       <path className="din-bone" />
       <path className="din-hot" />
+      <path className="din-gold" />
     </svg>
   );
 }
@@ -210,8 +211,10 @@ const noise = (el: HTMLElement, p: number, age: number, ctx: VfxContext) => {
   const step = mode === "freeze" ? 0 : Math.floor(age / 55);
   const o: Pt = [num(svg, "ox", 800), num(svg, "oy", 450)];
   const ring = mode === "tune" ? num(svg, "speed", 1900) * easeOut((p - num(svg, "from", 0)) / 0.8) : -1;
+  const goldAllies = svg.dataset.gold === "1";
   let loud = "";
   let hot = "";
+  let gold = "";
   for (const s of strokes) {
     if (mode === "freeze" && p > s.out) continue;
     const at = place(s, ctx);
@@ -231,53 +234,105 @@ const noise = (el: HTMLElement, p: number, age: number, ctx: VfxContext) => {
       loud += poly(zig) + " ";
       continue;
     }
+    const e = easeInOut(k);
+    const owner = goldAllies && s.owner.startsWith("allies") ? ctx.actor(s.owner) : undefined;
+    if (owner) {
+      // An ally the ring reaches: its noise is tuned onto a circle round its
+      // own chest, and stays — the note ringing in it, not passing it by.
+      const chest: Pt = [owner.x, owner.y - owner.h * 0.52];
+      const radius = Math.hypot(c[0] - chest[0], c[1] - chest[1]);
+      const arc = arcPts(chest, c, at.len * (1 + 1.1 * k), zig.length, radius);
+      gold += poly(zig.map(([x, y], i): Pt => [lerp(x, arc[i][0], e), lerp(y, arc[i][1], e)])) + " ";
+      continue;
+    }
     // Tuned: pulled onto a circle round the blow, and carried out with the ring.
     const radius = d + (ring - d) * 0.22;
     // Once the ring is well past, the note it left there dies away.
     const left = 1 - clamp((ring - d - 260) / 520);
     if (left <= 0.04) continue;
     const arc = arcPts(o, c, at.len * (1 + 0.6 * k) * left, zig.length, radius);
-    const e = easeInOut(k);
-    const pts = zig.map(([x, y], i): Pt => [lerp(x, arc[i][0], e), lerp(y, arc[i][1], e)]);
-    hot += poly(pts) + " ";
+    hot += poly(zig.map(([x, y], i): Pt => [lerp(x, arc[i][0], e), lerp(y, arc[i][1], e)])) + " ";
   }
-  const ink = loud + hot;
+  const ink = loud + hot + gold;
   setD(svg.querySelector(".din-ink"), ink.trim());
   setD(svg.querySelector(".din-bone"), loud.trim());
   setD(svg.querySelector(".din-hot"), hot.trim());
+  setD(svg.querySelector(".din-gold"), gold.trim());
   if (mode === "freeze") svg.style.setProperty("--quiet", p.toFixed(3));
 };
+
+/* ── Hand-cut arcs ─────────────────────────────────────────────────────── */
+
+/**
+ * A band of a circle round (cx, cy) from angle `a0` to `a1` (radians), widest
+ * in its middle and tapering to points, its edges nicked like a gouge in a
+ * woodblock: the film's one shape for a sound that has become a note. Drawn
+ * in straight facets, never as a clean `A` arc, so it never reads as a glyph.
+ */
+function crescent(cx: number, cy: number, r: number, a0: number, a1: number, width: number, seed: number, steps = 12) {
+  if (width < 0.5 || Math.abs(a1 - a0) < 0.002) return "";
+  const outer: Pt[] = [];
+  const inner: Pt[] = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const a = lerp(a0, a1, t);
+    const w = width * Math.sin(Math.PI * t) ** 0.7;
+    const nick = (hash(seed, i) - 0.5) * width * 0.4;
+    const nick2 = (hash(i, seed) - 0.5) * width * 0.3;
+    outer.push([cx + Math.cos(a) * (r + w / 2 + nick), cy + Math.sin(a) * (r + w / 2 + nick)]);
+    inner.push([cx + Math.cos(a) * (r - w / 2 + nick2), cy + Math.sin(a) * (r - w / 2 + nick2)]);
+  }
+  return `${poly(outer)} L${inner.reverse().map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join(" L")} Z `;
+}
 
 /* ── The ring ──────────────────────────────────────────────────────────── */
 
 function Ring({ cue }: VfxProps) {
   const p = cue.params ?? {};
-  const n = Number(p.rings ?? 5);
   return (
     <svg
       className="din-sky din-ring"
       viewBox="0 0 1600 900"
       aria-hidden="true"
       {...dataOf(p, { ox: 800, oy: 450, speed: 2000, gap: 70, from: 0, rings: 5 })}
+      data-seed={String(cue.seed ?? 9)}
     >
-      {Array.from({ length: n }, (_, i) => (
-        <circle key={i} className="din-ring-line" data-i={i} cx={String(p.ox ?? 800)} cy={String(p.oy ?? 450)} r="0" style={v({ "--i": i })} />
-      ))}
+      <path className="din-ring-ink" />
+      <path className="din-ring-cut" />
     </svg>
   );
 }
 
+/**
+ * The ring of the blow: each ring is a broken circle of hand-cut bands, the
+ * breaks in the same places every frame, thinning as it grows.
+ */
 const ring = (el: HTMLElement, p: number) => {
   const svg = el.querySelector<SVGSVGElement>(".din-ring");
   if (!svg) return;
   const R = num(svg, "speed", 2000) * easeOut((p - num(svg, "from", 0)) / 0.85);
   const gap = num(svg, "gap", 70);
-  svg.querySelectorAll<SVGCircleElement>(".din-ring-line").forEach((c, i) => {
-    const r = Math.max(0, R - i * gap * (1 + p * 0.6));
-    c.setAttribute("r", r.toFixed(1));
-    const life = clamp(1 - p * 1.05) * (r > 0 ? 1 : 0) * (1 - i * 0.13);
-    c.style.opacity = life.toFixed(3);
-  });
+  const n = num(svg, "rings", 5);
+  const seed = num(svg, "seed", 9);
+  const ox = num(svg, "ox", 800);
+  const oy = num(svg, "oy", 450);
+  let d = "";
+  for (let i = 0; i < n; i++) {
+    const r = R - i * gap * (1 + p * 0.6);
+    if (r <= 8) continue;
+    const life = clamp(1 - p * 1.05) * (1 - i * 0.16);
+    const width = (22 - i * 3.5) * life;
+    if (width < 1) continue;
+    const rand = seeded(seed + i * 31);
+    let a = rand() * 0.6;
+    while (a < Math.PI * 2 + 0.3) {
+      const span = 0.28 + rand() * 0.55;
+      d += crescent(ox, oy, r, a, a + span, width, seed + i * 7 + Math.round(a * 10), 10);
+      a += span + 0.08 + rand() * 0.22;
+    }
+  }
+  setD(svg.querySelector(".din-ring-ink"), d);
+  setD(svg.querySelector(".din-ring-cut"), d);
 };
 
 /* ── The blow, drawn ───────────────────────────────────────────────────── */
@@ -301,9 +356,8 @@ function brokenRing(seed: number, r: number) {
   let a = rand();
   while (a < Math.PI * 2) {
     const len = 0.25 + rand() * 0.5;
-    const b = Math.min(Math.PI * 2, a + len);
-    d += `M${(Math.cos(a) * r).toFixed(1)} ${(Math.sin(a) * r).toFixed(1)} A${r} ${r} 0 0 1 ${(Math.cos(b) * r).toFixed(1)} ${(Math.sin(b) * r).toFixed(1)} `;
-    a = b + 0.12 + rand() * 0.25;
+    d += crescent(0, 0, r, a, Math.min(Math.PI * 2, a + len), r * 0.12, seed + Math.round(a * 10), 8);
+    a += len + 0.12 + rand() * 0.25;
   }
   return d;
 }
@@ -330,117 +384,155 @@ const clang = (el: HTMLElement, _p: number, age: number) => {
   if (el.dataset.k !== k) el.dataset.k = k;
 };
 
+/** The swing, smeared: a hand-cut fan round the shoulder from the top of the swing to the blow. */
+function Swing({ cue }: VfxProps) {
+  const p = cue.params ?? {};
+  const cx = Number(p.cx ?? 800);
+  const cy = Number(p.cy ?? 450);
+  const r = Number(p.r ?? 180);
+  const from = (Number(p.from ?? -100) * Math.PI) / 180;
+  const to = (Number(p.to ?? 30) * Math.PI) / 180;
+  const width = Number(p.width ?? 70);
+  // Three bands, the outer one (where the weapon head travelled) widest and
+  // longest, so the smear leads with the head and trails off at the top.
+  const bands = [
+    { r: r * 0.98, a0: from, w: width, seed: 3 },
+    { r: r * 0.78, a0: lerp(from, to, 0.3), w: width * 0.55, seed: 8 },
+    { r: r * 0.58, a0: lerp(from, to, 0.55), w: width * 0.35, seed: 13 },
+  ];
+  const d = bands.map((b) => crescent(cx, cy, b.r, b.a0, to, b.w, b.seed, 16)).join("");
+  return (
+    <svg className="din-sky din-swing" viewBox="0 0 1600 900" aria-hidden="true">
+      <path className="din-swing-ink" d={d} />
+      <path className="din-swing-cut" d={d} />
+    </svg>
+  );
+}
+
 /* ── Figures moved by the film ─────────────────────────────────────────── */
 
 /** Put back every figure an effect moved, when its shot ends. */
-function useRestore(role: "caster" | "allies") {
+function useRestore(...roles: ("caster" | "allies" | "targets")[]) {
   const ref = useRef<HTMLSpanElement>(null);
+  const key = roles.join(",");
   useEffect(() => {
     const root = ref.current?.closest<HTMLElement>(".ult-cinematic") ?? null;
     return () => {
-      for (const fig of root?.querySelectorAll<HTMLElement>(`.cine-actor[data-role="${role}"] .cine-look`) ?? [])
-        fig.style.transform = "";
+      for (const role of key.split(","))
+        for (const fig of root?.querySelectorAll<HTMLElement>(`.cine-actor[data-role="${role}"] .cine-look`) ?? [])
+          fig.style.transform = "";
     };
-  }, [role]);
+  }, [key]);
   return ref;
 }
 
 function Body({ cue }: VfxProps) {
-  const ref = useRestore("caster");
+  const ref = useRestore("caster", "targets");
   return <span ref={ref} className="din-marker" data-mode={String(cue.params?.mode ?? "walk")} />;
 }
+
+const write = (el: HTMLElement | null | undefined, t: string) => {
+  if (el && el.style.transform !== t) el.style.transform = t;
+};
 
 /**
  * The whole figure's weight, which a copy's root track cannot give it today:
  * the stride's bob (`walk`), the coil under the raised weapon (`draw`), and
- * the lean into the blow and the give out of it (`blow`). Pixels are in the
- * figure's own 100-unit box, so they scale with the shot.
+ * in the blow (`blow`) the Warcaller's lean down into it and the enemy's
+ * recoil — driven down and back on the frame it lands, head thrown up, then
+ * staggering. Pixels are in each figure's own 100-unit box, so they scale
+ * with the shot.
  */
 const body = (el: HTMLElement, p: number, age: number) => {
-  const look = rootOf(el)?.querySelector<HTMLElement>('.cine-actor[data-role="caster"] .cine-look');
+  const root = rootOf(el);
+  const look = root?.querySelector<HTMLElement>('.cine-actor[data-role="caster"] .cine-look');
   if (!look) return;
   const mode = el.querySelector<HTMLElement>(".din-marker")?.dataset.mode ?? "walk";
-  let t = "";
   if (mode === "walk") {
     // Two steps a clip: down on each footfall, up between, a little roll.
     const phase = (age / 450) * Math.PI;
     const bob = Math.abs(Math.sin(phase));
-    t = `translateY(${(-bob * 2.4 + 0.8).toFixed(2)}px) rotate(${(Math.sin(phase) * 1.1).toFixed(2)}deg)`;
+    write(look, `translateY(${(-bob * 2.4 + 0.8).toFixed(2)}px) rotate(${(Math.sin(phase) * 1.1).toFixed(2)}deg)`);
   } else if (mode === "draw") {
     // Sink back onto the rear foot under the weapon, then hold dead still.
     const k = easeInOut(p / 0.4);
-    t = `translate(${(-2.5 * k).toFixed(2)}px, ${(1.5 * k).toFixed(2)}px) rotate(${(-4 * k).toFixed(2)}deg) scale(${(1 + 0.03 * k).toFixed(3)}, ${(1 - 0.03 * k).toFixed(3)})`;
+    write(look, `translate(${(-2.5 * k).toFixed(2)}px, ${(1.5 * k).toFixed(2)}px) rotate(${(-4 * k).toFixed(2)}deg) scale(${(1 + 0.03 * k).toFixed(3)}, ${(1 - 0.03 * k).toFixed(3)})`);
   } else {
     // Everything into the blow on the frame it lands, then a slow give back.
-    const hit = clamp(p / 0.04);
-    const back = easeOut((p - 0.04) / 0.6);
-    const lean = hit * (1 - back * 0.4);
-    t = `translate(${(9 * lean).toFixed(2)}px, ${(3 * lean).toFixed(2)}px) rotate(${(9 * lean).toFixed(2)}deg) scale(${(1 + 0.05 * lean).toFixed(3)}, ${(1 - 0.07 * lean).toFixed(3)})`;
+    const hit = clamp(p / 0.05);
+    const back = easeOut((p - 0.05) / 0.6);
+    const lean = hit * (1 - back * 0.45);
+    write(look, `translate(${(9 * lean).toFixed(2)}px, ${(3 * lean).toFixed(2)}px) rotate(${(12 * lean).toFixed(2)}deg) scale(${(1 + 0.05 * lean).toFixed(3)}, ${(1 - 0.07 * lean).toFixed(3)})`);
+    // The enemy: crushed down and knocked back on the frame, head flung up,
+    // then a stagger that does not quite recover.
+    const since = p - 0.05;
+    const jolt = since < 0 ? 0 : 1 - easeOut(since / 0.5) * 0.55;
+    const wobble = since < 0 ? 0 : Math.sin(since * 26) * (1 - clamp(since / 0.6)) * 3;
+    for (const target of root?.querySelectorAll<HTMLElement>('.cine-actor[data-role="targets"] .cine-look') ?? [])
+      write(
+        target,
+        jolt
+          ? `translate(${(10 * jolt).toFixed(2)}px, ${(4 * jolt).toFixed(2)}px) rotate(${(14 * jolt + wobble).toFixed(2)}deg) scale(${(1 + 0.08 * jolt).toFixed(3)}, ${(1 - 0.14 * jolt).toFixed(3)})`
+          : "",
+      );
   }
-  if (look.style.transform !== t) look.style.transform = t;
 };
+
+/* ── Courage ───────────────────────────────────────────────────────────── */
 
 function Courage({ cue }: VfxProps) {
   const ref = useRestore("allies");
-  return (
-    <span ref={ref} className="din-courage-box">
-      <svg className="din-sky din-courage" viewBox="0 0 1600 900" aria-hidden="true" data-arrive={String(cue.params?.arrive ?? 0.16)}>
-        {Array.from({ length: 6 }, (_, i) => (
-          <g key={i} className="din-carry" data-i={i} style={{ display: "none" }}>
-            <path className="din-carry-glow" />
-            <path className="din-carry-line" />
-          </g>
-        ))}
-      </svg>
-    </span>
-  );
+  return <span ref={ref} className="din-marker" data-arrive={String(cue.params?.arrive ?? 0.16)} />;
 }
 
-/** Three arcs of a ring, opening forward (to the right) from a point. */
-function carried(x: number, y: number, h: number, grow: number) {
-  let d = "";
-  for (let i = 0; i < 3; i++) {
-    const r = h * (0.1 + i * 0.075) * (0.7 + 0.3 * grow);
-    const a = 0.62 - i * 0.08;
-    d += `M${(x + Math.cos(-a) * r).toFixed(1)} ${(y + Math.sin(-a) * r).toFixed(1)} A${r.toFixed(1)} ${r.toFixed(1)} 0 0 1 ${(x + Math.cos(a) * r).toFixed(1)} ${(y + Math.sin(a) * r).toFixed(1)} `;
-  }
-  return d;
-}
-
-const courage = (el: HTMLElement, p: number, _age: number, ctx: VfxContext) => {
-  const svg = el.querySelector<SVGSVGElement>(".din-courage");
+/**
+ * The ring reaching the party: every ally lurches forward on the same frame
+ * (the drawing of it is the din round them tuned into gold, in `din-noise`).
+ */
+const courage = (el: HTMLElement, p: number, _age: number) => {
   const root = rootOf(el);
-  if (!svg || !root) return;
-  const arrive = num(svg, "arrive", 0.16);
-  const since = p - arrive;
-  const figures = [...root.querySelectorAll<HTMLElement>('.cine-actor[data-role="allies"]')];
-  const groups = svg.querySelectorAll<SVGGElement>(".din-carry");
-  groups.forEach((g, i) => {
-    const at = ctx.actor(`allies-${i}`);
-    const look = figures[i]?.querySelector<HTMLElement>(".cine-look");
-    if (!at || since < 0) {
-      if (g.style.display !== "none") g.style.display = "none";
-      if (look && look.style.transform) look.style.transform = "";
-      return;
+  if (!root) return;
+  const since = p - num(el.querySelector<HTMLElement>(".din-marker"), "arrive", 0.16);
+  for (const look of root.querySelectorAll<HTMLElement>('.cine-actor[data-role="allies"] .cine-look')) {
+    if (since < 0) {
+      write(look, "");
+      continue;
     }
-    if (g.style.display) g.style.display = "";
-    // All at once: the ring reaches the whole party on one frame.
     const k = clamp(since / 0.14);
     const settle = clamp((since - 0.14) / 0.4);
     const lunge = easeOut(k) * (1 - settle * 0.45);
-    if (look) {
-      const t = `translate(${(lunge * 7).toFixed(2)}px, ${(-lunge * 2.5).toFixed(2)}px) rotate(${(lunge * 5).toFixed(2)}deg)`;
-      if (look.style.transform !== t) look.style.transform = t;
-    }
-    const d = carried(at.x + at.h * 0.44, at.y - at.h * 0.55, at.h, easeOut(since / 0.3));
-    setD(g.querySelector(".din-carry-line"), d);
-    setD(g.querySelector(".din-carry-glow"), d);
-    g.style.setProperty("--k", clamp(since / 0.08).toFixed(3));
-    g.style.setProperty("--w", (at.h / 60).toFixed(2));
-  });
+    write(look, `translate(${(lunge * 7).toFixed(2)}px, ${(-lunge * 2.5).toFixed(2)}px) rotate(${(lunge * 5).toFixed(2)}deg)`);
+  }
 };
 
 /* ── On the real board ─────────────────────────────────────────────────── */
+
+/**
+ * The same hand-cut bands on the real units, in each unit's own box (240 wide,
+ * the unit 120 of it, the feet at y 0), boiling between three cuts: broken
+ * rings round the chest, left open across the legs — bone round the struck
+ * enemy, gold round each ally the blow reached.
+ */
+function boardCuts(mode: "ring" | "carry", f: number) {
+  const s = 100 + f * 17;
+  const rings = mode === "ring" ? [66, 94] : [58, 80];
+  let d = "";
+  rings.forEach((r, i) => {
+    const rand = seeded(s + i * 5 + (mode === "ring" ? 0 : 50));
+    let a = -Math.PI * 0.5 + rand() * 0.5;
+    const end = a + Math.PI * 2;
+    while (a < end) {
+      const span = 0.55 + rand() * 0.55;
+      // Not across the legs: the lower quarter of the ring is left open.
+      const mid = ((a + span / 2) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+      if (mid < Math.PI * 0.3 || mid > Math.PI * 0.7)
+        d += crescent(0, -86, r, a, a + span, 5.5 - i * 1.5, s + i + Math.round(a * 10), 12);
+      a += span + 0.22 + rand() * 0.3;
+    }
+  });
+  const floor = crescent(0, 0, mode === "ring" ? 66 : 54, Math.PI * 0.08, Math.PI * 0.92, 6, s + 40, 12);
+  return mode === "ring" ? { gold: "", bone: d, floor } : { gold: d, bone: "", floor };
+}
 
 function Board({ cue }: VfxProps) {
   const mode = String(cue.params?.mode ?? "din");
@@ -467,32 +559,21 @@ function Board({ cue }: VfxProps) {
       </div>
     );
   }
-  if (mode === "ring")
-    return (
-      <div className="din-board" data-mode="ring">
-        <svg viewBox="-120 -200 240 220" aria-hidden="true">
-          <ellipse className="din-board-floor" cx="0" cy="0" rx="78" ry="16" />
-          {[0, 1, 2].map((i) => (
-            <g key={i} className="din-board-arcs" style={v({ "--i": i })}>
-              <path d={`M${-70 - i * 18} ${-120 - i * 6} Q${-96 - i * 26} -80 ${-70 - i * 18} ${-40 + i * 6}`} />
-              <path d={`M${70 + i * 18} ${-120 - i * 6} Q${96 + i * 26} -80 ${70 + i * 18} ${-40 + i * 6}`} />
-            </g>
-          ))}
-        </svg>
-      </div>
-    );
+  const cut = mode === "ring" ? "ring" : "carry";
   return (
-    <div className="din-board" data-mode="carry">
+    <div className="din-board" data-mode={cut}>
       <svg viewBox="-120 -200 240 220" aria-hidden="true">
-        <ellipse className="din-board-floor or" cx="0" cy="0" rx="60" ry="12" />
-        {[0, 1, 2].map((i) => (
-          <path
-            key={i}
-            className="din-board-carry"
-            style={v({ "--i": i })}
-            d={`M${46 + i * 20} ${-122 - i * 10} Q${74 + i * 30} -84 ${46 + i * 20} ${-46 + i * 10}`}
-          />
-        ))}
+        {[0, 1, 2].map((f) => {
+          const c = boardCuts(cut, f);
+          return (
+            <g key={f} className="din-board-cut" data-f={f}>
+              <path className="din-board-floor" d={c.floor} />
+              <path className="din-board-ink" d={c.gold + c.bone} />
+              <path className="din-board-bone" d={c.bone} />
+              {c.gold && <path className="din-board-gold" d={c.gold} />}
+            </g>
+          );
+        })}
       </svg>
     </div>
   );
@@ -507,6 +588,7 @@ export const renderers: Record<string, (p: VfxProps) => ReactNode> = {
   "din-noise": Din,
   "din-ring": Ring,
   "din-clang": Clang,
+  "din-swing": Swing,
   "din-body": Body,
   "din-courage": Courage,
   "din-board": Board,

@@ -66,14 +66,29 @@
   opacity: calc(0.75 - var(--quiet, 0) * 0.45);
 }
 
-/* ---- the ring ---- */
-.din-ring-line {
-  fill: none;
-  stroke: #fffaf0;
-  stroke-width: calc(9px - var(--i) * 1.4px);
+/* ---- the ring: hand-cut bands, an ink edge under bone ---- */
+.din-ring-ink {
+  fill: #0b0a0e;
+  stroke: #0b0a0e;
+  stroke-width: 7px;
+  stroke-linejoin: miter;
+  opacity: 0.8;
 }
-.din-ring-line[data-i="0"] {
-  stroke-width: 14px;
+.din-ring-cut {
+  fill: #fffaf0;
+}
+
+/* ---- the swing, smeared ---- */
+.din-swing-ink {
+  fill: #0b0a0e;
+  stroke: #0b0a0e;
+  stroke-width: 8px;
+  stroke-linejoin: miter;
+  opacity: calc(0.7 * (1 - var(--p)));
+}
+.din-swing-cut {
+  fill: #fffaf0;
+  opacity: calc(clamp(0, (1 - var(--p)) * 1.6, 1));
 }
 
 /* ---- the blow, drawn ---- */
@@ -120,22 +135,12 @@
   fill: #0b0a0e;
 }
 
-/* ---- courage, carried ---- */
-.din-carry path {
-  fill: none;
-  stroke-linecap: round;
-}
-.din-carry-glow {
+/* ---- courage: the ring cut through the party ---- */
+.din-gold {
   stroke: #e7b54a;
-  stroke-width: calc(var(--w) * 5px);
-  opacity: calc(var(--k) * 0.25);
+  stroke-width: calc(6.5px * var(--w, 1));
+  stroke-linejoin: round;
 }
-.din-carry-line {
-  stroke: #ffe3a1;
-  stroke-width: calc(var(--w) * 1.4px);
-  opacity: var(--k);
-}
-
 /* ---- on the real board ---- */
 .cine-vfx > .din-board {
   left: 0;
@@ -166,38 +171,37 @@
 .fx-din-board-wrap:not([data-f]) .din-board-zig[data-f="0"] {
   display: inline;
 }
+.din-board-cut {
+  display: none;
+}
+.fx-din-board-wrap[data-f="0"] .din-board-cut[data-f="0"],
+.fx-din-board-wrap[data-f="1"] .din-board-cut[data-f="1"],
+.fx-din-board-wrap[data-f="2"] .din-board-cut[data-f="2"],
+.fx-din-board-wrap:not([data-f]) .din-board-cut[data-f="0"] {
+  display: inline;
+}
+.din-board-cut {
+  opacity: clamp(0, calc(var(--pe) * 3), 1);
+}
 .din-board-floor {
-  fill: none;
-  stroke: #f1e6cc;
-  stroke-width: 3px;
-  opacity: calc(var(--pe) * 0.7);
-  transform-box: fill-box;
-  transform-origin: center;
-  transform: scale(calc(0.5 + var(--pe) * 0.5));
+  fill: #f1e6cc;
+  opacity: 0.7;
 }
-.din-board-floor.or {
-  stroke: #e7b54a;
+.din-board[data-mode="carry"] .din-board-floor {
+  fill: #e7b54a;
 }
-.din-board-arcs path {
-  fill: none;
-  stroke: #fffaf0;
-  stroke-width: calc(6px - var(--i) * 1.5px);
-  stroke-linecap: round;
-  opacity: calc(clamp(0, (var(--pe) * 3 - var(--i) * 0.5), 1) * (1 - var(--p) * 0.35));
+.din-board-ink {
+  fill: #0b0a0e;
+  stroke: #0b0a0e;
+  stroke-width: 5px;
+  stroke-linejoin: miter;
+  opacity: 0.75;
 }
-/* Still ringing: the arcs shiver in and out on the film's frames. */
-.fx-din-board-wrap[data-f="1"] .din-board-arcs {
-  transform: scale(1.06, 1);
+.din-board-bone {
+  fill: #fffaf0;
 }
-.fx-din-board-wrap[data-f="2"] .din-board-arcs {
-  transform: scale(0.96, 1);
-}
-.din-board-carry {
-  fill: none;
-  stroke: #ffd98a;
-  stroke-width: calc(6px - var(--i) * 1.2px);
-  stroke-linecap: round;
-  opacity: clamp(0, calc(var(--pe) * 3 - var(--i) * 0.6), 1);
-  transform-box: view-box;
-  transform: translateX(calc(var(--pe) * 10px));
+.din-board-gold {
+  fill: #e7b54a;
+  stroke: #ffe3a1;
+  stroke-width: 1.5px;
 }

@@ -13,7 +13,8 @@ import { face, type Expression } from "../../battle/face";
  *                `ult:din-grin`  the earnest face going to war, then a bark
  *                `ult:din-walk`  walking out into the din, weapon on the shoulder
  *                `ult:din-draw`  the quiet: drawn back high, and held dead still
- *                `ult:din-blow`  the overhead blow; `contact` is the ring
+ *                `ult:din-blow`  the strike, landing from a leap; `contact` is the ring
+ *                `ult:din-follow` on down through the enemy, and the landing
  *                `ult:din-front` far out in front of the party, weapon up
  *                `ult:din-hold`  on the board after: weapon planted, chin up
  *   every ally   `ult:din-wait`  holding back in the noise
@@ -38,8 +39,8 @@ const turn = (...keys: [number, number][]): Pose[] => keys.map(([at, rotate]) =>
 const SHOULDER = -38;
 /** Drawn back as far as it goes, the head of it behind the Herald's own head. */
 const DRAWN = -30;
-/** Brought down onto the enemy: past level, into it. */
-const STRUCK = 78;
+/** Brought down onto the enemy from above: past level, into it. */
+const STRUCK = 92;
 
 /** The earnest face the Herald is drawn with. */
 const EARNEST: Expression = { brow: -1.1, knit: -3, open: 1.2, mouth: 1, wide: 1 };
@@ -186,43 +187,76 @@ const draw: Clip = {
 };
 
 /**
- * The blow, cut into mid-swing. `contact` is the frame the weapon lands and
- * the film goes two-tone: everything is down, the knees give, the horn arm
- * flies back, and the mouth opens on the line a beat after.
+ * The blow is two clips. `ult:din-blow` is the strike itself, only 120ms
+ * long, cut into on the downswing: a clip that short blends in from the quiet
+ * in under 25ms (the animator eases into a one-shot over a fifth of its
+ * length), so the frame the hit-stop holds is the struck pose and not a
+ * pose half-way out of the draw. `contact` is where the weapon head lands on
+ * the enemy, past level and still going down. Then `ult:din-follow` carries
+ * it on through: the head driven down past the enemy towards the ground, the
+ * knees taking the landing, the mouth open on the line.
  */
 const blow: Clip = {
-  duration: 900,
-  markers: { contact: 0.03 },
+  duration: 120,
+  markers: { contact: 0.3 },
   poses: [
-    { at: 0, x: 0.04, y: 0.01, rotate: 5, squash: 1.04, scale: 1.02, flash: 0.3 },
-    { at: 0.03, x: 0.1, y: 0.03, rotate: 9, squash: 1.12, scale: 1.04, flash: 0.9 },
-    { at: 0.2, x: 0.09, y: 0.025, rotate: 7, squash: 1.08, scale: 1.03, flash: 0 },
-    { at: 1, x: 0.08, y: 0.02, rotate: 6, squash: 1.06, scale: 1.02 },
+    { at: 0, x: 0.06, y: 0.02, rotate: 6, squash: 1.04, scale: 1.02, flash: 0 },
+    { at: 0.3, x: 0.1, y: 0.03, rotate: 10, squash: 1.1, scale: 1.04, flash: 0 },
+    { at: 1, x: 0.1, y: 0.03, rotate: 10, squash: 1.12, scale: 1.04, flash: 0 },
   ],
   parts: {
     banner: [
-      { at: 0, rotate: 40, y: 0.02, x: 0.03 },
-      { at: 0.03, rotate: STRUCK, y: 0.05, x: 0.05 },
-      { at: 0.14, rotate: STRUCK - 7, y: 0.04, x: 0.045 },
-      { at: 0.3, rotate: STRUCK - 3, y: 0.045, x: 0.05 },
-      { at: 1, rotate: STRUCK - 5, y: 0.045, x: 0.05 },
+      { at: 0, rotate: STRUCK - 40, y: 0.03, x: 0.04 },
+      { at: 0.3, rotate: STRUCK, y: 0.05, x: 0.05 },
+      { at: 1, rotate: STRUCK + 5, y: 0.055, x: 0.05 },
     ],
-    flag: turn([0, -30], [0.03, -46], [0.2, 10], [0.45, -14], [0.7, 4], [1, -6]),
-    horn: turn([0, 30], [0.03, 52], [0.25, 44], [1, 40]),
-    head: turn([0, 8], [0.03, 13], [0.25, 4], [0.45, -4], [1, -3]),
+    flag: turn([0, -34], [0.3, -48], [1, -44]),
+    horn: turn([0, 36], [0.3, 56], [1, 58]),
+    head: turn([0, 9], [0.3, 14], [1, 14]),
     body: [
-      { at: 0, squash: 1.04, y: 0.01 },
-      { at: 0.03, squash: 1.1, y: 0.025 },
-      { at: 0.3, squash: 1.05, y: 0.015 },
-      { at: 1, squash: 1.04, y: 0.012 },
+      { at: 0, squash: 1.05, y: 0.015 },
+      { at: 0.3, squash: 1.1, y: 0.025 },
+      { at: 1, squash: 1.1, y: 0.025 },
     ],
     legs: [
-      { at: 0, squash: 1.06 },
-      { at: 0.03, squash: 1.16 },
-      { at: 0.3, squash: 1.1 },
+      { at: 0, squash: 0.98 },
+      { at: 0.3, squash: 1.04 },
       { at: 1, squash: 1.08 },
     ],
-    ...face([0, SET], [0.03, { ...SET, open: 0.45 }], [0.22, SHOUT], [0.7, SHOUT], [1, { ...SHOUT, mouth: 2.2 }]),
+    ...face([0, SET], [0.3, { ...SET, open: 0.45 }], [1, { ...SET, open: 0.5, mouth: 0.9 }]),
+  },
+};
+
+/** The follow-through: on down past the enemy, and the landing. */
+const follow: Clip = {
+  duration: 800,
+  poses: [
+    { at: 0, x: 0.1, y: 0.03, rotate: 10, squash: 1.12, scale: 1.04, flash: 0 },
+    { at: 0.2, x: 0.11, y: 0.035, rotate: 12, squash: 1.14, scale: 1.03, flash: 0 },
+    { at: 1, x: 0.09, y: 0.025, rotate: 8, squash: 1.06, scale: 1.02 },
+  ],
+  parts: {
+    banner: [
+      { at: 0, rotate: STRUCK + 5, y: 0.055, x: 0.05 },
+      { at: 0.2, rotate: STRUCK + 28, y: 0.08, x: 0.06 },
+      { at: 0.45, rotate: STRUCK + 22, y: 0.075, x: 0.055 },
+      { at: 1, rotate: STRUCK + 24, y: 0.075, x: 0.055 },
+    ],
+    flag: turn([0, -44], [0.2, 16], [0.4, -12], [0.65, 6], [1, -4]),
+    horn: turn([0, 58], [0.3, 44], [1, 38]),
+    head: turn([0, 14], [0.25, 4], [0.45, -5], [1, -4]),
+    body: [
+      { at: 0, squash: 1.1, y: 0.025 },
+      { at: 0.2, squash: 1.14, y: 0.03 },
+      { at: 1, squash: 1.05, y: 0.015 },
+    ],
+    legs: [
+      { at: 0, squash: 1.08 },
+      { at: 0.15, squash: 1.22 },
+      { at: 0.4, squash: 1.1 },
+      { at: 1, squash: 1.08 },
+    ],
+    ...face([0, { ...SET, open: 0.5, mouth: 0.9 }], [0.2, SHOUT], [0.7, SHOUT], [1, { ...SHOUT, mouth: 2.2 }]),
   },
 };
 
@@ -421,6 +455,7 @@ export const poses: Record<string, Rig> = Object.fromEntries(
             "ult:din-walk": walk,
             "ult:din-draw": draw,
             "ult:din-blow": blow,
+            "ult:din-follow": follow,
             "ult:din-front": front,
             "ult:din-hold": hold,
           }

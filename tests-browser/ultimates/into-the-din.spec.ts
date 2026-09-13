@@ -92,6 +92,18 @@ test("the blow is drawn, tunes the din and reveals the damage on the frame", asy
   expect(await strokes(page, "hot")).toBeGreaterThan(10);
   await expect(page.locator(".cine-text-impact")).toHaveText(/^\d+$/);
   await expect(page.locator('.cine-actor[data-role="targets"]')).toBeVisible();
+
+  // The held frame: the weapon is down on the enemy, drawn in front of it, and the enemy is knocked.
+  await hold(page, { shot: 4, at: 0.055 }, "blow");
+  const z = (role: string) => page.locator(`.cine-actor[data-role="${role}"]`).evaluate((e) => Number((e as HTMLElement).style.zIndex));
+  expect(await z("caster")).toBeGreaterThan(await z("targets"));
+  const angle = (t: string) => Number(/rotate\((-?[\d.]+)deg\)/.exec(t)?.[1] ?? NaN);
+  const banner = page.locator('.cine-actor[data-role="caster"] [data-part="banner"]');
+  expect(angle(await banner.evaluate((e) => (e as HTMLElement).style.transform))).toBeGreaterThan(80);
+  expect(await page.locator('.cine-actor[data-role="targets"] .cine-look').evaluate((e) => (e as HTMLElement).style.transform)).toContain("rotate");
+  // And it follows through, down past the enemy.
+  await hold(page, { shot: 4, at: 0.5 }, "blow");
+  expect(angle(await banner.evaluate((e) => (e as HTMLElement).style.transform))).toBeGreaterThan(105);
 });
 
 test("the ring reaches the whole real party at once, and the board keeps what it did", async ({ page }) => {
@@ -101,7 +113,8 @@ test("the ring reaches the whole real party at once, and the board keeps what it
     .locator('.cine-actor[data-role="allies"] .cine-look')
     .evaluateAll((els) => els.map((e) => (e as HTMLElement).style.transform !== ""));
   expect(lunged.every(Boolean)).toBe(true);
-  await expect(page.locator('.din-carry:not([style*="none"])')).toHaveCount(3);
+  // The din round them has been tuned into gold rings round their chests.
+  expect(await strokes(page, "gold")).toBeGreaterThan(30);
 
   await hold(page, { party: 4, shot: 6, at: 0.6 }, "carried");
   await expect(page.locator('.din-board[data-mode="carry"]')).toHaveCount(3);

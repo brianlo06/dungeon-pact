@@ -84,9 +84,9 @@ shot sits directly before the loudest.
 | 1 | Grin · face close-up | 600 (340) | tight on the face, level, a slow push | `ult:din-grin` — the earnest open face sets: brows drop, eyes narrow, the smile becomes a grin, then a bark | din field, low; bone rim; the din buzzing behind the head | `din-noise` loud, behind | the din continuing; a grip creak | no | black 90ms | identity: the Herald's own face, going to war |
 | 2 | Out front · wide, from behind the party | 900 (440) | low, behind the party's shoulders, drifting after the Warcaller | allies `ult:din-wait` (held back, weapons low); Herald `ult:din-walk`, walking out past them into the din | din field; the party dim in the foreground, the Warcaller rim-lit | the din round every figure and thickest round the target; the Warcaller's stride bobs its figure (`din-body` walk) | war drum and brass: motif D3 · D3 · F3 on the footfalls | **yes**, far off in the din, braces at 0.62 | whip 110ms | stakes: who it leads, who it walks at; title |
 | 3 | The eye · reverse over the target's shoulder | 580 (380) | from behind the real target (a black shape filling the right edge), on the Warcaller's face and raised weapon; dead still | `ult:din-draw` — weapon drawn back high, face set, jaw shut; held still for the last half | exposure 0.16 → 0.07, a faint bone back light so the black shape reads, heavy vignette, bone rim | every din stroke freezes and goes out one by one (`din-noise` freeze); the figure sinks under the weapon and holds (`din-body` draw) | music ducked to 4%; a heartbeat, twice; the grip | **yes** — its back | cut (the din cuts with it) | the quiet |
-| 4 | The blow · impact | 740 (540) | profile across the blow, Dutch −6° → −2°, easing back | Herald `ult:din-blow` (contact 0.03); target `hurt`, shoved and tilted | exposure blown to 1, falling; bone tint | **two-tone frame**; the drawn clang at contact (`din-clang`); the ring out of it (`din-ring`); every stroke of the din tuned into an arc round the blow and dying away behind the ring (`din-noise` tune); the whole figure leans into the blow (`din-body` blow) | layered bell impact + room boom; 150ms stop; heavy shake | **yes** | cut on a 70ms two-tone frame (FAST: invert) | impact: the fourth note; damage and Vulnerable revealed; "THAT's the signal!" |
-| 5 | Courage · low angle on the party | 560 (360) | low, on the whole real party, pushing in | allies `ult:din-surge` at the ring's arrival — all at once, weapons forward; the Warcaller small, far out front, `ult:din-front` | din field brightening behind them; bone rim rising | the ring rolling in from the Warcaller and over the party (`din-ring`); the din round them tuned as it passes; each lurches forward and carries a ring of or before it (`din-courage`) | the ring passing; the party's shout; footfalls | no — the party | whip 100ms, back the way the ring goes | courage from the blow: Empowered, on everyone at once |
-| 6 | Carried · return | 660 (440) | battle camera | real Herald `ult:din-hold` — weapon planted, chin up | real battlefield; bars open | the target still ringing (`din-board` ring); a ring of or before every ally (`din-board` carry) | the motif's last two notes in brass, soft; tail | on board | flash 80ms | release: what it did, where it matters |
+| 4 | The blow · impact | 740 (540) | profile across the blow, Dutch −6° → −2°, easing back | Herald `ult:din-blow` (120ms strike, contact 0.3) coming down out of a leap onto its ground point, then `ult:din-follow` (react at 0.16): on down past the enemy and the landing; target `hurt` after the hold, knocked back, tilted and staggered (`din-body` blow) | exposure blown to 1, falling; bone tint | **two-tone frame** (34ms), then the hit-stop holds the struck moment in colour: the weapon head on the enemy's head, a hand-cut smear of the swing round the shoulder (`din-swing`), the drawn clang just past the head (`din-clang`), a broken hand-cut ring out of it (`din-ring`); every stroke of the din tuned into an arc round the blow (`din-noise` tune) | layered bell impact + room boom; 150ms stop at contact; heavy shake | **yes** | cut on the two-tone frame (FAST: invert) | impact: the fourth note; damage and Vulnerable revealed on the held frame; "THAT's the signal!" |
+| 5 | Courage · low angle on the party | 560 (360) | from the party's feet, looking up past them at the hatched sky, horizon low in frame, a slight roll | allies `ult:din-surge` at the ring's arrival — all at once, weapons forward; the Warcaller tiny on the horizon, `ult:din-front` | din field brightening behind them; gold rim rising | the broken hand-cut ring rolling in from the Warcaller (`din-ring`); the din round each ally tuned into a broken gold ring round its chest (`din-noise` tune, gold); each lurches forward (`din-courage`) | the ring passing; the party's shout; footfalls | no — the party | whip 100ms, back the way the ring goes | courage from the blow: Empowered, on everyone at once |
+| 6 | Carried · return | 660 (440) | battle camera | real Herald `ult:din-hold` — weapon planted, chin up | real battlefield; bars open | the struck enemy still ringing in broken hand-cut bone rings (`din-board` ring); a broken gold ring round every ally (`din-board` carry); both boil between three cuts | the motif's last two notes in brass, soft; tail | on board | flash 80ms | release: what it did, where it matters |
 
 ## Framing
 
@@ -115,10 +115,34 @@ noise. I'm already here."
 ## Notes from the lab
 
 - Every camera and effect was placed from probed positions
-  (`scripts/probe-ultimate.ts`). The blow's contact point (960, 650) is where
-  the banner pole's head lands on the Slag Hound's neck with the Herald at
-  x 700–715 and the banner at +78° from the shoulder; at +104° the pole head
-  hit the floor in front of the hound instead.
+  (`scripts/probe-ultimate.ts`). Revised after the lead's review, which found
+  the blow read as a level poke with no follow-through, and the kit's blade
+  lost against the hound:
+  - The animator blends into a one-shot over min(120ms, a fifth of the clip),
+    so a 900ms blow cut in at contact 0.03 was held by the hit-stop *a
+    quarter of the way out of the quiet's pose* — the weapon upright on the
+    two-tone frame, level only after. The strike is now a 120ms clip (a 24ms
+    blend) with contact at 0.3, and the follow-through a second clip.
+  - The follow-through is started by a `react` on the caster at 0.16 with
+    `then` holding each clip, not by `then: "ult:din-follow"`: in the lab's
+    seek that chain landed on idle. A lab seek into 0.16–0.32 of the shot
+    still shows the follow-through blending from the pre-seek pose (all the
+    instants fire before a frame is drawn); playback is continuous.
+  - An overhead blow could not come *down* on a hound whose head is level
+    with the Herald's shoulder, so the Warcaller leaps: the shot opens with it
+    170 world units up, dropping onto its ground point (ease out), and the
+    weapon at +92° from the shoulder lands on the hound's head (probed: head
+    centre 948, 636; the pole head 976, 628 on the held frame; the Blood
+    Price's blade crosses the head to the jaw). It follows on to +120°, into
+    the ground in front of the enemy.
+  - The held frame is in colour: the two-tone frame is 34ms and the stop at
+    0.05 (37ms). The target's `hurt` reaction waits until after the hold
+    (0.06), so the held frame shows it crushed and tilted by `din-body`
+    rather than blown out by the shared clip's flash; the Warcaller's strike
+    clips carry no root flash, since root keys do play in some runs (see
+    below) and a flash there posterises the figure.
+  - The clang sits just past the weapon head and smaller, so the head is
+    never under it.
 - The weapon drawn back far behind the head (−72°) put the flag straight over
   the Herald's face, so the quiet raises it high and nearly upright (−30°,
   lifted and a little forward), and the blow swings through 106°.
@@ -127,6 +151,15 @@ noise. I'm already here."
   and the earnest start needs the brow lifted (−1.1) for the change to read.
 - The tuned strokes at a large radius are nearly straight and read as rain;
   they now shorten and go out 260–780 world units behind the ring front.
+- Courage was first drawn as three arcs in front of each ally, which read as
+  a speaker icon, then as tall gold bands of the ring crossing each figure,
+  which read as claw slashes. It is now the film's own mechanism: the din
+  round each ally is tuned by the ring onto circles round that ally's chest,
+  in gold — a broken ring of hand-cut strokes that stays, the note ringing in
+  them. The board's marks are the same broken rings, hand-cut bands left open
+  across the legs: bone round the struck enemy, gold round each ally.
+- The ring itself is no longer clean circles: each is a broken circle of
+  hand-cut bands with an ink edge.
 - The Collector drawn as a silhouette shows pale, hard-edged shapes through
   it (by the look of it, parts the ink rule does not reach), so the boss framing
   of the quiet keeps it lit and only its near edge in frame.
@@ -145,9 +178,12 @@ noise. I'm already here."
   `din-body`, and the surge's lurch by `din-courage`, both writing the copy's
   `.cine-look` and restoring it when their shot ends. Clips with non-trivial
   root keys, which will start to play when the engine attaches the root:
-  `ult:din-step`, `ult:din-blow` (x 0.1 at contact), `ult:din-front`,
-  `ult:din-hold`, `ult:din-draw`, `ult:din-walk`, `ult:din-grin` and every
-  ally's `ult:din-surge` (x 0.05). They were kept small so the framing holds
+  `ult:din-step`, `ult:din-blow` (x 0.1 at contact, rotate 10), `ult:din-front`,
+  `ult:din-hold`, `ult:din-draw`, `ult:din-walk`, `ult:din-grin`,
+  `ult:din-follow` and every ally's `ult:din-surge` (x 0.05). In some lab
+  runs (seen with `gear=kit`) the root does play already — the Herald moves
+  0.1 of its width forward at contact and the shared `hurt` flash shows —
+  so the attach order is a race, not a rule; the blow was checked both ways. They were kept small so the framing holds
   when they do; `din-body` would then need halving.
 - **Allies on the board.** Battlefield clips reach only the caster and the
   targets, so the real allies cannot come forward in the return; what the
