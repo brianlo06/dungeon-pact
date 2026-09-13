@@ -51,9 +51,9 @@ export const voices: Record<string, Voice> = {
   "spot-call": {
     bus: "sfx",
     render: (c, o, t) => {
-      swell(c, o, t, { type: "sine", freq: hz(36), gain: 0.22, attack: 0.16, hold: 0.22, release: 0.6, cutoff: 400 });
+      swell(c, o, t, { type: "sine", freq: hz(36), gain: 0.34, attack: 0.16, hold: 0.22, release: 0.6, cutoff: 400 });
       swell(c, o, t + 0.04, { type: "triangle", freq: hz(55), gain: 0.04, attack: 0.2, hold: 0.2, release: 0.5, cutoff: 700 });
-      flutter(c, o, t + 0.02, { seconds: 0.46, count: 22, gain: 0.3, freq: 700, rise: 1.8, seed: 3 });
+      flutter(c, o, t + 0.02, { seconds: 0.46, count: 22, gain: 0.5, freq: 700, rise: 1.8, seed: 3 });
       moon(c, o, t + 0.2, 0.018, 0.9);
     },
   },
@@ -74,10 +74,10 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       const notes: [number, number, number, number][] = [
-        [0, 72, 0.1, 0.32],
-        [0.17, 67, 0.09, 0.34],
-        [0.36, 84, 0.08, 0.3],
-        [0.5, 83, 0.09, 1.2],
+        [0, 72, 0.15, 0.32],
+        [0.17, 67, 0.14, 0.34],
+        [0.36, 84, 0.12, 0.3],
+        [0.5, 83, 0.14, 1.2],
       ];
       for (const [at, midi, gain, decay] of notes) whistle(c, o, t + at, midi, gain, decay);
       swell(c, o, t + 0.5, { type: "sine", freq: hz(47), gain: 0.06, attack: 0.15, hold: 0.25, release: 0.7, cutoff: 500 });
@@ -87,7 +87,7 @@ export const voices: Record<string, Voice> = {
   "spot-open": {
     bus: "sfx",
     render: (c, o, t) => {
-      flutter(c, o, t, { seconds: 0.5, count: 28, gain: 0.22, freq: 1100, rise: 1.3, seed: 7 });
+      flutter(c, o, t, { seconds: 0.5, count: 28, gain: 0.5, freq: 1100, rise: 1.3, seed: 7 });
       const scale = [79, 81, 84, 86, 88, 91];
       for (let i = 0; i < 9; i++)
         hit(c, o, t + 0.05 + i * 0.05, { type: "sine", from: hz(scale[(i * 5) % scale.length]), gain: 0.018, attack: 0.003, decay: 0.16 });
@@ -98,7 +98,7 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       crash(c, o, t, { seconds: 0.26, gain: 0.12, type: "bandpass", freq: 500, sweepTo: 1600, q: 0.8 });
-      flutter(c, o, t, { seconds: 0.24, count: 16, gain: 0.34, freq: 600, rise: 1.4, seed: 11 });
+      flutter(c, o, t, { seconds: 0.24, count: 16, gain: 0.7, freq: 600, rise: 1.4, seed: 11 });
     },
   },
   /**
@@ -133,8 +133,8 @@ export const voices: Record<string, Voice> = {
   "spot-impact": {
     bus: "sfx",
     render: (c, o, t) => {
-      crash(c, o, t, { seconds: 0.022, gain: 0.9, type: "highpass", freq: 3600, q: 0.5 });
-      hit(c, o, t, { type: "sine", from: 140, to: 28, gain: 1, attack: 0.002, decay: 0.85 });
+      crash(c, o, t, { seconds: 0.022, gain: 0.7, type: "highpass", freq: 3600, q: 0.5 });
+      hit(c, o, t, { type: "sine", from: 140, to: 28, gain: 0.9, attack: 0.002, decay: 0.85 });
       hit(c, o, t, { type: "triangle", from: 300, to: 80, gain: 0.26, attack: 0.002, decay: 0.28 });
       crash(c, o, t + 0.004, { seconds: 0.34, gain: 0.5, type: "bandpass", freq: 2600, sweepTo: 420, q: 0.9 });
       flutter(c, o, t + 0.02, { seconds: 0.36, count: 26, gain: 0.34, freq: 1300, rise: 0.6, seed: 5 });
@@ -147,7 +147,7 @@ export const voices: Record<string, Voice> = {
   "spot-scatter": {
     bus: "sfx",
     render: (c, o, t) => {
-      flutter(c, o, t, { seconds: 0.55, count: 30, gain: 0.2, freq: 1500, rise: 0.5, seed: 13 });
+      flutter(c, o, t, { seconds: 0.55, count: 30, gain: 0.4, freq: 1500, rise: 0.5, seed: 13 });
       crash(c, o, t, { seconds: 0.5, gain: 0.05, type: "bandpass", freq: 1800, sweepTo: 700, q: 1 });
     },
   },
@@ -155,8 +155,8 @@ export const voices: Record<string, Voice> = {
   "spot-after": {
     bus: "sfx",
     render: (c, o, t) => {
-      whistle(c, o, t, 84, 0.06, 0.5);
-      whistle(c, o, t + 0.3, 83, 0.065, 1.1);
+      whistle(c, o, t, 84, 0.1, 0.5);
+      whistle(c, o, t + 0.3, 83, 0.11, 1.1);
       flutter(c, o, t + 0.08, { seconds: 0.4, count: 10, gain: 0.12, freq: 1000, seed: 17 });
     },
   },

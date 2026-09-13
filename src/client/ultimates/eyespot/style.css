@@ -201,7 +201,7 @@
 }
 .spot-coat .spot-moth {
   --flap: 0.06;
-  --open: clamp(0.16, calc((var(--p) - var(--o)) * 9 + 0.16), 1);
+  --open: clamp(0.4, calc((var(--p) - var(--o)) * 9 + 0.4), 1);
   transform: translate(-50%, -50%) rotate(var(--rr));
 }
 .spot-coat[data-held] .spot-moth {
@@ -220,7 +220,6 @@
     translate(calc((1 - var(--lk)) * var(--lx) * 10%), calc((1 - var(--lk)) * (1 - var(--lk)) * 900%))
     rotate(calc(var(--rr) * var(--lk)));
 }
-/* A closed moth is its body and a sliver of wing: the eye shows only open. */
 
 /* ---- the robe ---- */
 .spot-robe {
