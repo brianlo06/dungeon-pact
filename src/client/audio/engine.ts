@@ -29,14 +29,38 @@ interface Voice {
   render: (ctx: AudioContext, out: AudioNode, at: number) => void;
 }
 
+/**
+ * White noise is white noise: a buffer need not be generated afresh for every
+ * hit. Filling one sample at a time on each impact put tens of thousands of
+ * random numbers on the main thread at exactly the moment a replay lands its
+ * blows. Buffers are made once per length, a few variants each, and handed out
+ * in turn so a flurry of hits does not repeat one waveform.
+ */
+const NOISE_VARIANTS = 3;
+const noiseCache = new WeakMap<AudioContext, Map<number, AudioBuffer[]>>();
+let noiseTurn = 0;
+
 /** Shaped noise: the backbone of impacts, chains and steam. */
 function noise(ctx: AudioContext, seconds: number) {
-  const frames = Math.max(1, Math.floor(ctx.sampleRate * seconds));
-  const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < frames; i++) data[i] = Math.random() * 2 - 1;
+  // Lengths are bucketed to 50ms so a handful of buffers covers every sound.
+  const frames = Math.max(
+    1,
+    Math.ceil((ctx.sampleRate * Math.ceil(seconds * 20)) / 20),
+  );
+  let byLength = noiseCache.get(ctx);
+  if (!byLength) noiseCache.set(ctx, (byLength = new Map()));
+  let variants = byLength.get(frames);
+  if (!variants) {
+    variants = Array.from({ length: NOISE_VARIANTS }, () => {
+      const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < frames; i++) data[i] = Math.random() * 2 - 1;
+      return buffer;
+    });
+    byLength.set(frames, variants);
+  }
   const source = ctx.createBufferSource();
-  source.buffer = buffer;
+  source.buffer = variants[noiseTurn++ % NOISE_VARIANTS];
   return source;
 }
 
