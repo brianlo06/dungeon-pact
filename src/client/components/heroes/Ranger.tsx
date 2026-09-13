@@ -60,11 +60,11 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
   const hold = useRigParts(unitId, animators, PARTS);
   // The face only acts in a close-up; in a round it is never registered, so
   // it costs the stage nothing.
-  const face = useRigParts(
-    unitId,
-    useContext(CloseUpContext) ? animators : undefined,
-    FACE_PARTS,
-  );
+  const closeUp = useContext(CloseUpContext);
+  const face = useRigParts(unitId, closeUp ? animators : undefined, FACE_PARTS);
+  // Held (and so named as parts) only where they are driven, so a round's
+  // figure has no part the animator is not writing.
+  const facePart = (name: (typeof FACE_PARTS)[number]) => (closeUp ? face(name) : undefined);
   const g = useShades("rng");
   const [bx, by] = BODY.shoulderBack;
   const [fx, fy] = BODY.shoulderFront;
@@ -257,7 +257,7 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
             strokeWidth={DETAIL}
             strokeLinejoin="round"
           />
-          <g ref={face("brow")} data-part="brow" style={at(56.5, 26)}>
+          <g ref={facePart("brow")} style={at(56.5, 26)}>
             {/* brows up: something moved out there */}
             <path
               d="M50.4 26.9 Q53 25.1 55.6 26.5 M57.9 26.2 Q60.3 24.8 62.5 26.3"
@@ -267,7 +267,7 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
               strokeLinecap="round"
             />
           </g>
-          <g ref={face("eyes")} data-part="eyes" style={at(56.5, 30.5)}>
+          <g ref={facePart("eyes")} style={at(56.5, 30.5)}>
             {/*
           Big dark eyes, wide open, with a lot of light in them. Not whites:
           at portrait size a white ring round each eye reads as spectacles,
@@ -290,7 +290,7 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          <g ref={face("mouth")} data-part="mouth" style={at(58.3, 40)}>
+          <g ref={facePart("mouth")} style={at(58.3, 40)}>
             {/* lips parted, about to say so */}
             <path
               d="M55.4 39.3 Q58.4 42.4 61.2 38.8 Q58.2 39.9 55.4 39.3 Z"
@@ -324,10 +324,10 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
         <BaseWeapon>
           {" "}
           {/* the string, clear of the body: two halves that meet mid-way */}
-          <g ref={face("stringTop")} data-part="stringTop" style={at(67.5, 23.5)}>
+          <g ref={facePart("stringTop")} style={at(67.5, 23.5)}>
             <path d="M67.5 23.5 L67.5 58" stroke="#e9dfcf" strokeWidth={1.1} />
           </g>
-          <g ref={face("stringLow")} data-part="stringLow" style={at(67.5, 92)}>
+          <g ref={facePart("stringLow")} style={at(67.5, 92)}>
             <path d="M67.5 58 L67.5 92" stroke="#e9dfcf" strokeWidth={1.1} />
           </g>
           <path

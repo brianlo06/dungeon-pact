@@ -56,11 +56,11 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
   const hold = useRigParts(unitId, animators, PARTS);
   // The face only acts in a close-up; in a round it is never registered, so
   // it costs the stage nothing.
-  const face = useRigParts(
-    unitId,
-    useContext(CloseUpContext) ? animators : undefined,
-    FACE_PARTS,
-  );
+  const closeUp = useContext(CloseUpContext);
+  const face = useRigParts(unitId, closeUp ? animators : undefined, FACE_PARTS);
+  // Held (and so named as parts) only where they are driven, so a round's
+  // figure has no part the animator is not writing.
+  const facePart = (name: (typeof FACE_PARTS)[number]) => (closeUp ? face(name) : undefined);
   const g = useShades("brk");
   const [bx, by] = BODY.shoulderBack;
   const [fx, fy] = BODY.shoulderFront;
@@ -277,7 +277,7 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
             />
             <path d="M55 31.4 H56.2 M48 31 L40.8 29.8" fill="none" />
           </g>
-          <g ref={face("eyes")} data-part="eyes" style={at(56, 32)}>
+          <g ref={facePart("eyes")} style={at(56, 32)}>
             <circle cx={52} cy={32.2} r={1.15} fill={INK} />
             <circle cx={59.8} cy={32.2} r={1} fill={INK} />
             <path
@@ -310,7 +310,7 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
             strokeLinecap="round"
           />
           <circle cx={66.2} cy={35.2} r={0.9} fill="#fff3dc" opacity={0.7} />
-          <g ref={face("mouth")} data-part="mouth" style={at(59.6, 42.6)}>
+          <g ref={facePart("mouth")} style={at(59.6, 42.6)}>
             {/* a small mouth pursed under it, very pleased with the deal */}
             <path
               d="M57.2 42.6 Q59.7 43.8 62.1 41.9"
@@ -320,7 +320,7 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
               strokeLinecap="round"
             />
           </g>
-          <g ref={face("brow")} data-part="brow" style={at(55.8, 27)}>
+          <g ref={facePart("brow")} style={at(55.8, 27)}>
             {/* bushy grey brows, just under the brim, over the rims */}
             <path
               d="M48.4 28 C49.8 26 53.6 25.8 55.2 27.4 C53.6 27.6 51 28 48.4 28 Z M57 27.2 C58.6 25.8 61.8 26 63.2 27.7 C61.2 27.6 59 27.7 57 27.2 Z"

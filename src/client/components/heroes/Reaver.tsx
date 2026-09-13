@@ -48,11 +48,11 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
   const hold = useRigParts(unitId, animators, PARTS);
   // The face only acts in a close-up; in a round it is never registered, so
   // it costs the stage nothing.
-  const face = useRigParts(
-    unitId,
-    useContext(CloseUpContext) ? animators : undefined,
-    FACE_PARTS,
-  );
+  const closeUp = useContext(CloseUpContext);
+  const face = useRigParts(unitId, closeUp ? animators : undefined, FACE_PARTS);
+  // Held (and so named as parts) only where they are driven, so a round's
+  // figure has no part the animator is not writing.
+  const facePart = (name: (typeof FACE_PARTS)[number]) => (closeUp ? face(name) : undefined);
   const g = useShades("rvr");
   const [bx, by] = BODY.shoulderBack;
   const [fx, fy] = BODY.shoulderFront;
@@ -200,7 +200,7 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
             strokeWidth={DETAIL}
             strokeLinejoin="round"
           />
-          <g ref={face("eyes")} data-part="eyes" style={at(56.5, 32.5)}>
+          <g ref={facePart("eyes")} style={at(56.5, 32.5)}>
             {/* small eyes, deep in the shadow of the brow, glaring */}
             <path
               d="M47.8 30.2 C52 32.4 58.5 32.4 65 30.6 L64.6 34.2 C58.5 35.2 52.2 34.9 48.4 32.8 Z"
@@ -220,7 +220,7 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
             <circle cx={54} cy={32.6} r={0.95} fill={INK} />
             <circle cx={61.2} cy={32.3} r={0.85} fill={INK} />
           </g>
-          <g ref={face("brow")} data-part="brow" style={at(57, 28.5)}>
+          <g ref={facePart("brow")} style={at(57, 28.5)}>
             {/* the brow: a shelf of bone that juts past the face */}
             <path
               d="M46 29.2 C49.5 26 57 25.3 62 26 C64.8 26.4 67 27.4 68 29 C67 31 64.4 31.4 61.8 31 C59.4 30.7 57.8 31.4 56.2 31.6 C53 32 49.2 31.4 46 29.2 Z"
@@ -259,7 +259,7 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          <g ref={face("mouth")} data-part="mouth" style={at(58, 40)}>
+          <g ref={facePart("mouth")} style={at(58, 40)}>
             {/* teeth gritted, lips pulled back, one of them gone */}
             <path
               d="M50.6 40.6 L53 39.2 H62.6 L64.6 40.4 L62.8 43.6 H53 Z"

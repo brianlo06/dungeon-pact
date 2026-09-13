@@ -76,11 +76,11 @@ export function Herald({ unitId, animators, className, viewBox }: HeroProps) {
   const hold = useRigParts(unitId, animators, PARTS);
   // The face only acts in a close-up; in a round it is never registered, so
   // it costs the stage nothing.
-  const face = useRigParts(
-    unitId,
-    useContext(CloseUpContext) ? animators : undefined,
-    FACE_PARTS,
-  );
+  const closeUp = useContext(CloseUpContext);
+  const face = useRigParts(unitId, closeUp ? animators : undefined, FACE_PARTS);
+  // Held (and so named as parts) only where they are driven, so a round's
+  // figure has no part the animator is not writing.
+  const facePart = (name: (typeof FACE_PARTS)[number]) => (closeUp ? face(name) : undefined);
   const g = useShades("hrl");
   const [bx, by] = BODY.shoulderBack;
   const [fx, fy] = BODY.shoulderFront;
@@ -237,7 +237,7 @@ export function Herald({ unitId, animators, className, viewBox }: HeroProps) {
             fill="none"
             strokeLinecap="round"
           />
-          <g ref={face("brow")} data-part="brow" style={at(56, 27.2)}>
+          <g ref={facePart("brow")} style={at(56, 27.2)}>
             {/* level brows, thick, lifted a little at the middle: earnest */}
             <path
               d="M48.8 27.9 L55.2 26.7 M57.6 26.6 L63 27.6"
@@ -246,7 +246,7 @@ export function Herald({ unitId, animators, className, viewBox }: HeroProps) {
               strokeLinecap="round"
             />
           </g>
-          <g ref={face("eyes")} data-part="eyes" style={at(56, 31.1)}>
+          <g ref={facePart("eyes")} style={at(56, 31.1)}>
             {/* wide-open eyes, whites and warm brown irises */}
             <g stroke={INK} strokeWidth={1}>
               <path
@@ -273,7 +273,7 @@ export function Herald({ unitId, animators, className, viewBox }: HeroProps) {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          <g ref={face("mouth")} data-part="mouth" style={at(57.6, 40.5)}>
+          <g ref={facePart("mouth")} style={at(57.6, 40.5)}>
             {/* an open smile, the top teeth showing, and a crease beside it */}
             <path
               d="M53.2 39.2 Q57.6 40.2 62 38.9 Q61 43.6 57.4 43.6 Q54.2 43.4 53.2 39.2 Z"

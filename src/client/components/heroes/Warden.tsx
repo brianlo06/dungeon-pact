@@ -81,11 +81,11 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
   const hold = useRigParts(unitId, animators, PARTS);
   // The face only acts in a close-up; in a round it is never registered, so
   // it costs the stage nothing.
-  const face = useRigParts(
-    unitId,
-    useContext(CloseUpContext) ? animators : undefined,
-    FACE_PARTS,
-  );
+  const closeUp = useContext(CloseUpContext);
+  const face = useRigParts(unitId, closeUp ? animators : undefined, FACE_PARTS);
+  // Held (and so named as parts) only where they are driven, so a round's
+  // figure has no part the animator is not writing.
+  const facePart = (name: (typeof FACE_PARTS)[number]) => (closeUp ? face(name) : undefined);
   const g = useShades("wdn");
   const [bx, by] = BODY.shoulderBack;
   const [fx, fy] = BODY.shoulderFront;
@@ -302,7 +302,7 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
             <path d="M49.3 31.2 l-2 -0.9 M49.3 32 l-2.2 0.3 M49.6 32.8 l-1.8 1.3" />
             <path d="M51 34.4 Q53.2 35.4 55.4 34.3 M58.6 34.2 Q60.2 35 61.8 34.1" />
           </g>
-          <g ref={face("eyes")} data-part="eyes" style={at(56, 32)}>
+          <g ref={facePart("eyes")} style={at(56, 32)}>
             {/* eyes closed, the lids heavy and at rest */}
             <path
               d="M50.3 31.3 Q53 33.8 55.8 31.2 M58.2 31 Q60.1 33.2 62 31"
@@ -334,7 +334,7 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
             fill="none"
             strokeLinecap="round"
           />
-          <g ref={face("mouth")} data-part="mouth" style={at(59, 41)}>
+          <g ref={facePart("mouth")} style={at(59, 41)}>
             {/* a drooping moustache, and a small smile under it */}
             <path
               d="M54.5 39.5 C56.5 37.3 60.5 37 63.6 37.8 C64.6 39 64.4 41 63 42.4 C62 40.6 59.5 39.8 57.3 40.6 C56.3 41 55.2 40.8 54.5 39.5 Z"
@@ -360,7 +360,7 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          <g ref={face("brow")} data-part="brow" style={at(56, 27.5)}>
+          <g ref={facePart("brow")} style={at(56, 27.5)}>
             {/* white brows, bushy, drooping at the ends */}
             <path
               d="M49 29 C50.2 26.6 54 26 56.3 27.4 C54.8 27.9 53 28 51.6 28.7 C50.6 29.2 49.6 29.6 49 29 Z M58 27.3 C59.6 26 62.3 26.2 63.6 28 C62.2 28 60.4 28.2 59 28.8 C58.3 28.7 57.9 28 58 27.3 Z"
