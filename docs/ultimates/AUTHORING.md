@@ -82,6 +82,27 @@ lightning arcs wet pages drops rune-circle` (see `vfx.tsx`); `follow`,
 overrides. Reusing a shared effect is fine; building your film out of nothing
 but shared effects is not the bar.
 
+## Faces
+
+The Ranger, Warden, Broker, Herald and Reaver show their faces, and each face
+has three parts a close-up can move: `brow`, `eyes` and `mouth` (grouped from
+the existing drawing, pivoting on each feature). They register with the
+animator only inside a cinematic's copy of the figure, so a round never pays
+for them. Build their tracks with `face()` from `src/client/battle/face.ts` and
+spread them into a clip's `parts`:
+
+```ts
+parts: { ...face([0, FACES.focus], [0.6, FACES.fury]), head: turn([0, 0], [0.6, -8]) }
+```
+
+Preview any preset on a hero in the lab with `&face=fury` (or `rest`,
+`resolve`, `shout`, `shock`, `focus`, `calm`, `grin`) on a paused close-up, and
+capture it cropped with `&crop=.cine-actor[data-role=caster] [data-part=head]`.
+Tune magnitudes per hero: the Reaver's brow is a shelf of bone over its eyes,
+so tilting it (`knit`) more than about 5° shows the socket under it; lift and
+lower it instead. A close-up without any face acting, on one of these five, is
+below the bar.
+
 ## Gameplay, for a path's Ultimate
 
 Read the path in `content/evolutions.ts` — what it trades away and what it

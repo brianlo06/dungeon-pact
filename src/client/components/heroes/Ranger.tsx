@@ -1,6 +1,7 @@
 import { IllustratedHead, Neck, Tailoring } from "./Illustration";
 import { BaseWeapon, GearMount, GearArrow } from "../../equipment/Equipment";
-import { useRigParts } from "../../battle/useRigParts";
+import { useContext } from "react";
+import { CloseUpContext, useRigParts } from "../../battle/useRigParts";
 import {
   at,
   BODY,
@@ -40,6 +41,8 @@ const PARTS = [
   "draw",
   "arrow",
 ] as const;
+/** The face, moved only in an Ultimate close-up (see `CloseUpContext`). */
+const FACE_PARTS = ["brow", "eyes", "mouth"] as const;
 
 /**
  * The youngest face in the party: a round cranium, full cheeks and a small
@@ -50,6 +53,13 @@ const FACE = "M45 14L56 16L63 23L64 33L58 43L50 46L39 40L34 29L37 19Z";
 
 export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
   const hold = useRigParts(unitId, animators, PARTS);
+  // The face only acts in a close-up; in a round it is never registered, so
+  // it costs the stage nothing.
+  const face = useRigParts(
+    unitId,
+    useContext(CloseUpContext) ? animators : undefined,
+    FACE_PARTS,
+  );
   const g = useShades("rng");
   const [bx, by] = BODY.shoulderBack;
   const [fx, fy] = BODY.shoulderFront;
@@ -242,25 +252,29 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
             strokeWidth={DETAIL}
             strokeLinejoin="round"
           />
-          {/* brows up: something moved out there */}
-          <path
-            d="M50.4 26.9 Q53 25.1 55.6 26.5 M57.9 26.2 Q60.3 24.8 62.5 26.3"
-            stroke="#7a2e18"
-            strokeWidth={1.4}
-            fill="none"
-            strokeLinecap="round"
-          />
-          {/*
+          <g ref={face("brow")} data-part="brow" style={at(56.5, 26)}>
+            {/* brows up: something moved out there */}
+            <path
+              d="M50.4 26.9 Q53 25.1 55.6 26.5 M57.9 26.2 Q60.3 24.8 62.5 26.3"
+              stroke="#7a2e18"
+              strokeWidth={1.4}
+              fill="none"
+              strokeLinecap="round"
+            />
+          </g>
+          <g ref={face("eyes")} data-part="eyes" style={at(56.5, 30.5)}>
+            {/*
           Big dark eyes, wide open, with a lot of light in them. Not whites:
           at portrait size a white ring round each eye reads as spectacles,
           and spectacles are the Broker's.
         */}
-          <path
-            d="M50 30L55 29L55 32L51 32ZM58 29L63 28L62 31L59 31Z"
-            fill={INK}
-          />
-          <g fill="#fff6e2">
-            <path d="M52 30H54M60 29H62" stroke="#d9dec4" strokeWidth=".7" />
+            <path
+              d="M50 30L55 29L55 32L51 32ZM58 29L63 28L62 31L59 31Z"
+              fill={INK}
+            />
+            <g fill="#fff6e2">
+              <path d="M52 30H54M60 29H62" stroke="#d9dec4" strokeWidth=".7" />
+            </g>
           </g>
           {/* a button nose, turned up, just past the cheek */}
           <path
@@ -271,14 +285,16 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          {/* lips parted, about to say so */}
-          <path
-            d="M55.4 39.3 Q58.4 42.4 61.2 38.8 Q58.2 39.9 55.4 39.3 Z"
-            fill="#7a2b2a"
-            stroke={INK}
-            strokeWidth={1}
-            strokeLinejoin="round"
-          />
+          <g ref={face("mouth")} data-part="mouth" style={at(58.3, 40)}>
+            {/* lips parted, about to say so */}
+            <path
+              d="M55.4 39.3 Q58.4 42.4 61.2 38.8 Q58.2 39.9 55.4 39.3 Z"
+              fill="#7a2b2a"
+              stroke={INK}
+              strokeWidth={1}
+              strokeLinejoin="round"
+            />
+          </g>
           {/* the hood itself, framing the face */}
           <path
             d="M47 11.5 C57 11.5 65 18 65.5 27 C63 22 58 19.5 51 19.5 C43 19.5 39 24 38 33 C38 38 40 42 43 45 L35 45 C32 40 31 34 32 27 C33 17 38.5 11.5 47 11.5 Z"

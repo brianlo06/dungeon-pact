@@ -24,6 +24,7 @@ import { CREATURES } from "../components/creatures";
 import { Miser } from "../components/Miser";
 import { Strongbox } from "../components/Strongbox";
 import { EquipmentProvider } from "../equipment/Equipment";
+import { CloseUpContext } from "../battle/useRigParts";
 import type { EquipmentBoard } from "../equipment/replay";
 import { Background } from "./backgrounds";
 import { CinematicRun, NO_DEBUG, type CinematicDebug } from "./run";
@@ -170,13 +171,15 @@ const CastLayer = memo(function CastLayer({
           >
             <div className="cine-rig" ref={(el) => animators.attach(id, el)}>
               <div className="cine-look">
-                <Figure
-                  unit={c.unit}
-                  id={id}
-                  animators={animators}
-                  worn={isPlayer(c.unit) ? (equipment?.worn[c.unit.id] ?? c.unit.items) : []}
-                  gold={gold}
-                />
+                <CloseUpContext.Provider value={true}>
+                  <Figure
+                    unit={c.unit}
+                    id={id}
+                    animators={animators}
+                    worn={isPlayer(c.unit) ? (equipment?.worn[c.unit.id] ?? c.unit.items) : []}
+                    gold={gold}
+                  />
+                </CloseUpContext.Provider>
               </div>
             </div>
             {anchors && <i className="cine-anchor" />}

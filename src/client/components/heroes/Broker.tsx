@@ -1,6 +1,7 @@
 import { IllustratedHead, Neck, Tailoring } from "./Illustration";
 import { BaseWeapon, GearMount } from "../../equipment/Equipment";
-import { useRigParts } from "../../battle/useRigParts";
+import { useContext } from "react";
+import { CloseUpContext, useRigParts } from "../../battle/useRigParts";
 import {
   at,
   BODY,
@@ -38,6 +39,8 @@ const PARTS = [
   "pans",
   "ledger",
 ] as const;
+/** The face, moved only in an Ultimate close-up (see `CloseUpContext`). */
+const FACE_PARTS = ["brow", "eyes", "mouth"] as const;
 
 /**
  * The heaviest face in the party, and the only one wider at the chin than at
@@ -51,6 +54,13 @@ const FACE =
 
 export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
   const hold = useRigParts(unitId, animators, PARTS);
+  // The face only acts in a close-up; in a round it is never registered, so
+  // it costs the stage nothing.
+  const face = useRigParts(
+    unitId,
+    useContext(CloseUpContext) ? animators : undefined,
+    FACE_PARTS,
+  );
   const g = useShades("brk");
   const [bx, by] = BODY.shoulderBack;
   const [fx, fy] = BODY.shoulderFront;
@@ -267,15 +277,17 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
             />
             <path d="M55 31.4 H56.2 M48 31 L40.8 29.8" fill="none" />
           </g>
-          <circle cx={52} cy={32.2} r={1.15} fill={INK} />
-          <circle cx={59.8} cy={32.2} r={1} fill={INK} />
-          <path
-            d="M49.8 31.3 Q52 30.2 54 31.2 M57.9 31.3 Q59.8 30.3 61.6 31.2"
-            stroke={INK}
-            strokeWidth={1}
-            fill="none"
-            strokeLinecap="round"
-          />
+          <g ref={face("eyes")} data-part="eyes" style={at(56, 32)}>
+            <circle cx={52} cy={32.2} r={1.15} fill={INK} />
+            <circle cx={59.8} cy={32.2} r={1} fill={INK} />
+            <path
+              d="M49.8 31.3 Q52 30.2 54 31.2 M57.9 31.3 Q59.8 30.3 61.6 31.2"
+              stroke={INK}
+              strokeWidth={1}
+              fill="none"
+              strokeLinecap="round"
+            />
+          </g>
           <path
             className="ph-brk-glint"
             d="M49.4 30.1 l2 -1.8 M57.6 30.2 l1.7 -1.5"
@@ -298,22 +310,26 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
             strokeLinecap="round"
           />
           <circle cx={66.2} cy={35.2} r={0.9} fill="#fff3dc" opacity={0.7} />
-          {/* a small mouth pursed under it, very pleased with the deal */}
-          <path
-            d="M57.2 42.6 Q59.7 43.8 62.1 41.9"
-            stroke={INK}
-            strokeWidth={1.2}
-            fill="none"
-            strokeLinecap="round"
-          />
-          {/* bushy grey brows, just under the brim, over the rims */}
-          <path
-            d="M48.4 28 C49.8 26 53.6 25.8 55.2 27.4 C53.6 27.6 51 28 48.4 28 Z M57 27.2 C58.6 25.8 61.8 26 63.2 27.7 C61.2 27.6 59 27.7 57 27.2 Z"
-            fill={RAMP.silver[0]}
-            stroke={INK}
-            strokeWidth={DETAIL}
-            strokeLinejoin="round"
-          />
+          <g ref={face("mouth")} data-part="mouth" style={at(59.6, 42.6)}>
+            {/* a small mouth pursed under it, very pleased with the deal */}
+            <path
+              d="M57.2 42.6 Q59.7 43.8 62.1 41.9"
+              stroke={INK}
+              strokeWidth={1.2}
+              fill="none"
+              strokeLinecap="round"
+            />
+          </g>
+          <g ref={face("brow")} data-part="brow" style={at(55.8, 27)}>
+            {/* bushy grey brows, just under the brim, over the rims */}
+            <path
+              d="M48.4 28 C49.8 26 53.6 25.8 55.2 27.4 C53.6 27.6 51 28 48.4 28 Z M57 27.2 C58.6 25.8 61.8 26 63.2 27.7 C61.2 27.6 59 27.7 57 27.2 Z"
+              fill={RAMP.silver[0]}
+              stroke={INK}
+              strokeWidth={DETAIL}
+              strokeLinejoin="round"
+            />
+          </g>
           {/* flat cap, brim to the front, quill tucked in the band */}
           <path
             d="M40 19 L28 10.5 L31 10.2 L42 17 Z"

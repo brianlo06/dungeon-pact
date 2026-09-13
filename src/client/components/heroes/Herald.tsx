@@ -1,6 +1,7 @@
 import { IllustratedHead, Neck, Tailoring } from "./Illustration";
 import { BaseWeapon, GearMount } from "../../equipment/Equipment";
-import { useRigParts } from "../../battle/useRigParts";
+import { useContext } from "react";
+import { CloseUpContext, useRigParts } from "../../battle/useRigParts";
 import {
   at,
   BODY,
@@ -31,6 +32,8 @@ import {
  * bell hangs at the hip.
  */
 const PARTS = ["legs", "body", "head", "banner", "flag", "horn"] as const;
+/** The face, moved only in an Ultimate close-up (see `CloseUpContext`). */
+const FACE_PARTS = ["brow", "eyes", "mouth"] as const;
 
 /**
  * The squarest face in the party: flat at the sides, a jaw with corners and a
@@ -71,6 +74,13 @@ function Sun({
 
 export function Herald({ unitId, animators, className, viewBox }: HeroProps) {
   const hold = useRigParts(unitId, animators, PARTS);
+  // The face only acts in a close-up; in a round it is never registered, so
+  // it costs the stage nothing.
+  const face = useRigParts(
+    unitId,
+    useContext(CloseUpContext) ? animators : undefined,
+    FACE_PARTS,
+  );
   const g = useShades("hrl");
   const [bx, by] = BODY.shoulderBack;
   const [fx, fy] = BODY.shoulderFront;
@@ -227,29 +237,33 @@ export function Herald({ unitId, animators, className, viewBox }: HeroProps) {
             fill="none"
             strokeLinecap="round"
           />
-          {/* level brows, thick, lifted a little at the middle: earnest */}
-          <path
-            d="M48.8 27.9 L55.2 26.7 M57.6 26.6 L63 27.6"
-            stroke={INK}
-            strokeWidth={2}
-            strokeLinecap="round"
-          />
-          {/* wide-open eyes, whites and warm brown irises */}
-          <g stroke={INK} strokeWidth={1}>
+          <g ref={face("brow")} data-part="brow" style={at(56, 27.2)}>
+            {/* level brows, thick, lifted a little at the middle: earnest */}
             <path
-              d="M49.4 31.4 Q52.2 28.6 55.2 31.2 Q52.2 33.8 49.4 31.4 Z"
-              fill="#fffaf0"
-            />
-            <path
-              d="M57.4 31.1 Q59.9 28.7 62.4 31 Q59.9 33.4 57.4 31.1 Z"
-              fill="#fffaf0"
+              d="M48.8 27.9 L55.2 26.7 M57.6 26.6 L63 27.6"
+              stroke={INK}
+              strokeWidth={2}
+              strokeLinecap="round"
             />
           </g>
-          <circle cx={52.8} cy={31.2} r={1.45} fill="#4a2a1a" />
-          <circle cx={60.3} cy={31} r={1.3} fill="#4a2a1a" />
-          <circle cx={52.9} cy={31.2} r={0.7} fill={INK} />
-          <circle cx={60.4} cy={31} r={0.6} fill={INK} />
-          <circle cx={53.3} cy={30.6} r={0.45} fill="#fff6e2" />
+          <g ref={face("eyes")} data-part="eyes" style={at(56, 31.1)}>
+            {/* wide-open eyes, whites and warm brown irises */}
+            <g stroke={INK} strokeWidth={1}>
+              <path
+                d="M49.4 31.4 Q52.2 28.6 55.2 31.2 Q52.2 33.8 49.4 31.4 Z"
+                fill="#fffaf0"
+              />
+              <path
+                d="M57.4 31.1 Q59.9 28.7 62.4 31 Q59.9 33.4 57.4 31.1 Z"
+                fill="#fffaf0"
+              />
+            </g>
+            <circle cx={52.8} cy={31.2} r={1.45} fill="#4a2a1a" />
+            <circle cx={60.3} cy={31} r={1.3} fill="#4a2a1a" />
+            <circle cx={52.9} cy={31.2} r={0.7} fill={INK} />
+            <circle cx={60.4} cy={31} r={0.6} fill={INK} />
+            <circle cx={53.3} cy={30.6} r={0.45} fill="#fff6e2" />
+          </g>
           {/* a straight nose, the bridge drawn in one line */}
           <path
             d="M58.6 30.4 C59.4 32.8 61 34.6 62.6 35.4 C61.8 36.6 60.2 36.9 58.8 36.2"
@@ -259,25 +273,27 @@ export function Herald({ unitId, animators, className, viewBox }: HeroProps) {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          {/* an open smile, the top teeth showing, and a crease beside it */}
-          <path
-            d="M53.2 39.2 Q57.6 40.2 62 38.9 Q61 43.6 57.4 43.6 Q54.2 43.4 53.2 39.2 Z"
-            fill="#5a2226"
-            stroke={INK}
-            strokeWidth={1.1}
-            strokeLinejoin="round"
-          />
-          <path
-            d="M54 39.6 Q57.6 40.5 61.2 39.4 L60.8 40.8 Q57.6 41.6 54.4 40.8 Z"
-            fill="#f7f1e4"
-          />
-          <path
-            d="M52.2 37.4 Q51.2 39.4 52.3 41.2"
-            stroke={RAMP.skinBrown[2]}
-            strokeWidth={0.9}
-            fill="none"
-            strokeLinecap="round"
-          />
+          <g ref={face("mouth")} data-part="mouth" style={at(57.6, 40.5)}>
+            {/* an open smile, the top teeth showing, and a crease beside it */}
+            <path
+              d="M53.2 39.2 Q57.6 40.2 62 38.9 Q61 43.6 57.4 43.6 Q54.2 43.4 53.2 39.2 Z"
+              fill="#5a2226"
+              stroke={INK}
+              strokeWidth={1.1}
+              strokeLinejoin="round"
+            />
+            <path
+              d="M54 39.6 Q57.6 40.5 61.2 39.4 L60.8 40.8 Q57.6 41.6 54.4 40.8 Z"
+              fill="#f7f1e4"
+            />
+            <path
+              d="M52.2 37.4 Q51.2 39.4 52.3 41.2"
+              stroke={RAMP.skinBrown[2]}
+              strokeWidth={0.9}
+              fill="none"
+              strokeLinecap="round"
+            />
+          </g>
           {/* the laurel circlet */}
           <path
             d="M34 25 Q48 17.5 63 22.5"

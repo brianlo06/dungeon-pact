@@ -34,13 +34,27 @@ for (const job of jobs) {
   if (q.has("shot")) {
     await page
       .locator(`.ult-cinematic[data-shot-index="${q.get("shot")}"]`)
-      .waitFor({ timeout: 15000 });
+      .waitFor({ timeout: 45000 });
   } else if (q.get("wait")) {
-    await page.locator(q.get("wait")!).first().waitFor({ timeout: 15000 });
+    await page.locator(q.get("wait")!).first().waitFor({ timeout: 45000 });
   }
   await page.waitForTimeout(Number(q.get("settle") ?? 400));
   // FORMAT=jpeg for small files a report can embed.
   const jpeg = process.env.FORMAT === "jpeg";
+  // `crop=<selector>`: capture just that element, padded, for close checks.
+  const crop = q.get("crop");
+  if (crop) {
+    const box = await page.locator(crop).first().boundingBox();
+    if (box) {
+      const pad = Math.max(box.width, box.height) * 0.35;
+      await page.screenshot({
+        path: `${out}/${name}.png`,
+        clip: { x: box.x - pad, y: box.y - pad, width: box.width + pad * 2, height: box.height + pad * 2 },
+      });
+      console.log("saved", name);
+      continue;
+    }
+  }
   await page.locator(".preview-viewport").screenshot({
     path: `${out}/${name}.${jpeg ? "jpg" : "png"}`,
     ...(jpeg ? { type: "jpeg" as const, quality: 80 } : {}),

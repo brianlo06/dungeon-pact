@@ -1,5 +1,12 @@
-import { useEffect, useRef } from "react";
+import { createContext, useEffect, useRef } from "react";
 import type { Animators } from "./useAnimators";
+
+/**
+ * True inside an Ultimate's close-up copy of a figure. Parts that only act in
+ * a close-up — a face's brows, eyes and mouth — register with the animator
+ * only here, so on the battlefield they are never promoted to layers.
+ */
+export const CloseUpContext = createContext(false);
 
 /** What every authored creature is handed by the combatant that holds it. */
 export interface CreatureProps {

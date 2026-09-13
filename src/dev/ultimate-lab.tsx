@@ -14,6 +14,7 @@ import type { RunState } from "../shared/model";
 import type { Framing } from "../shared/cinematic";
 import { NO_DEBUG, type CinematicDebug } from "../client/cinematic/run";
 import { bossFixture, finishPreviewRound } from "./boss-fixture";
+import { face, FACES } from "../client/battle/face";
 import "../client/style.css";
 import "./boss-preview.css";
 import "./ultimate-lab.css";
@@ -190,7 +191,15 @@ function UltimateLab() {
         const primed = structuredClone(from);
         primed.players[0].ultimateCharge = Math.max(primed.players[0].ultimateCharge ?? 0, ULTIMATE_MAX);
         before.current = primed;
-        let next = reduce(primed, "preview-0", { type: "ultimate", target }, 0);
+        // Aim where the Ultimate's rule allows: itself, an ally, or the enemy chosen.
+        const rule = ultimateFor(primed.players[0])?.target;
+        const aim =
+          rule === "self"
+            ? "preview-0"
+            : rule === "ally" || rule === "allyRow"
+              ? (primed.players[1]?.id ?? "preview-0")
+              : target;
+        let next = reduce(primed, "preview-0", { type: "ultimate", target: aim }, 0);
         next = finishPreviewRound(next);
         setRun(next);
         setError("");
@@ -247,6 +256,25 @@ function UltimateLab() {
         // offset again would overshoot a short shot into the next one.
         const ahead = ms - c.at(lab.loop.clock.time);
         if (ahead > 0) lab.loop.clock.step(ahead);
+        // `face=<name>`: hold the caster in one of the close-up expressions,
+        // for checking a face without authoring a clip for it.
+        const look = new URLSearchParams(location.search).get("face");
+        // Two frames later, so the film's own clip cues up to the seek point
+        // have fired and cannot replace the expression.
+        if (look && look in FACES)
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+          const id = `cine:${c.key}:caster`;
+          const rig = lab.animators.rig(id);
+          if (rig) {
+            rig["ult:lab-face"] = {
+              duration: 300,
+              poses: [{ at: 0 }, { at: 1 }],
+              parts: face([0, FACES[look as keyof typeof FACES]], [1, FACES[look as keyof typeof FACES]]),
+            };
+            lab.animators.play(id, "ult:lab-face", "ult:lab-face", { at: lab.loop.clock.time, force: true });
+            lab.loop.clock.step(320);
+          }
+          }));
       };
       requestAnimationFrame(wait);
     }, 250);
