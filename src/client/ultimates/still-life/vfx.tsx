@@ -210,7 +210,10 @@ const plates: Frame = (el, p, age, ctx) => {
       // A low arc: out, over and down into the sleeve.
       ox = lerp(ox, tx, k);
       oy = lerp(oy, ty, k) - Math.sin(k * Math.PI) * s.at.h * 0.35;
-      scale = lerp(1, num(box.dataset.grow, 2), k * k);
+      // Growing as it nears the lens, to about the same size whatever it is a
+      // still of: a boss's stills do not arrive as a wall.
+      const grow = Math.max(1, num(box.dataset.grow, 2) * Math.min(1, 140 / Math.max(1, s.at.h)));
+      scale = lerp(1, grow, k * k);
       o *= k > 0.85 ? clamp((1 - k) / 0.15) : 1;
     } else if (mode === "converge") {
       const hit = s.source === 0 ? num(box.dataset.hit, 0.1) : num(box.dataset.hit2, 0.36) + (s.source - 1) * 0.05;
@@ -227,7 +230,7 @@ const plates: Frame = (el, p, age, ctx) => {
       ox = lerp(ox, ox * 0.12, arrive) - dx * s.at.h * n * blow * 1.1;
       oy = lerp(oy, oy * 0.12, arrive) - dy * s.at.h * n * blow * 1.1;
       scale = 1 + ease("out", out) * 0.12 * n;
-      o *= out > 0 ? (1 - out) * (out < 0.08 ? 1.2 : 1) : p < start ? 0 : lerp(0.4, 1, k);
+      o *= out > 0 ? (1 - out) ** 2 : p < start ? 0 : lerp(0.4, 1, k);
       const hot = out > 0 && out < 0.35;
       if (s.wrap.dataset.hot !== (hot ? "1" : "0")) s.wrap.dataset.hot = hot ? "1" : "0";
     }

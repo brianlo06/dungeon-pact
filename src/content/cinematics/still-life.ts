@@ -30,8 +30,9 @@ import type { ActorCue, Cinematic } from "../../shared/cinematic";
 
 const AMBER = "#ffb870";
 const STILL = "#e6e1f6";
-const HOT = "#fff4e2";
 const NIGHT = "#0a0914";
+/** A screen flash is drawn at full strength and screened: its colour is its strength. */
+const FLICKER = "#4a3321";
 const BARS = 0.11;
 
 /** The impact's stills: laid out to the left of each figure, then thrown home. */
@@ -102,7 +103,7 @@ export const stillLife: Cinematic = {
         { role: "caster", at: [800, 900], size: 760, clip: "ult:still-pinch", then: "ult:still-pinch", look: "rim", rim: AMBER, root: false },
       ],
       vfx: [
-        { kind: "still-plates", at: 0, until: 1, layer: "back", params: { from: "caster", keep: "hand", clip: "ult:still-pinch", mode: "lay", takes: "0.22,0.47,0.72", dx: 0, dy: 0, fade: 0.25, alpha: 0.7 } },
+        { kind: "still-plates", at: 0, until: 1, layer: "front", params: { from: "caster", keep: "hand", clip: "ult:still-pinch", mode: "lay", takes: "0.2,0.45,0.7", dx: 0, dy: 0, fade: 0.2, alpha: 0.6 } },
         { kind: "still-flicker", at: 0, until: 1, scale: 0.55, color: AMBER, layer: "front", params: { at: "0.2,0.45,0.7", len: 0.13, spark: true } },
       ],
       sound: [
@@ -151,9 +152,9 @@ export const stillLife: Cinematic = {
         { kind: "still-plates", at: 0, until: 1, layer: "back", params: { from: "targets", mode: "lay", takes: "0.26,0.46,0.66", dx: -0.2, dy: 0.012, fade: 0.28, alpha: 0.8, glide: 0.1 } },
       ],
       screen: [
-        { kind: "flash", at: 0.25, ms: 70, amount: 0.14, color: AMBER },
-        { kind: "flash", at: 0.45, ms: 70, amount: 0.14, color: AMBER },
-        { kind: "flash", at: 0.65, ms: 70, amount: 0.18, color: AMBER },
+        { kind: "flash", at: 0.25, ms: 60, color: FLICKER },
+        { kind: "flash", at: 0.45, ms: 60, color: FLICKER },
+        { kind: "flash", at: 0.65, ms: 60, color: FLICKER },
       ],
       sound: [
         { at: 0.02, sfx: "still-motif" },
@@ -300,21 +301,21 @@ export const stillLife: Cinematic = {
         ease: "out",
       },
       background: "still-fallen",
-      lighting: { exposure: 0.85, back: [AMBER, 0.4], under: [AMBER, 0.25], rim: [AMBER, 1, 1], vignette: 0.35, letterbox: BARS },
-      toLighting: { exposure: 0.55, back: [AMBER, 0.14], under: [AMBER, 0.12], rim: [AMBER, 0.7, 1], vignette: 0.5, letterbox: BARS },
+      lighting: { exposure: 0.8, under: [AMBER, 0.16], rim: [AMBER, 0.6, 1], vignette: 0.35, letterbox: BARS },
+      toLighting: { exposure: 0.6, under: [AMBER, 0.1], rim: [AMBER, 0.4, 1], vignette: 0.5, letterbox: BARS },
       actors: [
-        { role: "caster", at: [250, 1150], size: 920, clip: "ult:still-release", look: "rim", rim: AMBER, z: 3 },
+        { role: "caster", at: [250, 1150], size: 920, clip: "ult:still-release", then: "ult:still-release", look: "lit", z: 3 },
         releaseTargets([1060, 810], 340, [240, -22], 70),
       ],
       vfx: [
         { kind: "still-fall", at: 0, until: 1, layer: "back", params: { drop: 0.14 } },
         { kind: "still-plates", at: 0, until: 1, layer: "front", params: CONVERGE },
-        { kind: "still-burst", at: 0.1, until: 0.42, follow: "target", x: 0, y: -150, scale: 1, seed: 7, color: AMBER, layer: "front" },
+        { kind: "still-burst", at: 0.1, until: 0.42, follow: "target", x: -90, y: -120, scale: 0.8, seed: 7, color: AMBER, layer: "front" },
       ],
       screen: [
         { kind: "two-tone", at: 0.1, ms: 70, color: AMBER },
-        { kind: "flash", at: 0.2, ms: 50, amount: 0.12, color: HOT },
-        { kind: "flash", at: 0.36, ms: 60, amount: 0.16, color: AMBER },
+        { kind: "flash", at: 0.26, ms: 60, color: "#6b4a2a" },
+        { kind: "flash", at: 0.36, ms: 60, color: FLICKER },
         { kind: "chromatic", at: 0.12, ms: 150, amount: 0.8 },
       ],
       stop: [{ at: 0.1, ms: 150 }],
@@ -343,7 +344,7 @@ export const stillLife: Cinematic = {
             ease: "out",
           },
           actors: [
-            { role: "caster", at: [300, 1060], size: 660, clip: "ult:still-release", look: "rim", rim: AMBER, z: 3 },
+            { role: "caster", at: [300, 1060], size: 660, clip: "ult:still-release", then: "ult:still-release", look: "lit", z: 3 },
             releaseTargets([1060, 840], 320, [260, -20], 45),
           ],
         },
@@ -354,7 +355,7 @@ export const stillLife: Cinematic = {
             ease: "out",
           },
           actors: [
-            { role: "caster", at: [260, 1040], size: 600, clip: "ult:still-release", look: "rim", rim: AMBER, z: 3 },
+            { role: "caster", at: [260, 1040], size: 600, clip: "ult:still-release", then: "ult:still-release", look: "lit", z: 3 },
             releaseTargets([1080, 870], 300, [300, -16], 18),
           ],
           vfx: [
