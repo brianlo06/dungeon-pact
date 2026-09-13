@@ -42,6 +42,16 @@ const FACE_PARTS = ["brow", "eyes", "mouth"] as const;
 const FACE =
   "M48 12.5 C58 12.5 64 19 64.2 28.5 C64.5 36 63 43 58.5 47 C55.5 49.5 50 49.5 46 48 C38 45.5 33 39 33 29 C33 19.5 38.5 12.5 48 12.5 Z";
 
+/**
+ * The open hand closing, in three drawings stepped on `--wdn-grasp` (0 open,
+ * about a half curled, 1 shut), so a film can close it like a drawn frame
+ * rather than a cross-fade. Used only in an Ultimate's close-up.
+ */
+const GRASP_OPEN = "clamp(0, (0.34 - var(--wdn-grasp, 0)) * 1000, 1)";
+const GRASP_CURL =
+  "clamp(0, min((var(--wdn-grasp, 0) - 0.34) * 1000, (0.67 - var(--wdn-grasp, 0)) * 1000), 1)";
+const GRASP_FIST = "clamp(0, (var(--wdn-grasp, 0) - 0.67) * 1000, 1)";
+
 /** A pointed leaf, `r` half its length, in local space. */
 const leafD = (r: number) =>
   `M0 0 Q${r} ${-r * 0.75} ${2 * r} 0 Q${r} ${r * 0.75} 0 0 Z`;
@@ -419,28 +429,63 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={DETAIL + 0.3}
           strokeLinejoin="round"
         />
-        {/* palm up, fingers open */}
-        <path
-          d="M70 58.5 C70 55 73 54 75.5 55 L78 53 L78.8 54.8 L77 56.3 L79.5 56.5 L79 58.3 L76.5 58.4 C76 61 72 62 70 58.5 Z"
-          fill={g.url("skin")}
-          stroke={INK}
-          strokeWidth={DETAIL + 0.5}
-          strokeLinejoin="round"
-        />
-        <circle
-          className="ph-wdn-mote ph-glow"
-          cx={75.5}
-          cy={49.5}
-          r={5}
-          fill={g.url("mote")}
-        />
-        <g className="ph-wdn-mote">
+        {/*
+         * The open hand, with its light. In an Ultimate's close-up it can
+         * close (`--wdn-grasp`, Mourning Water): the palm and its light give
+         * way to a curl and then a fist. Unset, only the open hand is drawn.
+         */}
+        <g style={closeUp ? { opacity: GRASP_OPEN } : undefined}>
+          {/* palm up, fingers open */}
           <path
-            d={leafD(1.6)}
-            transform={place(73.5, 51, -46)}
-            fill="#c9f59b"
+            d="M70 58.5 C70 55 73 54 75.5 55 L78 53 L78.8 54.8 L77 56.3 L79.5 56.5 L79 58.3 L76.5 58.4 C76 61 72 62 70 58.5 Z"
+            fill={g.url("skin")}
+            stroke={INK}
+            strokeWidth={DETAIL + 0.5}
+            strokeLinejoin="round"
           />
+          <circle
+            className="ph-wdn-mote ph-glow"
+            cx={75.5}
+            cy={49.5}
+            r={5}
+            fill={g.url("mote")}
+          />
+          <g className="ph-wdn-mote">
+            <path
+              d={leafD(1.6)}
+              transform={place(73.5, 51, -46)}
+              fill="#c9f59b"
+            />
+          </g>
         </g>
+        {closeUp && (
+          <>
+            {/* the fingers curling up over the palm */}
+            <g style={{ opacity: GRASP_CURL }}>
+              <path
+                d="M70 58.5 C70 55.2 72.6 54.2 75 54.6 C75.6 52.6 77.6 51.8 78.9 52.9 C79.8 53.7 79.4 55.2 78.3 55.6 C79.7 56 80.1 57.8 78.9 58.6 L76.6 58.6 C76 61 72 62 70 58.5 Z"
+                fill={g.url("skin")}
+                stroke={INK}
+                strokeWidth={DETAIL + 0.5}
+                strokeLinejoin="round"
+              />
+              <path d="M75.4 55.6 C76.4 55.2 77.4 55.4 78.2 55.8" stroke={INK} strokeWidth={DETAIL} fill="none" strokeLinecap="round" />
+            </g>
+            {/* shut */}
+            <g style={{ opacity: GRASP_FIST }}>
+              <path
+                d="M69.8 58.6 C69.4 55.4 71.8 53.6 74.6 53.7 C77.2 53.8 79.3 55.3 79.3 57.6 C79.3 60 77.2 61.6 74.4 61.6 C72.2 61.6 70.1 60.6 69.8 58.6 Z"
+                fill={g.url("skin")}
+                stroke={INK}
+                strokeWidth={DETAIL + 0.5}
+                strokeLinejoin="round"
+              />
+              {/* knuckles, and the thumb laid across them */}
+              <path d="M76.9 54.4 C77.6 55.5 77.7 56.6 77.2 57.6 M78.8 56 C79.3 57 79.1 58.2 78.3 59" stroke={INK} strokeWidth={DETAIL} fill="none" strokeLinecap="round" />
+              <path d="M71.6 57.6 C73.4 56.8 75.6 57 77.4 58.4" stroke={INK} strokeWidth={DETAIL + 0.2} fill="none" strokeLinecap="round" />
+            </g>
+          </>
+        )}
       </g>
     </HeroFrame>
   );

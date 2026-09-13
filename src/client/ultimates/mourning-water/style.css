@@ -1,0 +1,362 @@
+/*
+ * Mourning Water. Everything moves through frame functions and the film's
+ * variables (--p, --grow, --k) written from the combat clock: no keyframes,
+ * and no filter or blur on anything. Water is a dark body with an ink edge
+ * and one pale stroke of light along it.
+ */
+
+/*
+ * ---- the lantern going out, and the green in the palm put out by the tear,
+ * only in this film's copy of the Warden. Their idle flicker is a keyframe
+ * on opacity, which would win over the film's value, so it is held here.
+ */
+.ult-cinematic[data-cinematic="mourning-water"] .cine-actor[data-role="caster"] .ph-wdn-lamp {
+  animation: none;
+  opacity: var(--mourn-lamp, 1);
+}
+.ult-cinematic[data-cinematic="mourning-water"] .cine-actor[data-role="caster"] .ph-wdn-mote {
+  animation: none;
+  opacity: var(--mourn-mote, 1);
+}
+
+/* ---- the tear, drawn in the Warden's head (drawing units) ---- */
+.mourn-tear-wet {
+  fill: none;
+  stroke: #9fbdb3;
+  stroke-width: 0.95;
+  stroke-linecap: round;
+  stroke-dasharray: 1 1;
+  opacity: 0.55;
+}
+.mourn-tear-shine {
+  fill: none;
+  stroke: #f2fbf6;
+  stroke-width: 0.32;
+  stroke-linecap: round;
+  stroke-dasharray: 1 1;
+  opacity: 0.9;
+}
+.mourn-tear-bead path,
+.mourn-tear-drop path,
+.mourn-palm-fall path {
+  fill: #d7ece3;
+  stroke: #0c1512;
+  stroke-width: 0.4;
+  stroke-linejoin: round;
+}
+.mourn-tear-lit {
+  fill: #ffffff;
+}
+
+/* ---- the palm (drawing units) ---- */
+.mourn-palm-pool {
+  fill: #07120f;
+  fill-opacity: 0.82;
+  stroke: #020605;
+  stroke-width: 0.55;
+  stroke-linejoin: round;
+}
+.mourn-palm-lit {
+  fill: none;
+  stroke: #d9efe6;
+  stroke-width: 0.45;
+  stroke-linecap: round;
+}
+.mourn-palm-ring {
+  fill: none;
+  stroke: #e6f3ec;
+  stroke-width: 0.35;
+}
+.mourn-crown {
+  fill: #e6f3ec;
+  stroke: #0c1512;
+  stroke-width: 0.2;
+}
+.mourn-strand-body {
+  fill: #0a1714;
+  stroke: #020605;
+  stroke-width: 0.35;
+}
+.mourn-strand-lit {
+  fill: none;
+  stroke: #a9c9bd;
+  stroke-width: 0.3;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+.mourn-strand-drop {
+  fill: #0a1714;
+  stroke: #a9c9bd;
+  stroke-width: 0.25;
+}
+
+/* ---- the drop on the glass ---- */
+.cine-screen > .cine-vfx > .mourn-lens {
+  position: absolute;
+  inset: 0;
+}
+.mourn-lens svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.mourn-lens-rings ellipse {
+  fill: none;
+  stroke: #d8ece4;
+}
+.mourn-lens-drop path {
+  fill: #0b1714;
+  fill-opacity: 0.8;
+  stroke: #d8ece4;
+  stroke-width: 5;
+}
+.mourn-lens-drop-lit {
+  fill: #f2fbf6;
+  opacity: 0.75;
+}
+
+/* ---- world-sized drawings ---- */
+.cine-vfx > .mourn-world {
+  transform: none;
+  left: -800px;
+  top: -450px;
+  width: 3200px;
+  height: 1800px;
+  overflow: visible;
+}
+
+/* ---- the mere in front of the figures ---- */
+.mourn-sh-dim {
+  opacity: calc(1 - var(--exposure, 1));
+}
+.mourn-sh-edge {
+  fill: none;
+  stroke: #9ab8ad;
+  stroke-width: var(--sw, 3);
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.mourn-sh-ring {
+  fill: none;
+  stroke: #9ab8ad;
+  stroke-width: var(--sw, 3);
+  opacity: 0.35;
+}
+
+/* ---- rings across the mere ---- */
+.mourn-ring {
+  fill: none;
+  stroke: #cfe4db;
+  stroke-width: 3;
+}
+.mourn-ring-dark {
+  fill: none;
+  stroke: #020605;
+  stroke-width: 9;
+}
+
+/* ---- strands off the hand, in a wide ---- */
+.mourn-spill-body {
+  fill: #0a1714;
+  stroke: #020605;
+  stroke-width: 1.5;
+}
+.mourn-spill-lit {
+  fill: none;
+  stroke: #a9c9bd;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+/* ---- the fist of water ---- */
+.cine-vfx > .mourn-fist {
+  transform: none;
+  left: calc(var(--ah, 100px) * -1.6 * var(--s, 1));
+  top: calc(var(--ah, 100px) * -2.6 * var(--s, 1));
+  width: calc(var(--ah, 100px) * 3.2 * var(--s, 1));
+  height: calc(var(--ah, 100px) * 3 * var(--s, 1));
+}
+.mourn-fist svg {
+  width: 100%;
+  height: 100%;
+}
+.mourn-fist-hand {
+  transform-origin: 0 0;
+  transform-box: view-box;
+}
+.mourn-fist-body {
+  fill-opacity: 0.55;
+  stroke: #010403;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+.mourn-fist-body.back {
+  fill-opacity: 0.62;
+}
+.mourn-fist-lit {
+  fill: none;
+  stroke: #d9efe6;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.mourn-fist-crease {
+  fill: none;
+  stroke: #010403;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+.mourn-fist-run {
+  fill: none;
+  stroke: #a9bf62;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.mourn-fist-foot {
+  fill: #0a1714;
+  stroke: #cfe4db;
+  stroke-width: 3;
+}
+.mourn-fist-spray path {
+  fill: #e6f3ec;
+  stroke: #0b1512;
+  stroke-width: 1;
+}
+.mourn-fist-sheets path {
+  fill: #0c1c18;
+  stroke: #010403;
+  stroke-width: 1.4;
+}
+.mourn-fist-ring {
+  fill: none;
+  stroke: #cfe4db;
+  stroke-width: 3;
+}
+
+/* ---- the light behind the fist ---- */
+.cine-vfx > .mourn-glare {
+  transform: none;
+  left: calc(var(--ah, 100px) * -2.2 * var(--s, 1));
+  top: calc(var(--ah, 100px) * -3 * var(--s, 1));
+  width: calc(var(--ah, 100px) * 4.4 * var(--s, 1));
+  height: calc(var(--ah, 100px) * 3.6 * var(--s, 1));
+  opacity: var(--glare, 0);
+}
+.mourn-glare svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- what stays on it ---- */
+.cine-vfx > .mourn-cling {
+  transform: none;
+  left: calc(var(--ah, 100px) * -1 * var(--s, 1));
+  top: calc(var(--ah, 100px) * -1.3 * var(--s, 1));
+  width: calc(var(--ah, 100px) * 2 * var(--s, 1));
+  height: calc(var(--ah, 100px) * 1.5 * var(--s, 1));
+}
+.mourn-cling svg {
+  width: 100%;
+  height: 100%;
+}
+.mourn-cling-pool {
+  fill: #06100d;
+  stroke: #9ab8ad;
+  stroke-width: 1.4;
+  opacity: calc(var(--grow, 1) * 0.92);
+}
+.mourn-cling-body {
+  fill: #0c1c18;
+  fill-opacity: 0.7;
+}
+.mourn-cling-lit {
+  display: none;
+}
+.mourn-cling-drop {
+  fill: #d7ece3;
+  stroke: #0a1714;
+  stroke-width: 0.7;
+}
+.mourn-cling-weed {
+  fill: #a9bf62;
+  opacity: calc(var(--grow, 1) * 0.85);
+}
+.mourn-cling-ring {
+  fill: none;
+  stroke: #cfe4db;
+  stroke-width: 1.4;
+}
+
+/* ---- on the real battlefield ---- */
+.mourn-board {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+}
+.mourn-board[data-mode="call"] > svg {
+  position: absolute;
+  left: calc(var(--unit-w) * -1.1);
+  top: calc(var(--unit-w) * -0.37);
+  width: calc(var(--unit-w) * 2.2);
+  height: calc(var(--unit-w) * 0.73);
+}
+.mourn-board-pool {
+  fill: #050c0b;
+  fill-opacity: 0.8;
+  stroke: #9ab8ad;
+  stroke-width: 1.2;
+}
+.mourn-board-ring {
+  fill: none;
+  stroke: #cfe4db;
+  stroke-width: 2;
+}
+.mourn-board[data-mode="drowned"] > .mourn-cling {
+  position: absolute;
+  left: calc(var(--unit-h) * -0.75);
+  top: calc(var(--unit-h) * -0.97);
+  width: calc(var(--unit-h) * 1.5);
+  height: calc(var(--unit-h) * 1.12);
+}
+.mourn-wet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  opacity: var(--k, 0);
+}
+.mourn-wet > svg {
+  position: absolute;
+  left: calc(var(--u, 100px) * -0.6);
+  top: calc(var(--u, 100px) * -0.87);
+  width: calc(var(--u, 100px) * 1.2);
+  height: calc(var(--u, 100px) * 0.9);
+}
+.mourn-wet-pool {
+  fill: #050c0b;
+  fill-opacity: 0.8;
+  stroke: #9ab8ad;
+  stroke-width: 1.2;
+}
+.mourn-wet-ring {
+  fill: none;
+  stroke: #cfe4db;
+  stroke-width: 1.3;
+}
+.mourn-wet-drip {
+  fill: #0a1714;
+  stroke: #b7d3c8;
+  stroke-width: 0.9;
+}
+.mourn-wet-sheen {
+  fill: none;
+  stroke: #b7d3c8;
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: 0.4;
+}
