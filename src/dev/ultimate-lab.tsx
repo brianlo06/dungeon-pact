@@ -60,6 +60,8 @@ interface Options {
   gear: Gear;
   party: 2 | 3 | 4;
   charge: number;
+  /** `downed=1`: the last hero in the party starts the round downed. */
+  downed?: boolean;
 }
 
 function read() {
@@ -73,6 +75,7 @@ function read() {
       gear: (q.get("gear") as Gear) ?? "base",
       party: Number(q.get("party") ?? 3) as 2 | 3 | 4,
       charge: Number(q.get("charge") ?? ULTIMATE_MAX),
+      downed: q.get("downed") === "1",
     },
     mode: (q.get("mode") ?? "full") as "full" | "fast",
     framing: (q.get("framing") ?? "auto") as Framing | "auto",
@@ -113,6 +116,7 @@ function build(o: Options): RunState {
     gold: 400,
     legacy: false,
     heroes: [o.hero, ...others].slice(0, o.party),
+    downed: o.downed,
   });
   const me = s.players[0];
   me.row = "front";
