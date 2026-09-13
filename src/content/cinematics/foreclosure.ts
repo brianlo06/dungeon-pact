@@ -258,7 +258,7 @@ export const foreclosure: Cinematic = {
       ],
       screen: [
         { kind: "two-tone", at: 0.07, ms: 70 },
-        { kind: "flash", at: 0.14, ms: 90, amount: 0.5, color: HOT },
+        { kind: "flash", at: 0.14, ms: 60, amount: 0.5, color: HOT },
         { kind: "chromatic", at: 0.07, ms: 120, amount: 0.7 },
       ],
       stop: [{ at: 0.07, ms: 140 }],

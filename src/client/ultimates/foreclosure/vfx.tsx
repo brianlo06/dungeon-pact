@@ -353,7 +353,8 @@ const tag: Frame = (el, p, age, ctx) => {
   const mode = el.dataset.mode;
   const size = num(el, "size", 1);
   // The tag is 80 units wide; drawn at a quarter of the figure's height.
-  const s = (h * 0.24 * size) / 80;
+  // On the board a tag is a tag, whoever wears it: a boss's is not a banner.
+  const s = Math.min((h * 0.24 * size) / 80, el.dataset.follow ? Infinity : 0.62);
   const ox = num(el, "ox", -0.05) * h;
   const oy = -num(el, "oy", 0.72) * h;
   let drop = 0;
