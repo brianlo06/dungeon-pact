@@ -75,7 +75,7 @@ export const redLedger: Cinematic = {
         "Identity and the price, paid on screen: the bandaged fist clenched in front of the scarred chest until it shakes and the bandage soaks red from inside; then the fist is dragged down across the chest and leaves one red stroke behind it.",
       space: "cinematic",
       ms: 700,
-      fastMs: 420,
+      fastMs: 460,
       transition: { kind: "black", ms: 130 },
       camera: {
         from: { x: 820, y: 826, zoom: 1.96, rotate: -8 },
@@ -89,16 +89,18 @@ export const redLedger: Cinematic = {
         { role: "caster", at: [800, 1300], size: 1000, clip: "ult:ledger-price", then: "ult:ledger-price", look: "lit" },
       ],
       vfx: [
-        { kind: "ledger-drops", at: 0.18, until: 0.6, x: 1013, y: 862, layer: "front", seed: 4, params: { n: 4, fall: 300 } },
+        { kind: "ledger-drops", at: 0.1, until: 0.5, x: 1013, y: 862, layer: "front", seed: 4, params: { n: 4, fall: 300 } },
       ],
       sound: [
         { at: 0.04, sfx: "ledger-clench" },
-        { at: 0.5, sfx: "ledger-entry" },
+        // The wipe starts 280ms into the clip, whichever cut this is.
+        { at: 0.4, sfx: "ledger-entry", mode: "full" },
+        { at: 0.6, sfx: "ledger-entry", mode: "fast" },
       ],
       text: [{ kind: "voice", at: 0.2, until: 1, text: "$voice.activation" }],
       markers: [
-        { at: 0.46, label: "soaked" },
-        { at: 0.74, label: "entered" },
+        { at: 0.37, label: "soaked" },
+        { at: 0.59, label: "entered" },
       ],
     },
 
@@ -203,7 +205,7 @@ export const redLedger: Cinematic = {
         { at: 0.06, sfx: "ledger-heart" },
         { at: 0.62, sfx: "ledger-drop" },
       ],
-      markers: [{ at: 0.8, label: "eyes open" }],
+      markers: [{ at: 0.55, label: "eyes open" }],
     },
 
     /* 4 · COLLECT — the black frame, the chop, the copies. */
@@ -246,7 +248,6 @@ export const redLedger: Cinematic = {
       screen: [
         { kind: "black", at: 0, ms: 70, mode: "full" },
         { kind: "black", at: 0, ms: 50, mode: "fast" },
-        { kind: "flash", at: 0.1, ms: 70, amount: 0.15, color: "#fff4e6" },
       ],
       stop: [{ at: 0.04, ms: 150 }],
       shake: [
@@ -260,7 +261,7 @@ export const redLedger: Cinematic = {
       ],
       reveal: [{ at: 0.04, reveal: "impact" }],
       text: [
-        { kind: "impact", at: 0.04, until: 0.9, text: "$damage", x: 0.64, y: 0.24, rotate: -5 },
+        { kind: "impact", at: 0.04, until: 0.9, text: "$damage", x: 0.46, y: 0.2, rotate: -5 },
         { kind: "voice", at: 0.34, until: 1, text: "$voice.impact" },
       ],
       markers: [
@@ -270,14 +271,14 @@ export const redLedger: Cinematic = {
       framing: {
         boss: {
           camera: {
-            from: { x: 880, y: 470, zoom: 1.12, rotate: 3 },
-            to: { x: 900, y: 470, zoom: 1.04, rotate: 1 },
+            from: { x: 900, y: 500, zoom: 1.08, rotate: 4 },
+            to: { x: 920, y: 500, zoom: 1.0, rotate: 1.5 },
             ease: "out",
           },
           actors: [
             {
               role: "targets",
-              at: [1110, 860],
+              at: [1100, 830],
               spread: [220, -12],
               size: 400,
               face: -1,
@@ -286,7 +287,7 @@ export const redLedger: Cinematic = {
               shove: { at: 0.04, by: [18, 0] },
               toTilt: 2,
             },
-            { role: "caster", at: [500, 860], to: [570, 860], ease: "out", size: 380, clip: "ult:ledger-collect", then: "ult:ledger-collect", look: "lit", z: 2 },
+            { role: "caster", at: [600, 830], to: [650, 830], ease: "out", size: 400, clip: "ult:ledger-collect", then: "ult:ledger-collect", look: "lit", z: 2 },
           ],
         },
       },

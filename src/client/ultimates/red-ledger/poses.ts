@@ -114,8 +114,9 @@ const clench: Clip = {
  */
 const WIPE = wipe(0.5, 0.74);
 
+// Short enough that FAST's cut of the shot still sees the stroke painted.
 const price: Clip = {
-  duration: 740,
+  duration: 560,
   poses: [
     { at: 0, y: 0.01, rotate: 1, squash: 1.03 },
     { at: 0.45, y: 0.016, rotate: 2, squash: 1.05 },
@@ -200,8 +201,9 @@ const walk: Clip = {
  * the fist held at the jaw; then the brow lifts, the eyes open and the teeth
  * show.
  */
+// The eyes open by 68%: inside FAST's cut of the shot, and held in FULL's.
 const hush: Clip = {
-  duration: 600,
+  duration: 520,
   poses: [
     { at: 0, y: 0.01, rotate: 2, squash: 1.02 },
     { at: 1, y: 0.008, rotate: 1, squash: 1.01 },
@@ -215,12 +217,12 @@ const hush: Clip = {
       { at: 1, rotate: -83, x: 0.04, scale: 0.9 },
     ],
     cleaver: turn([0, -10], [1, -10]),
-    head: turn([0, 9], [0.62, 8], [0.8, 1], [1, 0]),
-    hair: turn([0, 0], [0.8, -3], [1, -2]),
+    head: turn([0, 9], [0.5, 8], [0.68, 1], [1, 0]),
+    hair: turn([0, 0], [0.68, -3], [1, -2]),
     ...face(
       [0, { brow: 2.2, knit: 3, open: 0.22, mouth: 0.8 }],
-      [0.64, { brow: 2.3, knit: 3, open: 0.2, mouth: 0.78 }],
-      [0.8, { brow: -1.2, knit: 1, open: 1.2, mouth: 1.35, wide: 1.2 }],
+      [0.52, { brow: 2.3, knit: 3, open: 0.2, mouth: 0.78 }],
+      [0.68, { brow: -1.2, knit: 1, open: 1.2, mouth: 1.35, wide: 1.2 }],
       [1, { brow: -1.4, knit: 1, open: 1.25, mouth: 1.4, wide: 1.22 }],
     ),
   },
