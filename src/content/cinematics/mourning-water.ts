@@ -138,15 +138,15 @@ export const mourningWater: Cinematic = {
       fastMs: 440,
       transition: { kind: "black", ms: 60 },
       camera: {
-        from: { x: 752, y: 300, zoom: 3.3 },
-        to: { x: 752, y: 306, zoom: 3.55 },
+        from: { x: 600, y: 300, zoom: 3.3 },
+        to: { x: 604, y: 306, zoom: 3.55 },
         ease: "out",
       },
       background: "mourn-hollow",
       lighting: { exposure: 0.4, back: [COLD, 0.1], rim: [COLD, 0.6, 1], vignette: 0.75, letterbox: 0.13 },
       toLighting: { exposure: 0.3, back: [COLD, 0.14], rim: [COLD, 0.75, 1], vignette: 0.8, letterbox: 0.13 },
       actors: [
-        { role: "caster", at: [700, 900], size: 1000, clip: "ult:mourn-weep", then: "ult:mourn-weep", look: "lit", root: false },
+        { role: "caster", at: [700, 900], size: 1000, face: -1, clip: "ult:mourn-weep", then: "ult:mourn-weep", look: "lit", rim: COLD, root: false },
       ],
       vfx: [
         { kind: "mourn-grasp", at: 0, until: 1, params: { from: 0, to: 0, mote: 1 } },
@@ -171,8 +171,8 @@ export const mourningWater: Cinematic = {
       fastMs: 320,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 826, y: 600, zoom: 3.9, rotate: -6 },
-        to: { x: 830, y: 622, zoom: 4.2, rotate: -3 },
+        from: { x: 935, y: 578, zoom: 2.6, rotate: -6 },
+        to: { x: 940, y: 600, zoom: 2.78, rotate: -3 },
         ease: "out",
       },
       background: "mourn-hollow",
@@ -360,7 +360,7 @@ export const mourningWater: Cinematic = {
       toLighting: { tint: [NIGHT, 0], letterbox: 0 },
       actors: [{ role: "caster", at: [0, 0], size: 0, clip: "ult:mourn-open" }],
       vfx: [
-        { kind: "mourn-board", at: 0, until: 1, anchor: "targets", params: { mode: "drowned", big: 1.9 } },
+        { kind: "mourn-board", at: 0, until: 1, anchor: "targets", params: { mode: "drowned" } },
         { kind: "mourn-board", at: 0, until: 1, anchor: "caster", params: { mode: "soaked", stagger: 0.1 } },
       ],
       sound: [

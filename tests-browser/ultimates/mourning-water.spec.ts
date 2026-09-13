@@ -48,16 +48,33 @@ test("the face acts with its eyes shut, and the tear is drawn in the head and ru
   expect(later!.y).toBeGreaterThan(early!.y);
 });
 
-test("the tear lands in the open palm, which fills, spills and puts out its light", async ({ page }) => {
+test("the tear falls in view into a cupped hand, which fills, spills and puts out its light", async ({ page }) => {
+  // Before it lands: the close-up's cupped hand is drawn, the light is lit, and the tear is in frame, over the palm.
+  await hold(page, { shot: 2, at: 0.28 }, "palm");
+  expect(await cssVar(page, "--wdn-palm")).toBe(1);
+  expect(await cssVar(page, "--mourn-mote")).toBe(1);
+  const frame = (await film(page).boundingBox())!;
+  const tear = (await caster(page).locator(".mourn-palm-fall path").boundingBox())!;
+  const hand = (await caster(page).locator('[data-part="hand"]').boundingBox())!;
+  expect(tear.y + tear.height / 2).toBeGreaterThan(frame.y + frame.height * 0.14);
+  expect(tear.y + tear.height).toBeLessThan(hand.y + hand.height);
+  expect(tear.x + tear.width / 2).toBeGreaterThan(hand.x);
+  expect(tear.x + tear.width / 2).toBeLessThan(hand.x + hand.width);
+  // The hand fills the frame.
+  expect(hand.width).toBeGreaterThan(frame.width * 0.45);
+
   await hold(page, { shot: 2, at: 0.9 }, "palm");
   const water = caster(page).locator('[data-part="hand"] > g.mourn-palm');
   await expect(water).toHaveCount(1);
   const pool = await water.locator(".mourn-palm-pool").boundingBox();
-  const hand = await caster(page).locator('[data-part="hand"]').boundingBox();
+  const after = await caster(page).locator('[data-part="hand"]').boundingBox();
   expect(pool!.width).toBeGreaterThan(10);
-  expect(pool!.x + pool!.width / 2).toBeGreaterThan(hand!.x);
-  expect(pool!.x + pool!.width / 2).toBeLessThan(hand!.x + hand!.width);
+  expect(pool!.x + pool!.width / 2).toBeGreaterThan(after!.x);
+  expect(pool!.x + pool!.width / 2).toBeLessThan(after!.x + after!.width);
+  // The light is out.
   expect(await cssVar(page, "--mourn-mote")).toBeLessThan(0.05);
+  const glow = await caster(page).locator(".mourn-palm-light").evaluate((el) => Number(el.getAttribute("opacity")));
+  expect(glow).toBeLessThan(0.05);
   // The drop on the glass is the way into the mere.
   await expect(page.locator(".mourn-lens[data-mode='hit']")).toBeAttached();
 });
@@ -100,12 +117,51 @@ test("the impact closes the water over the target in the shape of a hand, and re
   await expect.poll(async () => bar.evaluate((el) => (el as HTMLElement).style.transform)).not.toBe("scaleX(1)");
 });
 
-test("the return leaves the drowned hanging with water and every other real enemy soaked", async ({ page }) => {
-  await hold(page, { shot: 6, at: 0.8 }, "still");
-  const enemies = await page.locator('.stage .combatant[data-side="enemy"]:not([data-down])').count();
-  await expect(page.locator('.cine-anchored .mourn-board[data-mode="drowned"] .mourn-cling')).toHaveCount(1);
-  await expect(page.locator(".mourn-wet")).toHaveCount(enemies - 1);
-});
+/** Every water mark on the board, with the size of the figure it is drawn on. */
+async function boardWater(page: Page) {
+  return page.locator(".mourn-water").evaluateAll((marks) =>
+    marks.map((m) => {
+      const el = m as HTMLElement;
+      const unit = document.querySelector(`.stage [data-unit="${el.dataset.unit}"] .combatant-rig`)!.getBoundingClientRect();
+      const pool = el.querySelector(".mw-pool")!.getBoundingClientRect();
+      const coat = el.querySelector(".mw-coat svg")?.getBoundingClientRect();
+      return {
+        kind: el.dataset.kind,
+        unit: el.dataset.unit,
+        unitW: unit.width,
+        unitH: unit.height,
+        poolW: pool.width,
+        coatH: coat?.height ?? 0,
+        runs: el.querySelectorAll(".mw-stream, .mw-pour").length,
+        drops: el.querySelectorAll(".mw-drop").length,
+        shown: Number(getComputedStyle(el).opacity),
+      };
+    }),
+  );
+}
+
+for (const enemy of ["hound", "collector"]) {
+  test(`the return shows the drowned pouring water and every other real enemy soaked on the figure (${enemy})`, async ({ page }) => {
+    await hold(page, { enemy, shot: 6, at: 0.8 }, "still");
+    const enemies = await page.locator('.stage .combatant[data-side="enemy"]:not([data-down])').count();
+    const marks = await boardWater(page);
+    expect(marks).toHaveLength(enemies);
+    const drowned = marks.filter((m) => m.kind === "drowned");
+    expect(drowned).toHaveLength(1);
+    expect(drowned[0].unit).toBe("enemy-0");
+    for (const m of marks) {
+      expect(m.shown, m.unit).toBeGreaterThan(0.9);
+      // Water on the figure itself: its own drawing, laid over it at its size, with runs and drips.
+      expect(m.coatH, m.unit).toBeGreaterThan(m.unitH * 0.95);
+      expect(m.coatH, m.unit).toBeLessThan(m.unitH * 1.05);
+      expect(m.runs, m.unit).toBeGreaterThan(1);
+      expect(m.drops, m.unit).toBeGreaterThan(4);
+    }
+    // The drowned one pours, and stands in a pool clearly wider than it.
+    expect(drowned[0].runs).toBeGreaterThanOrEqual(7);
+    expect(drowned[0].poolW).toBeGreaterThan(drowned[0].unitW * 1.4);
+  });
+}
 
 test("a boss is framed whole under the fist, the worn kit is drawn, and skipping leaves nothing behind", async ({ page }) => {
   await hold(page, { enemy: "collector", gear: "kit", shot: 5, at: 0.3 }, "drown");

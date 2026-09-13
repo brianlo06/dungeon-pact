@@ -72,10 +72,29 @@
   stroke: #0c1512;
   stroke-width: 0.2;
 }
+/* The palm shot's light: it swells as the tear comes through it. */
+.ult-cinematic[data-cinematic="mourning-water"] .cine-actor[data-role="caster"] .ph-wdn-mote.ph-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(var(--mourn-mote-s, 1));
+}
+.mourn-palm-trail {
+  fill: none;
+  stroke: #e6f3ec;
+  stroke-width: 0.45;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.mourn-palm-wisp {
+  fill: none;
+  stroke: #c9d6cf;
+  stroke-width: 0.32;
+  stroke-linecap: round;
+}
 .mourn-strand-body {
-  fill: #0e1f1a;
-  stroke: #a9c9bd;
-  stroke-width: 0.18;
+  fill: #1a3a33;
+  stroke: #03100c;
+  stroke-width: 0.14;
   stroke-linejoin: round;
 }
 .mourn-strand-lit {
@@ -323,63 +342,94 @@
   stroke: #cfe4db;
   stroke-width: 2;
 }
-.mourn-board[data-mode="drowned"] > .mourn-cling {
-  position: absolute;
-  left: calc(var(--unit-h) * -0.75);
-  top: calc(var(--unit-h) * -0.97);
-  width: calc(var(--unit-h) * 1.5);
-  height: calc(var(--unit-h) * 1.12);
-}
-.mourn-wet {
+/* ---- water on the real board, drawn against each figure ---- */
+.mourn-water {
   position: absolute;
   left: 0;
   top: 0;
   width: 0;
   height: 0;
-  opacity: var(--k, 0);
 }
-.mourn-wet > svg {
+.mourn-water > svg {
   position: absolute;
-  left: calc(var(--u, 100px) * -0.6);
-  top: calc(var(--u, 100px) * -0.87);
-  width: calc(var(--u, 100px) * 1.2);
-  height: calc(var(--u, 100px) * 0.9);
+  left: 0;
+  top: 0;
+  overflow: visible;
 }
-.mourn-wet-pool {
-  fill: #050c0b;
-  fill-opacity: 0.8;
-  stroke: #9ab8ad;
-  stroke-width: 1.2;
+/* The figure's own drawing, laid over it: a dark wet coat, heavier low down. */
+.mw-coat,
+.mw-wet-edge {
+  position: absolute;
+  left: 0;
+  top: 0;
 }
-.mourn-wet-ring {
+.mw-coat > svg,
+.mw-wet-edge > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.mw-coat :where(path, rect, circle, ellipse, polygon, line, polyline) {
+  fill: #0a2a24 !important;
+  stroke: #0a2a24 !important;
+}
+.mw-coat {
+  opacity: 0.46;
+  -webkit-mask-image: linear-gradient(to top, #000 45%, rgba(0, 0, 0, 0.3) 100%);
+  mask-image: linear-gradient(to top, #000 45%, rgba(0, 0, 0, 0.3) 100%);
+}
+.mourn-water[data-kind="drowned"] .mw-coat {
+  opacity: 0.58;
+}
+/* The same drawing again as a pale line a hair above: light caught on wet edges. */
+.mw-wet-edge :where(path, rect, circle, ellipse, polygon, line, polyline) {
+  fill: none !important;
+  stroke: #dcefe7 !important;
+  stroke-width: 1.2px !important;
+  vector-effect: non-scaling-stroke;
+}
+.mw-wet-edge {
+  opacity: 0.42;
+  margin-top: -1.5px;
+  margin-left: -1px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 35%, transparent 85%);
+  mask-image: linear-gradient(to bottom, #000 35%, transparent 85%);
+}
+.mourn-water[data-kind="drowned"] .mw-wet-edge {
+  opacity: 0.5;
+}
+.mw-pool {
+  fill: #040b09;
+  fill-opacity: 0.7;
+  stroke: #cfe4db;
+}
+.mw-ring {
   fill: none;
   stroke: #cfe4db;
-  stroke-width: 1.3;
 }
-.mourn-wet-drip {
-  fill: #0a1714;
-  stroke: #b7d3c8;
-  stroke-width: 0.9;
+.mw-body {
+  fill: #0a1915;
+  fill-opacity: 0.82;
+  stroke: #010403;
+  stroke-width: 0.8;
+  stroke-linejoin: round;
 }
-.mourn-wet-sheen {
+.mw-edge {
   fill: none;
-  stroke: #b7d3c8;
-  stroke-width: 2;
+  stroke: #9fc4b8;
   stroke-linecap: round;
-  opacity: 0.4;
+  opacity: 0.7;
 }
-
-/* On the board the drowned is small: its water is drawn larger and plainer. */
-.mourn-board[data-mode="drowned"] .mourn-cling-pool {
-  stroke: none;
-  fill-opacity: 0.9;
+.mw-glint {
+  fill: none;
+  stroke: #f2fbf6;
+  stroke-linecap: round;
 }
-.mourn-board[data-mode="drowned"] .mourn-cling-ring {
-  stroke-width: 2.4;
+.mw-drop {
+  fill: #e6f3ec;
+  stroke: #04100c;
 }
-.mourn-board[data-mode="drowned"] .mourn-cling-drop {
-  stroke-width: 1.2;
-}
-.mourn-board[data-mode="drowned"] .mourn-cling-weed {
-  opacity: 1;
+.mw-weed {
+  fill: #a9bf62;
 }

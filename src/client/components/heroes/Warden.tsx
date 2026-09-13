@@ -442,7 +442,58 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
             stroke={INK}
             strokeWidth={DETAIL + 0.5}
             strokeLinejoin="round"
+            style={closeUp ? { opacity: "calc(1 - var(--wdn-palm, 0))" } : undefined}
           />
+          {/*
+           * The same open hand drawn for a close-up that looks into it
+           * (`--wdn-palm`, Mourning Water): cupped, palm up, the thumb raised
+           * and the fingers curling up at the tips, so it reads as a hand
+           * holding something rather than a shape at the end of an arm.
+           */}
+          {closeUp && (
+            <g style={{ opacity: "var(--wdn-palm, 0)" }}>
+              {/* the far fingers, behind the palm */}
+              <path
+                d="M77.4 55.6 C79.2 53.4 81.4 51.6 83.2 51.4 C84.2 51.3 84.6 52.3 83.9 53 C82.6 54.2 81.2 55.6 80.4 57 Z"
+                fill={g.url("skin")}
+                stroke={INK}
+                strokeWidth={DETAIL}
+                strokeLinejoin="round"
+              />
+              {/* the back of the hand and the heel, the palm hollow on top */}
+              <path
+                d="M69.4 56.2 C71.2 55.2 73 56.4 75.2 56.6 C77.2 56.8 79 55.8 80.8 55.6 C82.8 55.4 85 54.4 86 53.6 C87 53 87.8 53.8 87.2 54.8 C85.8 57.4 83 59.8 79.6 60.8 C76.2 61.8 72.2 61.4 69.8 60 Z"
+                fill={g.url("skin")}
+                stroke={INK}
+                strokeWidth={DETAIL}
+                strokeLinejoin="round"
+              />
+              {/* the hollow of the palm, in shadow */}
+              <path
+                d="M71.6 56.4 C73.4 57.6 76.4 58 79 57.4 C80.6 57 82.2 56.4 83.6 55.6"
+                stroke={RAMP.skinUmber[2]}
+                strokeWidth={0.8}
+                fill="none"
+                strokeLinecap="round"
+              />
+              {/* the near fingers' tips, curling up, parted */}
+              <path
+                d="M83.8 56.6 C84.8 55.2 85.4 53.6 85.4 52.6 M81.6 57.6 C82.6 56.4 83.2 55.2 83.4 54.2"
+                stroke={INK}
+                strokeWidth={DETAIL - 0.4}
+                fill="none"
+                strokeLinecap="round"
+              />
+              {/* the thumb, raised */}
+              <path
+                d="M70.8 56.6 C70.6 54.4 71.4 52.2 72.8 51.2 C73.8 50.6 74.8 51.2 74.4 52.2 C73.8 53.8 73.6 55.2 73.8 56.8 Z"
+                fill={g.url("skin")}
+                stroke={INK}
+                strokeWidth={DETAIL}
+                strokeLinejoin="round"
+              />
+            </g>
+          )}
           <circle
             className="ph-wdn-mote ph-glow"
             cx={75.5}

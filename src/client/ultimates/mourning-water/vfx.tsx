@@ -78,7 +78,11 @@ function InsideAnchor({ cue, className }: { cue: VfxProps["cue"]; className: str
   useEffect(() => {
     const anchor = ref.current;
     return () => {
-      if (anchor) INSIDE.get(anchor)?.remove();
+      if (!anchor) return;
+      const g = INSIDE.get(anchor);
+      // Anything the effect moved elsewhere in the part goes with it.
+      g?.parentElement?.querySelectorAll(":scope > .mourn-extra").forEach((n) => n.remove());
+      g?.remove();
     };
   }, []);
   return (
@@ -170,109 +174,158 @@ const tear: Frame = (el, p) => {
 
 /* ── The palm ──────────────────────────────────────────────────────────── */
 
-/** Drawing units, in the Warden's hand: the palm's bowl, between the heel of the hand and the fingers. */
-const PALM = { x: 74.6, y: 55.6 };
+/**
+ * Drawing units, in the Warden's hand: the hollow of the cupped palm that the
+ * close-up draws (`--wdn-palm`), between the raised thumb and the fingers.
+ */
+const PALM = { x: 77, y: 57.2 };
+/** The green light held in the palm, as the drawing places it. */
+const LIGHT = { x: 75.5, y: 49.5 };
 
 const PALM_MARKUP = (() => {
   const rand = seeded(61);
-  const crown = Array.from({ length: 8 }, (_, i) => {
-    const a = -Math.PI * (0.12 + (i / 7) * 0.76);
-    const speed = 5 + rand() * 5;
-    return `<circle class="mourn-crown" data-vx="${f2(Math.cos(a) * speed)}" data-vy="${f2(Math.sin(a) * speed)}" r="${f2(0.45 + rand() * 0.4)}"/>`;
+  const crown = Array.from({ length: 9 }, (_, i) => {
+    const a = -Math.PI * (0.1 + (i / 8) * 0.8);
+    const speed = 6 + rand() * 6;
+    return `<circle class="mourn-crown" data-vx="${f2(Math.cos(a) * speed)}" data-vy="${f2(Math.sin(a) * speed)}" r="${f2(0.4 + rand() * 0.35)}"/>`;
   }).join("");
+  // Off the heel of the hand, off the fingertips, and through the fingers underneath.
   const strands = [
-    { x: 71.2, y: 57.2, len: 22, sway: -1.2 },
-    { x: 77.8, y: 57.4, len: 30, sway: 1.4 },
-    { x: 74.8, y: 60.2, len: 17, sway: 0.4 },
-    { x: 72.8, y: 59.6, len: 26, sway: -0.6 },
+    { x: 70.2, y: 59.2, len: 14, sway: -0.8 },
+    { x: 86.4, y: 55.6, len: 17, sway: 1 },
+    { x: 80, y: 61, len: 10, sway: 0.3 },
+    { x: 74, y: 61.2, len: 15, sway: -0.5 },
   ]
     .map(
-      (s, i) =>
-        `<g class="mourn-strand" data-x="${s.x}" data-y="${s.y}" data-len="${s.len}" data-sway="${s.sway}" data-i="${i}"><path class="mourn-strand-body"/><path class="mourn-strand-lit"/><path class="mourn-strand-drop" d="${DROP(0.8)}"/></g>`,
+      (st, i) =>
+        `<g class="mourn-strand" data-x="${st.x}" data-y="${st.y}" data-len="${st.len}" data-sway="${st.sway}" data-i="${i}"><path class="mourn-strand-body"/><path class="mourn-strand-drop" d="${DROP(0.7)}"/></g>`,
     )
     .join("");
   return `
+    <g class="mourn-extra mourn-palm-light-host"><defs><radialGradient id="mourn-palm-light"><stop offset="0" stop-color="#d8ffb8" stop-opacity="0.7"/><stop offset="0.35" stop-color="#8fd46a" stop-opacity="0.28"/><stop offset="1" stop-color="#5f9f4a" stop-opacity="0"/></radialGradient></defs><circle class="mourn-palm-light" cx="${LIGHT.x}" cy="${LIGHT.y + 3}" r="26" fill="url(#mourn-palm-light)"/></g>
     <g class="mourn-palm-strands">${strands}</g>
     <path class="mourn-palm-pool"/>
     <path class="mourn-palm-lit"/>
-    <ellipse class="mourn-palm-ring" cx="${PALM.x}" cy="${PALM.y}"/>
-    <g class="mourn-palm-crown" transform="translate(${PALM.x} ${PALM.y})">${crown}</g>
-    <g class="mourn-palm-fall"><path d="${DROP(1.6)}"/><circle class="mourn-tear-lit" cx="-0.52" cy="0.25" r="0.45"/></g>
+    <ellipse class="mourn-palm-ring" cx="${PALM.x}" cy="${PALM.y - 0.6}"/>
+    <g class="mourn-palm-crown" transform="translate(${PALM.x} ${PALM.y - 0.6})">${crown}</g>
+    <path class="mourn-palm-wisp"/>
+    <g class="mourn-palm-drop">
+      <path class="mourn-palm-trail"/>
+      <g class="mourn-palm-fall"><path d="${DROP(1.5)}"/><circle class="mourn-tear-lit" cx="-0.5" cy="0.25" r="0.42"/></g>
+    </g>
   `;
 })();
 
 const Palm = ({ cue }: VfxProps): ReactNode => <InsideAnchor cue={cue} className="mourn-palm-anchor" />;
 
-const palm: Frame = (el, p) => {
+const palm: Frame = (el, p, age) => {
   const d = params(el);
   const land = num(d, "land", 0.36);
+  const node = casterNode(el);
   const g = inside(el, '[data-part="hand"]', "mourn-palm", PALM_MARKUP);
-  if (!g) return;
-  // The tear, falling into the palm from above the frame.
-  const fall = g.querySelector<SVGGElement>(".mourn-palm-fall");
+  if (!g || !node) return;
+  setStyle(node, "--wdn-palm", "1");
+  // The light the palm holds is cast on the hand, so it goes behind the drawing, not over its ink.
+  const host = g.querySelector(".mourn-palm-light-host");
+  if (host && g.parentElement) g.parentElement.insertBefore(host, g.parentElement.firstChild);
+  // Gravity is the frame's, not the hand's: falling things are counter-rotated.
+  const counter = -partRotation(g.parentElement);
+  const upright = `rotate(${f1(counter)} ${PALM.x} ${PALM.y})`;
+
+  // The tear, seen the whole way down: in from the top of the frame, through
+  // the light, into the palm, with a streak behind it.
   const k = span(p, 0, land);
-  const fy = PALM.y - 17 + 17 * ease("in", k) - 2;
+  const drop = g.querySelector<SVGGElement>(".mourn-palm-drop");
+  setAttr(drop, "transform", upright);
+  const fall = g.querySelector<SVGGElement>(".mourn-palm-fall");
+  const H0 = 13;
+  const fy = PALM.y - 1.2 - H0 * (1 - k * k);
   const falling = p < land;
-  setAttr(fall, "transform", falling ? `translate(${PALM.x} ${f2(fy)}) scale(1 ${f2(1 + 0.4 * k)})` : "scale(0)");
+  setAttr(fall, "transform", falling ? `translate(${PALM.x} ${f2(fy)}) scale(1 ${f2(1 + 0.35 * k)})` : "scale(0)");
+  const trail = Math.min(9, 2 + k * 10);
+  setAttr(
+    g.querySelector(".mourn-palm-trail"),
+    "d",
+    falling && k > 0.05 ? `M${PALM.x} ${f2(fy - 2.4 - trail)} L${PALM.x} ${f2(fy - 2.4)}` : "M0 0",
+  );
+
+  // The light: it swells as the tear comes through it, then gutters and goes out.
+  const flare = span(p, land - 0.1, land);
+  const out = span(p, land, land + 0.2);
+  const gutter = out > 0 && out < 1 ? [1, 0.35, 0.85, 0.2, 0.5, 0.08, 0.2, 0][Math.floor(out * 8)] : out >= 1 ? 0 : 1;
+  const light = p < land ? 1 : gutter;
+  setStyle(node, "--mourn-mote", f2(light));
+  setStyle(node, "--mourn-mote-s", f2(1 + 0.45 * flare * (p < land ? 1 : 0)));
+  const glow = g.parentElement?.querySelector(":scope > .mourn-palm-light-host .mourn-palm-light") ?? null;
+  setAttr(glow, "opacity", f2(light * (0.8 + 0.5 * flare * (p < land ? 1 : 0))));
+  setAttr(glow, "r", f2(26 + 8 * flare * (p < land ? 1 : 0)));
+  // What is left of it: a thread of smoke, rising and gone.
+  const wisp = span(p, land + 0.14, land + 0.5);
+  const wy = LIGHT.y - wisp * 7;
+  setAttr(
+    g.querySelector(".mourn-palm-wisp"),
+    "d",
+    wisp > 0 && wisp < 1
+      ? `M${LIGHT.x} ${f2(LIGHT.y + 1)} C${f2(LIGHT.x - 1.2)} ${f2(LIGHT.y - 1.5)} ${f2(LIGHT.x + 1.4)} ${f2(wy + 2.5)} ${f2(LIGHT.x + Math.sin(age / 90) * 0.6)} ${f2(wy)}`
+      : "M0 0",
+  );
+  setAttr(g.querySelector(".mourn-palm-wisp"), "opacity", f2(0.5 * Math.sin(wisp * Math.PI)));
+  setAttr(g.querySelector(".mourn-palm-wisp"), "transform", `rotate(${f1(counter)} ${LIGHT.x} ${LIGHT.y})`);
+
   // The crown it throws up.
-  const c = span(p, land, land + 0.28);
-  g.querySelectorAll<SVGCircleElement>(".mourn-crown").forEach((drop) => {
-    const vx = Number(drop.dataset.vx);
-    const vy = Number(drop.dataset.vy);
+  const c = span(p, land, land + 0.26);
+  g.querySelectorAll<SVGCircleElement>(".mourn-crown").forEach((dr) => {
+    const vx = Number(dr.dataset.vx);
+    const vy = Number(dr.dataset.vy);
     const t = c * 1.6;
-    setAttr(drop, "cx", f2(vx * t));
-    setAttr(drop, "cy", f2(vy * t + 9 * t * t));
-    setAttr(drop, "opacity", c > 0 && c < 1 ? f2(1 - c * c) : "0");
+    setAttr(dr, "cx", f2(vx * t));
+    setAttr(dr, "cy", f2(vy * t + 10 * t * t));
+    setAttr(dr, "opacity", c > 0 && c < 1 ? f2(1 - c * c) : "0");
   });
   const ring = g.querySelector(".mourn-palm-ring");
-  setAttr(ring, "rx", f2(1 + c * 6));
-  setAttr(ring, "ry", f2(0.4 + c * 1.5));
+  setAttr(ring, "rx", f2(1 + c * 7));
+  setAttr(ring, "ry", f2(0.4 + c * 1.3));
   setAttr(ring, "opacity", c > 0 && c < 1 ? f2(0.9 * (1 - c)) : "0");
-  // Far more water than a tear: it wells up in the palm and brims.
+
+  // Far more water than a tear: black, it fills the hollow of the hand and brims.
   const brim = ease("out", span(p, land + 0.02, land + 0.34));
-  const h = brim * 2.1;
-  const x0 = PALM.x - 3.6 - brim * 0.4;
-  const x1 = PALM.x + 3.4 + brim * 0.4;
-  const y = PALM.y + 1.5;
-  const pool = `M${f2(x0)} ${f2(y)} C${f2(x0 - 0.4)} ${f2(y - h * 0.7)} ${f2(PALM.x - 2.2)} ${f2(y - h)} ${f2(PALM.x)} ${f2(y - h)} C${f2(PALM.x + 2.4)} ${f2(y - h)} ${f2(x1 + 0.4)} ${f2(y - h * 0.7)} ${f2(x1)} ${f2(y)} C${f2(PALM.x + 2)} ${f2(y + 1.4)} ${f2(PALM.x - 2)} ${f2(y + 1.4)} ${f2(x0)} ${f2(y)} Z`;
+  const top = PALM.y - 0.4 - brim * 1.6;
+  const x0 = 72 - brim * 0.8;
+  const x1 = 83 + brim * 1.2;
+  const pool = `M${f2(x0)} ${f2(top + 0.6)} C${f2(x0 + 2)} ${f2(top - 0.3)} ${f2(x1 - 3)} ${f2(top - 0.5)} ${f2(x1)} ${f2(top - 0.4)} C${f2(x1 - 1.4)} ${f2(PALM.y + 0.4)} ${f2(PALM.x + 2)} ${f2(PALM.y + 1.2)} ${f2(PALM.x - 1)} ${f2(PALM.y + 1)} C${f2(x0 + 1.4)} ${f2(PALM.y + 0.8)} ${f2(x0 + 0.2)} ${f2(top + 1.4)} ${f2(x0)} ${f2(top + 0.6)} Z`;
   setAttr(g.querySelector(".mourn-palm-pool"), "d", brim > 0.01 ? pool : "M0 0");
-  // The green light in the palm goes out under it.
-  setStyle(casterNode(el), "--mourn-mote", f2(1 - ease("out", span(p, land, land + 0.2))));
   setAttr(
     g.querySelector(".mourn-palm-lit"),
     "d",
-    brim > 0.2 ? `M${f2(PALM.x - 2.6)} ${f2(y - h * 0.72)} Q${f2(PALM.x - 0.6)} ${f2(y - h * 1.02)} ${f2(PALM.x + 1.6)} ${f2(y - h * 0.86)}` : "M0 0",
+    brim > 0.2 ? `M${f2(x0 + 1.6)} ${f2(top + 0.2)} Q${f2(PALM.x)} ${f2(top - 0.5)} ${f2(x1 - 2.4)} ${f2(top - 0.3)}` : "M0 0",
   );
-  // And spills off the edge of the hand and the fingers, straight down.
-  const counter = -partRotation(g.parentElement);
-  const strands = g.querySelector<SVGGElement>(".mourn-palm-strands");
-  g.querySelectorAll<SVGGElement>(".mourn-strand").forEach((s) => {
-    const i = Number(s.dataset.i);
-    const sx = Number(s.dataset.x);
-    const sy = Number(s.dataset.y);
-    const len = Number(s.dataset.len);
-    const sway = Number(s.dataset.sway);
+
+  // And spills off the heel, the fingertips and through the fingers, straight down.
+  g.querySelectorAll<SVGGElement>(".mourn-strand").forEach((st) => {
+    const i = Number(st.dataset.i);
+    const sx = Number(st.dataset.x);
+    const sy = Number(st.dataset.y);
+    const len = Number(st.dataset.len);
+    const sway = Number(st.dataset.sway);
     const grow = ease("in", span(p, land + 0.16 + i * 0.05, land + 0.62 + i * 0.04));
     const L = grow * len;
-    // A thread of water: it wavers, pinches into beads and thins as it falls.
     const edgeL: string[] = [];
     const edgeR: string[] = [];
     for (let n = 0; n <= 10; n++) {
       const t = n / 10;
-      const hw = 0.5 * (1 - t * 0.7) * (0.6 + 0.4 * Math.abs(Math.sin(t * 9 + i * 1.3 + p * 20)));
-      const cx = sx + sway * t * t + Math.sin(t * 6 + i + p * 14) * 0.35;
+      const hw = 0.42 * (1 - t * 0.8) * (0.55 + 0.45 * Math.abs(Math.sin(t * 9 + i * 1.3 + p * 20)));
+      const cx = sx + sway * t * t + Math.sin(t * 6 + i + p * 14) * 0.3;
       edgeL.push(`${f2(cx - hw)} ${f2(sy + L * t)}`);
       edgeR.unshift(`${f2(cx + hw)} ${f2(sy + L * t)}`);
     }
-    const body = `M${edgeL.join(" L")} L${edgeR.join(" L")} Z`;
-    setAttr(s.querySelector(".mourn-strand-body"), "d", L > 0.3 ? body : "M0 0");
-    setAttr(s.querySelector(".mourn-strand-lit"), "d", "M0 0");
-    const drop = s.querySelector(".mourn-strand-drop");
-    setAttr(drop, "transform", L > 3 ? `translate(${f2(sx + sway)} ${f2(sy + L + 1.4 + ((p * 60 + i * 7) % 6))}) scale(1 1.3)` : "scale(0)");
+    setAttr(st.querySelector(".mourn-strand-body"), "d", L > 0.3 ? `M${edgeL.join(" L")} L${edgeR.join(" L")} Z` : "M0 0");
+    setAttr(
+      st.querySelector(".mourn-strand-drop"),
+      "transform",
+      L > 3 ? `translate(${f2(sx + sway)} ${f2(sy + L + 1.4 + ((p * 60 + i * 7) % 6))}) scale(1 1.3)` : "scale(0)",
+    );
+    setAttr(st, "transform", `rotate(${f1(counter)} ${sx} ${sy})`);
   });
-  // Water falls down the frame, not along the hand.
-  const pivot = `${PALM.x} ${PALM.y}`;
-  setAttr(strands, "transform", `rotate(${f1(counter)} ${pivot})`);
 };
 
 /* ── The drop on the glass ────────────────────────────────────────────── */
@@ -505,6 +558,8 @@ const grasp: Frame = (el, p) => {
   const to = num(d, "to", 1);
   setStyle(node, "--wdn-grasp", f2(from + (to - from) * ease("in", k)));
   setStyle(node, "--mourn-mote", f2(num(d, "mote", 1)));
+  // Only the palm shot draws the cupped hand; every other shot keeps the drawing's own.
+  setStyle(node, "--wdn-palm", "0");
   const lf = num(d, "lampFrom", 1);
   const lt = num(d, "lampTo", 1);
   // A flame going out gutters first.
@@ -763,7 +818,7 @@ const cling: Frame = (el, p, age) => {
     const swellK = Math.min(1, cyc * 2);
     const fallK = Math.max(0, cyc * 2 - 1);
     const dy = y + L + fallK * fallK * Math.max(8, -y - L + 2);
-    const ds = grow * (0.4 + 0.6 * swellK) * (w / 3.2) * num(d, "big", 1);
+    const ds = grow * (0.4 + 0.6 * swellK) * (w / 3.2);
     setAttr(g.querySelector(".mourn-cling-drop"), "transform", grow > 0.05 ? `translate(${f1(x + sway)} ${f1(dy)}) scale(${f2(ds)} ${f2(ds * (1 + fallK * 0.6))})` : "scale(0)");
   });
   el.querySelectorAll<SVGEllipseElement>(".mourn-cling-ring").forEach((r, i) => {
@@ -776,14 +831,12 @@ const cling: Frame = (el, p, age) => {
 
 /* ── On the real battlefield ──────────────────────────────────────────── */
 
-const Board = ({ cue, color }: VfxProps): ReactNode => {
+const Board = ({ cue }: VfxProps): ReactNode => {
   const mode = String(cue.params?.mode ?? "call");
   return (
     <div className="mourn-board" data-mode={mode}>
       <Params cue={cue} />
-      {mode === "drowned" ? (
-        <Cling cue={{ ...cue, params: {} }} color={color} />
-      ) : mode === "call" ? (
+      {mode === "call" ? (
         <svg viewBox="-120 -40 240 80" overflow="visible">
           <ellipse className="mourn-board-pool" cx="0" cy="0" />
           <ellipse className="mourn-board-ring" cx="0" cy="0" />
@@ -794,7 +847,202 @@ const Board = ({ cue, color }: VfxProps): ReactNode => {
   );
 };
 
-const WET_MARK = `<svg viewBox="-100 -130 200 150" overflow="visible"><ellipse class="mourn-wet-pool" cx="0" cy="2" rx="70" ry="9"/><ellipse class="mourn-wet-ring" cx="0" cy="2"/><ellipse class="mourn-wet-ring b" cx="0" cy="2"/><path class="mourn-wet-drip" d="${DROP(2.4)}"/><path class="mourn-wet-drip b" d="${DROP(2)}"/><path class="mourn-wet-sheen" d="M-30 -86 C-34 -60 -32 -30 -28 -8 M22 -80 C26 -54 24 -28 20 -6"/></svg>`;
+/**
+ * Water on a figure on the real board, drawn against the figure itself: its
+ * measured box (`W` wide, `H` tall, origin at its feet) sizes every stroke, so
+ * a hound and the Collector both carry it at their own size, and a copy of
+ * its own drawing, taken once, is laid over it as a dark wet coat with a pale
+ * wet edge, so the water is on the silhouette and not beside it.
+ *
+ * "drowned", the one the mere closed over: the coat heavy, water pouring off
+ * both its sides and running down it in streams, weed stuck to it, big drops,
+ * a black pool wider than it with rings going out. "soaked", every other
+ * enemy: the coat lighter, a couple of runs, drips, a pool at its feet.
+ */
+interface WaterMark {
+  node: HTMLElement;
+  W: number;
+  H: number;
+  drowned: boolean;
+  /** Where the drawing is actually painted, px from the feet: left, right, top (negative). */
+  x0: number;
+  x1: number;
+  top: number;
+}
+
+/** A copy of a board figure's drawing, without ids (they would shadow the original's gradients) or filters. */
+function copyDrawing(unit: string, cls: string) {
+  const svg = document.querySelector<SVGSVGElement>(`.stage [data-unit="${CSS.escape(unit)}"] .combatant-rig svg`);
+  if (!svg) return null;
+  const copy = svg.cloneNode(true) as SVGSVGElement;
+  for (const n of [copy, ...copy.querySelectorAll<SVGElement>("*")]) {
+    n.removeAttribute("id");
+    n.removeAttribute("filter");
+    n.removeAttribute("class");
+    n.style?.removeProperty("filter");
+    n.style?.removeProperty("animation");
+  }
+  copy.querySelectorAll("defs, text").forEach((n) => n.remove());
+  const wrap = document.createElement("div");
+  wrap.className = cls;
+  wrap.appendChild(copy);
+  return wrap;
+}
+
+function buildWater(host: HTMLElement, unit: string, drowned: boolean, seed: number) {
+  const rand = seeded(seed);
+  const streams = drowned ? 5 : 3;
+  const drops = drowned ? 12 : 6;
+  let inner = `<ellipse class="mw-pool"/>`;
+  for (let i = 0; i < (drowned ? 3 : 2); i++) inner += `<ellipse class="mw-ring" data-i="${i}"/>`;
+  let over = "";
+  if (drowned) for (let i = 0; i < 2; i++) over += `<g class="mw-pour" data-side="${i ? 1 : -1}"><path class="mw-body"/><path class="mw-edge"/><path class="mw-glint"/></g>`;
+  for (let i = 0; i < streams; i++) {
+    // Runs, not bars: short, at uneven places and heights, each ending in a bead.
+    const x = (i / (streams - 1) - 0.5) * 0.62 + (rand() - 0.5) * 0.14;
+    const top = 0.22 + rand() * 0.3;
+    const len = (drowned ? 0.28 : 0.2) + rand() * 0.16;
+    over += `<g class="mw-stream" data-x="${x.toFixed(3)}" data-top="${top.toFixed(3)}" data-len="${len.toFixed(3)}" data-i="${i}"><path class="mw-body"/><path class="mw-edge"/><path class="mw-glint"/></g>`;
+  }
+  for (let i = 0; i < drops; i++)
+    over += `<path class="mw-drop" d="${DROP(10)}" data-x="${((rand() - 0.5) * (drowned ? 1.05 : 0.8)).toFixed(3)}" data-y="${(0.2 + rand() * 0.4).toFixed(3)}" data-o="${rand().toFixed(3)}"/>`;
+  if (drowned)
+    for (let i = 0; i < 9; i++)
+      over += `<ellipse class="mw-weed" data-x="${((rand() - 0.5) * 0.6).toFixed(3)}" data-y="${(0.3 + rand() * 0.5).toFixed(3)}"/>`;
+  const mark = document.createElement("div");
+  mark.className = "mourn-water";
+  mark.dataset.kind = drowned ? "drowned" : "soaked";
+  mark.dataset.unit = unit;
+  mark.innerHTML = `<svg class="mw-under" width="1" height="1" viewBox="0 0 1 1" overflow="visible">${inner}</svg>`;
+  const coat = copyDrawing(unit, "mw-coat");
+  const edge = copyDrawing(unit, "mw-wet-edge");
+  if (coat) mark.appendChild(coat);
+  if (edge) mark.appendChild(edge);
+  const top = document.createElementNS(SVG, "svg");
+  top.setAttribute("class", "mw-over");
+  top.setAttribute("width", "1");
+  top.setAttribute("height", "1");
+  top.setAttribute("viewBox", "0 0 1 1");
+  top.setAttribute("overflow", "visible");
+  top.innerHTML = over;
+  mark.appendChild(top);
+  host.appendChild(mark);
+  return mark;
+}
+
+/** A thread of water from (x, y0) down to (x + drift, y1), `w` wide: it wavers and pinches as it falls. */
+function thread(x: number, y0: number, y1: number, w: number, drift: number, phase: number) {
+  const left: string[] = [];
+  const right: string[] = [];
+  for (let n = 0; n <= 8; n++) {
+    const t = n / 8;
+    const hw = (w / 2) * (0.45 + 0.55 * t) * (0.7 + 0.3 * Math.abs(Math.sin(t * 7 + phase)));
+    const cx = x + drift * t * t + Math.sin(t * 5 + phase) * w * 0.2;
+    const y = y0 + (y1 - y0) * t;
+    left.push(`${f1(cx - hw)} ${f1(y)}`);
+    right.unshift(`${f1(cx + hw)} ${f1(y)}`);
+  }
+  return `M${left.join(" L")} L${right.join(" L")} Z`;
+}
+
+/** A glint running down a length of water: one short bright dash, travelling. */
+function glint(el: Element | null, H: number, age: number, speed: number, phase: number) {
+  setAttr(el, "stroke-dasharray", `${f1(H * 0.09)} ${f1(H * 1.2)}`);
+  setAttr(el, "stroke-dashoffset", f1(-(((age / 1000) * speed + phase) % 1) * H * 1.29));
+}
+
+function drawWater(m: WaterMark, k: number, age: number) {
+  const { node, W, H, drowned } = m;
+  // Positions follow the painted drawing; sizes follow the figure's height.
+  const AW = m.x1 - m.x0;
+  const AC = (m.x0 + m.x1) / 2;
+  const AH = -m.top;
+  node.style.opacity = f2(k);
+  const all = (sel: string) => node.querySelectorAll<SVGElement>(sel);
+  const rx = drowned ? Math.max(AW * 0.95, H * 0.7) : Math.max(AW * 0.62, H * 0.42);
+  const ry = rx * 0.12;
+  const line = Math.max(1.5, H * (drowned ? 0.014 : 0.01));
+  const pool = node.querySelector(".mw-pool");
+  setAttr(pool, "cx", f1(AC));
+  node.querySelectorAll(".mw-ring").forEach((r) => setAttr(r, "cx", f1(AC)));
+  setAttr(pool, "rx", f1(rx * (0.6 + 0.4 * k)));
+  setAttr(pool, "ry", f1(ry * (0.6 + 0.4 * k)));
+  setAttr(pool, "stroke-width", f1(line));
+  all(".mw-ring").forEach((r) => {
+    const i = Number(r.dataset.i);
+    const n = drowned ? 3 : 2;
+    const cyc = ((age / (drowned ? 900 : 1200) + i / n) % 1 + 1) % 1;
+    setAttr(r, "rx", f1(rx * (1 + cyc * 0.55)));
+    setAttr(r, "ry", f1(ry * (1 + cyc * 0.55)));
+    setAttr(r, "stroke-width", f1(line * (1.1 - cyc * 0.6)));
+    setAttr(r, "opacity", f2(0.8 * (1 - cyc)));
+  });
+  for (const cls of [".mw-coat", ".mw-wet-edge"]) {
+    const c = node.querySelector<HTMLElement>(cls);
+    if (!c) continue;
+    const size = `translate3d(${f1(-W / 2)}px, ${f1(-H)}px, 0)`;
+    if (c.style.transform !== size) {
+      c.style.transform = size;
+      c.style.width = `${f1(W)}px`;
+      c.style.height = `${f1(H)}px`;
+    }
+  }
+  all(".mw-stream").forEach((g) => {
+    const i = Number(g.dataset.i);
+    const x = AC + Number(g.dataset.x) * AW;
+    const y0 = m.top + Number(g.dataset.top) * AH;
+    // The run lengthens and shortens a little as water feeds it.
+    const y1 = Math.min(-H * 0.02, y0 + Number(g.dataset.len) * AH * (0.92 + 0.08 * Math.sin(age / 300 + i)));
+    const w = H * (drowned ? 0.045 : 0.03);
+    const drift = w * (i % 2 ? 0.4 : -0.4);
+    setAttr(g.querySelector(".mw-body"), "d", `${thread(x, y0, y1, w, drift, i * 1.7 + age / 500)} M${f1(x + drift - w * 0.55)} ${f1(y1)} a${f1(w * 0.55)} ${f1(w * 0.62)} 0 1 0 ${f1(w * 1.1)} 0 a${f1(w * 0.55)} ${f1(w * 0.62)} 0 1 0 ${f1(-w * 1.1)} 0 Z`);
+    const edge = `M${f1(x + w * 0.12)} ${f1(y0 + w * 0.6)} Q${f1(x + w * 0.2)} ${f1((y0 + y1) / 2)} ${f1(x + drift + w * 0.15)} ${f1(y1 - w * 0.2)}`;
+    setAttr(g.querySelector(".mw-edge"), "d", edge);
+    setAttr(g.querySelector(".mw-edge"), "stroke-width", f1(Math.max(0.8, w * 0.16)));
+    const gl = g.querySelector(".mw-glint");
+    setAttr(gl, "d", edge);
+    setAttr(gl, "stroke-width", f1(Math.max(1.2, w * 0.3)));
+    glint(gl, H, age, drowned ? 1.6 : 1.1, i * 0.37);
+  });
+  all(".mw-pour").forEach((g) => {
+    const side = Number(g.dataset.side);
+    // Sheeting off the drawing's own edge and falling straight down beside it.
+    const edgeX = side > 0 ? m.x1 : m.x0;
+    const x0 = edgeX - side * AW * 0.14;
+    const y0 = m.top + AH * 0.3;
+    const x1 = edgeX + side * H * 0.05;
+    const w = H * 0.07;
+    const wob = Math.sin(age / 180 + side) * w * 0.12;
+    const mid = y0 + (0 - y0) * 0.25;
+    const d = `M${f1(x0 - w * 0.5 * side)} ${f1(y0)} C${f1(x1 + wob)} ${f1(y0)} ${f1(x1 + wob)} ${f1(mid)} ${f1(x1 + wob)} ${f1(-H * 0.01)} L${f1(x1 - side * w * 0.6 + wob)} ${f1(-H * 0.01)} C${f1(x1 - side * w * 0.6)} ${f1(mid + H * 0.04)} ${f1(x1 - side * w * 0.8)} ${f1(y0 + w)} ${f1(x0 - w * 0.5 * side)} ${f1(y0 + w * 0.7)} Z`;
+    setAttr(g.querySelector(".mw-body"), "d", d);
+    const edge = `M${f1(x0)} ${f1(y0 + w * 0.2)} C${f1(x1 - side * w * 0.1 + wob)} ${f1(y0 + w * 0.1)} ${f1(x1 - side * w * 0.15 + wob)} ${f1(mid)} ${f1(x1 - side * w * 0.15 + wob)} ${f1(-H * 0.03)}`;
+    setAttr(g.querySelector(".mw-edge"), "d", edge);
+    setAttr(g.querySelector(".mw-edge"), "stroke-width", f1(Math.max(1, w * 0.12)));
+    const gl = g.querySelector(".mw-glint");
+    setAttr(gl, "d", edge);
+    setAttr(gl, "stroke-width", f1(Math.max(1.4, w * 0.26)));
+    glint(gl, H, age, 1.8, side > 0 ? 0.5 : 0);
+  });
+  all(".mw-drop").forEach((path, i) => {
+    const x = AC + Number(path.dataset.x) * AW;
+    const y0 = -Number(path.dataset.y) * AH;
+    const cyc = ((age / (drowned ? 520 : 720) + Number(path.dataset.o) + i * 0.13) % 1 + 1) % 1;
+    const y = y0 + cyc * cyc * -y0;
+    const size = (H * (drowned ? 0.026 : 0.024)) / 10;
+    setAttr(path, "transform", `translate(${f1(x)} ${f1(y)}) scale(${f2(size)} ${f2(size * (1 + cyc * 0.5))})`);
+    setAttr(path, "stroke-width", f1(1 / size));
+    setAttr(path, "opacity", f2(1 - cyc * 0.4));
+  });
+  all(".mw-weed").forEach((e) => {
+    setAttr(e, "cx", f1(AC + Number(e.dataset.x) * AW));
+    setAttr(e, "cy", f1(-Number(e.dataset.y) * AH));
+    setAttr(e, "rx", f1(H * 0.024));
+    setAttr(e, "ry", f1(H * 0.013));
+  });
+}
+
+const MARKS = new WeakMap<HTMLElement, WaterMark[]>();
 
 const board: Frame = (el, p, age) => {
   const d = params(el);
@@ -815,56 +1063,63 @@ const board: Frame = (el, p, age) => {
     });
     return;
   }
-  if (mode === "drowned") {
-    cling(el, clamp(p * 1.4 + 0.3), age, { actor: () => undefined });
-    return;
-  }
-  // "soaked": every other enemy on the board, its water laid and dripping, one after another.
+  const drowned = mode === "drowned";
+  // "drowned" rides its own anchor, the target; "soaked" finds every other living enemy.
   if (!box.dataset.built) {
     box.dataset.built = "1";
-    const drowned = [...root.querySelectorAll<HTMLElement>('.mourn-board-wrap[data-anchor], .fx-mourn-board-wrap[data-anchor]')]
-      .filter((w) => w.querySelector('.mourn-board[data-mode="drowned"]'))
-      .map((w) => w.dataset.anchor);
-    const units = [...document.querySelectorAll<HTMLElement>('.stage .combatant[data-side="enemy"]')].filter(
-      (u) => !u.hasAttribute("data-down") && !drowned.includes(u.dataset.unit),
-    );
-    units.forEach((u, i) => {
-      const mark = document.createElement("div");
-      mark.className = "mourn-wet";
-      mark.dataset.unit = u.dataset.unit ?? "";
-      mark.style.setProperty("--i", String(i));
-      mark.innerHTML = WET_MARK;
-      box.appendChild(mark);
-    });
+    const marks: WaterMark[] = [];
+    if (drowned) {
+      marks.push({ node: buildWater(box, el.dataset.anchor ?? "", true, 31), W: 0, H: 0, drowned: true, x0: 0, x1: 0, top: 0 });
+    } else {
+      const taken = [...root.querySelectorAll<HTMLElement>(".cine-anchored[data-anchor]")]
+        .filter((w) => w.querySelector('.mourn-board[data-mode="drowned"]'))
+        .map((w) => w.dataset.anchor);
+      [...document.querySelectorAll<HTMLElement>('.stage .combatant[data-side="enemy"]')]
+        .filter((u) => !u.hasAttribute("data-down") && !taken.includes(u.dataset.unit))
+        .forEach((u, i) => marks.push({ node: buildWater(box, u.dataset.unit ?? "", false, 50 + i * 7), W: 0, H: 0, drowned: false, x0: 0, x1: 0, top: 0 }));
+    }
+    MARKS.set(el, marks);
   }
+  const marks = MARKS.get(el) ?? [];
+  // The board does not move under a film: measure now and then, not every frame.
   const measure = Number(box.dataset.measured ?? -1e9);
   if (age - measure > 200 || age < measure) {
     box.dataset.measured = String(age);
     const origin = root.getBoundingClientRect();
     const left = parseFloat(el.style.left) || 0;
     const top = parseFloat(el.style.top) || 0;
-    box.querySelectorAll<HTMLElement>(".mourn-wet").forEach((m) => {
-      const r = document.querySelector<HTMLElement>(`.stage [data-unit="${CSS.escape(m.dataset.unit ?? "")}"] .combatant-rig`)?.getBoundingClientRect();
-      if (!r) return;
-      m.style.transform = `translate3d(${f1(r.left + r.width / 2 - origin.left - left)}px, ${f1(r.bottom - origin.top - top)}px, 0)`;
-      m.style.setProperty("--u", `${f1(Math.max(50, r.height))}px`);
-    });
+    for (const m of marks) {
+      const r = document
+        .querySelector<HTMLElement>(`.stage [data-unit="${CSS.escape(m.node.dataset.unit ?? "")}"] .combatant-rig`)
+        ?.getBoundingClientRect();
+      if (!r) continue;
+      m.W = r.width;
+      m.H = r.height;
+      // The painted drawing, which rarely fills its box (a hound is low and long).
+      const svg = document.querySelector<SVGSVGElement>(`.stage [data-unit="${CSS.escape(m.node.dataset.unit ?? "")}"] .combatant-rig svg`);
+      let ax0 = Infinity;
+      let ax1 = -Infinity;
+      let at = Infinity;
+      for (const child of svg ? [...svg.children] : []) {
+        if (child.tagName === "defs") continue;
+        const b = child.getBoundingClientRect();
+        if (!b.width || !b.height) continue;
+        ax0 = Math.min(ax0, b.left);
+        ax1 = Math.max(ax1, b.right);
+        at = Math.min(at, b.top);
+      }
+      const cx = r.left + r.width / 2;
+      m.x0 = Number.isFinite(ax0) ? Math.max(-r.width * 0.7, ax0 - cx) : -r.width * 0.4;
+      m.x1 = Number.isFinite(ax1) ? Math.min(r.width * 0.7, ax1 - cx) : r.width * 0.4;
+      m.top = Number.isFinite(at) ? Math.max(-r.height * 1.1, Math.min(-r.height * 0.3, at - r.bottom)) : -r.height * 0.8;
+      m.node.style.transform = `translate3d(${f1(r.left + r.width / 2 - origin.left - left)}px, ${f1(r.bottom - origin.top - top)}px, 0)`;
+    }
   }
-  const stagger = num(d, "stagger", 0.12);
-  box.querySelectorAll<HTMLElement>(".mourn-wet").forEach((m, i) => {
-    const k = ease("out", span(p, 0.05 + i * stagger, 0.45 + i * stagger));
-    m.style.setProperty("--k", f2(k));
-    m.querySelectorAll(".mourn-wet-ring").forEach((r, n) => {
-      const cyc = ((age / 1200 + n * 0.5 + i * 0.2) % 1 + 1) % 1;
-      setAttr(r, "rx", f1(40 + cyc * 70));
-      setAttr(r, "ry", f1(6 + cyc * 9));
-      setAttr(r, "opacity", f2(k * 0.7 * (1 - cyc)));
-    });
-    m.querySelectorAll(".mourn-wet-drip").forEach((drip, n) => {
-      const cyc = ((age / (700 + n * 130) + i * 0.3 + n * 0.5) % 1 + 1) % 1;
-      setAttr(drip, "transform", `translate(${n ? 18 : -24} ${f1(-70 + cyc * cyc * 70)})`);
-      setAttr(drip, "opacity", f2(k * (1 - cyc * 0.6)));
-    });
+  const stagger = num(d, "stagger", 0.1);
+  marks.forEach((m, i) => {
+    if (!m.H) return;
+    const k = drowned ? ease("out", span(p, 0, 0.18)) : ease("out", span(p, 0.06 + i * stagger, 0.34 + i * stagger));
+    drawWater(m, k, age);
   });
 };
 

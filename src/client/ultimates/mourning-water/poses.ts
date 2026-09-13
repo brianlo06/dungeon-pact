@@ -97,7 +97,7 @@ const weep: Clip = {
 };
 
 /**
- * The palm. The hand comes up a little to take the tear, and when it lands it
+ * The palm. The hand is held out, level, to take the tear, and when it lands it
  * sinks — a weight far heavier than one drop — and steadies, still open.
  * `contact` is the drop landing.
  */
@@ -106,14 +106,16 @@ const cup: Clip = {
   markers: { contact: 0.36 },
   poses: STILL,
   parts: {
+    // Held out from the body, level, and a little larger than life: the hand
+    // is nearer the lens than the rest of the figure.
     hand: [
-      { at: 0, rotate: 18, x: -0.02, y: 0, scale: 1 },
-      { at: 0.3, rotate: 10, x: -0.01, y: -0.01, scale: 1.02 },
-      { at: 0.36, rotate: 10, y: -0.01, scale: 1.02 },
+      { at: 0, rotate: -4, x: 0.03, y: 0, scale: 1.3 },
+      { at: 0.3, rotate: -8, x: 0.035, y: -0.01, scale: 1.32 },
+      { at: 0.36, rotate: -8, x: 0.035, y: -0.01, scale: 1.32 },
       // The weight.
-      { at: 0.46, rotate: 24, x: -0.005, y: 0.03, scale: 1.03 },
-      { at: 0.66, rotate: 15, y: 0.012, scale: 1.02 },
-      { at: 1, rotate: 17, y: 0.016, scale: 1.02 },
+      { at: 0.46, rotate: 6, x: 0.03, y: 0.03, scale: 1.33 },
+      { at: 0.66, rotate: -3, x: 0.032, y: 0.012, scale: 1.32 },
+      { at: 1, rotate: -1, x: 0.032, y: 0.016, scale: 1.32 },
     ],
     head: turn([0, 13], [0.46, 15], [1, 14]),
     staff: turn([0, -5], [1, -5]),
