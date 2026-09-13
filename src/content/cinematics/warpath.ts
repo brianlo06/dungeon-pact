@@ -168,7 +168,6 @@ export const warpath: Cinematic = {
         },
       ],
       vfx: [
-        { kind: "warpath-trail", at: 0, until: 1, layer: "back", seed: 9, params: { x0: -300, y0: 560, width: 26 } },
         { kind: "warpath-drift", at: 0, until: 1, layer: "front", seed: 3, params: { depth: 0.27, targetDepth: 0.06, heave: 1, stride: 1000 } },
         { kind: "warpath-snow", at: 0, until: 1, layer: "screen", seed: 13, params: { count: 90, wind: -1.4, fall: 0.45, near: 0.06 } },
         { kind: "warpath-gust", at: 0, until: 0.22, layer: "screen", seed: 21, params: { phase: "out" } },
@@ -356,8 +355,8 @@ export const warpath: Cinematic = {
         { kind: "warpath-snow", at: 0.1, until: 1, layer: "screen", seed: 19, params: { count: 70, wind: -1.2, fall: 0.45, near: 0.05, fadeIn: 0.3 } },
       ],
       screen: [
-        { kind: "two-tone", at: 0, ms: 70, color: SNOW, mode: "full" },
-        { kind: "invert", at: 0, ms: 50, mode: "fast" },
+        { kind: "two-tone", at: 0.04, ms: 50, color: SNOW, mode: "full" },
+        { kind: "invert", at: 0.04, ms: 40, mode: "fast" },
         { kind: "chromatic", at: 0.047, ms: 160, amount: 0.8 },
         { kind: "radial", at: 0.047, ms: 220, amount: 0.8, color: ICE },
       ],
@@ -387,8 +386,8 @@ export const warpath: Cinematic = {
         },
         boss: {
           camera: {
-            from: { x: 860, y: 540, zoom: 1.16, rotate: -4 },
-            to: { x: 840, y: 535, zoom: 1.06, rotate: -1.5 },
+            from: { x: 880, y: 500, zoom: 1.02, rotate: -4 },
+            to: { x: 860, y: 495, zoom: 0.96, rotate: -1.5 },
             ease: "out",
           },
           actors: [
