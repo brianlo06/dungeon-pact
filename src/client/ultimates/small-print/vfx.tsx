@@ -516,6 +516,8 @@ const wad: Frame = (el, p, _age, ctx) => {
     quads.push({ q: [bl, br, [br[0] + top[0], br[1] + top[1]], [bl[0] + top[0], bl[1] + top[1]]], lit: i % 2 === 0, script: shows ? 4 : 0 });
   }
   writeLeaves(svg, quads);
+  // Arrives with the hand, not before it.
+  setStyle(svg, "opacity", clamp((p - 0.08) / 0.1).toFixed(2));
 };
 
 /** Out of one shot and off the next: a sheet turning over the lens. */

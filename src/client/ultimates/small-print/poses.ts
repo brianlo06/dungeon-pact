@@ -114,8 +114,8 @@ const cast: Clip = {
   ],
   parts: {
     ledger: turn([0, -98], [0.1, -70], [0.22, -128], [0.34, -116], [0.6, -110], [1, -108]),
-    scales: turn([0, 22], [0.22, 12], [1, 16]),
-    pans: turn([0, -22], [0.26, -2], [0.4, -20], [0.55, -12], [1, -16]),
+    scales: turn([0, 60], [0.22, 52], [1, 56]),
+    pans: turn([0, -60], [0.26, -44], [0.4, -60], [0.55, -52], [1, -56]),
     head: turn([0, 4], [0.22, -3], [0.5, 2], [1, 3]),
     ...face([0, WELCOME], [0.22, PERSUADE], [1, PLEASED]),
     purse: turn([0, 0], [0.22, -9], [0.4, 7], [0.6, -3], [1, 0]),
@@ -176,8 +176,9 @@ const snap: Clip = {
       { at: 0.5, rotate: -96, x: 0.07, y: 0.006 },
       { at: 1, rotate: -94, x: 0.065, y: 0.006 },
     ],
-    scales: turn([0, 26], [0.05, -18], [0.25, -8], [0.5, -12], [1, -10]),
-    pans: turn([0, -20], [0.06, 30], [0.2, -8], [0.36, 14], [0.55, 2], [0.75, 8], [1, 6]),
+    // The balance thrown back and down out of the way: this film weighs nothing.
+    scales: turn([0, 48], [0.05, 66], [0.25, 58], [0.5, 62], [1, 60]),
+    pans: turn([0, -48], [0.06, -40], [0.2, -70], [0.36, -54], [0.55, -62], [0.75, -58], [1, -60]),
     head: turn([0, 8], [0.05, -10], [0.3, -7], [1, -6]),
     ...face([0, FINE], [0.04, CRY], [0.5, CRY], [1, { ...CRY, mouth: 2.1, open: 1 }]),
     purse: [
@@ -246,6 +247,13 @@ function look(hero: string): Clip {
     poses: [{ at: 0, x: 0, y: 0, rotate: 0, squash: 1 }],
     parts: {
       head: turn([0, 0], [0.3, 10], [0.7, 14], [1, 13]),
+      // Leaning over to read it, and settling back a little, unconvinced.
+      body: [
+        { at: 0, rotate: 0, squash: 1 },
+        { at: 0.35, rotate: 4, squash: 1.03 },
+        { at: 0.75, rotate: 3, squash: 1.02 },
+        { at: 1, rotate: 2.5, squash: 1.015 },
+      ],
       ...(FACED.has(hero)
         ? face([0, {}], [0.3, { brow: -0.4, open: 1.15, mouth: 0.9 }], [0.75, { brow: 0.6, knit: 4, open: 0.8, mouth: 0.8 }], [1, { brow: 0.6, knit: 4, open: 0.8, mouth: 0.85 }])
         : {}),

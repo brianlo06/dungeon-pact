@@ -82,7 +82,8 @@ export const smallPrint: Cinematic = {
       space: "cinematic",
       ms: 600,
       fastMs: 380,
-      transition: { kind: "black", ms: 70 },
+      // Long enough to hide the copy blending out of its rest pose into the riffle.
+      transition: { kind: "black", ms: 110 },
       camera: {
         from: { x: 750, y: 640, zoom: 1.68, rotate: 8 },
         to: { x: 758, y: 630, zoom: 1.82, rotate: 5 },
