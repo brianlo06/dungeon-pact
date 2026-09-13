@@ -154,22 +154,19 @@
   fill-opacity: 0.45;
 }
 .gr-web[data-mode="hand"] .gr-root-line {
-  stroke-width: 12;
+  stroke-width: 6;
 }
 .gr-web[data-mode="hand"] .gr-root-glow {
-  stroke-width: 44;
-  opacity: 0.22;
-}
-.gr-web[data-mode="hand"] .gr-twig {
-  stroke-width: 5;
+  stroke-width: 22;
+  opacity: 0.2;
 }
 .gr-web[data-mode="surge"] .gr-root-line {
   stroke: #effbe0;
-  stroke-width: calc(7px + var(--surge, 0) * 7px);
+  stroke-width: calc(5px + var(--surge, 0) * 4px);
 }
 .gr-web[data-mode="surge"] .gr-root-glow {
-  opacity: calc(0.12 + var(--surge, 0) * 0.3);
-  stroke-width: 40;
+  opacity: calc(0.06 + var(--surge, 0) * 0.18);
+  stroke-width: 30;
 }
 .gr-web[data-mode="surge"] .gr-bead {
   transform-box: fill-box;
@@ -182,9 +179,9 @@
   position: absolute;
   left: 0;
   top: 0;
-  width: 90px;
-  height: 90px;
-  margin: -45px 0 0 -45px;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
   border-radius: 50%;
   background: radial-gradient(closest-side, #f4ffe8 0%, #b8f0a6 22%, rgba(155, 227, 138, 0.45) 48%, rgba(155, 227, 138, 0) 100%);
   opacity: 0;
@@ -208,6 +205,18 @@
 .gr-foes[data-mode="web"] .gr-foe-art :where(path, rect, circle, ellipse, polygon, polyline, line) {
   fill: #080605 !important;
   stroke: #080605 !important;
+}
+.gr-foe-haze {
+  position: absolute;
+  left: -30%;
+  top: 5%;
+  width: 160%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(120, 170, 100, 0.34), rgba(120, 170, 100, 0.12) 60%, rgba(120, 170, 100, 0));
+}
+.gr-foes[data-mode="rot"] .gr-foe-haze {
+  background: radial-gradient(closest-side, rgba(150, 80, 130, 0.3), rgba(150, 80, 130, 0));
 }
 .gr-foe[data-back] {
   opacity: 0.82;
@@ -271,7 +280,8 @@
   transform-origin: center;
   transform: scale(clamp(0, calc(var(--k) * 2.4 - 1.2), 1)) rotate(calc(var(--k) * 40deg));
 }
-.gr-bloom:not([data-caster]) .gr-flower {
+.gr-bloom:not([data-caster]) .gr-flower,
+.gr-bloom:not([data-chip]) .gr-chip {
   display: none;
 }
 .gr-stem {
@@ -312,11 +322,12 @@
 .gr-chip {
   position: absolute;
   left: 0;
-  top: -380px;
-  transform: translate(-50%, calc((1 - var(--chip, 0)) * 24px));
+  top: var(--chip-y, -340px);
+  transform: translate(-50%, calc((1 - var(--chip, 0)) * 24px)) scale(calc(0.9 / var(--bs, 1)));
+  transform-origin: 0 100%;
   opacity: var(--chip, 0);
   white-space: nowrap;
-  font: 800 30px/1 var(--font-display, system-ui), system-ui, sans-serif;
+  font: 800 22px/1 var(--font-display, system-ui), system-ui, sans-serif;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 7px 14px 8px;
@@ -328,7 +339,6 @@
   color: #b9f3a8;
 }
 .gr-chip.rot {
-  top: var(--chip-y, -380px);
   color: #d9c46a;
   background: #1d0b18e6;
 }
@@ -480,4 +490,9 @@
 }
 .gr-drip.b {
   transform: translate3d(calc(var(--u) * 0.24), calc(var(--u) * -0.7 + var(--pp) * var(--u) * 0.6), 0);
+}
+
+/* The downed ally's copy lies where it stands, pivoting at its feet like the rig. */
+.ult-cinematic[data-cinematic="green-reckoning"] .cine-actor[data-role="allies"] .cine-look {
+  transform-origin: 50% 92%;
 }

@@ -17,39 +17,64 @@ import { face } from "../../battle/face";
  * `brow`, `eyes`, `mouth`, `body`, `legs`. The Warden faces right: forward is
  * +x, and a positive rotation tips a part forward and down.
  *
- * The kneel sinks the whole figure into the ground: the film draws the soil in
- * front of every figure's feet, so a Warden lowered a fifth of its height is
- * a Warden on one knee with the knee in the moss, not a Warden in a hole.
+ * The kneel is built from the parts, not the root. A presentation copy's root
+ * track is never written (its `.cine-rig` is attached before the animator
+ * exists — see the storyboard's engine notes), so the clips for the film's own
+ * copies move every part down together instead: staff, body, head and hand
+ * sink by the same amount and the legs fold under. The film draws the soil in
+ * front of every foot, so the fold is a knee in the moss. The battlefield
+ * clips (`listen`, `rest`) play on the real unit, whose root does move.
  *
  * Face magnitudes are for the Warden's drawing. Its brows are bushy and droop
  * at the ends, so a knit reads at 5–8° and a lift at 1–2 units; its eyes are
- * drawn shut, so `open` below 1 is the lids pressed tighter, and above 1 is
- * only meaningful once the film has opened them (`--wdn-eyes`).
+ * drawn shut, so `open` below 1 is the lids pressed tighter, and above 1 only
+ * shows once the film has opened them (`--wdn-eyes`).
  */
 
 type Part = Record<string, Pose[]>;
 const turn = (...keys: [number, number][]): Pose[] => keys.map(([at, rotate]) => ({ at, rotate }));
 
-/** On one knee, the hand laid on the ground, head bowed to it. */
-const KNEEL = { y: 0.2, x: 0.02, rotate: 6, squash: 1.03 };
-const HAND_DOWN = { rotate: 64, x: 0.03, y: 0.1, scale: 1.05 };
-const STAFF_DOWN = { rotate: -7, y: 0.05 };
+/** How far the kneel sinks every part, in drawing hundredths. */
+const SINK = 0.22;
 
-/** The kneel's held parts at one key, so shots that hold it agree. */
-const kneeling = (at: number, head = 11, lantern = 1): Part => ({
-  hand: [{ at, ...HAND_DOWN }],
-  staff: [{ at, ...STAFF_DOWN }],
-  head: [{ at, rotate: head, y: 0.004 }],
-  lantern: [{ at, rotate: lantern }],
-  legs: [{ at, squash: 1.2, y: 0.02 }],
-  body: [{ at, squash: 1.03, y: 0.006 }],
-});
+/** One held body at one key: sunk by `s`, parts as given (their own y added to the sink). */
+interface Body {
+  s: number;
+  hand: Omit<Pose, "at">;
+  staff: Omit<Pose, "at">;
+  head: Omit<Pose, "at">;
+  body?: Omit<Pose, "at">;
+  lantern: number;
+}
 
-const merge = (...parts: Part[]): Part => {
+function held(at: number, b: Body): Part {
+  const k = b.s / SINK;
+  return {
+    hand: [{ at, ...b.hand, y: (b.hand.y ?? 0) + b.s }],
+    staff: [{ at, ...b.staff, y: (b.staff.y ?? 0) + b.s }],
+    head: [{ at, ...b.head, y: (b.head.y ?? 0) + b.s }],
+    body: [{ at, rotate: 0, squash: 1 + 0.03 * k, ...b.body, y: (b.body?.y ?? 0) + b.s }],
+    legs: [{ at, squash: 1 + 0.35 * k, y: 0.1 * k }],
+    lantern: [{ at, rotate: b.lantern }],
+  };
+}
+
+function bodies(...keys: [number, Body][]): Part {
   const out: Part = {};
-  for (const p of parts) for (const [k, v] of Object.entries(p)) (out[k] ??= []).push(...v);
-  for (const v of Object.values(out)) v.sort((a, b) => a.at - b.at);
+  for (const [at, b] of keys) for (const [name, poses] of Object.entries(held(at, b))) (out[name] ??= []).push(...poses);
   return out;
+}
+
+const STILL: Pose[] = [{ at: 0 }, { at: 1 }];
+
+/** Knelt, the palm flat on the moss, the head bowed to it. */
+const KNELT: Body = {
+  s: SINK,
+  hand: { rotate: 94, x: 0.02, y: 0.15, scale: 1.08 },
+  staff: { rotate: -8, x: 0.02 },
+  head: { rotate: 12, x: 0.02 },
+  body: { rotate: 3 },
+  lantern: 2,
 };
 
 /**
@@ -83,37 +108,23 @@ const listen: Clip = {
  */
 const kneel: Clip = {
   duration: 680,
-  poses: [
-    { at: 0, y: 0.04, x: 0, rotate: 2, squash: 1.02 },
-    { at: 0.35, y: 0.17, x: 0.015, rotate: 7, squash: 1.05 },
-    { at: 0.5, y: 0.21, x: 0.02, rotate: 6.5, squash: 1.06 },
-    { at: 0.62, ...KNEEL, squash: 1.02 },
-    { at: 1, ...KNEEL },
-  ],
-  parts: merge(
-    {
-      hand: [
-        { at: 0, rotate: 38, x: 0.02, y: 0.05, scale: 1 },
-        { at: 0.4, rotate: 58, x: 0.035, y: 0.08, scale: 1.02 },
-        // The press.
-        { at: 0.5, rotate: 67, x: 0.03, y: 0.115, scale: 1.07 },
-        { at: 0.62, ...HAND_DOWN },
-      ],
-      staff: turn([0, -4], [0.4, -8], [0.62, -7]),
-      head: turn([0, 9], [0.45, 13], [0.62, 11]),
-      lantern: turn([0, 0], [0.3, 14], [0.5, -9], [0.7, 4], [0.85, -1]),
-      legs: [
-        { at: 0, squash: 1, y: 0 },
-        { at: 0.5, squash: 1.2, y: 0.02 },
-      ],
-      body: [
-        { at: 0, squash: 1, y: 0 },
-        { at: 0.5, squash: 1.04, y: 0.006 },
-      ],
-      ...face([0, { brow: 0.2, open: 0.9 }], [0.5, { brow: 0.6, knit: 3, open: 0.8, mouth: 0.9 }], [1, { brow: 0.5, knit: 3, open: 0.8, mouth: 0.9 }]),
-    },
-    kneeling(1),
-  ),
+  poses: STILL,
+  parts: {
+    ...bodies(
+      [0, { s: 0.04, hand: { rotate: 40, x: 0.02, y: 0.05 }, staff: { rotate: -4 }, head: { rotate: 9 }, lantern: 0 }],
+      [0.35, { s: 0.17, hand: { rotate: 80, x: 0.025, y: 0.11, scale: 1.04 }, staff: { rotate: -9, x: 0.01 }, head: { rotate: 14, x: 0.01 }, body: { rotate: 4 }, lantern: 14 }],
+      // The press.
+      [0.5, { ...KNELT, s: SINK + 0.012, hand: { ...KNELT.hand, rotate: 97, y: 0.165, scale: 1.12 }, lantern: -9 }],
+      [0.62, { ...KNELT, lantern: 4 }],
+      [0.8, { ...KNELT, lantern: -1 }],
+      [1, KNELT],
+    ),
+    ...face(
+      [0, { brow: 0.2, open: 0.9 }],
+      [0.5, { brow: 0.6, knit: 3, open: 0.8, mouth: 0.9 }],
+      [1, { brow: 0.5, knit: 3, open: 0.8, mouth: 0.9 }],
+    ),
+  },
 };
 
 /**
@@ -123,21 +134,16 @@ const kneel: Clip = {
  */
 const hear: Clip = {
   duration: 660,
-  poses: [
-    { at: 0, ...KNEEL },
-    { at: 0.55, ...KNEEL, rotate: 6.6 },
-    { at: 0.86, ...KNEEL, y: 0.19, rotate: 4.5 },
-    { at: 1, ...KNEEL, y: 0.185, rotate: 4 },
-  ],
+  poses: STILL,
   parts: {
-    head: [
-      { at: 0, rotate: 8, y: 0.004 },
-      { at: 0.35, rotate: 6, y: 0.002 },
+    ...bodies(
+      [0, { ...KNELT, head: { rotate: 8, x: 0.02 } }],
+      [0.35, { ...KNELT, head: { rotate: 6, x: 0.02, y: -0.002 } }],
       // Towards the faint one.
-      { at: 0.6, rotate: 11, y: 0.006 },
-      { at: 0.86, rotate: 1, y: -0.004 },
-      { at: 1, rotate: -1, y: -0.006 },
-    ],
+      [0.6, { ...KNELT, head: { rotate: 11, x: 0.02, y: 0.004 } }],
+      [0.86, { ...KNELT, s: SINK - 0.01, head: { rotate: 1, x: 0.015, y: -0.006 }, hand: { ...KNELT.hand, rotate: 90, scale: 1.1 } }],
+      [1, { ...KNELT, s: SINK - 0.014, head: { rotate: -1, x: 0.015, y: -0.008 }, hand: { ...KNELT.hand, rotate: 88, scale: 1.12 }, staff: { rotate: -10, x: 0.02 } }],
+    ),
     ...face(
       [0, { brow: 0.7, knit: 5, open: 0.8, mouth: 0.9 }],
       [0.35, { brow: 1.2, knit: 8, open: 0.62, mouth: 0.85 }],
@@ -148,11 +154,6 @@ const hear: Clip = {
       [0.9, { brow: -1.9, knit: 2, open: 1.25, mouth: 0.75 }],
       [1, { brow: -2.1, knit: 3, open: 1.3, mouth: 0.75 }],
     ),
-    hand: [{ at: 0, ...HAND_DOWN }, { at: 0.86, ...HAND_DOWN, rotate: 60, scale: 1.08 }, { at: 1, ...HAND_DOWN, rotate: 58, scale: 1.1 }],
-    staff: turn([0, -7], [0.86, -7], [1, -9]),
-    lantern: turn([0, 1], [1, 1]),
-    legs: [{ at: 0, squash: 1.2, y: 0.02 }, { at: 1, squash: 1.2, y: 0.02 }],
-    body: [{ at: 0, squash: 1.03, y: 0.006 }, { at: 1, squash: 1.03, y: 0.006 }],
   },
 };
 
@@ -162,48 +163,28 @@ const hear: Clip = {
  * mouth opens on the command. The lantern, for once, cannot keep up.
  * `contact` is the moment it has stood: the burst, and the reveal.
  */
+const UP: Body = {
+  s: -0.06,
+  hand: { rotate: -78, x: 0.06, y: -0.04, scale: 1.2 },
+  staff: { rotate: 10, x: 0.02, y: -0.1 },
+  head: { rotate: -12 },
+  body: { rotate: -3, squash: 0.95 },
+  lantern: 38,
+};
+
 const reckon: Clip = {
   duration: 760,
   markers: { contact: 0.04 },
-  poses: [
-    { at: 0, ...KNEEL, y: 0.16, rotate: 3 },
-    { at: 0.04, y: -0.05, x: -0.01, rotate: -6, squash: 0.94, scale: 1.05, flash: 0.45 },
-    { at: 0.14, y: -0.06, x: -0.012, rotate: -7, squash: 0.96, scale: 1.05, flash: 0 },
-    { at: 0.4, y: -0.035, x: -0.01, rotate: -5, squash: 0.99, scale: 1.03 },
-    { at: 1, y: -0.02, x: -0.008, rotate: -4, squash: 1, scale: 1.02 },
-  ],
+  poses: STILL,
   parts: {
-    staff: [
-      { at: 0, rotate: -9, y: 0.05 },
-      { at: 0.04, rotate: 8, y: -0.1, x: 0.02 },
-      { at: 0.2, rotate: 12, y: -0.11, x: 0.025 },
-      { at: 1, rotate: 9, y: -0.09, x: 0.02 },
-    ],
-    hand: [
-      { at: 0, rotate: 58, x: 0.03, y: 0.1, scale: 1.1 },
-      { at: 0.04, rotate: -74, x: 0.06, y: -0.04, scale: 1.2 },
-      { at: 0.22, rotate: -80, x: 0.065, y: -0.05, scale: 1.22 },
-      { at: 1, rotate: -70, x: 0.055, y: -0.035, scale: 1.16 },
-    ],
-    head: [
-      { at: 0, rotate: -1, y: -0.006 },
-      { at: 0.04, rotate: -12, y: -0.01 },
-      { at: 0.3, rotate: -10, y: -0.008 },
-      { at: 1, rotate: -7, y: -0.006 },
-    ],
-    lantern: turn([0, 1], [0.04, 38], [0.18, -26], [0.36, 18], [0.56, -10], [0.78, 5], [1, -2]),
-    legs: [
-      { at: 0, squash: 1.18, y: 0.02 },
-      { at: 0.04, squash: 0.92, y: -0.01 },
-      { at: 0.3, squash: 0.97, y: 0 },
-      { at: 1, squash: 1, y: 0 },
-    ],
-    body: [
-      { at: 0, squash: 1.03 },
-      { at: 0.04, squash: 0.94 },
-      { at: 0.3, squash: 0.98 },
-      { at: 1, squash: 1 },
-    ],
+    ...bodies(
+      [0, { ...KNELT, s: SINK - 0.03, head: { rotate: -1, x: 0.015 }, hand: { ...KNELT.hand, rotate: 86, scale: 1.12 } }],
+      [0.04, UP],
+      [0.16, { ...UP, s: -0.07, hand: { ...UP.hand, rotate: -82, scale: 1.22 }, staff: { ...UP.staff, rotate: 12, y: -0.11 }, lantern: -26 }],
+      [0.36, { ...UP, s: -0.045, head: { rotate: -10 }, body: { rotate: -2, squash: 0.98 }, lantern: 18 }],
+      [0.58, { ...UP, s: -0.035, head: { rotate: -9 }, body: { rotate: -2 }, lantern: -10 }],
+      [1, { ...UP, s: -0.025, hand: { ...UP.hand, rotate: -70, scale: 1.16 }, staff: { ...UP.staff, rotate: 9, y: -0.09 }, head: { rotate: -7 }, body: { rotate: -1.5 }, lantern: -2 }],
+    ),
     ...face(
       [0, { brow: -2.1, knit: 3, open: 1.3, mouth: 0.8 }],
       [0.04, { brow: -2.4, knit: 5, open: 1.4, mouth: 2.3, wide: 1.06 }],
@@ -237,48 +218,12 @@ const rest: Clip = {
   },
 };
 
-/**
- * The party, lifted by the roots. Root only — every hero rig has the same
- * root, whatever its arms hold — so one pose serves whoever stands beside the
- * Warden: a sag, then a breath drawn up through the feet, then standing
- * taller than before. `flash` is kept to the few frames of the hit-stop.
- */
-const lifted: Clip = {
-  duration: 740,
-  poses: [
-    { at: 0, y: 0.012, squash: 1.05, rotate: 1.5, scale: 1, flash: 0 },
-    { at: 0.05, y: -0.05, squash: 0.93, rotate: -2, scale: 1.05, flash: 0.35 },
-    { at: 0.16, y: -0.06, squash: 0.95, rotate: -2.5, scale: 1.05, flash: 0 },
-    { at: 0.5, y: -0.02, squash: 0.99, rotate: -1, scale: 1.02 },
-    { at: 1, y: -0.01, squash: 1, rotate: -0.5, scale: 1.01 },
-  ],
-};
-
-/** Waiting on the web: a slow breath, a little bowed. */
-const waiting: Clip = {
-  duration: 1100,
-  poses: [
-    { at: 0, y: 0.006, squash: 1.02, rotate: 1 },
-    { at: 0.5, y: 0.012, squash: 1.035, rotate: 1.6 },
-    { at: 1, y: 0.008, squash: 1.025, rotate: 1.2 },
-  ],
-};
-
-const party = (extra: Rig = {}): Rig => ({ "ult:green-lifted": lifted, "ult:green-waiting": waiting, ...extra });
-
 export const poses: Record<string, Rig> = {
-  warden: party({
+  warden: {
     "ult:green-listen": listen,
     "ult:green-kneel": kneel,
     "ult:green-hear": hear,
     "ult:green-reckon": reckon,
     "ult:green-rest": rest,
-  }),
-  vanguard: party(),
-  arcanist: party(),
-  ranger: party(),
-  broker: party(),
-  herald: party(),
-  reaver: party(),
-  beguiler: party(),
+  },
 };

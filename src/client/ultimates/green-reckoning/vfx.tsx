@@ -126,6 +126,8 @@ interface Foe {
   w: number;
   h: number;
   back: boolean;
+  /** How far the drawing reaches above its box, as a multiple of the box: a boss's crown. */
+  over: number;
 }
 interface FoePlaced {
   x: number;
@@ -180,7 +182,20 @@ function buildFoes(el: HTMLElement, box: HTMLElement, rot: boolean) {
       node.appendChild(rotNode);
     }
     box.appendChild(node);
-    return { id: s.u.dataset.unit ?? "", node, rot: rotNode, w: s.r.width, h: s.r.height, back: front - s.r.bottom > s.r.height * 0.12 };
+    // A glow behind each figure, so a black line reads against black air.
+    const haze = document.createElement("i");
+    haze.className = "gr-foe-haze";
+    node.prepend(haze);
+    let over = 1;
+    const svg = s.rig.querySelector<SVGSVGElement>("svg");
+    try {
+      const vb = svg?.viewBox.baseVal;
+      const bb = svg?.getBBox();
+      if (vb && bb && vb.height) over = Math.max(1, (vb.y + vb.height - bb.y) / vb.height);
+    } catch {
+      over = 1;
+    }
+    return { id: s.u.dataset.unit ?? "", node, rot: rotNode, w: s.r.width, h: s.r.height, back: front - s.r.bottom > s.r.height * 0.12, over };
   });
   return { foes, base };
 }
@@ -300,6 +315,7 @@ const Web = ({ cue }: VfxProps) => {
       data-seed={String(cue.seed ?? 3)}
       data-ox={String(cue.params?.ox ?? 0.07)}
       data-oy={String(cue.params?.oy ?? -0.01)}
+      data-depth={String(cue.params?.depth ?? 150)}
     >
       {Array.from({ length: count }, (_, i) => (
         <g key={i} className="gr-root" data-i={i} style={{ display: "none" }}>
@@ -325,7 +341,7 @@ const Foes = ({ cue }: VfxProps) => (
     data-gr=""
     data-mode={String(cue.params?.mode ?? "web")}
     data-x0={String(cue.params?.x0 ?? 900)}
-    data-span={String(cue.params?.span ?? 600)}
+    data-x1={String(cue.params?.x1 ?? 1500)}
     data-maxh={String(cue.params?.maxH ?? 320)}
     data-scale={String(cue.params?.scale ?? 1)}
   />
@@ -450,7 +466,7 @@ function rootShapes(el: HTMLElement, ctx: VfxContext): Root[] {
   if (mode === "hand") {
     return Array.from({ length: 12 }, (_, i) => {
       const a = ((i / 11) * 150 + 15 + (rand() - 0.5) * 12) * (Math.PI / 180);
-      const r = 180 + rand() * 260;
+      const r = 110 + rand() * 190;
       const end = [O[0] + Math.cos(a) * r * 1.2, O[1] + Math.sin(a) * r];
       const p1 = [O[0] + (rand() - 0.5) * 30, O[1] + 40 + rand() * 40];
       const p2 = [end[0] + (rand() - 0.5) * 80, end[1] - 40 - rand() * 60];
@@ -466,7 +482,7 @@ function rootShapes(el: HTMLElement, ctx: VfxContext): Root[] {
   return order.slice(0, ROOTS).map((e, n) => {
     const T = [e.x, FLOOR + 6];
     const dist = Math.abs(T[0] - O[0]);
-    const depth = 70 + dist * 0.28 + rand() * 50;
+    const depth = Math.min(Number(el.dataset.depth ?? 150), 34 + dist * 0.12 + rand() * 26);
     const dir = Math.sign(T[0] - O[0]) || 1;
     const p1 = [O[0] + dir * (30 + rand() * 40), O[1] + depth * 1.15];
     const p2 = [T[0] - dir * (50 + rand() * 60), T[1] + depth * 0.95];
@@ -576,8 +592,18 @@ const party: Frame = (el, p, age, ctx) => {
     if (!look) return;
     let k = 1;
     if (!down.has(i)) k = 0;
-    else if (mode === "rise") k = 1 - ease("out", clamp((p - 0.04) / 0.34));
-    const t = k <= 0.001 ? "" : `translate(${(10 * k).toFixed(2)}%, ${(-10 * k).toFixed(2)}%) rotate(${(-80 * k).toFixed(2)}deg)`;
+    else if (mode === "rise") k = 1 - ease("inOut", clamp((p - 0.07) / 0.5));
+    // Everyone is lifted by the burst: up onto the toes, then settling taller.
+    // (Written here rather than as a root clip: a copy's root is not animated.)
+    let lift = 0;
+    if (mode === "rise") {
+      const u = clamp((p - 0.035) / 0.5);
+      lift = u <= 0 ? 0 : Math.sin(Math.min(1, u / 0.25) * (Math.PI / 2)) * (1 - ease("inOut", clamp((u - 0.25) / 0.75)) * 0.6);
+    }
+    const t =
+      k <= 0.001 && lift <= 0.001
+        ? ""
+        : `translate(${(10 * k).toFixed(2)}%, ${(-10 * k - 7 * lift).toFixed(2)}%) rotate(${(-80 * k - 2 * lift).toFixed(2)}deg) scale(${(1 - 0.05 * lift).toFixed(3)}, ${(1 + 0.07 * lift).toFixed(3)})`;
     if (look.style.transform !== t) look.style.transform = t;
   });
   // A heart-light in every chest on the web, beating; the downed one's barely.
@@ -605,7 +631,7 @@ const party: Frame = (el, p, age, ctx) => {
   });
 };
 
-const foes: Frame = (el, p, age) => {
+const foes: Frame = (el, p, age, ctx) => {
   const box = el.querySelector<HTMLElement>(".gr-foes");
   const root = rootOf(el);
   if (!box || !root) return;
@@ -622,14 +648,17 @@ const foes: Frame = (el, p, age) => {
   // Every board pixel, in world units, measured against the Warden's figure.
   const casterBox = Number(el.dataset.casterBox ?? 0);
   const k0 = (casterBox || 240) / state.base;
-  const span = Number(el.dataset.span ?? 600);
+  // Clear of the party, however many stand on the web.
+  const standing = allies(ctx);
+  const x0 = Math.max(Number(el.dataset.x0 ?? 900), ...standing.map((a) => a.x + a.h * 0.75));
+  const span = Math.max(200, Number(el.dataset.x1 ?? 1500) - x0);
   const maxH = Number(el.dataset.maxh ?? 320);
   const scale = Number(el.dataset.scale ?? 1);
   const widths = state.foes.map((f) => f.w * k0 * 0.62);
   const total = widths.reduce((a, b) => a + b, 0) + 30 * (state.foes.length - 1);
-  const tallest = Math.max(...state.foes.map((f) => f.h * k0 * 0.9));
+  const tallest = Math.max(...state.foes.map((f) => f.h * k0 * 0.97 * f.over));
   const squeeze = Math.min(1, span / total, maxH / tallest) * scale;
-  let x = Number(el.dataset.x0 ?? 900);
+  let x = x0;
   const placed: FoePlaced[] = [];
   state.foes.forEach((f, i) => {
     const w = f.w * k0 * squeeze;
@@ -689,8 +718,18 @@ const burst: Frame = (el, p, _age, ctx) => {
     if (b.style.display) b.style.display = "";
     const size = a.h / 0.84;
     const big = down.has(a.i) ? 1.35 : a.i < 0 ? 1.15 : 1;
-    b.style.transform = `translate3d(${a.x.toFixed(1)}px, ${(FLOOR + 6).toFixed(1)}px, 0) scale(${((size / 330) * big).toFixed(3)})`;
+    const bs = (size / 330) * big;
+    b.style.transform = `translate3d(${a.x.toFixed(1)}px, ${(FLOOR + 6).toFixed(1)}px, 0) scale(${bs.toFixed(3)})`;
+    setStyle(b, "--bs", bs.toFixed(3));
+    setStyle(b, "--chip-y", `${((-size * 1.02) / bs).toFixed(1)}px`);
     b.toggleAttribute("data-caster", a.i < 0);
+    // One chip says what the party got; the one who was down says so instead.
+    const chip = b.querySelector<HTMLElement>(".gr-chip");
+    const revived = down.has(a.i);
+    const anyDown = targets.some((t) => down.has(t.i));
+    const says = revived ? "Revived · Healed · Regen" : n === 1 && !anyDown ? "Healed · Regen · Cleansed" : "";
+    if (chip && chip.textContent !== says) chip.textContent = says;
+    b.toggleAttribute("data-chip", !!says);
     setStyle(b, "--k", clamp((p - 0.035 - n * 0.015) / 0.3).toFixed(3));
   });
   const line = LINE.get(root) ?? [];
@@ -701,9 +740,11 @@ const burst: Frame = (el, p, _age, ctx) => {
       return;
     }
     if (b.style.display) b.style.display = "";
-    b.style.transform = `translate3d(${f.x.toFixed(1)}px, ${(FLOOR + 6).toFixed(1)}px, 0) scale(${Math.max(0.7, f.w / 300).toFixed(3)})`;
+    const bs = Math.max(0.55, Math.min(1.3, f.w / 460));
+    b.style.transform = `translate3d(${f.x.toFixed(1)}px, ${(FLOOR + 6).toFixed(1)}px, 0) scale(${bs.toFixed(3)})`;
+    setStyle(b, "--bs", bs.toFixed(3));
     setStyle(b, "--k", clamp((p - 0.04 - n * 0.02) / 0.28).toFixed(3));
-    setStyle(b, "--chip-y", `${(-f.h * 1.08 / Math.max(0.7, f.w / 300)).toFixed(1)}px`);
+    setStyle(b, "--chip-y", `${((-f.h * 1.02) / bs - (n % 2) * 40).toFixed(1)}px`);
   });
   el.style.setProperty("--chip", clamp((p - 0.08) / 0.12).toFixed(3));
 };

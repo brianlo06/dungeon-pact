@@ -82,19 +82,19 @@ export const greenReckoning: Cinematic = {
       fastMs: 380,
       transition: { kind: "black", ms: 50 },
       camera: {
-        from: { x: 640, y: 470, zoom: 2.3, rotate: -6 },
-        to: { x: 660, y: 490, zoom: 2.55, rotate: -3 },
+        from: { x: 560, y: 320, zoom: 1.5, rotate: -6 },
+        to: { x: 580, y: 350, zoom: 1.72, rotate: -3.5 },
         ease: "out",
       },
       background: "green-undergrowth",
       lighting: { exposure: 0.4, under: [SAP, 0.3], rim: [SAP, 0.55, 1], vignette: 0.7, letterbox: BARS },
       toLighting: { exposure: 0.55, under: [SAP, 0.75], rim: [SAP, 0.85, 1], vignette: 0.6, letterbox: BARS },
-      actors: [{ role: "caster", at: [520, 430], size: 900, clip: "ult:green-kneel", then: "ult:green-kneel", look: "rim", rim: SAP }],
+      actors: [{ role: "caster", at: [500, 430], size: 700, clip: "ult:green-kneel", then: "ult:green-kneel", look: "rim", rim: SAP }],
       vfx: [
         { kind: "green-eyes", at: 0, until: 1, params: { from: 0, to: 0 } },
         { kind: "green-soil", at: 0, until: 1, layer: "front", seed: 41 },
-        { kind: "green-web", at: 0.34, until: 1, layer: "front", seed: 12, params: { mode: "hand", ox: 0.17, oy: 0.01 } },
-        { kind: "motes", at: 0.3, until: 1, x: 690, y: 400, scale: 0.8, color: SAP, layer: "front", seed: 4 },
+        { kind: "green-web", at: 0.34, until: 1, layer: "front", seed: 12, params: { mode: "hand", ox: 0.083, oy: 0.01 } },
+        { kind: "motes", at: 0.3, until: 1, x: 560, y: 390, scale: 0.8, color: SAP, layer: "front", seed: 4 },
         { kind: "green-earth", at: 0.8, until: 1, layer: "screen", seed: 9, params: { dir: "in" } },
       ],
       sound: [
@@ -125,14 +125,14 @@ export const greenReckoning: Cinematic = {
       lighting: { exposure: 0.62, under: [SAP, 0.35], rim: [SAP, 0.7, 1], vignette: 0.5, letterbox: BARS },
       toLighting: { exposure: 0.8, under: [SAP, 0.45], rim: [SAP, 0.9, 1], vignette: 0.42, letterbox: BARS },
       actors: [
-        { role: "allies", at: [150, 430], spread: [150, 0], size: 220, clip: "ult:green-waiting", then: "ult:green-waiting", look: "rim", rim: SAP, z: 2 },
-        { role: "caster", at: [540, 430], size: 240, clip: "ult:green-kneel", then: "ult:green-kneel", look: "rim", rim: SAP, z: 3 },
+        { role: "allies", at: [390, 430], spread: [205, 0], size: 215, clip: "idle", look: "lit", z: 2 },
+        { role: "caster", at: [150, 430], size: 250, clip: "ult:green-kneel", then: "ult:green-kneel", look: "rim", rim: SAP, z: 3 },
       ],
       vfx: [
         { kind: "green-eyes", at: 0, until: 1, params: { from: 0, to: 0 } },
-        { kind: "green-foes", at: 0, until: 1, layer: "back", params: { mode: "web", x0: 860, span: 640, maxH: 300 } },
+        { kind: "green-foes", at: 0, until: 1, layer: "back", params: { mode: "web", x0: 860, x1: 1560, maxH: 300 } },
         { kind: "green-soil", at: 0, until: 1, layer: "front", seed: 41 },
-        { kind: "green-web", at: 0, until: 1, layer: "front", seed: 3, params: { mode: "web", ox: 0.17, oy: 0.01 } },
+        { kind: "green-web", at: 0, until: 1, layer: "front", seed: 3, params: { mode: "web", ox: 0.085, oy: 0.01 } },
         { kind: "green-party", at: 0, until: 1, layer: "front", params: { mode: "web" } },
         { kind: "green-earth", at: 0, until: 0.2, layer: "screen", seed: 9, params: { dir: "out" } },
       ],
@@ -141,8 +141,8 @@ export const greenReckoning: Cinematic = {
         { at: 0.3, sfx: "green-hearts" },
       ],
       text: [
-        { kind: "name", at: 0.3, until: 1, text: "$name", x: 0.06, y: 0.62 },
-        { kind: "epithet", at: 0.4, until: 1, text: "$epithet", x: 0.06, y: 0.71 },
+        { kind: "name", at: 0.3, until: 1, text: "$name", x: 0.06, y: 0.7 },
+        { kind: "epithet", at: 0.4, until: 1, text: "$epithet", x: 0.06, y: 0.79 },
       ],
       markers: [
         { at: 0.3, label: "title" },
@@ -161,8 +161,8 @@ export const greenReckoning: Cinematic = {
       fastMs: 400,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 842, y: 262, zoom: 3.0, rotate: 1.2 },
-        to: { x: 842, y: 258, zoom: 3.12, rotate: 0.6 },
+        from: { x: 766, y: 268, zoom: 3.0, rotate: 1.2 },
+        to: { x: 766, y: 262, zoom: 3.12, rotate: 0.6 },
         ease: "linear",
       },
       background: "green-undergrowth",
@@ -171,7 +171,7 @@ export const greenReckoning: Cinematic = {
       actors: [{ role: "caster", at: [700, 660], size: 1000, clip: "ult:green-hear", then: "ult:green-hear", look: "rim", rim: SAP }],
       vfx: [
         { kind: "green-eyes", at: 0, until: 1, params: { from: 0, to: 1, a: 0.86, b: 0.94 } },
-        { kind: "motes", at: 0, until: 1, x: 840, y: 270, scale: 0.8, color: SAP, layer: "front", seed: 7, params: { still: true } },
+        { kind: "motes", at: 0, until: 1, x: 766, y: 270, scale: 0.8, color: SAP, layer: "front", seed: 7, params: { still: true } },
       ],
       duck: [{ at: 0, level: 0.03, ms: 640 }],
       sound: [
@@ -195,22 +195,22 @@ export const greenReckoning: Cinematic = {
       fastMs: 540,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 800, y: 300, zoom: 1.34, rotate: 4 },
-        to: { x: 800, y: 290, zoom: 1.24, rotate: 1.5 },
+        from: { x: 800, y: 300, zoom: 1.2, rotate: 4 },
+        to: { x: 800, y: 292, zoom: 1.12, rotate: 1.5 },
         ease: "out",
       },
       background: "green-undergrowth",
-      lighting: { exposure: 1, tint: [HOT, 0.28], under: [SAP, 0.9], rim: [SAP, 1, 1], vignette: 0.28, letterbox: BARS },
-      toLighting: { exposure: 0.78, tint: [HOT, 0], under: [SAP, 0.45], rim: [SAP, 0.8, 1], vignette: 0.4, letterbox: BARS },
+      lighting: { exposure: 1, tint: [HOT, 0.12], back: [HOT, 0.75], under: [SAP, 0.9], rim: [SAP, 1, 1], vignette: 0.28, letterbox: BARS },
+      toLighting: { exposure: 0.78, tint: [HOT, 0], back: [SAP, 0.25], under: [SAP, 0.45], rim: [SAP, 0.8, 1], vignette: 0.4, letterbox: BARS },
       actors: [
-        { role: "allies", at: [520, 430], spread: [-160, 0], size: 320, clip: "ult:green-lifted", then: "ult:green-lifted", look: "lit", z: 2 },
-        { role: "caster", at: [770, 430], size: 400, clip: "ult:green-reckon", then: "ult:green-reckon", look: "rim", rim: SAP, z: 3 },
+        { role: "allies", at: [520, 430], spread: [-140, 0], size: 280, clip: "idle", look: "lit", z: 2 },
+        { role: "caster", at: [765, 430], size: 400, clip: "ult:green-reckon", then: "ult:green-reckon", look: "rim", rim: SAP, z: 3 },
       ],
       vfx: [
         { kind: "green-eyes", at: 0, until: 1, params: { from: 1, to: 1 } },
-        { kind: "green-foes", at: 0, until: 1, layer: "back", params: { mode: "rot", x0: 1010, span: 460, maxH: 460 } },
+        { kind: "green-foes", at: 0, until: 1, layer: "back", params: { mode: "rot", x0: 1000, x1: 1510, maxH: 470 } },
         { kind: "green-soil", at: 0, until: 1, layer: "front", seed: 41 },
-        { kind: "green-web", at: 0, until: 1, layer: "front", seed: 3, params: { mode: "surge", ox: -0.02, oy: 0.01 } },
+        { kind: "green-web", at: 0, until: 1, layer: "front", seed: 3, params: { mode: "surge", ox: -0.02, oy: 0.01, depth: 110 } },
         { kind: "green-burst", at: 0, until: 1, layer: "front" },
         { kind: "green-party", at: 0, until: 1, layer: "front", params: { mode: "rise" } },
         { kind: "motes", at: 0.05, until: 1, x: 760, y: 360, scale: 2.2, color: SAP, layer: "front", seed: 11 },
@@ -218,7 +218,6 @@ export const greenReckoning: Cinematic = {
       screen: [
         { kind: "two-tone", at: 0.03, ms: 70 },
         { kind: "flash", at: 0.12, ms: 90, amount: 0.5, color: HOT },
-        { kind: "radial", at: 0.05, ms: 220, amount: 0.5 },
       ],
       stop: [{ at: 0.04, ms: 150 }],
       shake: [
