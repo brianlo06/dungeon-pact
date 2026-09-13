@@ -727,7 +727,12 @@ export class Stagehand {
  * it along its path. New visuals are one entry here and one CSS rule.
  */
 export const PROJECTILE_ART: Record<string, string> = {
-  arrow: `<svg viewBox="-30 -6 40 12" width="40" height="12"><path d="M-26 0 H6" stroke="#171420" stroke-width="3.2" stroke-linecap="round"/><path d="M-26 0 H6" stroke="#c9a276" stroke-width="1.5" stroke-linecap="round"/><path d="M4 -3 L10 0 L4 3 Z" fill="#d4d1dc" stroke="#171420" stroke-width="1.2" stroke-linejoin="round"/><path d="M-29 -3 L-23 0 L-29 3 L-26 0 Z" fill="#c4533f" stroke="#171420" stroke-width="0.9"/></svg>`,
+  // Drawn bolder than the arrow in the Ranger's hand: in flight it is seen
+  // for a fifth of a second at stage scale, so it carries a pale halo that
+  // reads on the dark floor (no filter), a thick shaft, a broad head and
+  // bright fletching. The head's tip sits at 75% of the width, where the
+  // layer puts the projectile's position.
+  arrow: `<svg viewBox="-36 -8 48 16" width="48" height="16"><path d="M-31 0 H9" stroke="#fff4dc" stroke-opacity=".28" stroke-width="8" stroke-linecap="round"/><path d="M-30 0 H6" stroke="#171420" stroke-width="4.2" stroke-linecap="round"/><path d="M-30 0 H6" stroke="#e8c48c" stroke-width="2.2" stroke-linecap="round"/><path d="M2 -4.6 L11.5 0 L2 4.6 L4 0 Z" fill="#e6e3ee" stroke="#171420" stroke-width="1.4" stroke-linejoin="round"/><path d="M-35 -5.5 L-25 0 L-35 5.5 L-31 0 Z" fill="#e0573f" stroke="#171420" stroke-width="1.1" stroke-linejoin="round"/></svg>`,
   bolt: `<i></i>`,
   orb: `<i></i>`,
   mote: `<i></i>`,

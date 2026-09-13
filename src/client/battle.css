@@ -1482,7 +1482,7 @@
   position: absolute;
 }
 .projectile-arrow > svg {
-  width: calc(clamp(58px, 21cqh, 150px) * 0.36);
+  width: calc(clamp(58px, 21cqh, 150px) * 0.42);
   height: auto;
   left: 0;
   top: 0;
@@ -1495,12 +1495,13 @@
   right: 0;
   top: -1px;
   width: calc(clamp(58px, 21cqh, 150px) * 0.5);
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255, 238, 205, 0.45));
+  height: 3px;
+  margin-top: -0.5px;
+  background: linear-gradient(90deg, transparent, rgba(255, 238, 205, 0.6));
   transform-origin: 100% 50%;
 }
 .projectile-arrow[data-trail]::before {
-  right: calc(clamp(58px, 21cqh, 150px) * 0.27);
+  right: calc(clamp(58px, 21cqh, 150px) * 0.32);
 }
 .projectile[data-arrived]::before {
   display: none;
