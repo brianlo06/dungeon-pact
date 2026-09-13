@@ -145,7 +145,7 @@ export const falseFooting: Cinematic = {
       ],
       text: [
         { kind: "voice", at: 0.2, until: 1, text: "$voice.activation" },
-        { kind: "name", at: 0.34, until: 1, text: "$name", x: 0.06, y: 0.2, mode: "fast" },
+        { kind: "name", at: 0.34, until: 1, text: "$name", x: 0.6, y: 0.18, mode: "fast" },
       ],
       markers: [{ at: 0.3, label: "touch" }],
     },

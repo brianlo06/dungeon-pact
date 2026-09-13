@@ -54,16 +54,25 @@ So it was also weighed head to head: every Ranger playing one Ultimate's
 effects whatever its path, every Ranger party in every 2nd composition, all
 Ultimates on, 10 seeds (820 runs each):
 
-| Every Ranger plays | 2p | 3p | 4p | all |
-| --- | ---: | ---: | ---: | ---: |
-| The Hundredth Mark | 93% | 93% | 93% | 93% |
-| first cut (breaks the target's windup always) | 95% | 95% | 95% | 95–96% |
-| **False Footing** (windup broken only on Marked quarry) | **93%** | **94%** | **95%** | **94%** |
+| Every Ranger plays | seeds | 2p | 3p | 4p | all |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| The Hundredth Mark | 10 | 93% | 93% | 93% | 93% |
+| first cut: every target's windup broken, 16, Weak 2 | 4 | 94% | 97% | 96% | 96% |
+| first cut, 10 instead of 16 | 10 | 90% | 96% | 96% | 95% |
+| first cut, target Weak 1 round | 10 | 95% | 95% | 95% | 95% |
+| first cut, no interrupt at all | 10 | 95% | 94% | 94% | 94% |
+| **False Footing** (windup broken only on Marked quarry) | 10 | **93%** | **94%** | **95%** | **94%** |
 
-The first cut broke every target's windup outright and sat two to three
-points over the base; removing the unconditional interrupt was worth about
-that, and lower damage or a shorter Weak on the target moved nothing
-measurable. Tests: `tests/ultimates-false-footing.test.ts`.
+The first cut sat two to three points over the base. Damage and the length
+of the target's Weak moved nothing measurable; the unconditional interrupt
+was worth about two points, so the trip was kept for quarry the party has
+already tracked, which is also the better team play. False Footing lands a
+point over the Hundredth Mark, inside the noise of 820 runs. Ranger uses per
+run in the head to head: 3.97 with the base, 4.17 with False Footing (it
+charges a little faster: Weak on every enemy is Setup, which the Ranger earns
+at ×1.5).
+
+Tests: `tests/ultimates-false-footing.test.ts`.
 
 ## Space, palette, shape
 
@@ -152,3 +161,86 @@ Nothing out there bites."
   under a larger burst, rather than flipped.
 - **Party size** does not change the film: the cast is the Ranger and every
   enemy (the sliver). The allies are not in it.
+
+## Notes from the lab
+
+- Every camera and effect was placed from probed positions
+  (`scripts/probe-ultimate.ts`): the drawing hand at size 1300 in the read,
+  the eyes (world ~(747, 599)) and mouth (~(757, 660)) at size 1000 in the
+  face, and the hauling hand in the impact (behind the kid, ground offset
+  (−0.54, 0.29) of its drawn height), which is where the cord is tied off.
+- **The reading hand is drawn in `Ranger.tsx`**, inside the `draw` part: a
+  fingerless glove with two fingers out, rendered only in an Ultimate's
+  close-up copy (`CloseUpContext`) and shown only where a film sets
+  `--ff-reach` (this film's `read` shot, by a CSS rule on
+  `[data-cinematic][data-shot]`). The mitten circle fades out by the same
+  variable. A round's Ranger and every other film are unchanged. The first
+  read shot, without it, was a brown disc on a blue blob.
+- In the read the drawing arm is posed a little long (`scale` 1.25, carried
+  forward 0.27) so the hand reaches past the knee onto the print; its
+  shoulder is out of frame.
+- **The kneel is built from parts, not the root**: the legs fold about the
+  boots (scale/squash) and everything above them comes down by 0.13, so the
+  boots stay on the ground in every shot.
+- **The trail is placed from the cast.** `ff-trail` draws room for six
+  trails and its frame function puts one on each enemy the stage really
+  placed (`targets-i`), sizes the prints from each figure's drawn height,
+  hides the rest, and runs each cord back to the kid's hand. The prints on the
+  trail and the board are drawn light (lip, hollow, rim), which took the
+  film's peak from 2363 to 1957 nodes.
+- **The snare, sprung, was first a noose cinched round the ground point**,
+  which read as a halo floating between a hound's legs. It is now
+  `ff-hobble`: three turns of cord across the lower quarter of the figure,
+  sized from its drawn height, knotted where the line comes in, which reads
+  on a hound, the Bulwark and the Collector alike.
+- **The burst was first a white lotus** (symmetric petals and a centre
+  ellipse). It is now uneven clumps and torn-loose lumps, boiling between
+  three drawings, starting at 85% of its size so it is already there on the
+  held frame, and smaller so the figure still reads through it.
+- **The impact flash was removed.** A flash accent is a screen-blended solid
+  at full strength whatever its `amount`, so a 70ms flash after the stop was
+  a blank pale frame straight after the result. The two-tone frame (40ms) is
+  the accent and ends before the stop, so the held frame is in colour.
+- **The powder wipe** (`ff-spray`) was first a flat sheet with a straight
+  edge that read as a UI panel. Its edge is now a column of overlapping soft
+  clumps with grains flung ahead, entering from the left over the read and
+  leaving off the right of the high wide (or the face, in FAST).
+- The drift in front of the face and the effects in the quiet are not dimmed
+  by the shot's exposure (only the background is), so they are drawn in the
+  darker values of the shot they are in.
+- Sounds were rendered offline (`OfflineAudioContext`, peak and loudest-300ms
+  RMS): `ff-impact` 1.19 / 0.246 against the Hundredth Mark's impact 1.24 /
+  0.251 and Mourning Water's 1.33 / 0.293; the motif 0.25 / 0.052 against
+  0.19 / 0.051 and 0.19 / 0.078 (first cut 0.42 / 0.077, its low thud
+  lowered); the signature `ff-rip` 0.27 / 0.045.
+- Root keys: `ult:ff-kneel` (battlefield: x 0.02, y 0.01, leans 7°),
+  `ult:ff-watch` (the high wide: a breathing rock of 1.4–2°),
+  `ult:ff-haul` (the impact wide: thrown back x −0.085, 16°) and
+  `ult:ff-coil` (battlefield, settling back from the haul). The close-ups
+  `ult:ff-touch` and `ult:ff-know` keep a still root and their cues set
+  `root: false`. No whole-body motion is built on `.cine-look`.
+- Profile (1920×1080, real GPU, dev build, shared machine under load): film
+  p50 16.7ms / p95 33.4ms, 10 frames over 34ms; the round after it p50 16.7ms
+  / p95 33.4ms, 9 over 34ms. Peak 1957 nodes (1825 SVG), 3 live effects, 0
+  filtered elements.
+
+## What the engine could not do, and what was built instead
+
+- **The rest of the line is not in the cast.** Weak is a status and logs no
+  beat, so every other enemy takes a 0-base, non-precision sliver (the
+  Pathfinder's power less guard, at least 1) to be in the film. The engine
+  would need an Ultimate's status effects to count as reach.
+- **One reveal covers every target**, and a row's reactions land together:
+  the impact shows the one target, and every other enemy's snare lands in
+  the return, staggered by the anchor's own `stagger` (90ms).
+- **The occlusion object is always a cape**: the cut from the print to the
+  field is an in-folder screen effect (`ff-spray`).
+- **A result on the frame.** Mark, Weak and the interrupt leave the board's
+  status chips as their only record; the film draws them itself (the
+  hobble, the double loop and amber tag on the board's target). Presentation
+  copies do not carry statuses from before the cast, so the film cannot show
+  that a target was already Marked (and so tripped, EXPLOIT): the damage
+  number and the board's INTERRUPTED say it.
+- **A clip plays at one rate**: the quiet's walk is the enemy's own
+  `approach` loop at its own speed while the actor cue slides it forward;
+  the camera, not the walk, is held.
