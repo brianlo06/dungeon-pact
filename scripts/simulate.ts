@@ -25,6 +25,12 @@ export interface RunResult {
   invalidReasons: string[];
   /** Depth reached when the run ended; the boss sits at depth 6. */
   depth: number;
+  /**
+   * Where a lost run ended, as `floor:chamber`, e.g. `2:boss`. Null for a win.
+   * The handoff has asked for this for a while: every attempt to close the duo
+   * gap was a guess about where duos die, and none of the guesses measured it.
+   */
+  lostAt: string | null;
   revives: number;
   campSpend: number;
   /** Gold spent on gear. The exchange is a shop now; the name outlived it. */
@@ -140,7 +146,7 @@ export function run(
       auctionSpend += s.spent - auctionEntry;
       auctionEntry = null;
     }
-    if (["PACT", "MAP", "EVENT", "CAMP"].includes(s.phase)) {
+    if (["PACT", "MAP", "EVENT", "CAMP", "TOLL"].includes(s.phase)) {
       const p = s.players.find((p) => !s.votes[p.id])!;
       const before = s.gold;
       const wasCamp = s.phase === "CAMP";
@@ -175,6 +181,9 @@ export function run(
     } else if (s.phase === "UPGRADE") {
       const p = s.players.find((p) => !s.votes[p.id])!;
       send(p.id, { type: "upgrade", choice: policy.upgrade(s, p) });
+    } else if (s.phase === "SHRINE") {
+      const p = s.players.find((p) => !s.shrine!.answered.includes(p.id))!;
+      send(p.id, { type: "shrine", offering: policy.shrine(s, p) });
     } else if (s.phase === "SHOP") {
       const shop = s.shop!;
       if (shop.proposal) {
@@ -229,6 +238,10 @@ export function run(
     invalid,
     invalidReasons,
     depth: s.map.find((n) => n.id === s.currentNode)?.depth ?? 0,
+    lostAt:
+      s.outcome === "victory"
+        ? null
+        : `${s.floor ?? 1}:${s.map.find((n) => n.id === s.currentNode)?.type ?? "?"}`,
     revives: s.players.reduce((n, p) => n + p.revives, 0),
     campSpend,
     auctionSpend,
@@ -262,6 +275,8 @@ export interface Summary {
   averageRevives: number;
   averageDefeatDepth: number | null;
   invalidPlans: number;
+  /** Where each lost run ended, as `floor:chamber`. */
+  lossesAt: string[];
 }
 
 export function summarise(
@@ -279,12 +294,14 @@ export function summarise(
     invalid = 0,
     losses = 0,
     lossDepth = 0;
+  const lossesAt: string[] = [];
   for (let i = 0; i < seeds; i++) {
     const r = run(`${prefix}-${i}`, party, policyName);
     if (r.state.outcome === "victory") wins++;
     else {
       losses++;
       lossDepth += r.depth;
+      if (r.lostAt) lossesAt.push(r.lostAt);
     }
     gold += r.state.gold;
     auction += r.auctionSpend;
@@ -305,6 +322,7 @@ export function summarise(
     averageRevives: Number((revives / seeds).toFixed(2)),
     averageDefeatDepth: losses ? Number((lossDepth / losses).toFixed(1)) : null,
     invalidPlans: invalid,
+    lossesAt,
   };
 }
 
@@ -403,6 +421,21 @@ if (process.argv[1]?.endsWith("simulate.ts")) {
         );
       };
       console.log(`\n${rows.length} compositions`);
+      // Where each party size loses, so a gap can be traced to a chamber
+      // rather than argued about.
+      for (const n of [2, 3, 4]) {
+        const losses = rows
+          .filter((_, i) => parties[i].length === n)
+          .flatMap((r) => r.lossesAt);
+        const tally = new Map<string, number>();
+        for (const at of losses) tally.set(at, (tally.get(at) ?? 0) + 1);
+        const top = [...tally.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 6)
+          .map(([at, k]) => `${at} ${Math.round((k / losses.length) * 100)}%`)
+          .join("  ");
+        console.log(`  ${n}p losses (${losses.length}): ${top}`);
+      }
       for (const n of [2, 3, 4]) bucket((p) => p.length === n, `${n} players`);
       console.log("");
       for (const h of heroes) {

@@ -5,7 +5,7 @@ import { items } from "../content/items";
 import { events } from "../content/events";
 import { services } from "../content/services";
 import { hashSeed, pick } from "./rng";
-import { generateMap, availableNodes, mentorTier } from "./map";
+import { generateMap, availableNodes, nodeMentorTier, FLOORS } from "./map";
 import { log, spend, gain, applyStatus } from "./effects";
 import {
   enterCombat,
@@ -19,7 +19,19 @@ import { upgradeOffer } from "../content/upgrades";
 import { drillFor, mentors, pathFor, resourceCap } from "../content/evolutions";
 // The auction remains only for rooms that entered one before the shop replaced it.
 import { nextLot, nominate, purchase } from "./auction";
-import { enterShop, proposePurchase, approvePurchase } from "./shop";
+import {
+  enterShop,
+  enterForge,
+  proposePurchase,
+  approvePurchase,
+} from "./shop";
+import {
+  answerShrine,
+  enterHazard,
+  enterShrine,
+  enterToll,
+  resolveToll,
+} from "./chambers";
 import {
   VITALITY_MAX_HP,
   WEALTH_MAX_HP,
@@ -28,6 +40,7 @@ import {
 export function createRun(room: string, seed: string): RunState {
   return {
     expeditionVersion: 1,
+    floor: 1,
     reachVersion: 1,
     encounterVersion: 2,
     combatVersion: 2,
@@ -136,6 +149,38 @@ function teachableClass(s: RunState, mentorId: string) {
   return pool.length ? pick(s, pool).heroId : null;
 }
 
+/**
+ * Down to the next floor. The route is rebuilt for it and the party stands at
+ * its entrance, with nothing visited. Health, gear, upgrades, paths and the
+ * treasury all come with them — a floor is further into one run, not a new
+ * one — so the rest before each boss is what a party recovers with.
+ */
+/** What the stairs between floors restore: a raised hero's share, and everyone's. */
+export const DESCENT_RAISE = 0.5;
+export const DESCENT_HEAL = 0.3;
+function descend(s: RunState) {
+  s.floor = (s.floor ?? 1) + 1;
+  s.map = generateMap(s);
+  s.currentNode = null;
+  s.votes = {};
+  // The stairs down are a breather, not a camp. Fallen heroes get up and
+  // everyone recovers some ground, because a party that only just beat a boss
+  // would otherwise start the next floor half-dead. It is deliberately partial:
+  // a full heal here made three- and four-hero parties *more* likely to win two
+  // floors than they had been to win one, and barely helped duos at all.
+  for (const p of s.players) {
+    if (p.fallen || p.hp <= 0) p.hp = Math.round(p.maxHp * DESCENT_RAISE);
+    else p.hp = Math.min(p.maxHp, p.hp + Math.round(p.maxHp * DESCENT_HEAL));
+    p.fallen = false;
+    p.downedRounds = 0;
+    p.statuses = [];
+  }
+  log(
+    s,
+    `The party descends to floor ${s.floor} of ${FLOORS}, and catches its breath on the stairs.`,
+  );
+}
+
 function finishVote(s: RunState, result: string) {
   s.votes = {};
   if (s.phase === "PACT") {
@@ -164,17 +209,26 @@ function finishVote(s: RunState, result: string) {
     log(s, `Entered ${n.name}.`);
     if (n.type === "combat" || n.type === "elite" || n.type === "boss")
       enterCombat(s, n.type === "boss", n.type === "elite");
+    else if (n.type === "hazard") enterHazard(s);
+    else if (n.type === "toll") enterToll(s);
+    else if (n.type === "shrine") enterShrine(s);
+    else if (n.type === "forge") enterForge(s);
     else if (n.type === "auction" || n.type === "mystery") enterShop(s);
     else if (n.type === "event") {
       s.eventId = pick(s, events).id;
       s.phase = "EVENT";
     } else if (n.type === "mentor") {
-      const teaching = mentors[mentorTier(n.depth) - 1];
+      const teaching = mentors[nodeMentorTier(s, n) - 1];
       s.mentorId = teaching.id;
       s.mentorClass = teachableClass(s, teaching.id);
       s.trained = [];
       s.phase = "MENTOR";
-    } else s.phase = "CAMP";
+    } else if (n.type === "camp") s.phase = "CAMP";
+    else throw Error(`No chamber is built for ${n.type}`);
+    return;
+  }
+  if (s.phase === "TOLL") {
+    resolveToll(s, result as "pay" | "fight");
     return;
   }
   if (s.phase === "EVENT") {
@@ -263,7 +317,7 @@ export function reduce(
       log(s, "One treasury. One fate. Choose your starting pact.");
       break;
     case "vote": {
-      requirePhase("PACT", "MAP", "EVENT", "CAMP");
+      requirePhase("PACT", "MAP", "EVENT", "CAMP", "TOLL");
       if (s.serviceVote) throw Error("Finish the provision vote first");
       if (s.votes[p.id]) throw Error("Your vote is already locked");
       const choices =
@@ -273,18 +327,24 @@ export function reduce(
             ? availableNodes(s).map((n) => n.id)
             : s.phase === "CAMP"
               ? ["rest", "restore", "train"]
-              : events
-                  .find((e) => e.id === s.eventId)!
-                  .choices.map((c) => c.id);
+              : s.phase === "TOLL"
+                ? ["pay", "fight"]
+                : events
+                    .find((e) => e.id === s.eventId)!
+                    .choices.map((c) => c.id);
       if (!choices.includes(intent.choice)) throw Error("Invalid choice");
       const cost =
         s.phase === "CAMP"
           ? (campCosts[intent.choice] ?? 0)
-          : s.phase === "EVENT"
-            ? events
-                .find((e) => e.id === s.eventId)!
-                .choices.find((c) => c.id === intent.choice)!.cost
-            : 0;
+          : s.phase === "TOLL"
+            ? intent.choice === "pay"
+              ? (s.toll ?? 0)
+              : 0
+            : s.phase === "EVENT"
+              ? events
+                  .find((e) => e.id === s.eventId)!
+                  .choices.find((c) => c.id === intent.choice)!.cost
+              : 0;
       if (s.gold < cost) throw Error("The treasury cannot cover that choice");
       s.votes[p.id] = intent.choice;
       const result = voteResult(s);
@@ -527,8 +587,21 @@ export function reduce(
         // An exchange runs several lots; only the last one returns to the map.
         if (nextLot(s)) break;
       }
+      // Leaving the reward for a floor's boss is the way down: a new route, a
+      // new floor, and the party standing at its entrance.
+      if (
+        s.phase === "REWARD" &&
+        s.floor !== undefined &&
+        s.floor < FLOORS &&
+        s.map.find((n) => n.id === s.currentNode)?.type === "boss"
+      )
+        descend(s);
       s.phase = "MAP";
       s.auction = null;
+      break;
+    case "shrine":
+      requirePhase("SHRINE");
+      answerShrine(s, p, intent.offering);
       break;
     case "shopOffer":
       requirePhase("SHOP");

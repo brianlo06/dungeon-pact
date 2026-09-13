@@ -203,6 +203,44 @@ function hurt(
   if (actual > 0 && isPlayer(target))
     trigger(s, target, source, "onHurt", depth + 1);
 }
+/**
+ * A reforged piece's effects, half again as strong. Every quantity a player
+ * would feel scales — damage, healing, barrier, stacks — and the rules a piece
+ * follows do not: it still fires on the same trigger, at the same target, and
+ * never learns to do something it could not do before.
+ */
+export const REFORGE = 1.5;
+export function reforge(list: Effect[]): Effect[] {
+  const up = (n: number) => Math.round(n * REFORGE);
+  return list.map((effect): Effect => {
+    switch (effect.kind) {
+      case "damage":
+        return { ...effect, amount: up(effect.amount) };
+      case "heal":
+        return { ...effect, amount: up(effect.amount) };
+      case "protect":
+        return { ...effect, barrier: up(effect.barrier) };
+      case "status":
+        return {
+          ...effect,
+          stacks: Math.max(effect.stacks + 1, up(effect.stacks)),
+        };
+      case "resource":
+        return { ...effect, amount: effect.amount + 1 };
+      // A piece that pays out pays more; a price a piece charges is not raised
+      // by improving it.
+      case "gold":
+        return effect.amount > 0
+          ? { ...effect, amount: up(effect.amount) }
+          : effect;
+      case "conditional":
+        return { ...effect, effects: reforge(effect.effects) };
+      default:
+        return effect;
+    }
+  });
+}
+
 export function trigger(
   s: RunState,
   actor: Player,
@@ -223,7 +261,7 @@ export function trigger(
         s,
         actor,
         item.target === "self" ? actor : target,
-        item.effects,
+        actor.reforged?.includes(id) ? reforge(item.effects) : item.effects,
         depth + 1,
       );
     }
@@ -523,6 +561,15 @@ export function effects(
     }
   }
 }
+/**
+ * Damage the room deals rather than anyone in it: a hazard chamber's vents.
+ * Sourced to the victim, as a burn is, so barrier still absorbs it and nothing
+ * triggers off it as though an enemy had struck.
+ */
+export function scald(s: RunState, u: Unit, amount: number) {
+  hurt(s, u, u, amount, 5);
+}
+
 export function tickStatuses(s: RunState, u: Unit) {
   if (u.hp > 0) {
     for (const st of [...u.statuses]) {

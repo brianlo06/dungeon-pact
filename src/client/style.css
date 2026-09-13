@@ -621,9 +621,9 @@ body:has(.app-shell[data-combat]) {
    party cannot reach recedes; the one place they are standing is marked. */
 .map-route {
   position: relative;
-  max-width: 900px;
+  max-width: 940px;
   margin: auto;
-  padding: 4px 10px;
+  padding: 10px 10px 14px 34px;
   background:
     repeating-linear-gradient(
       180deg,
@@ -636,43 +636,58 @@ body:has(.app-shell[data-combat]) {
     inset 0 3px #4b3c4d,
     6px 6px #17131f;
 }
+/*
+ * Links are drawn from measured card edges (see `useRouteGeometry`), so this
+ * layer is in pixel space and must not be scaled or stretched to fit.
+ */
 .map-links {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
   pointer-events: none;
+  overflow: visible;
 }
-.map-links line {
-  stroke: #55445a;
-  stroke-width: 3;
-  stroke-dasharray: 3 5;
+.map-links path {
+  fill: none;
   stroke-linecap: round;
 }
-.map-links line.walked {
-  stroke: #6d5668;
-  stroke-dasharray: none;
+.map-links path.far {
+  stroke: #4a3b50;
+  stroke-width: 2;
+  stroke-dasharray: 2 6;
 }
-.map-links line.live {
+.map-links path.walked {
+  stroke: #6d5668;
+  stroke-width: 3;
+}
+.map-links path.live {
   stroke: var(--gold);
   stroke-width: 3;
-  stroke-dasharray: 4 4;
+  filter: drop-shadow(0 0 3px rgba(238, 184, 96, 0.45));
 }
+/*
+ * The gap is the drawing space for the links. Rows packed tight leave a link
+ * two pixels of run to say which of two chambers it joins, which is how the
+ * old route ended up illegible.
+ */
 .map-grid {
   position: relative;
   display: grid;
-  gap: 2px;
+  gap: 28px;
 }
+/*
+ * Every row is the same height whatever is in it, so the descent reads as a
+ * ladder and two chambers at the same depth cannot sit at different heights.
+ */
 .map-row {
   display: flex;
   justify-content: space-around;
   align-items: center;
   position: relative;
-  min-height: 54px;
+  min-height: 72px;
 }
 .map-depth {
   position: absolute;
-  left: 2px;
+  left: -26px;
   top: 50%;
   transform: translateY(-50%);
   font-family: var(--pixel);
@@ -681,42 +696,59 @@ body:has(.app-shell[data-combat]) {
 }
 .map-node {
   position: relative;
-  width: 152px;
-  padding: 4px 8px 5px;
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  background: #3a2f3d;
+  z-index: 1;
+  width: 188px;
+  padding: 7px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  background: #342a38;
   border: 2px solid #17131f;
   box-shadow: 0 3px #17131f;
-  opacity: 0.5;
-  filter: saturate(0.5);
+  opacity: 0.45;
+  filter: saturate(0.4);
+}
+.map-what {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
 }
 .map-glyph {
+  flex: none;
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   color: #c6a989;
   background: #2b2331;
   border: 2px solid #17131f;
 }
 .map-glyph .pixel-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 .map-node small {
   font-family: var(--pixel);
-  font-size: 7px;
+  font-size: 8px;
   letter-spacing: 1px;
   line-height: 1.4;
-  color: #a48f9c;
+  color: #b39db0;
 }
+/* Chamber names are written to be read, so they wrap rather than truncate. */
 .map-node strong {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
-  text-align: center;
-  line-height: 1.25;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.map-node em {
+  font-size: 10px;
+  font-style: normal;
+  color: #8d7f92;
 }
 /* Reachable now: lit, raised, and the only thing that responds. */
 .map-node.open {
@@ -724,6 +756,9 @@ body:has(.app-shell[data-combat]) {
   filter: none;
   background: #4a3a4b;
   border-color: var(--gold);
+  box-shadow:
+    0 3px #17131f,
+    0 0 0 1px rgba(238, 184, 96, 0.35);
 }
 .map-node.open .map-glyph {
   color: var(--gold);
@@ -753,13 +788,13 @@ body:has(.app-shell[data-combat]) {
 }
 /* The vault at the end of the route should look like the end of the route. */
 .map-node.type-boss {
-  width: 200px;
+  width: 232px;
   border-color: var(--rust);
 }
 .map-node.type-boss .map-glyph {
   color: var(--rust);
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
 }
 .map-votes {
   position: absolute;
@@ -1708,4 +1743,11 @@ body:has(.app-shell[data-combat]) {
   .shop-preview .sprite {
     height: 160px;
   }
+}
+/* The workbench groups a party's gear by who carries it. */
+.forge-owner {
+  margin-top: 18px;
+}
+.forge-owner > h2 {
+  margin: 0 0 8px;
 }

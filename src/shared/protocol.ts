@@ -28,6 +28,10 @@ export const intentSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("continue") }),
   z.object({ type: z.literal("shopOffer"), item: id, recipient: id }),
   z.object({ type: z.literal("shopApprove"), approve: z.boolean() }),
+  z.object({
+    type: z.literal("shrine"),
+    offering: z.enum(["blood", "gold", "leave"]),
+  }),
   z.object({ type: z.literal("interest"), interested: z.boolean() }),
   z.object({ type: z.literal("bid"), stay: z.boolean() }),
   z.object({ type: z.literal("approve"), approve: z.boolean() }),

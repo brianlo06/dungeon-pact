@@ -21,6 +21,8 @@ import {
   Upgrade,
   Reward,
   Results,
+  TollGate,
+  Shrine,
 } from "./components/RunScreens";
 import { items } from "../content/items";
 export default function App() {
@@ -262,6 +264,8 @@ export default function App() {
             {s.phase === "SHOP" && <Shop {...props!} />}
             {s.phase === "EVENT" && <EventRoom {...props!} />}{" "}
             {s.phase === "CAMP" && <Camp {...props!} />}{" "}
+            {s.phase === "TOLL" && <TollGate {...props!} />}
+            {s.phase === "SHRINE" && <Shrine {...props!} />}
             {s.phase === "MENTOR" && <Mentor {...props!} />}{" "}
             {s.phase === "UPGRADE" && <Upgrade {...props!} />}{" "}
             {s.phase === "REWARD" && <Reward {...props!} />}{" "}

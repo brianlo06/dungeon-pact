@@ -196,3 +196,119 @@ test("a training ground offers its class a path and everyone else a drill", asyn
     before - fee,
   );
 });
+
+/**
+ * Health and the class resource read at a glance on the battlefield. Health
+ * used to be a bar with its numbers in a tooltip, and the resource seven
+ * pixels of text under the hero's feet.
+ */
+test("a hero's plate shows health in figures and the resource as pips", async ({
+  page,
+}) => {
+  await page.goto("/dev/bosses.html?encounter=furnace-watch&party=4");
+  const plate = page.locator(".combatant[data-you] .combatant-plate");
+  await expect(plate.locator(".combatant-bar u")).toHaveText(/^\d+\/\d+$/);
+  const pips = plate.locator(".combatant-resource i");
+  expect(await pips.count()).toBeGreaterThanOrEqual(6);
+  await expect(plate.locator(".combatant-resource em")).not.toBeEmpty();
+  // Enemies carry the figures too; only heroes have a resource.
+  const enemy = page
+    .locator(".combatant[data-side='enemy'] .combatant-plate")
+    .first();
+  await expect(enemy.locator(".combatant-bar u")).toHaveText(/^\d+\/\d+$/);
+  await expect(enemy.locator(".combatant-resource")).toHaveCount(0);
+});
+
+/** Every route link leaves a card's bottom edge and arrives at a card's top. */
+test("the route's links join the chambers they connect", async ({ page }) => {
+  await page.goto("/dev/expedition.html?map=1");
+  await expect(page.locator(".map-links path").first()).toBeAttached();
+  const misses = await page.evaluate(() => {
+    const route = document.querySelector(".map-route")!.getBoundingClientRect();
+    const cards = [
+      ...document.querySelectorAll<HTMLElement>("[data-node]"),
+    ].map((el) => el.getBoundingClientRect());
+    const near = (x: number, y: number) =>
+      cards.some(
+        (c) => x >= c.left - 2 && x <= c.right + 2 && Math.abs(y - c.top) < 3,
+      ) ||
+      cards.some(
+        (c) =>
+          x >= c.left - 2 && x <= c.right + 2 && Math.abs(y - c.bottom) < 3,
+      );
+    return [...document.querySelectorAll<SVGPathElement>(".map-links path")]
+      .map((p) => {
+        const len = p.getTotalLength();
+        const a = p.getPointAtLength(0);
+        const b = p.getPointAtLength(len);
+        return {
+          start: near(route.left + a.x, route.top + a.y),
+          end: near(route.left + b.x, route.top + b.y),
+        };
+      })
+      .filter((l) => !l.start || !l.end);
+  });
+  expect(misses).toEqual([]);
+  // The way on from where the party stands is drawn live.
+  await expect(page.locator(".map-links path.live")).not.toHaveCount(0);
+});
+
+test("a toll gate offers to pay or to fight, and paying costs the price", async ({
+  page,
+}) => {
+  await page.goto("/dev/expedition.html?toll=1");
+  const treasury = page.getByRole("status").first();
+  const gold = Number((await treasury.innerText()).replace(/\D/g, ""));
+  const pay = page.getByRole("button", { name: /Pay \d+ gold/ });
+  const price = Number(
+    ((await pay.innerText()).match(/Pay (\d+) gold/) ?? [])[1],
+  );
+  await expect(
+    page.getByRole("button", { name: /Refuse and fight/ }),
+  ).toBeVisible();
+  await pay.click();
+  await page.getByLabel("Acting player").selectOption("b");
+  await page.getByRole("button", { name: /Pay \d+ gold/ }).click();
+  await expect(treasury).toHaveText(`Treasury: ${gold - price}`);
+});
+
+test("a shrine answers one hero and then refuses the rest", async ({
+  page,
+}) => {
+  await page.goto("/dev/expedition.html?shrine=1");
+  await page.getByRole("button", { name: /Offer your blood/ }).click();
+  // The altar has answered Ada, so it has closed for everyone.
+  await expect(
+    page.getByRole("heading", { name: /altar will answer/ }),
+  ).toHaveCount(0);
+});
+
+test("a workbench offers each hero's own gear for reforging", async ({
+  page,
+}) => {
+  await page.goto("/dev/expedition.html?forge=1");
+  await expect(
+    page.getByRole("heading", { name: /Make what you carry better/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Reforge for Ada" }),
+  ).toHaveCount(1);
+  await expect(
+    page.getByRole("button", { name: "Reforge for Bea" }),
+  ).toHaveCount(2);
+  await page.getByRole("button", { name: "Reforge for Ada" }).click();
+  await expect(
+    page.getByRole("region", { name: "Purchase approval" }),
+  ).toContainText("Reforge Stormglass Needle");
+});
+
+test("a hazard chamber states its rule on the strip", async ({ page }) => {
+  await page.goto(
+    "/dev/bosses.html?encounter=furnace-watch&party=4&hazard=vents",
+  );
+  await expect(page.locator(".strip-hazard")).toContainText("front row");
+  await page.goto(
+    "/dev/bosses.html?encounter=furnace-watch&party=4&hazard=collapse",
+  );
+  await expect(page.locator(".strip-hazard")).toContainText("catwalk");
+});

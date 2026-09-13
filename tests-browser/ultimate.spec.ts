@@ -37,13 +37,15 @@ test("the meter fills, the slip appears, and the Ultimate is queued beside the p
   page,
 }) => {
   await open(page, { charge: 40 });
-  await expect(page.locator(".ult-meter")).toBeVisible();
+  const mine = page.locator('.combatant[data-you] .combatant-charge');
+  await expect(mine).toBeVisible();
+  await expect(mine).not.toHaveAttribute("data-ready", "");
   await expect(page.locator(".ult-slip")).toHaveCount(0);
 
   await open(page, { charge: 100 });
   const slip = page.locator("button.ult-slip");
   await expect(slip).toBeVisible();
-  await expect(page.locator(".ult-meter[data-ready]")).toBeVisible();
+  await expect(page.locator('.combatant[data-you] .combatant-charge[data-ready]')).toBeVisible();
   await slip.click();
   await expect(page.locator('.commit-bar[data-mode="ultimate"]')).toBeVisible();
   // Targeting marks every living enemy, the screened back row included.

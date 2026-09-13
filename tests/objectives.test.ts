@@ -13,6 +13,9 @@ import type { Enemy, RunState } from "../src/shared/model";
 /** A boss chamber with the given boss already in place and a known party. */
 function vault(bossId: "collector" | "miser", heroIds: string[]): RunState {
   let s = createRun("OBJECTIVE", "test-objectives");
+  // An authored boss on the single-floor rules: unscaled, and the run ends
+  // when it falls. Floors are tested in their own right.
+  delete s.floor;
   heroIds.forEach((_, i) => addPlayer(s, `p${i}`, `Hero ${i}`));
   heroIds.forEach((id, i) => {
     s = reduce(s, `p${i}`, { type: "hero", hero: id }, 0);

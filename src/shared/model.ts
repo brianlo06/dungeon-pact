@@ -10,6 +10,8 @@ export type Phase =
   | "SHOP"
   | "EVENT"
   | "CAMP"
+  | "TOLL"
+  | "SHRINE"
   | "COMPLETE";
 import type { AbilityPresentation, UnitPresentation } from "./presentation";
 export type Row = "front" | "back";
@@ -196,6 +198,8 @@ export interface Player extends Unit {
   upgrades?: string[];
   /** Chosen class path. A hero evolves at most once per run. */
   evolution?: string;
+  /** Worn items this hero has had reforged at a workbench, by item id. */
+  reforged?: string[];
   resource: number;
   /**
    * Pact Charge, 0 to `ULTIMATE_MAX`. Always on that scale whatever the
@@ -260,8 +264,21 @@ export interface MapNode {
     | "event"
     | "camp"
     | "mentor"
-    | "boss";
+    | "boss"
+    /** Pay the keepers or fight through them. */
+    | "toll"
+    /** A fight in a room that acts on its own schedule. */
+    | "hazard"
+    /** A permanent bargain one hero may strike. */
+    | "shrine"
+    /** Reforge gear the party already carries. */
+    | "forge";
   name: string;
+  /**
+   * The tier of mentor a training chamber holds, fixed when the floor is
+   * built. A legacy map leaves it out and reads the tier from depth.
+   */
+  tier?: 1 | 2 | 3;
   next: string[];
   visited: boolean;
 }
@@ -330,6 +347,8 @@ export interface GameLog {
 }
 export interface RunState {
   shop?: {
+    /** A gear shop sells stock; a workbench reforges what the party carries. */
+    kind?: "shop" | "forge";
     stock: string[];
     sold: string[];
     sequence: number;
@@ -392,6 +411,17 @@ export interface RunState {
   round: number;
   auction: Auction | null;
   eventId: string | null;
+  /** The price the keepers of a toll gate are asking. */
+  toll?: number;
+  /** What the room is doing to everyone in it, for a hazard chamber's fight. */
+  hazard?: "vents" | "collapse";
+  /** An altar's state: who struck its bargain, and who has answered it. */
+  shrine?: { taken: string | null; answered: string[] };
+  /**
+   * Which floor of the run the party is on, from 1. `undefined` is a run that
+   * began before floors existed: one seven-chamber route and a single boss.
+   */
+  floor?: number;
   /** Mentor currently teaching, and who has already answered them. */
   mentorId?: string | null;
   /**

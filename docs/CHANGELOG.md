@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.14 Ultimates — 2026-09-12
+## 0.15 Ultimates — 2026-09-12
 
 The benchmark for a new system; see `ULTIMATES.md` for all of it.
 
@@ -22,6 +22,61 @@ The benchmark for a new system; see `ULTIMATES.md` for all of it.
   that have them: without it Ultimates took the matrix from 89% to 98%. With
   it: 90% → 91% (Unbroken), 90% → 90% (Gilded), duos +6.
 - **Ultimate lab** at `/dev/ultimates.html`.
+## 0.14 floors, chambers and a readable route — 2026-09-12
+
+The second playtest round: the run ended too soon, the route screen was hard
+to read, health and the class resource were hard to find in a fight, and the
+party wanted more kinds of room than fights and shops.
+
+- **Two floors.** A run used to end at whichever boss the dice picked. It now
+  descends: floor one is the Foundry and ends at the Collector's Hoard, floor
+  two opens in the Cistern, closes in the Archive and ends at the Miser's
+  Counting House. Each floor is six chambers with a guaranteed rest before its
+  boss. Floor two's enemies have a quarter more health and power. The stairs
+  between floors raise fallen heroes to half health and restore a third of
+  everyone else's. Rooms that entered a run before floors keep the old single
+  route.
+- **Four new chambers**, each built on a system the game already had:
+  a **toll gate** (pay the keepers, or fight for the reward and an upgrade), a
+  **hazard chamber** (vents that scald the front row every round, or a catwalk
+  that drops the back row forward on round three), a **shrine** (one hero trades
+  maximum HP or party gold for permanent Power, then the altar goes dark) and a
+  **workbench** (reforge gear the party carries so its effects strike half again
+  as hard, once, under the shop's consent rules).
+- **The route is legible.** Links were drawn in a percentage space that assumed
+  every row and card was the same size; the cards were laid out by flexbox, and
+  the two never agreed, so lines ran under cards and ended inside them. Links
+  are now measured off the rendered cards, leave one card's bottom edge and
+  arrive at the next one's top, and the way on from where the party stands is
+  drawn in gold. Names wrap rather than truncate.
+- **Health and the class resource are on the plate.** Health shows its figures
+  inside the bar. The resource, which was seven pixels of text under the hero's
+  feet, is a row of pips beneath it. The pulsing diamond that marked the action
+  fan's anchor was removed: it sat on top of the pips that replaced it.
+
+**Balance, measured rather than guessed.** Two floors first took duos from 84%
+to 48%. The runner now records where every lost run ended, and the answer was
+unambiguous: at every party size essentially every loss is at a boss, and duos
+died to the _first_ boss at eight times a quartet's rate. The boss health
+formula had been giving a duo more boss per head than a quartet (0.63 against
+0.51). With an even per-head weight, and the stairs' partial recovery, the
+tactical bot wins two floors at **80% / 94% / 91%** for two, three and four
+heroes — against 84% / 91% / 92% for the old single floor.
+
+Two levers were tried and rejected on the numbers, and are recorded so nobody
+tries them again: a full heal between floors (quartets rose to 94% while duos
+barely moved) and scaling floor damage by party size (+2 for duos, inside the
+noise).
+
+**A correction.** Three full browser runs in the previous round were reported
+as passing. Each had 53–56 failures; the summary line sits above the tail that
+was read. The failures predated that work — the same tests fail on the commit
+before it — and came from melee screening, which made back-row enemies illegal
+targets while twelve tests still clicked every enemy blindly or asserted that
+an ability marks every unit. Those twelve now aim at legal targets and assert
+that marks match legality. One pre-existing failure remains: the Collector's
+held wind-up drops to idle for a moment before its signature
+(`boss-moves.spec.ts`, "the wind-up lands as the signature").
 
 ## 0.13 playtest feedback — 2026-09-12
 

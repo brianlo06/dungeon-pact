@@ -50,7 +50,21 @@ work answers what they said. Their words, and where each one went:
    draws one class from the party; everyone else drills for stats. This also
    moved duos from 75% to 84% — see item 2 below, which it half answers.
 
-`CHANGELOG.md` 0.13 has the detail. What follows below was written before this
+A second round of feedback followed, and `CHANGELOG.md` 0.14 has the detail:
+
+9. _"the game was done after beating 1 boss, make it so we can go onto more
+   floors"_ — two floors, the Collector then the Miser. `content/floors.ts`.
+10. _"rework the map... it is a bit unclear and colliding"_ — links are measured
+    off the rendered cards. `useRouteGeometry` in `RunScreens.tsx`.
+11. _"make the character's stamina more visible... health more easily"_ —
+    figures in the health bar, resource pips under it.
+12. _"brainstorm more ideas for different types of stages"_ and _"add a resting
+    area"_ — the rest already existed (the camp) but a route could skip it;
+    every floor now ends in a guaranteed rest before its boss. Four chambers
+    were chosen from a brainstorm and built: toll gate, hazard chamber, shrine,
+    workbench. `engine/chambers.ts`, and the workbench in `engine/shop.ts`.
+
+`CHANGELOG.md` 0.13 has the detail of the first round. What follows below was written before this
 branch and describes the state at `main`; read it for the reasoning that still
 holds, not for the inventory.
 
@@ -97,9 +111,10 @@ SVG cutout rigs with named moving parts. Only the auctioneer and the reward
 chest still come from the generated atlas. `ART_DIRECTION.md` has the direction
 for each figure and why the medium changed.
 
-Verified at the playtest answers (2026-09-12): 358 unit tests across 32 files,
-524 browser checks across four resolutions, a production build, and the run
-matrix at 10 seeds under both pacts. Verified at the last commit on `main`:
+Verified at the second playtest round (2026-09-12): 385 unit tests across 34
+files, the full browser suite at four resolutions (see the known failure under
+"What is worth doing next"), a production build, 14 real-WebSocket checks, and
+the run matrix at 10 seeds. Verified at the last commit on `main`:
 300 unit tests across 25 files, 493 browser checks across four resolutions (plus three informational frame-time checks
 that run only at 1920×1080), a production build, and 13 real-WebSocket checks
 against a local Worker — the thirteenth added after the room server was found
@@ -113,6 +128,31 @@ and unit tests.
 ## What is worth doing next
 
 ### 0. The playtest answers, continued
+
+- **The browser suite has two known failures, both older than this work.**
+  `boss-moves.spec.ts`, "the wind-up lands as the signature": the Collector's
+  held wind-up drops to idle for a moment before its signature, at every
+  resolution. `stage-ui.spec.ts`, "chips hold still": at 1280×720 and 1366×768
+  an intent chip's layout offset shifts 12px when a reachable enemy is
+  targeted. Both fail on the commit before this round. The second was hidden
+  since melee screening landed, because the test clicked a screened enemy and
+  timed out before ever reaching the assertion; fixing its selector revealed
+  it. `motion.spec.ts`, "a revived hero stands", fails now and then under a
+  full parallel run and passes alone. **Read the summary line of a browser run, not its tail** — the
+  failure list prints above the pass count, and three runs were misreported as
+  green by reading only the last lines.
+- **The Reaver is the new class outlier.** Across two floors parties with a
+  Reaver win 84% against 95% without — an eleven-point hole, larger than the
+  Vanguard's and Warden's +9. Nobody has looked at why.
+- **Two floors are not harder than one was for larger parties.** Trios and
+  quartets win two floors at 94% and 91%, about what they won one floor at.
+  Losses concentrate at the floor-two boss, which is good pacing, but if a
+  group finds it easy, `FLOOR_SCALE` in `engine/combat.ts` is the knob — and
+  expect it to widen the duo gap (see the traps below).
+- **The four new chambers have not been driven by humans.** They are tested,
+  simulated and rendered in the lab; nobody has played a toll gate for real.
+  The bot walks into all four, so none of them measures as inert, but their
+  numbers (toll prices, scald, shrine terms, reforge ×1.5) are first guesses.
 
 - **The hero art is one pass, not a finished direction.** Proportions, necks
   and build are done and shared; faces, palette and per-hero silhouette are
@@ -212,7 +252,15 @@ tank cannot.
 
 ### 2. Two-hero parties still trail, and the container was not why
 
-**Half-answered, by accident, on 2026-09-12.** Class-locked training grounds
+**Answered, 2026-09-12, by measuring it.** The runner now records where every
+lost run ended (`lostAt`, printed per party size under `--matrix`). At every
+size essentially every loss was at a boss, and duos died to the first boss at
+eight times a quartet's rate: the boss formula gave a duo more boss per head
+than a quartet. An even per-head weight (`BOSS_BASE`, `BOSS_PER_HERO`) took
+duos from 69% to 80% over two floors without moving quartets at all. The gap
+that remains is eleven points, down from twenty-two.
+
+**Earlier the same day, half-answered by accident.** Class-locked training grounds
 moved duos from 75% to 84% against 92% at four, because two heroes used to pay
 two tuitions at one mentor and now pay one tuition and one drill. Nobody
 designed that; the change was made because a path should belong to a class. It

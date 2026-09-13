@@ -53,6 +53,41 @@ export function enterShop(s: RunState) {
 }
 
 /**
+ * The workbench: a shop whose stock is what the party already wears.
+ *
+ * Gear bought on the first floor was starting to be dead weight on the
+ * second, replaced the moment anything better appeared. Reforging is the other
+ * answer to a better item turning up — make the one you have better — and it
+ * spends from the same purse under the same consent, so it competes with the
+ * shop instead of sitting beside it.
+ *
+ * A reforge is keyed to its owner, `hero:item`, because two heroes can carry
+ * the same piece and reforging one does nothing for the other.
+ */
+export { forgeKey, parseForgeKey, reforgeCost } from "../content/forge";
+import { forgeKey, parseForgeKey, reforgeCost } from "../content/forge";
+
+export function enterForge(s: RunState) {
+  const stock: string[] = [];
+  for (const p of s.players.filter((x) => !x.fallen))
+    for (const id of new Set(p.items)) {
+      const item = items.find((i) => i.id === id);
+      if (item && item.slot !== "supply" && !p.reforged?.includes(id))
+        stock.push(forgeKey(p.id, id));
+    }
+  s.phase = "SHOP";
+  s.auction = null;
+  s.votes = {};
+  s.shop = { kind: "forge", stock, sold: [], sequence: 0, leaving: [] };
+  log(
+    s,
+    stock.length
+      ? "A workbench, still hot. Anything you carry can be made better, once."
+      : "A workbench, still hot — and nothing on the party worth the fire.",
+  );
+}
+
+/**
  * Put one item on the table for the party to decide on. Only one decision runs
  * at a time: two open proposals against one purse can both look affordable and
  * only one of them is.
@@ -68,12 +103,18 @@ export function proposePurchase(
     throw Error("That item is no longer in stock");
   if (!s.players.some((p) => p.id === recipient && !p.fallen))
     throw Error("Choose an available recipient");
-  const item = items.find((i) => i.id === itemId)!;
-  if (item.price > s.gold)
-    throw Error("The treasury cannot afford that purchase");
+  // At a workbench the stock names its owner, and only its owner can be the
+  // one it is reforged for.
+  const forging = shop.kind === "forge";
+  const piece = forging ? parseForgeKey(itemId) : null;
+  if (piece && piece.owner !== recipient)
+    throw Error("A piece is reforged for the hero who carries it");
+  const item = items.find((i) => i.id === (piece ? piece.item : itemId))!;
+  const price = forging ? reforgeCost(item) : item.price;
+  if (price > s.gold) throw Error("The treasury cannot afford that purchase");
   shop.sequence++;
   shop.leaving = [];
-  shop.proposal = { item: itemId, recipient, price: item.price, votes: {} };
+  shop.proposal = { item: itemId, recipient, price, votes: {} };
 }
 /**
  * A purchase needs a majority of the party and the recipient's own consent;
@@ -100,6 +141,22 @@ export function approvePurchase(s: RunState, player: string, approve: boolean) {
   if (yes <= s.players.length / 2 || !offer.votes[offer.recipient]) return;
   const recipient = s.players.find((p) => p.id === offer.recipient)!;
   if (recipient.fallen) throw Error("Recipient unavailable");
+  if (shop.kind === "forge") {
+    const { item: id } = parseForgeKey(offer.item);
+    const piece = items.find((i) => i.id === id)!;
+    spend(s, offer.price);
+    recipient.spent += offer.price;
+    recipient.reforged = [...(recipient.reforged ?? []), id];
+    shop.sold.push(offer.item);
+    delete shop.proposal;
+    shop.sequence++;
+    log(
+      s,
+      `${recipient.name}'s ${piece.name} is reforged for ${offer.price} team gold. Its effects strike half again as hard.`,
+      "gold",
+    );
+    return;
+  }
   const item = items.find((i) => i.id === offer.item)!;
   spend(s, offer.price);
   recipient.spent += offer.price;

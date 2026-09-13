@@ -10,6 +10,8 @@ import { Miser } from "./Miser";
 import { CREATURES } from "./creatures";
 import { StatusReadout } from "./StatusReadout";
 import { items } from "../../content/items";
+import { hero as heroDef } from "../../content/heroes";
+import { resourceCap } from "../../content/evolutions";
 import { holdsWindup } from "../battle/hero-clips";
 import { ULTIMATE_MAX } from "../../content/ultimates";
 
@@ -266,8 +268,45 @@ export function BattleUnit({
         </span>
         <span className="combatant-bar" title={`${shown} / ${unit.maxHp} HP`}>
           <i style={{ transform: `scaleX(${share})` }} />
+          {/* The number rides inside the bar rather than under it: a plate is
+              measured for collisions, and another row would push every one of
+              them into somebody. */}
+          <u>
+            {shown}
+            <s>/{unit.maxHp}</s>
+          </u>
           {barrier > 0 && <b>{barrier}</b>}
         </span>
+        {player && !down && (
+          <span
+            className="combatant-resource"
+            title={`${player.resource} of ${resourceCap(player)} ${heroDef(player.heroId).resource}`}
+          >
+            {Array.from({ length: resourceCap(player) }, (_, i) => (
+              <i key={i} data-filled={i < player.resource || undefined} />
+            ))}
+            <em>{heroDef(player.heroId).resource}</em>
+            {/* Pact Charge rides the resource row, not a row of its own: a
+                plate is measured for collisions, and every row pushes. */}
+            {player.ultimateCharge !== undefined && (
+              <b
+                className="combatant-charge"
+                data-ready={player.ultimateCharge >= ULTIMATE_MAX || undefined}
+                data-near={
+                  (player.ultimateCharge < ULTIMATE_MAX &&
+                    player.ultimateCharge >= ULTIMATE_MAX * 0.75) ||
+                  undefined
+                }
+                title={`Pact Charge ${Math.floor(player.ultimateCharge)}/${ULTIMATE_MAX}`}
+                style={
+                  {
+                    "--charge": Math.min(1, player.ultimateCharge / ULTIMATE_MAX),
+                  } as React.CSSProperties
+                }
+              />
+            )}
+          </span>
+        )}
         {enemy?.phase === 2 && <span className="combatant-tag">ENRAGED</span>}
         {player && down && (
           <span className="combatant-tag">

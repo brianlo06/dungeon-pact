@@ -1,3 +1,5 @@
+import { FLOORS } from "./map";
+import { applyHazard } from "./chambers";
 import { chooseEncounter } from "../content/encounters";
 import { reachError } from "../shared/reach";
 import type { RunState, Player, Enemy, Ability, Unit } from "../shared/model";
@@ -122,6 +124,20 @@ export function prepareIntents(s: RunState) {
     };
   }
 }
+/**
+ * How much harder a floor's enemies are than the first floor's. A party
+ * reaches floor two carrying floor one's gear, upgrades and a mentor's path;
+ * without this the second floor is the first floor played with a better kit.
+ * Health and power both climb, so a fight lasts longer and each hit in it
+ * matters more — the two ways a floor can feel deeper.
+ */
+/** A boss's health weight: a little for being a boss, the rest per hero. */
+export const BOSS_BASE = 0.1;
+export const BOSS_PER_HERO = 0.48;
+export const FLOOR_SCALE = 0.25;
+export function floorScale(s: Pick<RunState, "floor">) {
+  return s.floor === undefined ? 1 : 1 + FLOOR_SCALE * (s.floor - 1);
+}
 export function enterCombat(s: RunState, boss = false, elite = false) {
   s.phase = "COMBAT";
   s.round = 1;
@@ -131,6 +147,15 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
   s.enemies = [];
   const count = boss ? 1 : Math.min(4, s.players.length);
   const pool = definitions.filter((d) => !!d.boss === boss && !d.object);
+  // Each floor has its own boss, so the vault a party reaches is the one the
+  // floor was built around rather than whichever the dice preferred.
+  const floorBoss =
+    boss && s.floor !== undefined
+      ? s.floor <= 1
+        ? "collector"
+        : "miser"
+      : undefined;
+  const deeper = floorScale(s);
   const encounter =
     !boss && s.encounterVersion === 2 ? chooseEncounter(s) : undefined;
   const formation = encounter?.formations[s.players.length as 2 | 3 | 4];
@@ -138,22 +163,32 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
   for (let i = 0; i < count; i++) {
     const d = formation
       ? definitions.find((d) => d.id === formation[i])!
-      : pick(s, pool);
+      : floorBoss
+        ? definitions.find((d) => d.id === floorBoss)!
+        : pick(s, pool);
     // Larger parties cover more roles per round, so their encounters weigh more
     // per hero. Duos face slightly lighter bosses in exchange for having no
     // spare actions at all.
+    //
+    // Bosses were `0.45 + 0.4 × heroes`, which is lighter for a duo in total
+    // but heavier per head — 0.63 of a boss for each of two heroes against 0.51
+    // for each of four — for the party with no spare actions to answer an
+    // objective with. Losses split by chamber (`scripts/simulate.ts` records
+    // where every lost run ended) put essentially every loss at a boss, and
+    // duos dying to the first one at eight times a quartet's rate. The
+    // per-head weight is now even across party sizes.
     const scale = boss
-      ? 0.45 + s.players.length * 0.4
+      ? BOSS_BASE + s.players.length * BOSS_PER_HERO
       : 0.75 + s.players.length * 0.14;
     const priced = boss && s.ultimateVersion === 1 ? BOSS_PRICING.hp : 1;
-    const hp = Math.round(d.hp * scale * (elite ? 1.3 : 1) * priced);
+    const hp = Math.round(d.hp * scale * (elite ? 1.3 : 1) * deeper * priced);
     const e: Enemy = {
       id: `enemy-${i}`,
       definition: d.id,
       name: d.name,
       hp,
       maxHp: hp,
-      power: d.power,
+      power: Math.round(d.power * deeper),
       guard: d.guard,
       speed: d.speed,
       row: d.row,
@@ -218,6 +253,9 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
     }
 }
 function startRound(s: RunState) {
+  // The room moves first. Anything it knocks down or pushes forward is where
+  // the party stands when everyone decides the round.
+  applyHazard(s);
   for (const e of s.enemies)
     if (e.hp > 0 && e.elite === "armored") applyStatus(e, "barrier", 8, 1);
   for (const p of standing(s)) trigger(s, p, p, "roundStart");
@@ -602,10 +640,26 @@ export function resolveRound(s: RunState) {
   if (combatants(s).every((e) => e.hp <= 0)) {
     for (const e of s.enemies) if (e.holding?.length) release(s, e);
     const node = s.map.find((n) => n.id === s.currentNode)!;
-    s.reward = node.type === "boss" ? 240 : node.type === "elite" ? 180 : 110;
+    // A room that fought back pays more than an ordinary chamber, less than
+    // an elite: it was harder, but nobody in it was special.
+    s.reward =
+      node.type === "boss"
+        ? 240
+        : node.type === "elite"
+          ? 180
+          : node.type === "hazard"
+            ? 150
+            : 110;
+    delete s.hazard;
     gain(s, s.reward);
     log(s, "The chamber falls silent.");
-    if (node.type === "boss") {
+    if (node.type === "boss" && s.floor !== undefined && s.floor < FLOORS) {
+      // Not the end: the vault opens onto the next floor down. The party gets
+      // the same branch upgrade any victory earns, then descends when it
+      // leaves the reward.
+      log(s, "The vault floor gives way. There is further down.");
+      enterUpgrade(s);
+    } else if (node.type === "boss") {
       s.phase = "COMPLETE";
       s.outcome = "victory";
     } else enterUpgrade(s);

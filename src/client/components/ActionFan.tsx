@@ -48,7 +48,6 @@ export function ActionFan({
   disabled,
   occupied,
   top,
-  seal,
 }: {
   me: Player;
   place: Placement;
@@ -63,8 +62,6 @@ export function ActionFan({
   disabled: boolean;
   /** Above the slips: the Ultimate, when there is one to call. */
   top?: ReactNode;
-  /** In place of the plain seal at the hero's hand: the Pact Charge meter. */
-  seal?: ReactNode;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const usable = options.filter((o) => !o.blocked);
@@ -193,12 +190,15 @@ export function ActionFan({
         } as React.CSSProperties
       }
     >
-      <div className="fan-anchor" aria-hidden="true">
-        {seal ?? <span className="fan-seal" />}
-        <span className="fan-who">
-          {me.resource}/{def.maxResource} {def.resource}
-        </span>
-      </div>
+      {/*
+       * The anchor is gone. It marked whose fan this was with a pulsing gold
+       * diamond and spelled the class resource out beneath the hero's feet,
+       * seven pixels tall. The resource is pips on the name plate now, where a
+       * player is already looking, and the plate itself is gold for the hero
+       * you control — so the diamond was left covering the very row that
+       * replaced it. Its going also takes one perpetual animation with a glow
+       * on it off the stage for the whole planning phase.
+       */}
       <div
         ref={block}
         className="fan-block"

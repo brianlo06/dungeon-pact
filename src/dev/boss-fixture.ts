@@ -37,6 +37,8 @@ export interface FixtureOptions {
    * stage that moment without playing a whole fight to reach it.
    */
   finisher?: boolean;
+  /** Stage the fight as a hazard chamber, to see the room's rule on the strip. */
+  hazard?: "vents" | "collapse";
 }
 
 /** Supply the remaining players' legal Brace plans through the real reducer. */
@@ -73,6 +75,10 @@ export function bossFixture(options: FixtureOptions): RunState {
     : ["Ada", "Bram", "Cora", "Dain"];
   for (let seed = 0; seed < 100; seed++) {
     let s = createRun("PREVIEW", `boss-preview-${seed}`);
+    // The lab previews a boss as authored. A floored run assigns each floor
+    // its boss and scales floor two, so the fixture stages the single-floor
+    // rules, where either boss can be sought and neither is scaled.
+    delete s.floor;
     if (options.legacy) {
       delete s.combatVersion;
       delete s.encounterVersion;
@@ -139,6 +145,7 @@ export function bossFixture(options: FixtureOptions): RunState {
         ]);
       prepareIntents(s);
     }
+    if (options.hazard) s.hazard = options.hazard;
     if (options.finisher) {
       s.enemies.forEach((e, i) => {
         e.hp = i === 0 ? 1 : 0;

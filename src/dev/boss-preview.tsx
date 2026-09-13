@@ -57,6 +57,7 @@ function fromUrl(): {
       encounter: q.get("encounter") ?? undefined,
       heroes: q.get("heroes")?.split(",").filter(Boolean),
       finisher: q.has("finisher"),
+      hazard: (q.get("hazard") as "vents" | "collapse" | null) ?? undefined,
     },
     viewport: q.get("viewport") ?? "fit",
     you: num("you", 0),
