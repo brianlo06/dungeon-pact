@@ -1,0 +1,203 @@
+/*
+ * Into the Din — effects and space.
+ *
+ * Sable, argent and one or. No filters and no keyframes: the din's strokes are
+ * paths rebuilt on the combat clock (see `vfx.tsx`), everything else moves on
+ * `--p`, and a glow is a wide translucent stroke, never a blur.
+ */
+
+/* ---- the field ---- */
+.din-field-sky {
+  fill: none;
+  opacity: 0.1;
+}
+.din-field-rays {
+  fill: none;
+  opacity: 0.07;
+}
+.din-field-furrows {
+  opacity: 0.16;
+}
+
+/* ---- world-sized drawings ---- */
+.cine-vfx > .din-sky,
+.cine-vfx > .din-courage-box {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none !important;
+}
+.din-courage-box > svg {
+  position: absolute;
+  inset: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+}
+.din-marker {
+  display: none;
+}
+
+/* ---- the din ---- */
+.din-noise path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: miter;
+}
+.din-ink {
+  stroke: #0b0a0e;
+  stroke-width: calc(9px * var(--w, 1));
+  opacity: 0.85;
+}
+.din-bone {
+  stroke: #f1e6cc;
+  stroke-width: calc(3.4px * var(--w, 1));
+  opacity: 0.82;
+}
+.din-hot {
+  stroke: #fffaf0;
+  stroke-width: calc(4.6px * var(--w, 1));
+  stroke-linejoin: round;
+}
+/* In the quiet what is left of it is dimmer, as well as fewer. */
+.din-noise[data-mode="freeze"] .din-bone {
+  opacity: calc(0.75 - var(--quiet, 0) * 0.45);
+}
+
+/* ---- the ring ---- */
+.din-ring-line {
+  fill: none;
+  stroke: #fffaf0;
+  stroke-width: calc(9px - var(--i) * 1.4px);
+}
+.din-ring-line[data-i="0"] {
+  stroke-width: 14px;
+}
+
+/* ---- the blow, drawn ---- */
+.din-clang {
+  width: 640px;
+  height: 640px;
+  overflow: visible;
+}
+.cine-vfx > .din-clang {
+  transform: translate(-50%, -50%) rotate(var(--rot)) scale(calc(var(--s) * (0.55 + var(--pe) * 0.75)));
+  opacity: clamp(0, calc((1 - var(--p)) * 2.4), 1);
+}
+.din-clang-frame {
+  display: none;
+}
+.fx-din-clang-wrap[data-k="0"] .din-clang-frame[data-k="0"],
+.fx-din-clang-wrap[data-k="1"] .din-clang-frame[data-k="1"],
+.fx-din-clang-wrap[data-k="2"] .din-clang-frame[data-k="2"],
+.fx-din-clang-wrap:not([data-k]) .din-clang-frame[data-k="0"] {
+  display: inline;
+}
+.din-clang-wedge {
+  fill: #0b0a0e;
+  stroke: #f1e6cc;
+  stroke-width: 5px;
+  stroke-linejoin: miter;
+}
+.din-clang-ring {
+  fill: none;
+  stroke: #fffaf0;
+  stroke-linecap: butt;
+}
+.din-clang-ring.a {
+  stroke-width: 18px;
+}
+.din-clang-ring.b {
+  stroke-width: 8px;
+  opacity: 0.8;
+}
+.din-clang-core {
+  fill: #fffaf0;
+}
+.din-clang-notch {
+  fill: #0b0a0e;
+}
+
+/* ---- courage, carried ---- */
+.din-carry path {
+  fill: none;
+  stroke-linecap: round;
+}
+.din-carry-glow {
+  stroke: #e7b54a;
+  stroke-width: calc(var(--w) * 5px);
+  opacity: calc(var(--k) * 0.25);
+}
+.din-carry-line {
+  stroke: #ffe3a1;
+  stroke-width: calc(var(--w) * 1.4px);
+  opacity: var(--k);
+}
+
+/* ---- on the real board ---- */
+.cine-vfx > .din-board {
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: none;
+}
+.din-board svg {
+  position: absolute;
+  left: calc(var(--unit-w) * -1);
+  width: calc(var(--unit-w) * 2);
+  height: calc(var(--unit-w) * 2 * 220 / 240);
+  bottom: calc(var(--unit-w) * -0.16);
+  overflow: visible;
+}
+.din-board-zig {
+  fill: none;
+  stroke: #f1e6cc;
+  stroke-width: 3.5px;
+  stroke-linecap: round;
+  display: none;
+  opacity: calc(min(1, var(--p) * 5) * (1 - var(--p) * 0.3));
+}
+.fx-din-board-wrap[data-f="0"] .din-board-zig[data-f="0"],
+.fx-din-board-wrap[data-f="1"] .din-board-zig[data-f="1"],
+.fx-din-board-wrap[data-f="2"] .din-board-zig[data-f="2"],
+.fx-din-board-wrap:not([data-f]) .din-board-zig[data-f="0"] {
+  display: inline;
+}
+.din-board-floor {
+  fill: none;
+  stroke: #f1e6cc;
+  stroke-width: 3px;
+  opacity: calc(var(--pe) * 0.7);
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(calc(0.5 + var(--pe) * 0.5));
+}
+.din-board-floor.or {
+  stroke: #e7b54a;
+}
+.din-board-arcs path {
+  fill: none;
+  stroke: #fffaf0;
+  stroke-width: calc(6px - var(--i) * 1.5px);
+  stroke-linecap: round;
+  opacity: calc(clamp(0, (var(--pe) * 3 - var(--i) * 0.5), 1) * (1 - var(--p) * 0.35));
+}
+/* Still ringing: the arcs shiver in and out on the film's frames. */
+.fx-din-board-wrap[data-f="1"] .din-board-arcs {
+  transform: scale(1.06, 1);
+}
+.fx-din-board-wrap[data-f="2"] .din-board-arcs {
+  transform: scale(0.96, 1);
+}
+.din-board-carry {
+  fill: none;
+  stroke: #ffd98a;
+  stroke-width: calc(6px - var(--i) * 1.2px);
+  stroke-linecap: round;
+  opacity: clamp(0, calc(var(--pe) * 3 - var(--i) * 0.6), 1);
+  transform-box: view-box;
+  transform: translateX(calc(var(--pe) * 10px));
+}
