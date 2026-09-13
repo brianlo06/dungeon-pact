@@ -254,9 +254,19 @@ const palm: Frame = (el, p) => {
     const sway = Number(s.dataset.sway);
     const grow = ease("in", span(p, land + 0.16 + i * 0.05, land + 0.62 + i * 0.04));
     const L = grow * len;
-    const body = `M${f2(sx - 0.55)} ${f2(sy)} C${f2(sx - 0.3)} ${f2(sy + L * 0.4)} ${f2(sx + sway - 0.2)} ${f2(sy + L * 0.7)} ${f2(sx + sway)} ${f2(sy + L)} C${f2(sx + sway + 0.15)} ${f2(sy + L * 0.7)} ${f2(sx + 0.35)} ${f2(sy + L * 0.4)} ${f2(sx + 0.55)} ${f2(sy)} Z`;
+    // A thread of water: it wavers, pinches into beads and thins as it falls.
+    const edgeL: string[] = [];
+    const edgeR: string[] = [];
+    for (let n = 0; n <= 10; n++) {
+      const t = n / 10;
+      const hw = 0.5 * (1 - t * 0.7) * (0.6 + 0.4 * Math.abs(Math.sin(t * 9 + i * 1.3 + p * 20)));
+      const cx = sx + sway * t * t + Math.sin(t * 6 + i + p * 14) * 0.35;
+      edgeL.push(`${f2(cx - hw)} ${f2(sy + L * t)}`);
+      edgeR.unshift(`${f2(cx + hw)} ${f2(sy + L * t)}`);
+    }
+    const body = `M${edgeL.join(" L")} L${edgeR.join(" L")} Z`;
     setAttr(s.querySelector(".mourn-strand-body"), "d", L > 0.3 ? body : "M0 0");
-    setAttr(s.querySelector(".mourn-strand-lit"), "d", L > 2 ? `M${f2(sx + 0.3)} ${f2(sy + 0.6)} C${f2(sx + 0.3)} ${f2(sy + L * 0.35)} ${f2(sx + sway * 0.6)} ${f2(sy + L * 0.6)} ${f2(sx + sway * 0.9)} ${f2(sy + L * 0.8)}` : "M0 0");
+    setAttr(s.querySelector(".mourn-strand-lit"), "d", "M0 0");
     const drop = s.querySelector(".mourn-strand-drop");
     setAttr(drop, "transform", L > 3 ? `translate(${f2(sx + sway)} ${f2(sy + L + 1.4 + ((p * 60 + i * 7) % 6))}) scale(1 1.3)` : "scale(0)");
   });
@@ -542,6 +552,8 @@ const Fist = ({ cue }: VfxProps): ReactNode => {
                   <path className="mourn-fist-lit" d={`M${x - 11} ${KNUCKLE + 4} C${x - 6} ${KNUCKLE - 4} ${x + 6} ${KNUCKLE - 4} ${x + 11} ${KNUCKLE + 4}`} />
                   <path className="mourn-fist-crease" d={`M${x - 13} ${-128} Q${x} ${-121} ${x + 13} ${-128}`} />
                   <path className="mourn-fist-run" d={`M${x + 9} ${KNUCKLE + 14} C${x + 11} ${-140} ${x + 10} ${-110} ${x + 9} ${TIP + 4}`} />
+                  {/* Light along the finger's edge, so even the flat two-tone frame shows four fingers. */}
+                  <path className="mourn-fist-edge" d={`M${x - 15} ${KNUCKLE + 16} L${x - 14} ${TIP + 2}`} />
                 </g>
               ))}
               <g className="mourn-thumb">
@@ -609,7 +621,7 @@ const fist: Frame = (el, p) => {
   const sx = 1 + squeeze * 0.5 - drop * 0.1;
   const sy = (0.82 + 0.18 * shut) * (1 - squeeze) * (1 - drop * 0.55);
   setAttr(hand, "transform", `translate(0 ${f1(drop * 60)}) scale(${f2(sx)} ${f2(sy)})`);
-  setAttr(hand, "opacity", f2(1 - span(p, fall + 0.1, gone)));
+  setAttr(hand, "opacity", f2(1 - ease("out", span(p, fall + 0.02, gone - 0.08))));
   if (front) {
     el.querySelectorAll<SVGGElement>(".mourn-finger").forEach((g) => {
       const i = Number(g.dataset.i);
@@ -751,7 +763,7 @@ const cling: Frame = (el, p, age) => {
     const swellK = Math.min(1, cyc * 2);
     const fallK = Math.max(0, cyc * 2 - 1);
     const dy = y + L + fallK * fallK * Math.max(8, -y - L + 2);
-    const ds = grow * (0.4 + 0.6 * swellK) * (w / 3.2);
+    const ds = grow * (0.4 + 0.6 * swellK) * (w / 3.2) * num(d, "big", 1);
     setAttr(g.querySelector(".mourn-cling-drop"), "transform", grow > 0.05 ? `translate(${f1(x + sway)} ${f1(dy)}) scale(${f2(ds)} ${f2(ds * (1 + fallK * 0.6))})` : "scale(0)");
   });
   el.querySelectorAll<SVGEllipseElement>(".mourn-cling-ring").forEach((r, i) => {

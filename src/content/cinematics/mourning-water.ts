@@ -360,7 +360,7 @@ export const mourningWater: Cinematic = {
       toLighting: { tint: [NIGHT, 0], letterbox: 0 },
       actors: [{ role: "caster", at: [0, 0], size: 0, clip: "ult:mourn-open" }],
       vfx: [
-        { kind: "mourn-board", at: 0, until: 1, anchor: "targets", params: { mode: "drowned" } },
+        { kind: "mourn-board", at: 0, until: 1, anchor: "targets", params: { mode: "drowned", big: 1.9 } },
         { kind: "mourn-board", at: 0, until: 1, anchor: "caster", params: { mode: "soaked", stagger: 0.1 } },
       ],
       sound: [

@@ -73,9 +73,10 @@
   stroke-width: 0.2;
 }
 .mourn-strand-body {
-  fill: #0a1714;
-  stroke: #020605;
-  stroke-width: 0.35;
+  fill: #0e1f1a;
+  stroke: #a9c9bd;
+  stroke-width: 0.18;
+  stroke-linejoin: round;
 }
 .mourn-strand-lit {
   fill: none;
@@ -206,6 +207,13 @@
   stroke-width: 2.4;
   stroke-linecap: round;
   opacity: 0.8;
+}
+.mourn-fist-edge {
+  fill: none;
+  stroke: #e6f3ec;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  opacity: 0.9;
 }
 .mourn-fist-run {
   fill: none;
@@ -359,4 +367,19 @@
   stroke-width: 2;
   stroke-linecap: round;
   opacity: 0.4;
+}
+
+/* On the board the drowned is small: its water is drawn larger and plainer. */
+.mourn-board[data-mode="drowned"] .mourn-cling-pool {
+  stroke: none;
+  fill-opacity: 0.9;
+}
+.mourn-board[data-mode="drowned"] .mourn-cling-ring {
+  stroke-width: 2.4;
+}
+.mourn-board[data-mode="drowned"] .mourn-cling-drop {
+  stroke-width: 1.2;
+}
+.mourn-board[data-mode="drowned"] .mourn-cling-weed {
+  opacity: 1;
 }

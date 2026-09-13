@@ -36,8 +36,8 @@ const WILLOWS = Array.from({ length: 9 }, (_, i) => {
 
 /** Each willow's fronds: strands from the crown down to the water. */
 const FRONDS = WILLOWS.flatMap((t) =>
-  Array.from({ length: 16 }, (_, j) => {
-    const k = j / 15;
+  Array.from({ length: 10 }, (_, j) => {
+    const k = j / 9;
     const x = t.x + (k - 0.5) * t.w * 0.96;
     const crown = t.top + Math.pow(Math.abs(k - 0.5) * 2, 2) * (SHORE - t.top) * 0.55;
     return { x, y: crown, end: SHORE + 2 + rand() * 8, sway: (rand() - 0.5) * 26, w: 3 + rand() * 4, far: t.far };
@@ -45,21 +45,21 @@ const FRONDS = WILLOWS.flatMap((t) =>
 );
 
 /** Near fronds hanging into the top of the frame, left and right. */
-const NEAR = Array.from({ length: 30 }, (_, i) => {
+const NEAR = Array.from({ length: 18 }, (_, i) => {
   const left = i % 2 === 0;
   const x = left ? -760 + rand() * 820 : 1300 + rand() * 1060;
   return { x, len: 220 + rand() * 420, sway: (rand() - 0.5) * 50, w: 5 + rand() * 7, leaves: 4 + Math.floor(rand() * 5) };
 });
 
 /** Glints lying flat on the water, denser towards the far bank. */
-const GLINTS = Array.from({ length: 70 }, () => {
+const GLINTS = Array.from({ length: 48 }, () => {
   const d = Math.pow(rand(), 1.8);
   const y = SHORE + 10 + d * 880;
   return { x: -780 + rand() * 3160, y, w: 20 + rand() * 120 * (0.4 + d), o: 0.05 + (1 - d) * 0.14 };
 });
 
 /** Duckweed along the edges: clusters of tiny fronds. */
-const WEED = Array.from({ length: 150 }, () => {
+const WEED = Array.from({ length: 70 }, () => {
   const edge = rand() < 0.5;
   const y = edge ? SHORE + 4 + rand() * 40 : SHORE + 60 + rand() * 820;
   const x = edge ? -780 + rand() * 3160 : rand() < 0.5 ? -780 + rand() * 700 : 1700 + rand() * 680;
