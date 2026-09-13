@@ -163,7 +163,6 @@ export const anthemOfTheUnpaid: Cinematic = {
         { at: 0, sfx: "anthem-hush" },
         { at: 0.72, sfx: "anthem-gasp" },
       ],
-      text: [{ kind: "name", at: 0.05, until: 1, text: "$name", x: 0.06, y: 0.7, mode: "fast" }],
       markers: [{ at: 0.8, label: "eyes open" }],
     },
 
