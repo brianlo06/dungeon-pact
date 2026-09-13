@@ -1,0 +1,332 @@
+/* --------------------------------------------------------------- Sunblind -- */
+/*
+ * Everything the Gloomstalker's Ultimate draws. Progress arrives as the film's
+ * variables (`--p`, `--pe`, `--pi`, `--f`) and a few written by frame
+ * functions; nothing animates by itself, nothing filters, and softness is
+ * gradients.
+ *
+ * Palette: plaster #f4ecd6, glare #fffbea, shade #8e98c4, cast shadow
+ * #3a4478, ink #161a2c, and one colour, sun lemon #ffe45c (the accent).
+ */
+
+.cine-vfx > .sb-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none;
+}
+
+/* ---- the sun ---- */
+.cine-vfx > .sb-sun {
+  pointer-events: none;
+}
+.sb-sun-bloom {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgb(255 253 240 / calc(0.95 * var(--glow))) 0%,
+    rgb(255 246 206 / calc(0.75 * var(--glow))) 16%,
+    rgb(255 238 170 / calc(0.32 * var(--glow))) 40%,
+    rgb(255 238 170 / 0) 100%
+  );
+}
+.sb-sun-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.sb-sun-spokes {
+  transform: rotate(calc(var(--p) * 14deg));
+}
+.sb-sun-spokes path {
+  fill: #fffdf0;
+  opacity: 0.85;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.sb-sun-halo {
+  fill: #fffbe6;
+  opacity: calc(var(--core) * 0.55);
+}
+.sb-sun-core {
+  fill: #ffffff;
+  opacity: var(--core);
+}
+
+/* ---- shadows of the cast ---- */
+.sb-cast-one {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  opacity: 0.62;
+}
+.sb-cast-copy {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100px;
+  height: 100px;
+  margin-left: -50px;
+  margin-top: -97px;
+  transform-origin: 50px 97px;
+}
+.sb-cast-rig,
+.sb-cast-look {
+  width: 100%;
+  height: 100%;
+}
+.sb-cast-copy :where(path, rect, circle, ellipse, polygon, line, polyline) {
+  fill: #3a4478 !important;
+  stroke: #3a4478 !important;
+}
+
+/* ---- the volley, as its shadows ---- */
+.sb-shadows {
+  overflow: visible;
+}
+.sb-shade {
+  opacity: var(--o, 0.8);
+}
+.sb-shade-shape {
+  fill: #1f2548;
+  opacity: 0.78;
+}
+.sb-shade-soft {
+  fill: #2b3462;
+  opacity: 0.22;
+}
+
+/* ---- the loose ---- */
+.sb-loosed {
+  overflow: visible;
+}
+.sb-loosed-one {
+  opacity: var(--o, 1);
+}
+.sb-loosed-trail {
+  fill: none;
+  stroke: #fffdf2;
+  stroke-width: 9;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+
+/* ---- the flare ---- */
+.sb-flare {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /*
+   * The band is three frames wide, and its white heart (a quarter to three
+   * quarters of it) a frame and a half, so at its slant it covers the whole
+   * frame when its left edge is a frame left of the frame's. `in`: from off
+   * the left to covering; `out`: from covering to off the right.
+   */
+  --x: calc(-300% + var(--pi) * 200%);
+}
+.sb-flare[data-mode="out"] {
+  --x: calc(-100% + var(--pe) * 200%);
+}
+.sb-flare-band {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: var(--x);
+  width: 300%;
+  transform: skewX(-12deg);
+  background: linear-gradient(
+    90deg,
+    rgb(255 244 180 / 0) 0%,
+    rgb(255 236 150 / 0.6) 14%,
+    #fffdf2 25%,
+    #fffdf2 75%,
+    rgb(255 236 150 / 0.6) 86%,
+    rgb(255 244 180 / 0) 100%
+  );
+}
+.sb-flare-core {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: calc(var(--x) + 262%);
+  width: 4%;
+  transform: skewX(-12deg);
+  background: #ffe45c;
+  opacity: 0.55;
+}
+.sb-flare b {
+  position: absolute;
+  top: var(--y);
+  left: calc(var(--x) + 250% + var(--d) * 40%);
+  width: var(--w);
+  height: var(--h);
+  background: #fffdf2;
+  transform: rotate(-6deg);
+}
+
+/* ---- the volley, landed ---- */
+.sb-volley {
+  overflow: visible;
+}
+.sb-hit-streak {
+  fill: none;
+  stroke: #fffbea;
+  stroke-width: 6;
+  stroke-linecap: round;
+  opacity: calc(0.85 - var(--k, 0) * 0.85);
+}
+.sb-hit[data-body] .sb-hit-shadow,
+.sb-hit[data-body] .sb-hit-dust,
+.sb-hit[data-body] .sb-hit-chips {
+  display: none;
+}
+.sb-hit:not([data-body]) .sb-hit-spark {
+  display: none;
+}
+.sb-hit:not([data-stuck]) :is(.sb-hit-shadow, .sb-hit-dust, .sb-hit-chips, .sb-hit-spark) {
+  display: none;
+}
+.sb-hit-shadow {
+  fill: #2c3566;
+  opacity: 0.8;
+}
+.sb-hit-spark {
+  fill: #fffdf2;
+  stroke: #161a2c;
+  stroke-width: 2;
+}
+.sb-hit-puff {
+  display: none;
+}
+.sb-hit[data-k="0"] .sb-hit-puff[data-k="0"],
+.sb-hit[data-k="1"] .sb-hit-puff[data-k="1"],
+.sb-hit[data-k="2"] .sb-hit-puff[data-k="2"] {
+  display: inline;
+}
+.sb-hit-dust {
+  opacity: calc(0.95 - var(--k, 0) * 0.95);
+}
+.sb-hit-puff ellipse {
+  fill: #fbf4e2;
+  stroke: #cdbd98;
+  stroke-width: 2;
+  transform: scale(calc(0.7 + var(--k, 0) * 1.4));
+  transform-box: view-box;
+}
+.sb-hit-chips path {
+  fill: #e8dcc0;
+  stroke: #161a2c;
+  stroke-width: 1.5;
+  transform: translate(calc(var(--dx) * var(--k, 0) * 3), calc(var(--dy) * var(--k, 0) * 2.4 + var(--k, 0) * var(--k, 0) * 120px))
+    rotate(calc(var(--r) * var(--k, 0)));
+  opacity: calc(1 - var(--k, 0) * 1.2);
+}
+
+/* ---- heat ---- */
+.sb-heat {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.sb-heat i {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.9), transparent);
+  opacity: var(--o);
+  transform: translateY(calc((var(--p) + var(--d)) * -90px)) scaleX(calc(1 + sin((var(--p) + var(--d)) * 12rad) * 0.2));
+}
+
+/* ---- on the real battlefield ---- */
+/* The glare behind the real Ranger: over its shoulder, not at its feet. */
+.cine-anchored > .sb-sun {
+  translate: calc(var(--unit-w) * -0.3) calc(var(--unit-h) * -0.8);
+}
+.sb-board {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: none !important;
+}
+.sb-board-one {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+}
+.sb-board-pool {
+  position: absolute;
+  left: calc(var(--w) * -0.75);
+  top: calc(var(--h) * -0.09);
+  width: calc(var(--w) * 1.9);
+  height: calc(var(--h) * 0.2);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(255 250 220 / 0.85) 0%, rgb(255 236 150 / 0.45) 55%, rgb(255 236 150 / 0) 100%);
+  transform: scale(calc(0.3 + var(--swing, 0) * 0.7));
+  opacity: calc(var(--swing, 0) * var(--pool, 1));
+}
+.sb-board-shade {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  /* Swings out from standing under the feet to lying long behind them. */
+  transform: scale(calc(1 + var(--swing, 0) * 0.6), calc(1 - var(--swing, 0) * 0.76)) rotate(calc(var(--swing, 0) * 90deg));
+  transform-origin: 0 0;
+  opacity: calc(0.15 + var(--swing, 0) * 0.45);
+}
+.sb-board-stand {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -100%);
+}
+.sb-board-copy {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+.sb-board-copy :where(path, rect, circle, ellipse, polygon, line, polyline) {
+  fill: #3a4478 !important;
+  stroke: #3a4478 !important;
+}
+.sb-board-struck {
+  position: absolute;
+  width: calc(var(--unit-w, 120px) * 2.2);
+  height: calc(var(--unit-w, 120px) * 1.1);
+  left: calc(var(--unit-w, 120px) * -1.1);
+  top: calc(var(--unit-w, 120px) * -0.88);
+  overflow: visible;
+}
+.sb-board-arrow {
+  --k: clamp(0, calc((var(--p) - var(--d)) * 8), 1);
+  opacity: min(1, calc(var(--k) * 3));
+}
+.sb-board-arrow use {
+  translate: calc((1 - var(--k)) * -60px) calc((1 - var(--k)) * -90px);
+}
+.sb-board-shadow {
+  fill: #2c3566;
+  opacity: 0.75;
+}
+.sb-board-chip {
+  fill: #fbf4e2;
+  opacity: calc(1 - var(--k) * 0.6);
+}
