@@ -43,7 +43,13 @@ export const ultimate: UltimateDef = {
   cost: 100,
   speed: 10,
   presentation: {
+    cinematic: "foreclosure",
     theme: "contract",
     accent: "#f3d487",
+    voice: {
+      activation: "Now then. What's all this worth?",
+      impact: "Foreclosed!",
+      after: "Proceeds to the party. Don't spend it all at once.",
+    },
   },
 };
