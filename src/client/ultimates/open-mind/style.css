@@ -1,0 +1,464 @@
+/* ------------------------------------------------- The Open Mind (mind-) -- */
+/*
+ * Everything here moves on the variables the cinematic stage writes: --p,
+ * --pe, --pi, --pb and --f on an effect, --bgt on the film. No keyframes, no
+ * filters, nothing blurred: glows are wide translucent strokes and gradients.
+ *
+ * Palette: night #07060b, the Mindflayer's green #c7f06a, wall-ink violet
+ * #b7a9cf, the enemy's plan amber #ffb347.
+ */
+
+/* ---- the floor of the thinking ---- */
+.mind-bg-drift {
+  transform: translate(calc(sin(var(--bgt, 0) * 0.9 + var(--i)) * 14px), calc(var(--bgt, 0) * -22px));
+}
+.mind-bg-turn {
+  transform: rotate(calc(var(--bgt, 0) * 2deg));
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+/* ---- a mind, over a head ---- */
+.cine-vfx > .mind-disc {
+  --size: calc(var(--ah, 240px) * 0.55 + 40px);
+  --in: min(1, calc(var(--p) * 4.5));
+  width: var(--size);
+  height: var(--size);
+  transform: translate(-50%, calc(-50% - var(--ah, 240px) * 1.22)) scale(calc(var(--s) * (0.35 + 0.65 * var(--in)))) !important;
+  opacity: var(--in);
+}
+.cine-anchored > .mind-disc {
+  /* On the board, a figure's box is its drawing plus room; hang it lower. */
+  transform: translate(-50%, calc(-50% - var(--ah, 120px) * 1.08)) scale(calc(var(--s) * (0.35 + 0.65 * var(--in)))) !important;
+}
+.cine-vfx > .mind-disc[data-held] {
+  --in: 1;
+}
+.fx-mind-disc-wrap[data-follow-index="0"] > .mind-disc[data-skip-first],
+.fx-mind-hole-wrap[data-follow-index="0"] > .mind-hole[data-echo],
+.fx-mind-hole-wrap:not([data-follow-index]) > .mind-hole[data-echo] {
+  display: none;
+}
+.mind-disc svg,
+.mind-maze svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.mind-disc-halo {
+  fill: none;
+  stroke: #b7a9cf;
+  stroke-opacity: 0.18;
+  stroke-width: 14;
+}
+.mind-disc-back {
+  fill: #0a0712;
+  fill-opacity: 0.86;
+  stroke: #07060b;
+  stroke-width: 7;
+}
+.mind-disc-turn {
+  transform: rotate(calc(var(--turn0, 0deg) + var(--p) * var(--spin, 24deg)));
+}
+.mind-wall-ink,
+.mind-wall {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mind-disc .mind-wall-ink {
+  stroke: #07060b;
+  stroke-width: 11;
+}
+.mind-disc .mind-wall {
+  stroke: #a69fb4;
+  stroke-width: 5;
+}
+.mind-coil-glow {
+  fill: #ffb347;
+  fill-opacity: 0.12;
+}
+.mind-coil-ink,
+.mind-coil-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mind-coil-ink {
+  stroke: #07060b;
+  stroke-width: 6;
+}
+.mind-coil-line {
+  stroke: #ffb347;
+  stroke-width: 2.8;
+}
+.mind-disc .mind-coil {
+  transform: rotate(calc(var(--p) * -140deg));
+}
+
+/* Doubt, winding in the long way: one dot at a time, and never arriving. */
+.mind-doubt circle {
+  fill: #b98cff;
+  opacity: clamp(0, calc((var(--d0, 0) + var(--p) * var(--pace, 0.34) - var(--k)) * 40), 1);
+}
+.mind-disc .mind-doubt {
+  --d0: 0.02;
+  --pace: 0.36;
+}
+.fx-mind-disc-wrap:not([data-follow-index="0"]) .mind-doubt {
+  display: none;
+}
+
+/* Holed: a clean hole through the centre, ringed in the Mindflayer's green. */
+.mind-hole-rim {
+  fill: none;
+  stroke: #c7f06a;
+  stroke-width: 5;
+}
+.mind-hole-dark {
+  fill: #020104;
+}
+.mind-disc[data-small] .mind-disc-halo {
+  stroke-opacity: 0.3;
+}
+.mind-disc[data-holed] .mind-disc-back {
+  fill-opacity: 0.72;
+}
+/* The target's mind on the board is left open: a green ring round it all. */
+.mind-disc[data-holed][data-primary] .mind-disc-halo {
+  stroke: #c7f06a;
+  stroke-opacity: calc(0.35 + 0.3 * var(--in));
+  stroke-width: 8;
+}
+.mind-disc[data-holed]:not([data-primary]) .mind-disc-hole {
+  transform: scale(0.62);
+}
+
+/* ---- the labyrinth, room-sized ---- */
+.cine-vfx > .mind-maze {
+  width: var(--size);
+  height: var(--size);
+  transform: translate(-50%, -50%) rotate(var(--rot)) !important;
+}
+.mind-maze-floor {
+  fill: #0b0813;
+  stroke: #b7a9cf;
+  stroke-opacity: 0.1;
+  stroke-width: 6;
+}
+.mind-maze .mind-wall-ink {
+  stroke: #030206;
+  stroke-width: 5;
+  transform: translate(0.9px, 1.3px);
+}
+.mind-maze .mind-wall {
+  stroke: #b7a9cf;
+  stroke-width: 2.2;
+}
+.mind-maze .mind-coil {
+  transform: rotate(calc(var(--p) * -60deg));
+}
+.mind-maze[data-mode="heart"] .mind-coil {
+  /* The plan winding tighter, a turn at a time. */
+  transform: rotate(calc(var(--pi) * -300deg - var(--f) * 2deg)) scale(calc(1 - var(--pe) * 0.2));
+}
+.mind-maze .mind-coil-ink {
+  stroke-width: 3.2;
+}
+.mind-maze .mind-coil-line {
+  stroke-width: 1.4;
+}
+.mind-maze[data-mode="heart"] .mind-coil-glow {
+  fill-opacity: calc(0.05 + var(--pe) * 0.08);
+}
+/* The quiet: the walls fall back into the dark, and only the plan is lit. */
+.mind-maze[data-mode="heart"] .mind-maze-walls {
+  opacity: 0.28;
+}
+.mind-maze .mind-doubt {
+  --d0: 0.34;
+  --pace: 0.12;
+}
+.mind-maze .mind-doubt circle {
+  fill: #9c86c4;
+}
+
+/* The needle: its head runs from `--from` to `--to` (maze units) as the camera's does. */
+.mind-needle {
+  transform: translateX(calc((var(--from) + (var(--to) - var(--from)) * var(--pi)) * 1px));
+}
+.mind-maze[data-mode="heart"] .mind-needle {
+  /* A hair from the coil, and trembling. */
+  transform: translateX(calc((var(--to) + (var(--f) - 1.5) * 0.28) * 1px)) translateY(calc((var(--f) - 1.5) * 0.12px));
+}
+.mind-needle-glow,
+.mind-needle-core {
+  stroke-linecap: round;
+}
+.mind-needle-glow {
+  stroke: #c7f06a;
+  stroke-opacity: 0.32;
+  stroke-width: 6;
+}
+.mind-needle-core {
+  stroke: #f2ffd2;
+  stroke-width: 1.3;
+}
+.mind-needle-tip-glow {
+  fill: #c7f06a;
+  fill-opacity: 0.45;
+}
+.mind-needle-tip {
+  fill: #fbffe9;
+}
+.mind-maze[data-mode="heart"] .mind-needle-tip-glow {
+  fill-opacity: calc(0.3 + var(--f) * 0.06);
+}
+
+/* A wall punched through where the needle met it, and the chips of it. */
+.mind-punch {
+  --q: clamp(0, calc((var(--pi) - var(--k)) * 5), 1);
+}
+.mind-maze[data-mode="heart"] .mind-punch {
+  --q: 1;
+}
+.mind-punch-hole {
+  fill: #020104;
+  stroke: #c7f06a;
+  stroke-width: 0.8;
+  opacity: clamp(0, calc((var(--pi) - var(--k)) * 80), 1);
+}
+.mind-maze[data-mode="heart"] .mind-punch-hole {
+  opacity: 1;
+}
+.mind-chip {
+  fill: #d6cbe8;
+  stroke: #030206;
+  stroke-width: 0.4;
+  transform: translate(calc(var(--dx) * var(--q)), calc(var(--dy) * var(--q))) rotate(calc(var(--r) * var(--q)));
+  opacity: calc(min(1, var(--q) * 30) * (1 - var(--q)));
+}
+.mind-maze[data-mode="heart"] .mind-chip {
+  display: none;
+}
+
+/* ---- a mind punched through ---- */
+/*
+ * `--h0` is when, in the effect's life, the hole goes through: 0 for the
+ * target's; later for a mind the thought passes on to, which hangs whole
+ * until then. `--hq` runs 0…1 from there, `--hqe` eased out.
+ */
+.cine-vfx > .mind-hole {
+  --in: 1;
+  --hq: clamp(0, calc((var(--p) - var(--h0, 0)) / (1 - var(--h0, 0))), 1);
+  --hqe: calc(1 - (1 - var(--hq)) * (1 - var(--hq)) * (1 - var(--hq)));
+  --fast: min(1, calc(var(--hq) * 40));
+  opacity: calc(1 - max(0, var(--p) - 0.72) * 2.8);
+}
+.mind-hole .mind-disc-back {
+  fill-opacity: calc(0.86 - var(--hqe) * 0.6);
+}
+.mind-hole-ring {
+  transform: rotate(calc(var(--hqe) * var(--spin))) scale(calc(1 + var(--hqe) * (0.12 + var(--i) * 0.07)));
+  opacity: calc(1 - var(--hqe) * 0.75);
+}
+.mind-hole .mind-disc-turn {
+  transform: rotate(var(--turn0, 0deg));
+}
+.mind-hole .mind-coil {
+  opacity: calc(1 - var(--fast));
+}
+.mind-hole .mind-disc-hole {
+  transform: scale(calc(var(--fast) * 1.1));
+}
+.mind-hole .mind-hole-rim {
+  stroke-width: calc(12 - var(--hqe) * 7);
+}
+.mind-coil-bit {
+  fill: none;
+  stroke: #ffb347;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  transform: translate(calc(var(--dx) * var(--hqe)), calc(var(--dy) * var(--hqe))) rotate(calc(var(--r) * var(--hqe)));
+  opacity: calc(var(--fast) * (1 - var(--hqe)));
+}
+.mind-hole-needle {
+  display: none;
+}
+.mind-hole[data-echo] .mind-hole-needle {
+  display: inline;
+}
+.mind-hole .mind-needle-glow,
+.mind-hole .mind-needle-core {
+  stroke-dasharray: 1800;
+  stroke-dashoffset: calc(1800 * (1 - var(--fast)));
+}
+.mind-hole .mind-needle-glow {
+  stroke-width: 18;
+}
+.mind-hole .mind-needle-core {
+  stroke-width: 4;
+}
+.mind-hole .mind-disc-halo {
+  stroke: #c7f06a;
+  stroke-opacity: calc(0.7 * var(--fast) * (1 - var(--hqe)));
+  transform: scale(calc(1 + var(--hqe) * 0.6));
+}
+
+/* ---- the thought, and the gaze ---- */
+.cine-vfx > .mind-beam {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none !important;
+}
+.mind-beam line {
+  stroke-linecap: round;
+}
+.mind-beam-glow {
+  stroke: #c7f06a;
+  stroke-opacity: 0.34;
+  stroke-width: 30;
+}
+/* Ink under the light, so the thought still reads on the two-tone frame. */
+.mind-beam-ink {
+  stroke: #07060b;
+  stroke-width: 15;
+}
+.mind-beam-core {
+  stroke: #f4ffd8;
+  stroke-width: 6;
+}
+.mind-beam[data-kind="mind-sight"] .mind-beam-ink {
+  display: none;
+}
+.mind-beam[data-kind="mind-spike"] {
+  opacity: calc(1 - max(0, var(--p) - 0.42) * 1.9);
+}
+.mind-beam-flare {
+  fill: #eaffb8;
+  fill-opacity: calc(0.8 * (1 - var(--pe)));
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  transform: scale(calc(0.6 + var(--pe) * 3));
+}
+.mind-beam[data-kind="mind-sight"] .mind-beam-glow {
+  stroke-width: 12;
+  stroke-opacity: 0.22;
+}
+.mind-beam[data-kind="mind-sight"] .mind-beam-core {
+  stroke-width: 2.6;
+  stroke: #d9f59a;
+}
+.mind-beam[data-kind="mind-sight"] .mind-beam-flare {
+  fill-opacity: calc(0.7 * max(0, var(--p) - 0.55) * 2);
+  transform: scale(0.5);
+}
+
+/* ---- the iris ---- */
+.cine-screen > .cine-vfx > .mind-iris {
+  overflow: hidden;
+}
+.mind-iris i {
+  position: absolute;
+  left: var(--cx, 50%);
+  top: var(--cy, 50%);
+  width: calc(var(--rr) * 2);
+  height: calc(var(--rr) * 2);
+  margin: calc(var(--rr) * -1);
+  border-radius: 50%;
+  box-shadow: 0 0 0 300vmax #030206, inset 0 0 0 3px rgba(199, 240, 106, 0.55);
+}
+.mind-iris[data-mode="close"] i {
+  --rr: calc(var(--r, 60px) + (1 - var(--pe)) * 1500px);
+}
+
+/* ---- the drawn frame's light ---- */
+.cine-vfx > .mind-glare {
+  width: 0;
+  height: 0;
+  transform: scale(var(--s)) !important;
+}
+.mind-glare i {
+  position: absolute;
+  left: -1400px;
+  top: -900px;
+  width: 2800px;
+  height: 1800px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fbffe9 0%, #eaffbf 40%, color-mix(in srgb, var(--c) 75%, #fff) 64%, transparent 100%);
+  opacity: calc(1 - clamp(0, calc((var(--p) - 0.3) * 2.6), 1));
+}
+.mind-iris[data-mode="open"] i {
+  --rr: calc(50px + var(--pi) * 1500px);
+}
+
+/* ---- the eye, gathering to a point ---- */
+.cine-vfx > .mind-pin {
+  width: 0;
+  height: 0;
+  transform: none !important;
+}
+.mind-pin i {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+}
+.mind-pin-glow {
+  left: -80px;
+  top: -80px;
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--c) 70%, transparent), transparent);
+  transform: scale(calc(var(--s) * (1.3 - var(--pe) * 0.95)));
+  opacity: calc(0.15 + 0.3 * var(--pe));
+  mix-blend-mode: screen;
+}
+.mind-pin-ring {
+  --q: clamp(0, calc((var(--p) - var(--d)) * 2.2), 1);
+  left: -70px;
+  top: -70px;
+  width: 140px;
+  height: 140px;
+  box-sizing: border-box;
+  border: 3px solid var(--c);
+  transform: scale(calc(var(--s) * (1 - var(--q)) * 1.5));
+  opacity: calc(var(--q) * 3.5 * (1 - var(--q)));
+}
+.mind-pin-point {
+  left: -6px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  background: #fbffe9;
+  box-shadow: 0 0 8px 3px var(--c);
+  transform: scale(calc(var(--s) * clamp(0, calc((var(--p) - 0.55) * 3), 1)));
+}
+
+/* ---- the mask's crack, lit ---- */
+.cine-vfx > .mind-crack {
+  width: calc(40px * var(--s));
+  height: calc(48px * var(--s));
+  overflow: visible;
+  transform: translate(-50%, -50%) rotate(var(--rot)) !important;
+}
+.mind-crack path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 30;
+  stroke-dashoffset: calc(30 * (1 - var(--pe)));
+}
+.mind-crack-glow {
+  stroke: #c7f06a;
+  stroke-width: 3.2;
+  stroke-opacity: 0.4;
+}
+.mind-crack-core {
+  stroke: #f2ffcf;
+  stroke-width: 0.8;
+}

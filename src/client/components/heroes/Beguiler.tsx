@@ -1,6 +1,7 @@
 import { IllustratedHead, Neck, Tailoring } from "./Illustration";
 import { BaseWeapon, GearMount } from "../../equipment/Equipment";
-import { useRigParts } from "../../battle/useRigParts";
+import { useContext } from "react";
+import { CloseUpContext, useRigParts } from "../../battle/useRigParts";
 import {
   at,
   BODY,
@@ -33,9 +34,20 @@ import {
  * Beguiler is holding someone.
  */
 const PARTS = ["legs", "body", "head", "shard", "control", "strings"] as const;
+/**
+ * The eye, moved only in an Ultimate close-up (see `CloseUpContext`): the
+ * Mindflayer's Open Mind has it widen, narrow to a pin and flare. At rest it
+ * is exactly the eye as drawn.
+ */
+const FACE_PARTS = ["eye"] as const;
 
 export function Beguiler({ unitId, animators, className, viewBox }: HeroProps) {
   const hold = useRigParts(unitId, animators, PARTS);
+  // Registered only in a close-up, so a round's figure has no part the
+  // animator is not writing.
+  const closeUp = useContext(CloseUpContext);
+  const face = useRigParts(unitId, closeUp ? animators : undefined, FACE_PARTS);
+  const facePart = (name: (typeof FACE_PARTS)[number]) => (closeUp ? face(name) : undefined);
   const g = useShades("bgl");
   const [bx, by] = BODY.shoulderBack;
   const [fx, fy] = BODY.shoulderFront;
@@ -164,13 +176,15 @@ export function Beguiler({ unitId, animators, className, viewBox }: HeroProps) {
             d="M51.5 29.5 Q54.5 27.5 57.5 29.5 Q54.5 32 51.5 29.5 Z"
             fill={INK}
           />
-          <circle
-            className="ph-bgl-eye"
-            cx={54.5}
-            cy={29.8}
-            r={1.3}
-            fill="#c7f06a"
-          />
+          <g ref={facePart("eye")} style={at(54.5, 29.8)}>
+            <circle
+              className="ph-bgl-eye"
+              cx={54.5}
+              cy={29.8}
+              r={1.3}
+              fill="#c7f06a"
+            />
+          </g>
           {/* a painted smile, too wide */}
           <path
             d="M51 37.5 Q56 40.5 61.5 36"
