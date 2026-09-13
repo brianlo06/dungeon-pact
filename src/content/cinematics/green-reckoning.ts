@@ -208,7 +208,7 @@ export const greenReckoning: Cinematic = {
       ],
       vfx: [
         { kind: "green-eyes", at: 0, until: 1, params: { from: 1, to: 1 } },
-        { kind: "green-foes", at: 0, until: 1, layer: "back", params: { mode: "rot", x0: 1000, x1: 1510, maxH: 470 } },
+        { kind: "green-foes", at: 0, until: 1, layer: "back", params: { mode: "rot", x0: 1000, x1: 1470, maxH: 470 } },
         { kind: "green-soil", at: 0, until: 1, layer: "front", seed: 41 },
         { kind: "green-web", at: 0, until: 1, layer: "front", seed: 3, params: { mode: "surge", ox: -0.02, oy: 0.01, depth: 110 } },
         { kind: "green-burst", at: 0, until: 1, layer: "front" },

@@ -185,7 +185,7 @@ function buildFoes(el: HTMLElement, box: HTMLElement, rot: boolean) {
     // A glow behind each figure, so a black line reads against black air.
     const haze = document.createElement("i");
     haze.className = "gr-foe-haze";
-    node.prepend(haze);
+    node.insertBefore(haze, node.firstChild);
     let over = 1;
     const svg = s.rig.querySelector<SVGSVGElement>("svg");
     try {
@@ -296,7 +296,9 @@ const Soil = ({ cue }: VfxProps) => {
 };
 
 const ROOTS = 7;
-const TWIGS = 3;
+/** Where along a root its side roots leave: three along it, two fanning under the foot. */
+const TWIG_AT = [0.26, 0.47, 0.66, 0.93, 0.97];
+const TWIGS = TWIG_AT.length;
 
 /**
  * The web. Every root is a path of length 1, so growth is a dash offset; the
@@ -322,11 +324,12 @@ const Web = ({ cue }: VfxProps) => {
           <path className="gr-root-glow" pathLength={1} />
           <path className="gr-root-line" pathLength={1} />
           <path className="gr-root-rot" pathLength={1} />
+          <path className="gr-root-braid" pathLength={1} />
           {Array.from({ length: TWIGS }, (_, t) => (
             <path key={t} className="gr-twig" pathLength={1} />
           ))}
-          <circle className="gr-bead" r="9" />
-          <circle className="gr-bead core" r="4" />
+          <circle className="gr-bead" r="15" opacity="0" />
+          <circle className="gr-bead core" r="6" opacity="0" />
         </g>
       ))}
     </svg>
@@ -527,6 +530,10 @@ const web: Frame = (el, p, age, ctx) => {
     setAttr(paths[0], "d", d);
     setAttr(paths[1], "d", d);
     setAttr(paths[2], "d", d);
+    // A thinner root braided round the main one, crossing it twice.
+    const w = 10 + (i % 3) * 5;
+    const braid = [r.pts[0], [r.pts[1][0] + w, r.pts[1][1] - w * 1.6], [r.pts[2][0] - w, r.pts[2][1] + w * 1.4], r.pts[3]];
+    setAttr(paths[3], "d", d3(braid));
     g.dataset.kind = r.kind;
     g.toggleAttribute("data-faint", !!r.faint);
     // Growth: the whole web in the web and hand shots; already grown for the surge.
@@ -534,17 +541,23 @@ const web: Frame = (el, p, age, ctx) => {
     const grown = ease("out", k);
     setStyle(paths[0], "stroke-dashoffset", (1 - grown).toFixed(3));
     setStyle(paths[1], "stroke-dashoffset", (1 - grown).toFixed(3));
+    setStyle(paths[3], "stroke-dashoffset", (1 - clamp(grown * 1.04 - 0.04)).toFixed(3));
     // Rot takes the last part of a root that reaches an enemy.
     if (r.kind === "foe") setStyle(paths[2], "stroke-dasharray", `0 0.55 ${Math.max(0, grown - 0.55).toFixed(3)} 2`);
     else setStyle(paths[2], "stroke-dasharray", "0 2");
     // Twigs off the main root, each as the root passes it.
     for (let t = 0; t < TWIGS; t++) {
-      const tw = paths[3 + t];
-      const at = 0.3 + t * 0.22;
+      const tw = paths[4 + t];
+      const at = TWIG_AT[t];
       const [x, y] = bez(r.pts[0], r.pts[1], r.pts[2], r.pts[3], at);
       const s = (i * 7 + t * 3) % 5;
-      setAttr(tw, "d", `M${x.toFixed(1)} ${y.toFixed(1)} q${(s % 2 ? 24 : -24) + s * 4} ${18 + s * 6} ${(s % 2 ? 10 : -10) + s * 3} ${46 + s * 10}`);
-      setStyle(tw, "stroke-dashoffset", (1 - clamp((grown - at) / 0.3)).toFixed(3));
+      const tip = at > 0.9;
+      // Along the root they hang down into the soil; under the foot they fan out and curl.
+      const shape = tip
+        ? `M${x.toFixed(1)} ${y.toFixed(1)} q${t === 3 ? -34 : 30} ${-2 - s} ${t === 3 ? -52 : 50} ${20 + s * 3}`
+        : `M${x.toFixed(1)} ${y.toFixed(1)} q${(s % 2 ? 24 : -24) + s * 4} ${18 + s * 6} ${(s % 2 ? 10 : -10) + s * 3} ${46 + s * 10}`;
+      setAttr(tw, "d", shape);
+      setStyle(tw, "stroke-dashoffset", (1 - clamp((grown - at) / (tip ? 0.08 : 0.3))).toFixed(3));
     }
     const beads = g.querySelectorAll<SVGCircleElement>(".gr-bead");
     let bt = -1;
@@ -603,7 +616,7 @@ const party: Frame = (el, p, age, ctx) => {
     const t =
       k <= 0.001 && lift <= 0.001
         ? ""
-        : `translate(${(10 * k).toFixed(2)}%, ${(-10 * k - 7 * lift).toFixed(2)}%) rotate(${(-80 * k - 2 * lift).toFixed(2)}deg) scale(${(1 - 0.05 * lift).toFixed(3)}, ${(1 + 0.07 * lift).toFixed(3)})`;
+        : `translate(${(48 * k).toFixed(2)}%, ${(-10 * k - 7 * lift).toFixed(2)}%) rotate(${(-80 * k - 2 * lift).toFixed(2)}deg) scale(${(1 - 0.05 * lift).toFixed(3)}, ${(1 + 0.07 * lift).toFixed(3)})`;
     if (look.style.transform !== t) look.style.transform = t;
   });
   // A heart-light in every chest on the web, beating; the downed one's barely.

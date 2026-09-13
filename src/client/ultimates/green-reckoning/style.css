@@ -137,6 +137,13 @@
   stroke: #6fae62;
   stroke-width: 3;
 }
+.gr-root-braid {
+  stroke: #5f9a55;
+  stroke-width: 3.5;
+}
+.gr-root[data-kind="foe"] .gr-root-braid {
+  stroke: #4a2a3e;
+}
 .gr-root[data-kind="foe"] .gr-twig {
   stroke: #4a2a3e;
 }
@@ -145,7 +152,6 @@
 }
 .gr-bead {
   fill: #9be38a;
-  opacity: 0;
 }
 .gr-bead.core {
   fill: #effbe0;
