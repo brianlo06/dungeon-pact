@@ -414,6 +414,9 @@ and current phase.
   lift, paint order, projectile, mark and phase; rigs settle to rest.
 - Reconnect or remount: the stagehand is disposed and reset with the stage, and
   the first board a director sees is shown as it stands.
+- The action menu: hidden for the whole of a replay and shown again once the
+  round has settled, so nothing of the interface sits over a fighter crossing
+  the stage. The move being performed names itself in the stage callout.
 
 ## Annotating a new creature
 
