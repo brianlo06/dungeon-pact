@@ -66,7 +66,7 @@ describe("Command Performance", () => {
     effects(s, puppeteer, puppet, ultimateFor(puppeteer)!.effects);
     expect(puppet.row).toBe("front");
     // Through armour: the puppet's guard is not taken off.
-    expect(500 - puppet.hp).toBe(14 + puppeteer.power);
+    expect(500 - puppet.hp).toBe(10 + puppeteer.power);
     expect(status(puppet, "vulnerable")).toBeDefined();
     expect(status(puppet, "confused")?.sourceId).toBe(puppeteer.id);
     // Every other enemy is struck by the swing, and nobody else is turned.
@@ -89,7 +89,7 @@ describe("Command Performance", () => {
       expect(500 - e.hp, e.id).toBe(12 + puppeteer.power - e.guard);
     }
     // An open puppet takes the strings' bite harder.
-    expect(500 - puppet.hp).toBe(Math.round((14 + puppeteer.power) * 1.25));
+    expect(500 - puppet.hp).toBe(Math.round((10 + puppeteer.power) * 1.25));
   });
 
   it("resolves as an Ultimate: the film is handed the whole side, and the puppet's own blow turns", () => {

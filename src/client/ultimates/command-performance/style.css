@@ -40,11 +40,10 @@
   stroke-width: 1.5px;
 }
 .perf-sheaf-line {
-  stroke: #ffe2b3;
+  stroke: #2a170c;
   stroke-width: calc(var(--sw) * 1.1px);
 }
 /* On the drawn frame the strings stay light and the sheaf burns bright. */
-.ult-cinematic[data-two-tone] .perf-sheaf-line,
 .ult-cinematic[data-two-tone] .perf-string-core {
   stroke: #ffffff;
 }
@@ -251,6 +250,17 @@
   );
 }
 
+/* Behind a blow: a field of light hot enough that everything in front of it is ink. */
+.perf-lamp[data-hot] i {
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 244, 222, 1) 0%,
+    rgba(255, 214, 150, 1) 42%,
+    rgba(240, 160, 80, 0.85) 70%,
+    rgba(120, 60, 20, 0) 100%
+  );
+}
+
 /* ---- the curtain ---- */
 .cine-screen > .cine-vfx > .perf-curtain {
   overflow: hidden;
@@ -286,4 +296,9 @@
   background:
     radial-gradient(ellipse 50% 70% at 50% 0%, #e0b25c 0 55%, #7a5320 62%, transparent 66%) 0 55% / 2.4% 90% repeat-x,
     linear-gradient(#b8893e, #6d4a1c) 0 0 / 100% 50% no-repeat;
+}
+
+/* The hot field only burns for the blow, then the theatre comes back up behind it. */
+.perf-lamp[data-hot] {
+  opacity: calc(1 - clamp(0, (var(--p) - 0.1) * 1.5, 0.62));
 }

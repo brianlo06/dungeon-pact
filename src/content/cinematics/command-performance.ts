@@ -70,8 +70,8 @@ export const commandPerformance: Cinematic = {
       fastMs: 400,
       transition: { kind: "black", ms: 50 },
       camera: {
-        from: { x: 870, y: 505, zoom: 2.05, rotate: 8 },
-        to: { x: 880, y: 495, zoom: 2.25, rotate: 5 },
+        from: { x: 860, y: 470, zoom: 1.95, rotate: 8 },
+        to: { x: 870, y: 462, zoom: 2.12, rotate: 5 },
         ease: "out",
       },
       background: "perf-theatre",
@@ -99,20 +99,20 @@ export const commandPerformance: Cinematic = {
       fastMs: 0,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 800, y: 520, zoom: 1.05, rotate: -2 },
-        to: { x: 840, y: 555, zoom: 1.12, rotate: -1 },
+        from: { x: 820, y: 520, zoom: 1.0, rotate: -2 },
+        to: { x: 850, y: 550, zoom: 1.06, rotate: -1 },
         ease: "inOut",
       },
       background: "perf-theatre",
       lighting: { exposure: 0.62, rim: [AMBER, 0.7, 1], vignette: 0.5, letterbox: BARS },
       toLighting: { exposure: 0.7, rim: [AMBER, 0.8, 1], vignette: 0.46, letterbox: BARS },
       actors: [
-        { role: "caster", at: [230, 1060], size: 1000, clip: "ult:perf-cast", then: "ult:perf-cast", look: "rim", rim: AMBER, z: 4 },
+        { role: "caster", at: [360, 880], size: 820, clip: "ult:perf-cast", then: "ult:perf-cast", look: "rim", rim: AMBER, z: 4 },
         {
           role: "targets",
-          at: [1000, 830],
-          spread: [210, -8],
-          size: 250,
+          at: [940, 870],
+          spread: [190, -8],
+          size: 230,
           face: -1,
           look: "lit",
           z: 2,
@@ -121,20 +121,42 @@ export const commandPerformance: Cinematic = {
       ],
       vfx: [
         { kind: "perf-strings", at: 0, until: 1, layer: "front", params: { mode: "cast", from: "bar", face: -1, hook: 0.34, leave: 0.2, width: 2.6 } },
-        { kind: "perf-rail", at: 0, until: 1, x: -120, y: 690, layer: "front", params: { w: 980, post: 0.62, thick: 58 } },
+        { kind: "perf-rail", at: 0, until: 1, x: -120, y: 600, layer: "front", params: { w: 900, post: 0.7, thick: 54 } },
       ],
       sound: [
         { at: 0.05, sfx: "perf-motif" },
         { at: 0.33, sfx: "perf-hook" },
       ],
       text: [
-        { kind: "name", at: 0.3, until: 1, text: "$name", x: 0.5, y: 0.17 },
-        { kind: "epithet", at: 0.4, until: 1, text: "$epithet", x: 0.5, y: 0.27 },
+        { kind: "name", at: 0.3, until: 1, text: "$name", x: 0.34, y: 0.17 },
+        { kind: "epithet", at: 0.4, until: 1, text: "$epithet", x: 0.34, y: 0.27 },
       ],
       markers: [
         { at: 0.34, label: "bite" },
         { at: 0.3, label: "title" },
       ],
+      framing: {
+        boss: {
+          camera: {
+            from: { x: 840, y: 500, zoom: 0.96, rotate: -2 },
+            to: { x: 860, y: 520, zoom: 1.0, rotate: -1 },
+            ease: "inOut",
+          },
+          actors: [
+            { role: "caster", at: [330, 880], size: 800, clip: "ult:perf-cast", then: "ult:perf-cast", look: "rim", rim: AMBER, z: 4 },
+            {
+              role: "targets",
+              at: [960, 880],
+              spread: [280, -8],
+              size: 230,
+              face: -1,
+              look: "lit",
+              z: 2,
+              react: [{ at: 0.4, clip: "anticipate", then: "idle" }],
+            },
+          ],
+        },
+      },
     },
 
     /* 3 · BLOCKING — profile: walked into its own line. */
@@ -148,8 +170,8 @@ export const commandPerformance: Cinematic = {
       fastMs: 340,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 760, y: 650, zoom: 1.5 },
-        to: { x: 850, y: 650, zoom: 1.55 },
+        from: { x: 780, y: 640, zoom: 1.34 },
+        to: { x: 880, y: 640, zoom: 1.38 },
         ease: "linear",
       },
       background: "perf-theatre",
@@ -158,9 +180,9 @@ export const commandPerformance: Cinematic = {
       actors: [
         {
           role: "targets",
-          at: [520, 860],
-          spread: [270, -6],
-          size: 330,
+          at: [480, 860],
+          spread: [340, -6],
+          size: 320,
           face: 1,
           look: "lit",
           z: 2,
@@ -175,6 +197,31 @@ export const commandPerformance: Cinematic = {
         { kind: "name", at: 0.05, until: 1, text: "$name", x: 0.06, y: 0.2, mode: "fast" },
       ],
       markers: [{ at: 0.33, label: "step" }],
+      framing: {
+        boss: {
+          // Too heavy to walk: hauled one step.
+          camera: {
+            from: { x: 800, y: 600, zoom: 1.0 },
+            to: { x: 850, y: 600, zoom: 1.04 },
+            ease: "linear",
+          },
+          actors: [
+            {
+              role: "targets",
+              at: [520, 880],
+              spread: [440, -6],
+              size: 280,
+              face: 1,
+              look: "lit",
+              z: 2,
+              react: [{ at: 0.4, clip: "block" }],
+            },
+          ],
+          vfx: [
+            { kind: "perf-strings", at: 0, until: 1, layer: "front", params: { mode: "walk", face: 1, walk: 0.3, steps: 1, flip: true, fx: 520, fy: -300, fs: 90, width: 4 } },
+          ],
+        },
+      },
     },
 
     /* 4 · HELD — low angle: hoisted off the boards, and nothing moves. */
@@ -188,8 +235,8 @@ export const commandPerformance: Cinematic = {
       fastMs: 380,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 800, y: 480, zoom: 1.7 },
-        to: { x: 800, y: 478, zoom: 1.72 },
+        from: { x: 800, y: 590, zoom: 1.62 },
+        to: { x: 800, y: 588, zoom: 1.64 },
         ease: "linear",
       },
       background: "perf-theatre",
@@ -206,6 +253,35 @@ export const commandPerformance: Cinematic = {
       duck: [{ at: 0, level: 0.04, ms: 560 }],
       sound: [{ at: 0.02, sfx: "perf-hush" }],
       markers: [{ at: 0.5, label: "held" }],
+      framing: {
+        large: {
+          camera: {
+            from: { x: 800, y: 620, zoom: 1.4 },
+            to: { x: 800, y: 618, zoom: 1.42 },
+            ease: "linear",
+          },
+          actors: [{ role: "target", at: [800, 880], size: 330, face: 1, look: "silhouette", z: 2, clip: "idle" }],
+          vfx: [
+            { kind: "perf-lamp", at: 0, until: 1, x: 820, y: 440, layer: "back", params: { rx: 560, ry: 430 } },
+            { kind: "motes", at: 0, until: 1, x: 800, y: 440, scale: 1.8, color: AMBER, seed: 5, layer: "back", params: { still: true } },
+            { kind: "perf-strings", at: 0, until: 1, layer: "front", params: { mode: "hoist", face: 1, lift: 0.14, tilt: -3, fx: 800, fy: -300, fs: 130, width: 4 } },
+          ],
+        },
+        boss: {
+          // Onto its toes, no further: it fills the frame to the waist.
+          camera: {
+            from: { x: 800, y: 520, zoom: 1.28 },
+            to: { x: 800, y: 518, zoom: 1.3 },
+            ease: "linear",
+          },
+          actors: [{ role: "target", at: [800, 890], size: 290, face: 1, look: "silhouette", z: 2, clip: "idle" }],
+          vfx: [
+            { kind: "perf-lamp", at: 0, until: 1, x: 820, y: 400, layer: "back", params: { rx: 640, ry: 480 } },
+            { kind: "motes", at: 0, until: 1, x: 800, y: 420, scale: 2.2, color: AMBER, seed: 5, layer: "back", params: { still: true } },
+            { kind: "perf-strings", at: 0, until: 1, layer: "front", params: { mode: "hoist", face: 1, lift: 0.06, tilt: -2, fx: 800, fy: -400, fs: 160, width: 4.6 } },
+          ],
+        },
+      },
     },
 
     /* 5 · SWING — the impact: yanked down through its own line. */
@@ -227,7 +303,7 @@ export const commandPerformance: Cinematic = {
       lighting: { exposure: 0.95, back: [AMBER, 0.3], rim: [AMBER, 0.8, 1], vignette: 0.3, letterbox: BARS },
       toLighting: { exposure: 0.62, back: [AMBER, 0.2], rim: [AMBER, 0.5, 1], vignette: 0.5, letterbox: BARS },
       actors: [
-        { role: "caster", at: [390, 420], size: 250, clip: "ult:perf-yank", look: "silhouette", z: 1 },
+        { role: "caster", at: [430, 570], size: 240, clip: "ult:perf-yank", look: "silhouette", z: 1 },
         {
           role: "targets",
           at: [700, 860],
@@ -240,13 +316,15 @@ export const commandPerformance: Cinematic = {
         },
       ],
       vfx: [
+        { kind: "perf-lamp", at: 0, until: 1, x: 940, y: 640, layer: "back", params: { rx: 900, ry: 520, hot: true } },
+        { kind: "perf-rail", at: 0, until: 1, x: -260, y: 520, layer: "front", params: { w: 820, post: 0.52, thick: 26 } },
         { kind: "perf-strings", at: 0, until: 1, layer: "front", params: { mode: "swing", face: 1, px: 600, py: -800, span: 0.42, contact: 0.04, go: 0.46, fx: 600, fy: -800, fs: 40, width: 3 } },
         { kind: "perf-splinters", at: 0, until: 1, layer: "front", seed: 11, params: { count: 16, size: 300 } },
         { kind: "perf-curtain", at: 0.86, until: 1, layer: "screen", params: { phase: "in" } },
       ],
       screen: [
         { kind: "two-tone", at: 0, ms: 70, color: AMBER },
-        { kind: "chromatic", at: 0.05, ms: 140, amount: 0.7 },
+        { kind: "chromatic", at: 0.05, ms: 90, amount: 0.35 },
       ],
       stop: [{ at: 0.04, ms: 140 }],
       shake: [
@@ -269,6 +347,36 @@ export const commandPerformance: Cinematic = {
         { at: 0.46, label: "through the line" },
         { at: 0.86, label: "curtain" },
       ],
+      framing: {
+        boss: {
+          // Too heavy to swing: yanked forward and down by its own weight, onto whatever is beside it.
+          camera: {
+            from: { x: 850, y: 585, zoom: 1.08, rotate: 3 },
+            to: { x: 870, y: 585, zoom: 1.0, rotate: 1 },
+            ease: "out",
+          },
+          actors: [
+            { role: "caster", at: [330, 560], size: 230, clip: "ult:perf-yank", look: "silhouette", z: 1 },
+            {
+              role: "targets",
+              at: [700, 900],
+              spread: [360, -8],
+              size: 280,
+              face: 1,
+              look: "lit",
+              z: 2,
+              react: [{ at: 0.04, clip: "hurt" }],
+            },
+          ],
+          vfx: [
+            { kind: "perf-lamp", at: 0, until: 1, x: 860, y: 560, layer: "back", params: { rx: 1000, ry: 600, hot: true } },
+            { kind: "perf-rail", at: 0, until: 1, x: -360, y: 512, layer: "front", params: { w: 820, post: 0.6, thick: 26 } },
+            { kind: "perf-strings", at: 0, until: 1, layer: "front", params: { mode: "yank", dir: 1, face: 1, px: 520, py: -900, span: 0.4, contact: 0.04, fx: 520, fy: -900, fs: 70, width: 4 } },
+            { kind: "perf-splinters", at: 0, until: 1, layer: "front", seed: 11, params: { count: 18, size: 420 } },
+            { kind: "perf-curtain", at: 0.86, until: 1, layer: "screen", params: { phase: "in" } },
+          ],
+        },
+      },
     },
 
     /* 6 · CURTAIN CALL — the curtain rises off the real board. */

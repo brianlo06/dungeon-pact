@@ -16,7 +16,7 @@ import type { UltimateDef } from "../ultimates";
  *  - if the party had already opened it (Vulnerable: Puppetry, Seed of doubt,
  *    Unpick the seam, Mind spike, the Breaker, the Broker), that opening is
  *    dragged into everything it hits: every other enemy is left Vulnerable;
- *  - and it is left hanging on the strings: 14 arcane through armour, left
+ *  - and it is left hanging on the strings: 10 arcane through armour, left
  *    Vulnerable, and still working for the Beguiler this round (Confused, so
  *    its own blow, at its own strength, lands on its own side).
  *
@@ -44,7 +44,7 @@ export const ultimate: UltimateDef = {
   name: "Command Performance",
   epithet: "Places. You already know your part.",
   description:
-    "Take one enemy on strings: it is walked into the front line and swung through its own side, 12 arcane to every other enemy. Then it is left hanging: 14 arcane through armour, Vulnerable, and still striking its own side this round. If it was already Vulnerable, everything it hits is left Vulnerable too.",
+    "Take one enemy on strings: it is walked into the front line and swung through its own side, 12 arcane to every other enemy. Then it is left hanging: 10 arcane through armour, Vulnerable, and still striking its own side this round. If it was already Vulnerable, everything it hits is left Vulnerable too.",
   target: "enemy",
   effects: [
     {
@@ -55,7 +55,7 @@ export const ultimate: UltimateDef = {
       // The swing: the puppet's body through every other enemy.
       kind: "enemies",
       others: true,
-      effects: [{ kind: "damage", amount: 8, damageType: "arcane" }],
+      effects: [{ kind: "damage", amount: 12, damageType: "arcane" }],
     },
     {
       // A body the party already opened opens whatever it is swung into.
@@ -71,7 +71,7 @@ export const ultimate: UltimateDef = {
     },
     {
       kind: "damage",
-      amount: 14,
+      amount: 10,
       damageType: "arcane",
       pierce: true,
     },

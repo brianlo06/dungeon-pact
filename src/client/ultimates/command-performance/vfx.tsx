@@ -242,7 +242,6 @@ const stringsFrame: Frame = (el, p, age, ctx) => {
   const otherMoves: Move[] = others.map(() => ({ ...STILL }));
   let sag = num(d, "sag", 0.05) * puppet.h;
   let tremble = 0;
-  let from: Pt | null = null;
   let flyTo = 1;
   const sheafLines: { a: Pt; b: Pt; o: number }[] = [];
 
@@ -300,17 +299,23 @@ const stringsFrame: Frame = (el, p, age, ctx) => {
     const contact = num(d, "contact", 0.04);
     const head0 = worldOf(puppet, HEAD, STILL);
     const L = Math.hypot(head0[0] - pivot[0], head0[1] - pivot[1]);
-    const thC = Math.atan2(head0[0] - pivot[0], head0[1] - pivot[1]);
+    const thPlaced = Math.atan2(head0[0] - pivot[0], head0[1] - pivot[1]);
+    // On the drawn frame it is already into the first of the rest: the cut hid the fall.
+    const first = mode === "swing" ? others[0]?.b : undefined;
+    const thC = first
+      ? Math.asin(clamp((first.x - num(d, "into", 0.42) * first.h - pivot[0]) / L, -0.99, 0.99))
+      : thPlaced;
     const span = num(d, "span", 0.42);
     if (mode === "swing" && others.length) {
       // Far enough to go through the last of them, then back a little, hanging.
       const last = others[others.length - 1].b;
-      const reachX = last.x + 0.25 * last.h - pivot[0];
+      // Never past `reach`: in a long line the far end is struck by the line itself going over.
+      const reachX = Math.min(last.x + 0.25 * last.h, num(d, "reach", 1240)) - pivot[0];
       const thEnd = Math.asin(clamp(reachX / L, -0.99, 0.99));
       const go = num(d, "go", 0.46);
       const k = (u - contact) / (go - contact);
       let th: number;
-      if (u < contact) th = thC - span * (1 - u / contact) * 0.25;
+      if (u < contact) th = lerp(thPlaced - span * 0.3, thC, u / contact);
       else if (k <= 1) th = lerp(thC, thEnd, easeOut(k));
       else {
         const since = (u - go) * len;
@@ -322,7 +327,7 @@ const stringsFrame: Frame = (el, p, age, ctx) => {
       move = {
         dx: hx - head0[0],
         dy: hy - head0[1],
-        rot: -(th - thC) * DEG - 16 * vel,
+        rot: -(th - thPlaced) * DEG - 16 * vel,
         origin: HEAD,
       };
       // Each of the rest is struck as the swing arrives at it.
@@ -403,7 +408,6 @@ const stringsFrame: Frame = (el, p, age, ctx) => {
   others.forEach((o, i) => writeLook(o.fig, o.b, otherMoves[i]));
 
   // Where the strings come from: the bar, if the caster is in the shot and asked for; else the dark above.
-  if (d.from === "bar") from = null;
   const bar = d.from === "bar" ? barPoints(root, svg) : null;
   const above: Pt = [num(d, "fx", puppet.x - 200), num(d, "fy", -200)];
   const spread = num(d, "fs", 60);
@@ -594,6 +598,7 @@ const Rail = ({ cue }: VfxProps) => {
 const Lamp = ({ cue }: VfxProps) => (
   <div
     className="perf-lamp"
+    data-hot={cue.params?.hot ? "" : undefined}
     style={v({ "--rx": `${Number(cue.params?.rx ?? 520)}px`, "--ry": `${Number(cue.params?.ry ?? 380)}px` })}
   >
     <i />
