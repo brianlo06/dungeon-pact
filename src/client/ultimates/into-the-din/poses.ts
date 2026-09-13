@@ -36,17 +36,17 @@ const turn = (...keys: [number, number][]): Pose[] => keys.map(([at, rotate]) =>
 /** The weapon carried back over the shoulder, as it walks. */
 const SHOULDER = -38;
 /** Drawn back as far as it goes, the head of it behind the Herald's own head. */
-const DRAWN = -72;
+const DRAWN = -30;
 /** Brought down onto the enemy: past level, into it. */
-const STRUCK = 104;
+const STRUCK = 78;
 
 /** The earnest face the Herald is drawn with. */
-const EARNEST: Expression = { brow: -0.4, knit: -1, open: 1.08, mouth: 1, wide: 1 };
+const EARNEST: Expression = { brow: -1.1, knit: -3, open: 1.2, mouth: 1, wide: 1 };
 /** The same face gone to war: brows down on the eyes, a grin with teeth in it. */
-const GRIN: Expression = { brow: 1.3, knit: 7, open: 0.72, mouth: 1.25, wide: 1.28 };
-const BARK: Expression = { brow: 1.5, knit: 9, open: 0.8, mouth: 2.35, wide: 1.12 };
+const GRIN: Expression = { brow: 1.8, knit: 10, open: 0.62, mouth: 1.25, wide: 1.3 };
+const BARK: Expression = { brow: 2, knit: 12, open: 0.78, mouth: 2.5, wide: 1.12 };
 /** Nothing moves in it: eyes locked on, jaw shut. */
-const SET: Expression = { brow: 1.7, knit: 10, open: 0.58, mouth: 0.55, wide: 0.92 };
+const SET: Expression = { brow: 2.1, knit: 12, open: 0.5, mouth: 0.42, wide: 0.86 };
 const SHOUT: Expression = { brow: 1.2, knit: 8, open: 0.95, mouth: 2.7, wide: 1.12 };
 
 /** On the board: the weapon comes down to the fore, and the horn goes back. */
@@ -164,10 +164,10 @@ const draw: Clip = {
   parts: {
     banner: [
       { at: 0, rotate: SHOULDER, y: -0.02, x: 0 },
-      { at: 0.4, rotate: DRAWN, y: -0.07, x: -0.03 },
-      { at: 1, rotate: DRAWN, y: -0.07, x: -0.03 },
+      { at: 0.4, rotate: DRAWN, y: -0.1, x: 0.02 },
+      { at: 1, rotate: DRAWN, y: -0.1, x: 0.02 },
     ],
-    flag: turn([0, 14], [0.4, 30], [1, 30]),
+    flag: turn([0, 14], [0.4, -6], [1, -6]),
     horn: turn([0, 20], [0.4, -48], [1, -48]),
     body: [
       { at: 0, squash: 1, y: 0 },
@@ -200,7 +200,7 @@ const blow: Clip = {
   ],
   parts: {
     banner: [
-      { at: 0, rotate: 58, y: 0.02, x: 0.03 },
+      { at: 0, rotate: 40, y: 0.02, x: 0.03 },
       { at: 0.03, rotate: STRUCK, y: 0.05, x: 0.05 },
       { at: 0.14, rotate: STRUCK - 7, y: 0.04, x: 0.045 },
       { at: 0.3, rotate: STRUCK - 3, y: 0.045, x: 0.05 },

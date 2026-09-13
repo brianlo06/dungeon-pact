@@ -42,7 +42,7 @@ const OR = "#e7b54a";
 const BARS = 0.1;
 
 /** Where the weapon lands in the blow, world units (probed). */
-const CONTACT = { x: 850, y: 700 };
+const CONTACT = { x: 960, y: 650 };
 
 export const intoTheDin: Cinematic = {
   id: "into-the-din",
@@ -64,8 +64,8 @@ export const intoTheDin: Cinematic = {
       actors: [{ role: "caster", at: [0, 0], size: 0, clip: "ult:din-step" }],
       vfx: [
         { kind: "call-aura", at: 0, until: 1, anchor: "caster", color: BONE },
-        { kind: "din-board", at: 0.05, until: 1, anchor: "party", seed: 3, params: { mode: "din" } },
-        { kind: "din-board", at: 0.1, until: 1, anchor: "targets", seed: 9, params: { mode: "din" } },
+        { kind: "din-board", at: 0.05, until: 1, anchor: "party", seed: 3, scale: 0.7, params: { mode: "din" } },
+        { kind: "din-board", at: 0.1, until: 1, anchor: "targets", seed: 9, scale: 0.8, params: { mode: "din" } },
       ],
       sound: [
         { at: 0, sfx: "ult-call" },
@@ -86,8 +86,8 @@ export const intoTheDin: Cinematic = {
       fastMs: 340,
       transition: { kind: "black", ms: 90 },
       camera: {
-        from: { x: 800, y: 690, zoom: 2.75 },
-        to: { x: 815, y: 695, zoom: 3.0 },
+        from: { x: 800, y: 715, zoom: 2.7 },
+        to: { x: 815, y: 715, zoom: 2.95 },
         ease: "out",
       },
       background: "din-field",
@@ -115,13 +115,13 @@ export const intoTheDin: Cinematic = {
       fastMs: 440,
       transition: { kind: "whip", ms: 110, dir: 1 },
       camera: {
-        from: { x: 760, y: 520, zoom: 1.3 },
-        to: { x: 850, y: 505, zoom: 1.42 },
+        from: { x: 720, y: 520, zoom: 1.3 },
+        to: { x: 820, y: 505, zoom: 1.4 },
         ease: "inOut",
       },
       background: "din-field",
-      lighting: { exposure: 0.62, rim: [BONE, 0.7, 1], vignette: 0.45, letterbox: BARS },
-      toLighting: { exposure: 0.7, rim: [BONE, 0.85, 1], vignette: 0.42, letterbox: BARS },
+      lighting: { exposure: 0.62, back: [BONE, 0.12], rim: [BONE, 0.5, 1], vignette: 0.45, letterbox: BARS },
+      toLighting: { exposure: 0.7, back: [BONE, 0.14], rim: [BONE, 0.6, 1], vignette: 0.42, letterbox: BARS },
       actors: [
         {
           role: "target",
@@ -147,10 +147,10 @@ export const intoTheDin: Cinematic = {
         },
         {
           role: "allies",
-          at: [330, 1040],
-          spread: [-150, 40],
-          size: 640,
-          look: "rim",
+          at: [430, 1000],
+          spread: [-135, 30],
+          size: 560,
+          look: "lit",
           rim: BONE,
           z: 3,
           clip: "ult:din-wait",
@@ -210,10 +210,10 @@ export const intoTheDin: Cinematic = {
             },
             {
               role: "allies",
-              at: [320, 1040],
-              spread: [-150, 40],
-              size: 620,
-              look: "rim",
+              at: [420, 1000],
+              spread: [-135, 30],
+              size: 540,
+              look: "lit",
               rim: BONE,
               z: 3,
               clip: "ult:din-wait",
@@ -240,11 +240,11 @@ export const intoTheDin: Cinematic = {
         ease: "linear",
       },
       background: "din-field",
-      lighting: { exposure: 0.16, rim: [BONE, 0.7, 1], vignette: 0.8, letterbox: 0.13 },
-      toLighting: { exposure: 0.07, rim: [BONE, 0.9, 1], vignette: 0.9, letterbox: 0.14 },
+      lighting: { exposure: 0.16, back: [BONE, 0.2], rim: [BONE, 0.7, 1], vignette: 0.8, letterbox: 0.13 },
+      toLighting: { exposure: 0.07, back: [BONE, 0.16], rim: [BONE, 0.9, 1], vignette: 0.9, letterbox: 0.14 },
       actors: [
         { role: "caster", at: [560, 1060], size: 720, clip: "ult:din-draw", then: "ult:din-draw", look: "rim", rim: BONE, z: 1 },
-        { role: "target", at: [1400, 1250], size: 1000, face: -1, look: "silhouette", z: 3 },
+        { role: "target", at: [1320, 1120], size: 1100, face: -1, look: "silhouette", z: 3 },
       ],
       vfx: [
         { kind: "din-noise", at: 0, until: 1, layer: "back", seed: 41, params: { mode: "freeze", around: "caster", field: 70, dense: 1.4, width: 0.8 } },
@@ -261,7 +261,7 @@ export const intoTheDin: Cinematic = {
           },
           actors: [
             { role: "caster", at: [540, 1080], size: 720, clip: "ult:din-draw", then: "ult:din-draw", look: "rim", rim: BONE, z: 1 },
-            { role: "target", at: [1500, 1300], size: 700, face: -1, look: "silhouette", z: 3 },
+            { role: "target", at: [1330, 1320], size: 760, face: -1, look: "lit", z: 3 },
           ],
         },
       },
@@ -296,7 +296,7 @@ export const intoTheDin: Cinematic = {
           shove: { at: 0.04, by: [110, -6] },
           toTilt: 7,
         },
-        { role: "caster", at: [620, 860], to: [640, 860], ease: "out", size: 470, clip: "ult:din-blow", then: "ult:din-blow", look: "lit", rim: BONE, z: 2 },
+        { role: "caster", at: [700, 860], to: [715, 860], ease: "out", size: 470, clip: "ult:din-blow", then: "ult:din-blow", look: "lit", rim: BONE, z: 2 },
       ],
       vfx: [
         { kind: "din-noise", at: 0, until: 1, layer: "back", seed: 51, params: { mode: "tune", around: "caster,targets", field: 110, dense: 1.2, ox: CONTACT.x, oy: CONTACT.y, speed: 1500, from: 0.04 } },
@@ -336,8 +336,8 @@ export const intoTheDin: Cinematic = {
         },
         boss: {
           camera: {
-            from: { x: 920, y: 480, zoom: 1.14, rotate: -4 },
-            to: { x: 930, y: 475, zoom: 1.04, rotate: -1.5 },
+            from: { x: 920, y: 530, zoom: 1.14, rotate: -4 },
+            to: { x: 930, y: 520, zoom: 1.04, rotate: -1.5 },
             ease: "out",
           },
           actors: [
@@ -382,26 +382,26 @@ export const intoTheDin: Cinematic = {
       lighting: { exposure: 0.4, rim: [BONE, 0.3, 1], vignette: 0.55, letterbox: BARS },
       toLighting: { exposure: 0.85, rim: [OR, 0.95, 1], vignette: 0.35, letterbox: BARS },
       actors: [
-        { role: "caster", at: [1170, 690], size: 210, clip: "ult:din-front", then: "ult:din-front", look: "rim", rim: BONE, z: 1 },
+        { role: "caster", at: [1110, 700], size: 230, clip: "ult:din-front", then: "ult:din-front", look: "rim", rim: BONE, z: 1 },
         {
           role: "allies",
-          at: [580, 880],
-          spread: [-190, 12],
-          size: 520,
-          look: "rim",
+          at: [600, 880],
+          spread: [-250, 14],
+          size: 500,
+          look: "lit",
           rim: OR,
           z: 2,
           clip: "ult:din-wait",
-          react: [{ at: 0.09, clip: "ult:din-surge", then: "ult:din-surge" }],
+          react: [{ at: 0.13, clip: "ult:din-surge", then: "ult:din-surge" }],
         },
       ],
       vfx: [
-        { kind: "din-noise", at: 0, until: 1, layer: "back", seed: 61, params: { mode: "tune", around: "allies", field: 90, dense: 1, ox: 1170, oy: 560, speed: 2600, from: 0 } },
-        { kind: "din-ring", at: 0, until: 1, layer: "back", params: { ox: 1170, oy: 560, speed: 2900, gap: 80, rings: 4 } },
-        { kind: "din-courage", at: 0, until: 1, layer: "front", params: { arrive: 0.09 } },
+        { kind: "din-noise", at: 0, until: 1, layer: "back", seed: 61, params: { mode: "tune", around: "allies", field: 90, dense: 1, ox: 1110, oy: 580, speed: 1500, from: 0 } },
+        { kind: "din-ring", at: 0, until: 1, layer: "back", params: { ox: 1110, oy: 580, speed: 1600, gap: 90, rings: 4 } },
+        { kind: "din-courage", at: 0, until: 1, layer: "front", params: { arrive: 0.13 } },
       ],
       sound: [{ at: 0.04, sfx: "din-surge" }],
-      markers: [{ at: 0.09, label: "heard" }],
+      markers: [{ at: 0.13, label: "heard" }],
     },
 
     /* 6 · CARRIED — back on the board. */

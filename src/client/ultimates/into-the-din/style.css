@@ -146,10 +146,10 @@
 }
 .din-board svg {
   position: absolute;
-  left: calc(var(--unit-w) * -1);
-  width: calc(var(--unit-w) * 2);
-  height: calc(var(--unit-w) * 2 * 220 / 240);
-  bottom: calc(var(--unit-w) * -0.16);
+  left: calc(var(--unit-w) * -1 * var(--s));
+  width: calc(var(--unit-w) * 2 * var(--s));
+  height: calc(var(--unit-w) * 2 * 220 / 240 * var(--s));
+  bottom: calc(var(--unit-w) * -0.16 * var(--s));
   overflow: visible;
 }
 .din-board-zig {

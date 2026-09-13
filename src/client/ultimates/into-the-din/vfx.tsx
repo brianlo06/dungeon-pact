@@ -232,7 +232,10 @@ const noise = (el: HTMLElement, p: number, age: number, ctx: VfxContext) => {
     }
     // Tuned: pulled onto a circle round the blow, and carried out with the ring.
     const radius = d + (ring - d) * 0.22;
-    const arc = arcPts(o, c, at.len * (1 + 0.6 * k), zig.length, radius);
+    // Once the ring is well past, the note it left there dies away.
+    const left = 1 - clamp((ring - d - 260) / 520);
+    if (left <= 0.04) continue;
+    const arc = arcPts(o, c, at.len * (1 + 0.6 * k) * left, zig.length, radius);
     const e = easeInOut(k);
     const pts = zig.map(([x, y], i): Pt => [lerp(x, arc[i][0], e), lerp(y, arc[i][1], e)]);
     hot += poly(pts) + " ";
@@ -408,7 +411,7 @@ const courage = (el: HTMLElement, p: number, _age: number, ctx: VfxContext) => {
       const t = `translate(${(lunge * 7).toFixed(2)}px, ${(-lunge * 2.5).toFixed(2)}px) rotate(${(lunge * 5).toFixed(2)}deg)`;
       if (look.style.transform !== t) look.style.transform = t;
     }
-    const d = carried(at.x + at.h * 0.3, at.y - at.h * 0.55, at.h, easeOut(since / 0.3));
+    const d = carried(at.x + at.h * 0.44, at.y - at.h * 0.55, at.h, easeOut(since / 0.3));
     setD(g.querySelector(".din-carry-line"), d);
     setD(g.querySelector(".din-carry-glow"), d);
     g.style.setProperty("--k", clamp(since / 0.08).toFixed(3));
