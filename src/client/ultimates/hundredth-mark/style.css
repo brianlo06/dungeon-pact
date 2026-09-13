@@ -1,0 +1,421 @@
+/* ------------------------------------------------- The Hundredth Mark -- */
+/*
+ * Everything the Ranger's Ultimate draws. Progress arrives as the film's
+ * variables (`--p`, `--pe`, `--pi`, `--pb`, `--f`) and a few of its own set by
+ * frame functions (`--k` on a sign, `--pp` on fog); nothing animates by
+ * itself, nothing here filters, and nothing large is blurred — softness is
+ * gradients.
+ */
+
+/* ---- the wood ---- */
+.hm-wood .hm-tally-lit {
+  opacity: clamp(0, calc((var(--lit, 0) * 1.25 - var(--i)) * 6), 1);
+}
+
+/* ---- the quarry sign, wherever it is drawn ---- */
+.hm-sign {
+  overflow: visible;
+  --k: 1;
+}
+.hm-sign-glow {
+  fill: #c7f08a;
+  fill-opacity: calc(var(--k) * 0.16);
+  stroke: #c7f08a;
+  stroke-width: 22;
+  stroke-opacity: calc(var(--k) * 0.22);
+  stroke-linejoin: round;
+}
+.hm-sign-ink {
+  fill: none;
+  stroke: #0b0f0a;
+  stroke-width: 15;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: min(1, calc(var(--k) * 3));
+}
+.hm-sign-line {
+  fill: none;
+  stroke: #d9ff9c;
+  stroke-width: 6.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: calc(1 - var(--k));
+}
+.hm-sign-ticks {
+  fill: none;
+  stroke: #c7f08a;
+  stroke-width: 6;
+  stroke-linecap: round;
+  opacity: clamp(0, calc((var(--k) - 0.6) * 4), 1);
+}
+.hm-sign-pip {
+  fill: #f2ffd9;
+  transform: scale(clamp(0, calc((var(--k) - 0.7) * 3.4), 1));
+}
+
+/* ---- the line, marked: signs placed in world units ---- */
+.hm-slot > .hm-sign {
+  transform: scale(calc(1.9 - min(1, var(--k)) * 0.9)) rotate(calc((1 - var(--k)) * -45deg));
+  opacity: min(1, calc(var(--k) * 4));
+}
+.hm-slot[data-primary] .hm-sign-line {
+  stroke: #f2ffd9;
+  stroke-width: 8;
+}
+
+/* ---- the rest of the line, copied off the board as ink ---- */
+.cine-vfx > .hm-lineup {
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: none !important;
+}
+.hm-clone {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 50% 97%;
+  will-change: transform;
+}
+.hm-clone-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.hm-clone-art :where(path, rect, circle, ellipse, polygon, polyline, line) {
+  fill: #0d120c !important;
+  stroke: #0d120c !important;
+}
+
+/* ---- a hundred possibilities ---- */
+.cine-vfx > .hm-lines {
+  will-change: transform;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none !important;
+}
+.hm-ray {
+  fill: none;
+  stroke: #c7f08a;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-dasharray: 1 1;
+  --drawn: clamp(0, calc((var(--p) - var(--d)) * 3.2), 1);
+  stroke-dashoffset: calc(1 - var(--drawn));
+  /* Drawn bright, then left hanging as a possibility. */
+  opacity: calc(var(--o) * (1 - clamp(0, calc((var(--p) - var(--d) - 0.3) * 1.6), 0.55)));
+}
+.hm-true {
+  stroke: #f2ffd9;
+  stroke-width: 3;
+  --drawn: clamp(0, calc((var(--p) - 0.7) * 5), 1);
+  opacity: var(--drawn);
+}
+.hm-lines[data-let] .hm-ray {
+  stroke-dashoffset: 0;
+  opacity: calc(var(--o) * (1 - clamp(0, calc((var(--p) - var(--out)) * 14), 1)));
+}
+.hm-lines[data-let] .hm-true {
+  stroke-width: calc(2 + clamp(0, calc((var(--p) - 0.55) * 6), 1) * 3.5);
+  opacity: 1;
+}
+.hm-lines[data-ghost] .hm-ray {
+  stroke-dashoffset: 0;
+  stroke-width: 1.2;
+  opacity: calc(var(--o) * 0.22);
+}
+.hm-lines[data-ghost] .hm-true {
+  opacity: 0;
+}
+
+.hm-lines[data-one] .hm-ray {
+  display: none;
+}
+.hm-lines[data-one] .hm-true {
+  stroke-dashoffset: 0;
+  stroke: #9ee04a;
+  stroke-width: calc(10 - var(--pe) * 6);
+  opacity: calc(1 - var(--pi));
+}
+
+/* ---- one sign, riding the target ---- */
+.cine-vfx > .hm-sign-box {
+  width: calc(var(--ah, 300px) * var(--size));
+  height: calc(var(--ah, 300px) * var(--size));
+  transform: translate(-50%, calc(-50% - var(--ah, 300px) * var(--lift))) !important;
+}
+.hm-sign-box > .hm-sign {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: scale(calc(1.6 - var(--k) * 0.6));
+}
+.hm-sign-box[data-mode="hold"] > .hm-sign {
+  --k: 1;
+  transform: scale(calc(1 + var(--f) * 0.015));
+}
+.hm-sign-box[data-mode="shatter"] > .hm-sign {
+  --k: 1;
+  transform: none;
+}
+.hm-sign-box[data-mode="shatter"] .hm-sign-half,
+.hm-sign-box[data-mode="shatter"] .hm-sign-ticks,
+.hm-sign-box[data-mode="shatter"] .hm-sign-glow,
+.hm-sign-box[data-mode="shatter"] .hm-sign-pip {
+  transform-box: view-box;
+  transform-origin: 70px 70px;
+}
+.hm-sign-box[data-mode="shatter"] .hm-sign-half.a {
+  transform: translate(calc(var(--pe) * 46px), calc(var(--pe) * -38px + var(--pi) * 60px)) rotate(calc(var(--pe) * 38deg));
+  opacity: calc(1 - clamp(0, calc((var(--p) - 0.35) * 2), 1));
+}
+.hm-sign-box[data-mode="shatter"] .hm-sign-half.b {
+  transform: translate(calc(var(--pe) * -50px), calc(var(--pe) * 30px + var(--pi) * 60px)) rotate(calc(var(--pe) * -44deg));
+  opacity: calc(1 - clamp(0, calc((var(--p) - 0.35) * 2), 1));
+}
+.hm-sign-box[data-mode="shatter"] .hm-sign-ticks {
+  transform: scale(calc(1 + var(--pe) * 1.6));
+  opacity: calc(1 - var(--p) * 2.2);
+}
+.hm-sign-box[data-mode="shatter"] .hm-sign-glow {
+  transform: scale(calc(1 + var(--pe) * 0.8));
+  opacity: calc(1 - var(--p) * 1.6);
+}
+.hm-sign-box[data-mode="shatter"] .hm-sign-pip {
+  transform: scale(calc(1 + var(--pe) * 5));
+  opacity: calc(1 - var(--p) * 3);
+}
+.hm-sign-burst,
+.hm-shard {
+  display: none;
+}
+.hm-sign-box[data-mode="shatter"] .hm-sign-burst {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: calc(6px * (1 - var(--p))) solid #e9ffc0;
+  background: radial-gradient(closest-side, rgba(242, 255, 217, calc(0.9 - var(--p) * 1.4)), transparent 70%);
+  transform: translate(-50%, -50%) scale(calc(0.3 + var(--pe) * 2.6));
+  opacity: calc(1 - var(--p));
+}
+.hm-sign-box[data-mode="shatter"] .hm-shard {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12%;
+  height: 12%;
+  margin: -6% 0 0 -6%;
+  background: #d9ff9c;
+  outline: 3px solid #0b0f0a;
+  transform: rotate(var(--a)) translateX(calc(var(--pe) * 260%)) translateY(calc(var(--pi) * 160%)) rotate(calc(var(--p) * var(--r))) scale(calc(1 - var(--p) * 0.6));
+  opacity: calc(1 - clamp(0, calc((var(--p) - 0.5) * 2), 1));
+}
+
+/* ---- the arrow ---- */
+.cine-vfx > .hm-arrow {
+  width: 0;
+  height: 0;
+  transform: rotate(var(--angle, 0deg)) !important;
+}
+.hm-arrow > * {
+  position: absolute;
+}
+.hm-arrow-art {
+  right: calc(var(--len) * -0.1);
+  top: calc(var(--len) * -0.2);
+  width: calc(var(--len) * 1.14);
+  height: calc(var(--len) * 0.4);
+  overflow: visible;
+}
+.hm-arrow-line {
+  right: calc(var(--len) * 0.85);
+  top: -5px;
+  height: 10px;
+  width: var(--run, 0px);
+  border-radius: 5px;
+  background: linear-gradient(90deg, transparent, rgba(199, 240, 138, 0.55) 30%, #d9ff9c);
+}
+.hm-arrow-line.core {
+  top: -1.5px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #f2ffd9 40%, #fff);
+}
+.hm-arrow-head {
+  right: -40px;
+  top: -40px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(242, 255, 217, 0.9), rgba(199, 240, 138, 0.35) 45%, transparent);
+  opacity: calc(0.6 + var(--f) * 0.1);
+}
+.cine-vfx > .hm-arrow[data-stuck] {
+  transform: translate(0, calc(var(--ah, 300px) * -0.56)) rotate(var(--wob, 0deg)) !important;
+}
+.hm-arrow[data-stuck] .hm-arrow-art {
+  right: calc(var(--len) * -0.52);
+  clip-path: inset(0 30% 0 0);
+}
+.hm-arrow[data-stuck] .hm-arrow-line,
+.hm-arrow[data-stuck] .hm-arrow-head {
+  display: none;
+}
+
+/* ---- fog ---- */
+.cine-vfx > .hm-fog {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  transform: none !important;
+  overflow: visible;
+}
+.hm-fog > i {
+  position: absolute;
+  will-change: transform;
+  left: -20%;
+  top: var(--y);
+  width: var(--w);
+  height: var(--h);
+  background: radial-gradient(farthest-side, rgba(223, 230, 212, var(--o)), rgba(223, 230, 212, calc(var(--o) * 0.4)) 55%, transparent);
+  transform: translate3d(var(--x, 0px), 0, 0);
+}
+.hm-fog[data-part] > i {
+  transform: translate3d(var(--x, 0px), calc(var(--side) * var(--pp, 0) * 160px), 0);
+}
+.cine-screen .hm-fog[data-wipe] {
+  overflow: hidden;
+}
+.hm-fog[data-wipe] > i {
+  width: 170%;
+  --q: clamp(0, calc((var(--pp, 0) - var(--lag)) / (1 - var(--lag))), 1);
+  background: radial-gradient(farthest-side, #e3e9d8 50%, rgba(227, 233, 216, 0.6) 72%, transparent);
+}
+.hm-fog[data-wipe="in"] > i {
+  left: calc((1.05 - var(--q) * 1.4) * 100%);
+}
+.hm-fog[data-wipe="out"] > i {
+  left: calc((-0.35 - var(--q) * 1.6) * 100%);
+}
+
+/* ---- the reticle, closing on the hit ---- */
+.hm-reticle {
+  overflow: hidden;
+}
+.hm-reticle-art {
+  position: absolute;
+  left: var(--px);
+  top: var(--py);
+  width: calc(10cqh + (1 - var(--pe)) * 190cqh);
+  height: calc(10cqh + (1 - var(--pe)) * 190cqh);
+  transform: translate(-50%, -50%) rotate(calc((1 - var(--pe)) * 30deg));
+  overflow: visible;
+  opacity: calc(1 - clamp(0, calc((var(--p) - 0.55) * 2.4), 1));
+}
+.hm-reticle-diamond,
+.hm-reticle-cross {
+  fill: none;
+  stroke: #f2ffd9;
+  stroke-width: 3px;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+}
+.hm-reticle-cross {
+  stroke: #c7f08a;
+  stroke-width: 5px;
+}
+.hm-reticle-cut {
+  position: absolute;
+  left: -5%;
+  width: 110%;
+  top: var(--py);
+  height: calc(2.4cqh * (1 - var(--pe)) + 2px);
+  transform: translateY(-50%);
+  background: linear-gradient(0deg, transparent, rgba(199, 240, 138, 0.8) 30%, #fff 50%, rgba(199, 240, 138, 0.8) 70%, transparent);
+  opacity: calc(1 - clamp(0, calc(var(--p) * 2.2), 1));
+  mix-blend-mode: screen;
+}
+.hm-reticle:not([data-pierce]) .hm-reticle-cut {
+  display: none;
+}
+
+/* ---- on the real battlefield ---- */
+.cine-anchored > .hm-board {
+  width: 0;
+  height: 0;
+  transform: none !important;
+}
+.hm-board-sign {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  --k: 0;
+}
+.hm-board-sign > .hm-sign {
+  position: absolute;
+  left: calc(var(--u) / -2);
+  top: calc(var(--u) / -2);
+  width: var(--u);
+  height: var(--u);
+  transform: scale(calc(1.8 - var(--k) * 0.8));
+  opacity: min(1, calc(var(--k) * 5));
+}
+.hm-board[data-mode="spot"] .hm-board-sign > .hm-sign {
+  --k: 1;
+  transform: scale(calc(2.4 - var(--kk, 0) * 1.4)) rotate(45deg);
+  opacity: calc(clamp(0, calc(var(--kk, 0) * 6), 1) * (0.45 + var(--flick) * 0.45) * (1 - clamp(0, calc((var(--p) - 0.9) * 10), 1)));
+}
+.hm-board[data-mode="spot"] .hm-board-sign {
+  --kk: var(--k);
+}
+.hm-board[data-mode="spot"] .hm-sign-line {
+  stroke-dashoffset: 0;
+}
+.hm-board-sign[data-primary] .hm-sign-half {
+  transform-box: view-box;
+  transform-origin: 70px 70px;
+}
+.hm-board[data-mode="left"] .hm-board-sign[data-primary] > .hm-sign {
+  --k: 1;
+  transform: none;
+  opacity: calc(1 - var(--p) * 1.4);
+}
+.hm-board[data-mode="left"] .hm-board-sign[data-primary] .hm-sign-half.a {
+  transform: translate(calc(var(--pe) * 18px), calc(var(--pi) * 60px)) rotate(calc(var(--pe) * 40deg));
+}
+.hm-board[data-mode="left"] .hm-board-sign[data-primary] .hm-sign-half.b {
+  transform: translate(calc(var(--pe) * -18px), calc(var(--pi) * 70px)) rotate(calc(var(--pe) * -36deg));
+}
+.hm-board-shards {
+  display: none;
+}
+
+/* The title sits on fog, the brightest thing in this film's space: the
+   epithet is inked round so it reads on white. */
+.ult-cinematic[data-cinematic="hundredth-mark"] .cine-text-epithet {
+  color: #f6ffe8;
+  text-shadow:
+    0 0 6px #0b0f0a,
+    0 0 12px #0b0f0a,
+    2px 2px 0 #0b0f0a;
+}
+.ult-cinematic[data-cinematic="hundredth-mark"] .cine-text-name {
+  text-shadow:
+    0 0 18px rgba(11, 15, 10, 0.9),
+    4px 4px 0 #0b0f0a,
+    -2px -2px 0 #0b0f0a;
+}
