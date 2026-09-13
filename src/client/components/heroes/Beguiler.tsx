@@ -38,8 +38,12 @@ const PARTS = ["legs", "body", "head", "shard", "control", "strings"] as const;
  * The eye, moved only in an Ultimate close-up (see `CloseUpContext`): the
  * Mindflayer's Open Mind has it widen, narrow to a pin and flare. At rest it
  * is exactly the eye as drawn.
+ *
+ * The doll, the same way: the Puppeteer's Command Performance cuts it loose
+ * from its strings and lets it fall, because it has a real one now. At rest
+ * it hangs exactly where it is drawn.
  */
-const FACE_PARTS = ["eye"] as const;
+const FACE_PARTS = ["eye", "doll"] as const;
 
 export function Beguiler({ unitId, animators, className, viewBox }: HeroProps) {
   const hold = useRigParts(unitId, animators, PARTS);
@@ -278,34 +282,36 @@ export function Beguiler({ unitId, animators, className, viewBox }: HeroProps) {
             <path d="M74 42 L74 64" />
           </g>
           {/* the puppet: a wooden doll, limp */}
-          <circle
-            cx={74}
-            cy={65.5}
-            r={3.4}
-            fill={g.url("wood")}
-            stroke={INK}
-            strokeWidth={DETAIL + 0.3}
-          />
-          <path d="M72.5 65 h1 M75 65 h1" stroke={INK} strokeWidth={0.9} />
-          <path
-            d="M71 69 H77 L76.5 78 H71.5 Z"
-            fill={RAMP.crimson[1]}
-            stroke={INK}
-            strokeWidth={DETAIL + 0.3}
-            strokeLinejoin="round"
-          />
-          <path
-            d="M71 70 L67.5 76 M77 70 L80 76 M72.5 78 L71.5 85 M75.5 78 L77 85"
-            stroke={INK}
-            strokeWidth={2.4}
-            strokeLinecap="round"
-          />
-          <path
-            d="M71 70 L67.5 76 M77 70 L80 76 M72.5 78 L71.5 85 M75.5 78 L77 85"
-            stroke={RAMP.wood[0]}
-            strokeWidth={1.1}
-            strokeLinecap="round"
-          />
+          <g ref={facePart("doll")} style={at(74, 64)}>
+            <circle
+              cx={74}
+              cy={65.5}
+              r={3.4}
+              fill={g.url("wood")}
+              stroke={INK}
+              strokeWidth={DETAIL + 0.3}
+            />
+            <path d="M72.5 65 h1 M75 65 h1" stroke={INK} strokeWidth={0.9} />
+            <path
+              d="M71 69 H77 L76.5 78 H71.5 Z"
+              fill={RAMP.crimson[1]}
+              stroke={INK}
+              strokeWidth={DETAIL + 0.3}
+              strokeLinejoin="round"
+            />
+            <path
+              d="M71 70 L67.5 76 M77 70 L80 76 M72.5 78 L71.5 85 M75.5 78 L77 85"
+              stroke={INK}
+              strokeWidth={2.4}
+              strokeLinecap="round"
+            />
+            <path
+              d="M71 70 L67.5 76 M77 70 L80 76 M72.5 78 L71.5 85 M75.5 78 L77 85"
+              stroke={RAMP.wood[0]}
+              strokeWidth={1.1}
+              strokeLinecap="round"
+            />
+          </g>
         </g>
         {/* the cross-bar */}
         <path
