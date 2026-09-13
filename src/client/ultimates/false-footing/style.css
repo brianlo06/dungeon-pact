@@ -1,0 +1,435 @@
+/* ---------------------------------------------------------- False Footing -- */
+/*
+ * Everything the Pathfinder's Ultimate draws. Progress arrives as the film's
+ * variables (`--p`, `--pe`, `--pi`, `--f`) and a few set by frame functions
+ * (`--d` per print, `--cord`, `--taut`, `--rp`); nothing animates by itself,
+ * nothing filters, and softness is gradients.
+ *
+ * Palette: snow shadow #6f86b8, deep #4b5f91, lit #eef3fb, ink #0e1426, and
+ * one warm colour, amber #f2a93b, for what the Pathfinder knows.
+ */
+
+.cine-vfx > .ff-world {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none;
+}
+
+/* ---- a print ---- */
+.ff-print {
+  overflow: visible;
+  --r: clamp(0, calc((var(--p) - var(--ra)) / (var(--rb) - var(--ra))), 1);
+}
+.ff-dent-lip {
+  fill: #eef3fb;
+}
+.ff-dent-hollow {
+  fill: #4b5f91;
+}
+.ff-dent-floor {
+  fill: #6f86b8;
+}
+.ff-dent-warm {
+  fill: #f2a93b;
+  opacity: calc(var(--r, 0) * 0.55);
+}
+.ff-dent-claw {
+  fill: none;
+  stroke: #4b5f91;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+.ff-dent-read {
+  fill: none;
+  stroke: #f2a93b;
+  stroke-width: 3.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: calc(1 - var(--r, 0));
+  opacity: min(1, calc(var(--r, 0) * 6));
+}
+.ff-dent-read-claw {
+  stroke-width: 4;
+}
+.ff-crumbs circle {
+  fill: #eef3fb;
+  --k: clamp(0, calc((var(--p) - var(--d)) * 3), 1);
+  transform: translateY(calc(var(--dy) * var(--k)));
+  opacity: calc(1 - var(--k) * 0.9);
+}
+
+/* ---- the trail, from above ---- */
+.ff-trail .ff-step {
+  --r: clamp(0, calc((var(--p) - var(--d)) * 7), 1);
+}
+.ff-trail .ff-trail-one:not([data-primary]) .ff-dent-read {
+  stroke-width: 2.4;
+}
+.ff-trail .ff-trail-one:not([data-primary]) .ff-dent-warm {
+  opacity: calc(var(--r, 0) * 0.3);
+}
+.ff-next {
+  --r: clamp(0, calc((var(--p) - var(--d)) * 6), 1);
+  --r2: clamp(0, calc((var(--p) - var(--d) - 0.12) * 5), 1);
+}
+.ff-ghost-line {
+  fill: none;
+  stroke: #f2a93b;
+  stroke-width: 4.5;
+  stroke-dasharray: 7 6;
+  stroke-linecap: round;
+  opacity: var(--r);
+}
+.ff-trail-one:not([data-primary]) .ff-ghost-line {
+  opacity: calc(var(--r) * 0.7);
+}
+.ff-next-loop {
+  opacity: var(--r2);
+}
+.ff-loop-under {
+  fill: none;
+  stroke: #4b5f91;
+  stroke-width: 12;
+  opacity: 0.45;
+}
+.ff-loop-cord {
+  fill: none;
+  stroke: #f2a93b;
+  stroke-width: 5;
+  stroke-dasharray: 16 14;
+  stroke-linecap: round;
+}
+.ff-loop-knot {
+  fill: #f2a93b;
+  stroke: #0e1426;
+  stroke-width: 2;
+}
+.ff-trail .ff-cord-shadow,
+.ff-trail .ff-cord-line,
+.ff-trail .ff-cord-glint {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: calc(-1 + var(--cord, 0));
+}
+
+/* ---- a cord, wherever it runs ---- */
+.ff-cord-shadow {
+  fill: none;
+  stroke: #4b5f91;
+  stroke-width: calc(7px * var(--w, 1));
+  stroke-linecap: round;
+  opacity: 0.45;
+}
+.ff-cord-line {
+  fill: none;
+  stroke: #2b1d12;
+  stroke-width: calc(6px * var(--w, 1));
+  stroke-linecap: round;
+}
+.ff-cord-glint {
+  fill: none;
+  stroke: #f2a93b;
+  stroke-width: calc(2.6px * var(--w, 1));
+  stroke-linecap: round;
+}
+.ff-cord .ff-cord-shadow {
+  stroke-width: calc(9px * var(--cw, 1));
+  opacity: calc(0.45 * (1 - var(--taut, 0)));
+}
+.ff-cord .ff-cord-line {
+  stroke-width: calc(7px * var(--cw, 1));
+}
+.ff-cord .ff-cord-glint {
+  stroke: #ffd48a;
+  stroke-width: calc((2.6px + var(--taut, 0) * 1.6px) * var(--cw, 1));
+}
+.ff-rip ellipse {
+  fill: #eef3fb;
+  stroke: #0e1426;
+  stroke-width: 3;
+  --k: clamp(0, calc((var(--rp, 0) - var(--d)) * 4), 1);
+  transform: translate(calc(var(--dx) * var(--k)), calc(var(--dy) * var(--k) + var(--k) * var(--k) * 70px));
+  opacity: calc(min(1, var(--k) * 12) * (1 - var(--k)));
+}
+
+/* ---- the noose ---- */
+.ff-loop {
+  width: 320px;
+  height: 240px;
+  overflow: visible;
+}
+.ff-loop-shadow {
+  fill: none;
+  stroke: #4b5f91;
+  stroke-width: 16;
+  opacity: 0.4;
+}
+.ff-loop-rope {
+  fill: none;
+  stroke: #2b1d12;
+  stroke-width: 10;
+}
+.ff-loop-glow {
+  fill: none;
+  stroke: #f2a93b;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+}
+.ff-loop-tie {
+  fill: #f2a93b;
+  stroke: #0e1426;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.ff-loop-snow ellipse {
+  fill: #dfe8f6;
+}
+.ff-loop[data-mode="hidden"] .ff-loop-glow {
+  stroke-dasharray: 0.12 0.88;
+  stroke-dashoffset: calc(var(--p) * -0.7);
+}
+.ff-loop[data-mode="hidden"] .ff-loop-rope {
+  opacity: 0.75;
+}
+.cine-vfx > .ff-loop[data-mode="cinch"] {
+  transform: translate(-50%, -50%) translateY(calc(var(--pe) * -26px)) scale(calc(var(--s) * (1 - var(--pe) * 0.68)), calc(var(--s) * (1 - var(--pe) * 0.5)));
+}
+.ff-loop[data-mode="cinch"] .ff-loop-rope,
+.ff-loop[data-mode="held"] .ff-loop-rope {
+  stroke-width: 16;
+}
+.ff-loop[data-mode="cinch"] .ff-loop-glow,
+.ff-loop[data-mode="held"] .ff-loop-glow {
+  stroke-width: 7;
+}
+.cine-vfx > .ff-loop[data-mode="held"] {
+  transform: translate(-50%, -50%) translateY(-26px) scale(calc(var(--s) * 0.32), calc(var(--s) * 0.5));
+}
+
+/* ---- the bite ---- */
+.ff-burst {
+  width: 0;
+  height: 0;
+}
+.ff-burst-art {
+  position: absolute;
+  left: -280px;
+  top: -300px;
+  width: 560px;
+  height: 340px;
+  overflow: visible;
+  transform-origin: 280px 300px;
+  transform: scale(calc(0.35 + var(--pe) * 0.85));
+  opacity: calc(1 - clamp(0, calc((var(--p) - 0.5) * 2.2), 1));
+}
+.ff-burst-ground {
+  fill: #eef3fb;
+  stroke: #0e1426;
+  stroke-width: 5;
+}
+.ff-burst-clump {
+  stroke: #0e1426;
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+.ff-burst-frame {
+  display: none;
+}
+.ff-burst-art:not([data-k]) .ff-burst-frame[data-k="0"],
+.ff-burst-art[data-k="0"] .ff-burst-frame[data-k="0"],
+.ff-burst-art[data-k="1"] .ff-burst-frame[data-k="1"],
+.ff-burst-art[data-k="2"] .ff-burst-frame[data-k="2"] {
+  display: inline;
+}
+.ff-chunks i {
+  position: absolute;
+  left: 0;
+  top: -40px;
+  width: var(--w);
+  height: var(--h);
+  margin: calc(var(--h) * -0.5) 0 0 calc(var(--w) * -0.5);
+  background: #eef3fb;
+  border: 3px solid #0e1426;
+  border-radius: 45% 55% 40% 50%;
+  transform: translate(calc(var(--dx) * var(--pe)), calc(var(--dy) * var(--pe) + var(--p) * var(--p) * 300px)) rotate(calc(var(--r) * var(--p)));
+  opacity: calc(1 - var(--pi));
+}
+
+/* ---- breath ---- */
+.ff-breath {
+  width: 0;
+  height: 0;
+}
+.ff-breath i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  --k: clamp(0, calc((var(--p) - var(--at)) * 2.4), 1);
+  opacity: calc(min(1, var(--k) * 10) * (1 - var(--k)));
+}
+.ff-breath b {
+  position: absolute;
+  width: 90px;
+  height: 64px;
+  margin: -32px 0 0 -45px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(238, 243, 251, 0.75), rgba(238, 243, 251, 0.35) 55%, rgba(238, 243, 251, 0));
+  transform: translate(calc(var(--k) * 90px), calc(var(--k) * -34px)) scale(calc(0.3 + var(--k) * 1.3));
+}
+.ff-breath b:nth-child(2) {
+  transform: translate(calc(var(--k) * 150px + 20px), calc(var(--k) * -60px + 4px)) scale(calc(0.2 + var(--k) * 1.1));
+}
+.ff-breath b:nth-child(3) {
+  transform: translate(calc(var(--k) * 60px + 10px), calc(var(--k) * -8px + 10px)) scale(calc(0.2 + var(--k) * 0.9));
+}
+
+/* ---- flakes ---- */
+.ff-flakes {
+  position: absolute;
+  inset: 0;
+}
+.ff-flakes i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(7px * var(--s));
+  height: calc(7px * var(--s));
+  margin: calc(-3.5px * var(--s));
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff 35%, rgba(255, 255, 255, 0));
+  opacity: var(--o);
+  will-change: transform;
+}
+
+/* ---- the drift lip ---- */
+.ff-drift {
+  overflow: visible;
+}
+
+/* ---- powder across the lens ---- */
+.ff-spray {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.ff-spray[data-mode="in"] {
+  --edge: calc(-45% + var(--pi) * 150%);
+}
+.ff-spray[data-mode="out"] {
+  --edge: calc(105% + var(--pe) * 150%);
+}
+.ff-spray-sheet {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  width: 160%;
+  left: calc(var(--edge) - 160%);
+  background: linear-gradient(90deg, #dfe7f5 0%, #dfe7f5 78%, rgba(223, 231, 245, 0.85) 90%, rgba(223, 231, 245, 0) 100%);
+}
+.ff-spray[data-mode="out"] .ff-spray-sheet {
+  left: calc(var(--edge) - 160%);
+  background: linear-gradient(90deg, #dfe7f5 0%, #dfe7f5 78%, rgba(223, 231, 245, 0.85) 90%, rgba(223, 231, 245, 0) 100%);
+}
+.ff-spray b {
+  position: absolute;
+  left: var(--edge);
+  top: var(--y);
+  width: calc(220px * var(--s));
+  height: calc(170px * var(--s));
+  border-radius: 50%;
+  transform: translate(calc(-60% + var(--x)), -50%);
+  background: radial-gradient(closest-side, rgba(238, 243, 251, 0.95) 30%, rgba(223, 231, 245, 0.6) 65%, rgba(223, 231, 245, 0));
+  opacity: var(--o);
+}
+
+/* ---- on the battlefield ---- */
+.ff-board {
+  width: 0;
+  height: 0;
+}
+.ff-board-art {
+  position: absolute;
+  width: calc(var(--unit-w) * 2.2);
+  height: calc(var(--unit-w) * 0.88);
+  left: calc(var(--unit-w) * -1.1);
+  top: calc(var(--unit-w) * -0.66);
+  overflow: visible;
+}
+.ff-board .ff-dent-lip {
+  fill: #cfdaf0;
+  opacity: 0.85;
+}
+.ff-board .ff-dent-hollow {
+  fill: #33406a;
+}
+.ff-board .ff-dent-floor {
+  fill: #56699a;
+}
+.ff-board-step {
+  --r: clamp(0, calc((var(--p) - var(--d)) * 5), 1);
+  opacity: min(1, calc((var(--p) - var(--d) + 0.12) * 8));
+}
+.ff-board-puff {
+  fill: #eef3fb;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(calc(0.5 + var(--pe) * 1.1));
+  opacity: calc((1 - var(--pe)) * 0.9);
+}
+.ff-board-noose {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(calc(1.7 - min(1, calc(var(--p) * 4)) * 0.7));
+  opacity: min(1, calc(var(--p) * 10));
+}
+.ff-board-loop,
+.ff-board-loop-back {
+  fill: none;
+  stroke: #f2a93b;
+  stroke-width: 6;
+  stroke-linecap: round;
+  paint-order: stroke;
+}
+.ff-board-loop-back {
+  stroke: #8a5d22;
+  stroke-width: 5;
+}
+.ff-board-knot,
+.ff-board-tag {
+  fill: #f2a93b;
+  stroke: #0e1426;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.ff-board-tag {
+  fill: #ffe2a8;
+}
+.ff-board:not([data-primary]) .ff-board-tag,
+.ff-board:not([data-primary]) .ff-board-loop.b {
+  display: none;
+}
+.ff-board-stake-cord {
+  fill: none;
+  stroke: #2b1d12;
+  stroke-width: 5;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: calc(1 - min(1, calc(var(--p) * 3)));
+}
+.ff-board-stake {
+  fill: #5b4c3d;
+  stroke: #0e1426;
+  stroke-width: 2.5;
+  opacity: min(1, calc((var(--p) - 0.25) * 8));
+}
+.ff-print .ff-ghost-line {
+  opacity: var(--r);
+  stroke-width: 3.5;
+}
+
+/* ---- the reading hand (Ranger.tsx draws it in a close-up copy) ---- */
+.ult-cinematic[data-cinematic="false-footing"][data-shot="read"] .cine-actor[data-role="caster"] {
+  --ff-reach: 1;
+}

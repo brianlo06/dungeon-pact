@@ -430,7 +430,50 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
           fill={RAMP.leather[1]}
           stroke={INK}
           strokeWidth={LINE}
+          style={closeUp ? { opacity: "calc(1 - var(--ff-reach, 0))" } : undefined}
         />
+        {/*
+          A reading hand, for an Ultimate close-up only: a fingerless glove
+          with two fingers out, the way a tracker touches a print. Drawn only
+          in a close-up copy and shown only where a film sets `--ff-reach`
+          (False Footing's read), so a round's Ranger and every other film
+          keep the mitten above.
+        */}
+        {closeUp && (
+          <g className="rng-reach" style={{ opacity: "var(--ff-reach, 0)" }}>
+            <path
+              d="M38.6 62.6 C41 62.8 41.8 65.6 40.6 68.2 C40 69.4 38.8 69.3 38.5 68.2 C38.2 66.4 37.6 64.8 38.6 62.6 Z"
+              fill={RAMP.leather[1]}
+              stroke={INK}
+              strokeWidth={DETAIL}
+              strokeLinejoin="round"
+            />
+            <path
+              d="M33.6 67.4 C33.2 70.6 33.2 73.2 34.1 75 C34.8 76.2 36.2 75.9 36.3 74.6 C36.5 72.6 36.3 70.2 36.2 67.6 Z"
+              fill={RAMP.skinFair[1]}
+              stroke={INK}
+              strokeWidth={DETAIL}
+              strokeLinejoin="round"
+            />
+            <path
+              d="M36.4 67.8 C36.8 71 37.4 73.8 38.6 75.4 C39.4 76.4 40.8 75.8 40.6 74.5 C40.3 72.4 39.6 70 39 67.4 Z"
+              fill={RAMP.skinFair[0]}
+              stroke={INK}
+              strokeWidth={DETAIL}
+              strokeLinejoin="round"
+            />
+            <path
+              d="M30.6 61.2 C30.4 58.4 33.2 57.2 36 57.6 C39 58 40.2 60.4 39.8 63.4 C39.5 66.4 38.6 69.4 36.2 70 C33.6 70.6 31.4 69.6 31 67.6 C30.7 66 30.8 63.4 30.6 61.2 Z"
+              fill={RAMP.leather[1]}
+              stroke={INK}
+              strokeWidth={LINE}
+              strokeLinejoin="round"
+            />
+            <path d="M33.8 67.8 H39.4" stroke={RAMP.leather[2]} strokeWidth={1.2} strokeLinecap="round" />
+            <path d="M31.6 62 C32.4 60 34 59.2 35.6 59.4" stroke={RAMP.leather[0]} strokeWidth={1.1} fill="none" strokeLinecap="round" />
+            <path d="M30.4 67.8 C29.6 69.4 30.6 70.8 32.2 70.4 C33.2 70.1 33.4 69 33 68.2" fill={RAMP.leather[1]} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+          </g>
+        )}
       </g>
     </HeroFrame>
   );
