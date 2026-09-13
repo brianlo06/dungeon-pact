@@ -392,38 +392,70 @@ const arcanist: Rig = withFall({
       ],
     },
   },
-  /** Arcane spark: pull it back to the hip, throw it. */
+  /**
+   * Arcane spark. The gloved hand comes up and back, the spark in it swells
+   * into an orb and trembles there for a beat, then the arm drives forward
+   * and the orb leaves the hand at `release` — it is gone from the drawing
+   * the same frame the projectile appears at the hand. The hat tip is the lag.
+   */
   attack: {
-    duration: 560,
+    duration: 820,
+    markers: { release: 0.6 },
     poses: [
-      { at: 0, x: 0, rotate: 0, squash: 1 },
-      { at: 0.28, x: -0.06, rotate: -3, squash: 1.04 },
-      { at: 0.42, x: 0.1, rotate: 4, squash: 0.96 },
-      { at: 0.6, x: 0.06, rotate: 2 },
-      { at: 1, x: 0, rotate: 0, squash: 1 },
+      { at: 0, x: 0, y: 0, rotate: 0, squash: 1 },
+      { at: 0.2, x: -0.03, y: -0.008, rotate: -2, squash: 1.03 },
+      { at: 0.5, x: -0.045, y: -0.012, rotate: -3.5, squash: 1.05 },
+      { at: 0.6, x: 0.1, y: 0, rotate: 5, squash: 0.94 },
+      { at: 0.75, x: 0.05, rotate: 2, squash: 1 },
+      { at: 1, x: 0, y: 0, rotate: 0, squash: 1 },
     ],
     parts: {
       hand: [
         { at: 0, rotate: 0, x: 0, scale: 1 },
-        { at: 0.28, rotate: 22, x: -0.05 },
-        { at: 0.4, rotate: -8, x: 0.1, scale: 1.35 },
-        { at: 0.56, rotate: -6, x: 0.07, scale: 1.12 },
+        { at: 0.2, rotate: -36, x: -0.03 },
+        { at: 0.36, rotate: -31, x: -0.04 },
+        { at: 0.44, rotate: -35, x: -0.045 },
+        { at: 0.52, rotate: -30, x: -0.05 },
+        { at: 0.6, rotate: 4, x: 0.1, scale: 1.2 },
+        { at: 0.76, rotate: 0, x: 0.06, scale: 1.06 },
         { at: 1, rotate: 0, x: 0, scale: 1 },
       ],
-      hat: turn([0, 0], [0.3, 6], [0.46, -9], [0.7, 3], [1, 0]),
-      head: turn([0, 0], [0.28, -3], [0.42, 4], [1, 0]),
-      book: turn([0, 0], [0.3, -6], [0.45, 5], [1, 0]),
+      spark: [
+        { at: 0, scale: 1 },
+        { at: 0.14, scale: 0.6 },
+        { at: 0.46, scale: 1.9 },
+        { at: 0.52, scale: 2.05 },
+        { at: 0.595, scale: 2.1 },
+        { at: 0.62, scale: 0 },
+        { at: 0.88, scale: 0 },
+        { at: 1, scale: 1 },
+      ],
+      hat: turn([0, 0], [0.22, 5], [0.5, 7], [0.64, -10], [0.8, 3], [1, 0]),
+      head: turn([0, 0], [0.2, -3], [0.5, -4], [0.62, 4], [1, 0]),
+      book: turn([0, 0], [0.22, -6], [0.5, -8], [0.62, 6], [1, 0]),
+      legs: [
+        { at: 0, squash: 1 },
+        { at: 0.5, squash: 1.04 },
+        { at: 0.62, squash: 0.97 },
+        { at: 1, squash: 1 },
+      ],
     },
   },
-  /** Storm needle: the hand goes up over the hat, then comes down on them. */
+  /**
+   * Storm needle and Cinder bloom: the hand goes up over the hat and the orb
+   * grows big and bright there, held; then the arm comes down on them and
+   * the orb is spent — lightning out of the sky, or the ground going up.
+   */
   signature: {
-    duration: 820,
+    duration: 1100,
+    markers: { release: 0.66 },
     poses: [
       { at: 0, x: 0, y: 0, rotate: 0 },
-      { at: 0.25, y: 0.015, squash: 1.08, rotate: -4 },
-      { at: 0.42, y: -0.05, scale: 1.05, rotate: -2, squash: 0.97, flash: 0.3 },
+      { at: 0.2, y: 0.015, squash: 1.08, rotate: -4 },
+      { at: 0.45, y: -0.05, scale: 1.05, rotate: -2, squash: 0.97, flash: 0.3 },
+      { at: 0.6, y: -0.055, scale: 1.05, rotate: -2.5, squash: 0.96, flash: 0.45 },
       {
-        at: 0.54,
+        at: 0.66,
         x: 0.12,
         y: -0.01,
         rotate: 6,
@@ -431,49 +463,76 @@ const arcanist: Rig = withFall({
         scale: 1.08,
         flash: 0.7,
       },
-      { at: 0.7, x: 0.06, rotate: 2, squash: 1, flash: 0.2 },
+      { at: 0.8, x: 0.06, rotate: 2, squash: 1, flash: 0.2 },
       { at: 1, x: 0, y: 0, rotate: 0, scale: 1, squash: 1, flash: 0 },
     ],
     parts: {
       hand: [
         { at: 0, rotate: 0, x: 0, y: 0, scale: 1 },
-        { at: 0.25, rotate: -40, y: -0.02 },
-        { at: 0.42, rotate: -95, y: -0.04, scale: 1.22 },
-        { at: 0.54, rotate: 8, x: 0.06, y: 0, scale: 1.3 },
-        { at: 0.7, rotate: 2, x: 0.03, scale: 1.1 },
+        { at: 0.2, rotate: -40, y: -0.02 },
+        { at: 0.45, rotate: -98, y: -0.04, scale: 1.18 },
+        { at: 0.53, rotate: -94, y: -0.045, scale: 1.2 },
+        { at: 0.6, rotate: -100, y: -0.04, scale: 1.22 },
+        { at: 0.66, rotate: 8, x: 0.06, y: 0, scale: 1.3 },
+        { at: 0.8, rotate: 2, x: 0.03, scale: 1.1 },
         { at: 1, rotate: 0, x: 0, scale: 1 },
       ],
-      book: turn([0, 0], [0.42, -30], [0.56, -10], [1, 0]),
-      hat: turn([0, 0], [0.25, 8], [0.42, -10], [0.56, -14], [0.76, 6], [1, 0]),
-      head: turn([0, 0], [0.42, -6], [0.54, 5], [1, 0]),
+      spark: [
+        { at: 0, scale: 1 },
+        { at: 0.16, scale: 0.7 },
+        { at: 0.45, scale: 2.2 },
+        { at: 0.62, scale: 2.7 },
+        { at: 0.65, scale: 2.7 },
+        { at: 0.68, scale: 0 },
+        { at: 0.9, scale: 0 },
+        { at: 1, scale: 1 },
+      ],
+      book: turn([0, 0], [0.45, -30], [0.66, -10], [1, 0]),
+      hat: turn([0, 0], [0.2, 8], [0.45, -10], [0.6, -8], [0.68, -16], [0.84, 6], [1, 0]),
+      head: turn([0, 0], [0.45, -6], [0.66, 5], [1, 0]),
       legs: [
         { at: 0, squash: 1 },
-        { at: 0.25, squash: 1.06 },
-        { at: 0.54, squash: 0.96 },
+        { at: 0.2, squash: 1.06 },
+        { at: 0.66, squash: 0.96 },
         { at: 1, squash: 1 },
       ],
     },
   },
-  /** Cloudburst, break focus: both hands up, and it rises into the spell. */
+  /**
+   * Cloudburst and Break focus: the hand goes up with the orb in it, swells,
+   * and is flung at the sky — the spell comes down on them from above.
+   */
   cast: {
-    duration: 700,
+    duration: 900,
+    markers: { release: 0.56 },
     poses: [
       { at: 0, y: 0, scale: 1 },
       { at: 0.3, y: -0.05, scale: 1.04, flash: 0.2 },
-      { at: 0.6, y: -0.04, scale: 1.03, flash: 0.45 },
+      { at: 0.5, y: -0.045, scale: 1.035, flash: 0.3 },
+      { at: 0.56, y: -0.06, scale: 1.05, flash: 0.5 },
       { at: 1, y: 0, scale: 1, flash: 0 },
     ],
     parts: {
       hand: [
         { at: 0, rotate: 0, y: 0, scale: 1 },
         { at: 0.3, rotate: -70, y: -0.02 },
-        { at: 0.45, rotate: -78 },
-        { at: 0.62, rotate: -72, scale: 1.18 },
+        { at: 0.5, rotate: -74, y: -0.02 },
+        { at: 0.56, rotate: -88, y: -0.03, scale: 1.2 },
+        { at: 0.72, rotate: -72, scale: 1.1 },
         { at: 1, rotate: 0, y: 0, scale: 1 },
       ],
+      spark: [
+        { at: 0, scale: 1 },
+        { at: 0.14, scale: 0.7 },
+        { at: 0.5, scale: 1.8 },
+        { at: 0.555, scale: 1.9 },
+        { at: 0.58, scale: 0 },
+        { at: 0.88, scale: 0 },
+        { at: 1, scale: 1 },
+      ],
       book: turn([0, 0], [0.3, -45], [0.6, -50], [1, 0]),
-      hat: turn([0, 0], [0.3, -6], [0.5, 4], [0.75, -3], [1, 0]),
-      head: turn([0, 0], [0.3, -5], [0.6, -4], [1, 0]),
+      hat: turn([0, 0], [0.3, -6], [0.5, 4], [0.6, -8], [0.8, -3], [1, 0]),
+      head: turn([0, 0], [0.3, -5], [0.6, -7], [1, 0]),
     },
   },
   /** Brace: the tome comes up in front and it hunches behind it. */

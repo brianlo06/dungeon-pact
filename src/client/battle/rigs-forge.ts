@@ -403,10 +403,12 @@ const bellows: Rig = {
   },
   /**
    * Scorching exhale: a long, visible intake — the pleats swell, the handles
-   * spread, the snout lifts — then everything empties at once.
+   * spread, the snout lifts — then everything empties at once. The breath
+   * leaves the horn at `release`, as the plume is thrown out of it.
    */
   attack: {
-    duration: 1100,
+    duration: 1300,
+    markers: { release: 0.6 },
     poses: [
       { at: 0, x: 0, rotate: 0, squash: 1 },
       { at: 0.4, x: 0.04, rotate: 2.5, squash: 1.02 },
