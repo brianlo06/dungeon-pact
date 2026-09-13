@@ -84,7 +84,7 @@ export const openMind: Cinematic = {
       ],
       vfx: [
         { kind: "mind-crack", at: 0.18, until: 1, follow: "caster", x: 31, y: -517, scale: 1.08, color: GREEN, layer: "front" },
-        { kind: "mind-pin", at: 0.2, until: 1, follow: "caster", x: 15, y: -500, scale: 0.28, color: GREEN, layer: "front" },
+        { kind: "mind-pin", at: 0.2, until: 1, follow: "caster", x: 15, y: -500, scale: 0.15, color: GREEN, layer: "front" },
       ],
       sound: [{ at: 0.3, sfx: "mind-pin" }],
       text: [{ kind: "voice", at: 0.3, until: 1, text: "$voice.activation" }],
@@ -166,14 +166,14 @@ export const openMind: Cinematic = {
       id: "bore",
       kind: "projectile-follow",
       purpose:
-        "Escalation. Inside the target's mind: doubt's dotted path is still winding round the outer rings, and the Mindflayer's thought goes the other way, dead straight, punching through every wall it meets, faster and faster, towards the plan at the centre.",
+        "Escalation. Inside the target's mind, the whole labyrinth at once: doubt's dotted path is still winding round the outer rings, and the Mindflayer's thought goes the other way, dead straight, punching through every wall it meets, faster and faster, as the camera follows it in towards the plan at the centre.",
       space: "cinematic",
       ms: 580,
       fastMs: 360,
       transition: { kind: "cut" },
       camera: {
-        from: { x: -210, y: 450, zoom: 1.4, rotate: -7 },
-        to: { x: 870, y: 450, zoom: 1.4, rotate: -7 },
+        from: { x: 800, y: 450, zoom: 0.96, rotate: -7 },
+        to: { x: 700, y: 452, zoom: 2, rotate: -4 },
         ease: "in",
       },
       background: "void",
@@ -188,7 +188,7 @@ export const openMind: Cinematic = {
           y: 450,
           seed: MIND,
           layer: "back",
-          params: { mode: "bore", radius: 1000, from: -128, to: -19 },
+          params: { mode: "bore", radius: 380, from: -112, to: -19 },
         },
         { kind: "mind-iris", at: 0, until: 0.3, layer: "screen", params: { mode: "open" } },
       ],
@@ -272,7 +272,7 @@ export const openMind: Cinematic = {
       vfx: [
         { kind: "mind-glare", at: 0, until: 0.4, x: 1000, y: 520, color: GREEN, layer: "back" },
         { kind: "mind-spike", at: 0, until: 0.9, color: GREEN, layer: "front" },
-        { kind: "mind-hole", at: 0.02, until: 1, follow: "target", seed: MIND, scale: 0.72, layer: "front" },
+        { kind: "mind-hole", at: 0, until: 1, follow: "target", seed: MIND, scale: 0.72, layer: "front" },
         // Every other mind hangs whole until the thought reaches it. Starting
         // before the shot keeps each copy's own stagger (0.04 a figure) from
         // leaving it off the first frames.

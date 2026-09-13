@@ -65,12 +65,13 @@ const stare: Clip = {
   ],
   parts: {
     head: turn([0, -1.5], [0.25, 0.4], [0.4, 0], [1, 0]),
+    // Timed to finish inside the FAST shot (400ms): wide by 150ms, a pin by 320.
     eye: [
       { at: 0, scale: 1 },
-      { at: 0.3, scale: 1.55 },
-      { at: 0.46, scale: 1.5 },
-      { at: 0.66, scale: 0.36 },
-      { at: 1, scale: 0.32 },
+      { at: 0.2, scale: 1.6 },
+      { at: 0.3, scale: 1.52 },
+      { at: 0.46, scale: 0.34 },
+      { at: 1, scale: 0.3 },
     ],
     control: turn([0, DROPPED], [1, DROPPED]),
     strings: turn([0, SLACK], [0.5, SLACK - 3], [1, SLACK + 1]),
@@ -98,8 +99,8 @@ const pierce: Clip = {
   parts: {
     head: [
       { at: 0, rotate: -5, x: 0 },
-      { at: 0.04, rotate: 15, x: 0.035, y: 0.01 },
-      { at: 0.3, rotate: 11, x: 0.03, y: 0.008 },
+      { at: 0.04, rotate: 21, x: 0.05, y: 0.014 },
+      { at: 0.3, rotate: 15, x: 0.04, y: 0.01 },
       { at: 1, rotate: 5, x: 0.012, y: 0 },
     ],
     eye: [
@@ -110,8 +111,8 @@ const pierce: Clip = {
     ],
     body: [
       { at: 0, x: 0, rotate: 0, squash: 1 },
-      { at: 0.04, x: 0.03, rotate: 5, squash: 0.95 },
-      { at: 0.35, x: 0.025, rotate: 4, squash: 0.97 },
+      { at: 0.04, x: 0.04, rotate: 8, squash: 0.94 },
+      { at: 0.35, x: 0.032, rotate: 6, squash: 0.97 },
       { at: 1, x: 0.01, rotate: 1.5, squash: 1 },
     ],
     control: [

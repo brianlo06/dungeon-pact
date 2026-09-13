@@ -118,7 +118,7 @@ function maze(seed: number): Maze {
   const doubt: Maze["doubt"] = [];
   let total = 0;
   const lens = pts.map((p, i) => (i ? (total += Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1])) : 0));
-  const every = 5.5;
+  const every = 7.5;
   for (let at = 0, j = 1; at <= total && j < pts.length; at += every) {
     while (j < pts.length - 1 && lens[j] < at) j++;
     const k = (at - lens[j - 1]) / Math.max(0.001, lens[j] - lens[j - 1]);

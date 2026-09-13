@@ -80,11 +80,11 @@ export const voices: Record<string, Voice> = {
   /** Straight through seven walls, faster each time, over a rising whine. */
   "mind-bore": {
     bus: "sfx",
-    render: (c, o, t) => bore(c, o, t, 0.5),
+    render: (c, o, t) => bore(c, o, t, 0.58),
   },
   "mind-bore-fast": {
     bus: "sfx",
-    render: (c, o, t) => bore(c, o, t, 0.31),
+    render: (c, o, t) => bore(c, o, t, 0.36),
   },
   /**
    * The quiet: a thin ringing that fades out, and under it two soft, low
@@ -156,15 +156,19 @@ export const voices: Record<string, Voice> = {
   },
 };
 
-/** Seven punches over `span` seconds, each sooner than the last, and a rising whine. */
+/**
+ * Seven punches through a shot `span` seconds long, landing where the needle
+ * meets each wall. The needle eases in (cubic) from outside the rim, so the
+ * walls come at these shares of the shot, each sooner after the last, under
+ * a whine that rises the whole way.
+ */
+const WALLS = [0.505, 0.646, 0.742, 0.818, 0.883, 0.939, 0.989];
 function bore(c: AudioContext, o: AudioNode, t: number, span: number) {
-  hit(c, o, t, { type: "sine", from: 700, to: 3600, gain: 0.05, attack: span * 0.8, decay: span + 0.05 });
-  for (let i = 0; i < 7; i++) {
-    // Ease in: the walls come faster as the needle gathers speed.
-    const k = (i + 1) / 7;
-    const at = t + span * (1 - (1 - k) ** 1.6) * 0.95;
+  hit(c, o, t, { type: "sine", from: 500, to: 3600, gain: 0.05, attack: span * 0.9, decay: span + 0.04 });
+  WALLS.forEach((k, i) => {
+    const at = t + span * k;
     pin(c, o, at, 0.12 + i * 0.02);
     hit(c, o, at, { type: "sine", from: 180 + i * 30, to: 60, gain: 0.16 + i * 0.02, attack: 0.002, decay: 0.09 });
     crash(c, o, at, { seconds: 0.04, gain: 0.07, type: "bandpass", freq: 900 + i * 180, q: 3 });
-  }
+  });
 }
