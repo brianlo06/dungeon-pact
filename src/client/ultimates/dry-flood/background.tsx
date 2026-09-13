@@ -233,13 +233,11 @@ function Lip() {
       {/* beyond the drop: the far wall, far off, with the water's lines on it */}
       <rect x={NOSE_X - 40} y="-450" width={2400 - NOSE_X} height="1800" fill="#140d08" />
       {[
-        [300, 6, 0.2],
-        [420, 8, 0.28],
-        [520, 6, 0.26],
-        [640, 10, 0.36],
-        [760, 7, 0.3],
-        [880, 11, 0.4],
-        [1000, 8, 0.34],
+        [330, 5, 0.14],
+        [470, 7, 0.2],
+        [640, 8, 0.26],
+        [880, 9, 0.3],
+        [1040, 7, 0.24],
       ].map(([y, w, a], i) => (
         <Tide key={y} x0={NOSE_X - 40} x1={2400} y={y} width={w} alpha={a} seed={400 + i} slope={-0.02} />
       ))}

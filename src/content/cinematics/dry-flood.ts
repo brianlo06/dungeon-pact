@@ -270,7 +270,7 @@ export const dryFlood: Cinematic = {
         // it stands to one side of the steps instead, the crest clear of it.
         large: {
           actors: [
-            { role: "targets", at: [1180, 960], spread: [-640, 0], size: 420, face: -1, look: "silhouette", z: 2, react: [{ at: 0, clip: "anticipate" }] },
+            { role: "targets", at: [1190, 920], spread: [-660, 0], size: 400, face: -1, look: "silhouette", z: 2, react: [{ at: 0, clip: "anticipate" }] },
           ],
         },
         boss: {
