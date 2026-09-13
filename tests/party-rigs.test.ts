@@ -82,8 +82,11 @@ describe("every hero is rigged", () => {
       });
 
       it("drives parts the art actually has, in every clip", () => {
+        // A face part is held through `facePart("…")`, only in a close-up.
         const drawn = new Set(
-          [...source(id).matchAll(/data-part="(\w+)"/g)].map((m) => m[1]),
+          [...source(id).matchAll(/data-part="(\w+)"|facePart\("(\w+)"\)/g)].map(
+            (m) => m[1] ?? m[2],
+          ),
         );
         expect(drawn.size).toBeGreaterThanOrEqual(4);
         for (const [clip, c] of Object.entries(rig))
