@@ -38,7 +38,13 @@ export const ultimate: UltimateDef = {
   cost: 100,
   speed: 8,
   presentation: {
+    cinematic: "red-ledger",
     theme: "blood",
     accent: "#ff4d5e",
+    voice: {
+      activation: "Hurts. Good. That's what it costs.",
+      impact: "Now you pay.",
+      after: "Cheap at the price.",
+    },
   },
 };
