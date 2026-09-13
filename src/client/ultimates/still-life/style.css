@@ -1,0 +1,239 @@
+/*
+ * Still Life — effects and space.
+ *
+ * Indigo black, the pale lavender of the still-light and one amber (the
+ * eye-lights, deepened). No filters and no keyframes: stills are copies of
+ * the stage's figures moved by their wrappers (`vfx.tsx`), everything else
+ * moves on `--p` or a variable a frame writes, and a glow is a translucent
+ * stroke or a small gradient, never a blur.
+ */
+
+/* ---- a still: a copy of a figure, printed pale with amber lines ---- */
+.cine-vfx > .still-plates {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none !important;
+}
+.still-shift {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  will-change: transform, opacity;
+}
+/* Placed exactly as the stage places an actor (`.cine-actor`). */
+.still-plate {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100px;
+  height: 100px;
+  margin-left: -50px;
+  margin-top: -97px;
+  transform-origin: 50px 97px;
+  pointer-events: none;
+}
+.still-rig {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 92%;
+  filter: none !important;
+}
+.still-look {
+  width: 100%;
+  height: 100%;
+}
+/*
+ * How a still is printed, the same for a copy on the stage and one on the
+ * board: every fill a pale wash, every drawn edge amber. A stroke drawn as a
+ * shape (a limb: a thick line with no fill) is printed as wash, and a glow is
+ * left out, so a still reads as a figure and not as a tangle of rings.
+ */
+:is(.still-plate, .still-board-rig) {
+  --wash: #e6e1f6;
+  --wash-a: 0.14;
+  --line: #ffb870;
+  --line-a: 0.8;
+}
+:is(.still-plate, .still-board-rig) :where(path, rect, circle, ellipse, polygon, polyline, line) {
+  fill: var(--wash) !important;
+  fill-opacity: var(--wash-a) !important;
+  stroke: none !important;
+  filter: none !important;
+}
+:is(.still-plate, .still-board-rig) :where(path, rect, circle, ellipse, polygon, polyline, line)[stroke] {
+  stroke: var(--line) !important;
+  stroke-opacity: var(--line-a) !important;
+}
+:is(.still-plate, .still-board-rig) :where(path, rect, circle, ellipse, polygon, polyline, line)[fill="none"] {
+  fill: none !important;
+  stroke: var(--wash) !important;
+  stroke-opacity: calc(var(--wash-a) * 1.6) !important;
+}
+:is(.still-plate, .still-board-rig) .ph-glow {
+  display: none;
+}
+/* The frame a still lands on its figure: printed hot. */
+.still-shift[data-hot="1"] .still-plate {
+  --wash: #fff4e2;
+  --wash-a: 0.45;
+  --line: #ffffff;
+  --line-a: 1;
+}
+/* A moment given is printed in the light itself. */
+.still-given .still-board-rig {
+  --wash: #ffb870;
+  --wash-a: 0.3;
+  --line: #fff4e2;
+  --line-a: 0.75;
+}
+
+/* ---- the flicker ---- */
+.cine-vfx > .still-flicker {
+  width: 240px;
+  height: 240px;
+  overflow: visible;
+  --k: 0;
+}
+.still-flicker-core {
+  opacity: calc(1 - var(--k) * 0.9);
+  transform: scale(calc(1.6 - var(--k)));
+}
+.still-flicker-bar {
+  opacity: calc(1 - var(--k));
+  transform: scaleX(calc(0.6 + var(--k) * 0.8));
+}
+.still-flicker-ring {
+  opacity: calc(0.9 - var(--k) * 0.9);
+  transform: scale(calc(0.3 + var(--k) * 1.3));
+}
+.still-flicker-ring.b {
+  transform: scale(calc(0.2 + var(--k) * 0.9));
+}
+
+/* ---- the brim across the lens ---- */
+.cine-screen > .cine-vfx > .still-brim {
+  inset: -10% -20%;
+  width: auto;
+  height: auto;
+  will-change: transform;
+}
+.still-brim svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- the eye-lights ---- */
+.cine-vfx > .still-eyes {
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: none !important;
+}
+.still-eyes > i {
+  position: absolute;
+  left: -26px;
+  top: -26px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff4e2 0%, color-mix(in srgb, var(--c) 80%, transparent) 30%, transparent 100%);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+/* In this film's silhouettes the drawing's own eyes stay lit. */
+.ult-cinematic[data-cinematic="still-life"] .cine-actor[data-look="silhouette"] .ph-glow-eyes ellipse {
+  fill: #ffb870 !important;
+  stroke: none !important;
+  fill-opacity: var(--still-eyes, 0.25);
+}
+
+/* ---- hanging dust ---- */
+.cine-vfx > .still-motes {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: translate(-50%, -50%) scale(var(--s));
+}
+
+/* ---- the burst ---- */
+.cine-vfx > .still-burst {
+  width: 600px;
+  height: 520px;
+  overflow: visible;
+  transform: translate(-50%, -50%) rotate(var(--rot)) scale(calc(var(--s) * (0.55 + var(--pe) * 0.6)));
+  opacity: calc(1 - var(--pi));
+}
+.still-burst-frame {
+  display: none;
+}
+.still-burst[data-k="0"] .still-burst-frame[data-k="0"],
+.still-burst[data-k="1"] .still-burst-frame[data-k="1"],
+.still-burst[data-k="2"] .still-burst-frame[data-k="2"] {
+  display: inline;
+}
+
+/* ---- the roof comes down ---- */
+.cine-vfx > .still-fall {
+  left: -800px;
+  top: -450px;
+  width: 3200px;
+  height: 1800px;
+  overflow: visible;
+  transform: none !important;
+}
+.still-stone {
+  will-change: transform;
+}
+
+
+/* ---- on the board ---- */
+.cine-anchored > .still-held,
+.cine-anchored > .still-given,
+.still-given > div {
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: none;
+}
+.cine-anchored > .still-held,
+.still-given > div {
+  position: absolute;
+  will-change: transform, opacity;
+}
+.still-board-rig {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  transform: none !important;
+}
+.still-board-rig svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* On the board, the flicker sits at the real Arcanist's hand, not its feet. */
+.cine-anchored > .still-flicker {
+  transform: translate(calc(-50% + var(--unit-w, 100px) * 0.34), calc(-50% - var(--ah, 80px) * 0.58)) scale(0.45);
+}
+/* In this film's silhouettes the spark stays lit: the one light it carries. */
+.ult-cinematic[data-cinematic="still-life"] .cine-actor[data-look="silhouette"] circle.ph-arc-spark {
+  fill: #fff4e2 !important;
+  stroke: none !important;
+}
+.ult-cinematic[data-cinematic="still-life"] .cine-actor[data-look="silhouette"] path.ph-arc-spark {
+  fill: none !important;
+  stroke: #ffb870 !important;
+}
