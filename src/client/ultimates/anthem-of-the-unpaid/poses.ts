@@ -174,10 +174,10 @@ const cry: Clip = {
   ],
   parts: {
     horn: [
-      { at: 0, rotate: -150, x: 0.05, y: -0.12, scale: 1.1 },
-      { at: 0.024, rotate: -158, x: 0.06, y: -0.14, scale: 1.14 },
-      { at: 0.3, rotate: -150, x: 0.05, y: -0.125, scale: 1.1 },
-      { at: 1, rotate: -146, x: 0.05, y: -0.12, scale: 1.08 },
+      { at: 0, rotate: -172, x: -0.02, y: -0.1, scale: 1.1 },
+      { at: 0.024, rotate: -178, x: -0.02, y: -0.12, scale: 1.14 },
+      { at: 0.3, rotate: -172, x: -0.02, y: -0.11, scale: 1.1 },
+      { at: 1, rotate: -168, x: -0.02, y: -0.1, scale: 1.08 },
     ],
     banner: [
       { at: 0, rotate: 8, y: -0.06 },
