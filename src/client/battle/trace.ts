@@ -25,6 +25,8 @@ export type TraceKind =
   /** A projectile left, and reached its target. */
   | "spawn"
   | "arrive"
+  /** A choreographed sound: a draw, a release, footfalls. (Impacts ride their beats.) */
+  | "sound"
   /**
    * The director presented a beat: the number, the health change, the
    * target's reaction, the effect, the hit-stop and the sound, all at once.

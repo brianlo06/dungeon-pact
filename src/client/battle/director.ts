@@ -186,6 +186,13 @@ export function useDirector(
   const plan = useRef<RoundTimeline | null>(null);
   const geom = useRef<StageGeom | null>(null);
   const startAt = useRef(0);
+  /**
+   * Whether the planned round has had its first frame. Its time zero is that
+   * frame, not the moment it was planned: the frame that commits a new round
+   * is a slow one, and a clock started before it would jump the first fifth
+   * of a second of the replay — an anticipation — in a single frame.
+   */
+  const started = useRef(false);
   const cursor = useRef(0);
   const keys = useRef(0);
   const live = useRef<DirectorCues>(cues);
@@ -423,6 +430,7 @@ export function useDirector(
           break;
         case "sound":
           hooksRef.current.onSound?.(cue.name);
+          hooksRef.current.onTrace?.({ kind: "sound", t: clock.time, due: at, name: cue.name });
           break;
         default:
           handRef.current?.cue(cue, at);
@@ -478,14 +486,8 @@ export function useDirector(
     }
     plan.current = planRound(s, beats, g, hooksRef.current.plan);
     cursor.current = 0;
-    startAt.current = clock.time;
+    started.current = false;
     applyRate();
-    handRef.current?.begin(plan.current, g, startAt.current);
-    hooksRef.current.onTrace?.({
-      kind: "round",
-      t: clock.time,
-      detail: String(plan.current.duration),
-    });
     publish({
       ...live.current,
       hp: { ...board.current },
@@ -499,6 +501,16 @@ export function useDirector(
     () =>
       loop.add(ORDER.director, ({ time }) => {
         const p = plan.current;
+        if (p && !started.current && geom.current) {
+          started.current = true;
+          startAt.current = time;
+          handRef.current?.begin(p, geom.current, time);
+          hooksRef.current.onTrace?.({
+            kind: "round",
+            t: time,
+            detail: String(p.duration),
+          });
+        }
         if (p) {
           const t = time - startAt.current;
           while (cursor.current < p.cues.length && p.cues[cursor.current].t <= t) {
@@ -557,7 +569,7 @@ export function useDirector(
     step: () => {
       // Jump the clock to the next beat, however long it is until then.
       const p = plan.current;
-      if (!p) return;
+      if (!p || !started.current) return;
       const t = clock.time - startAt.current;
       const next = p.cues
         .slice(cursor.current)
@@ -570,6 +582,7 @@ export function useDirector(
       if (s) finish(s);
     },
     timeline: () => plan.current,
-    elapsed: () => (plan.current ? clock.time - startAt.current : null),
+    elapsed: () =>
+      plan.current && started.current ? clock.time - startAt.current : null,
   };
 }

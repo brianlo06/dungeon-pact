@@ -98,6 +98,8 @@ export class Stagehand {
   private follow: { units: string[]; projectiles: boolean; zoom?: number } | null =
     null;
   private phases = new Map<string, PhaseName>();
+  /** Shots flown this round, for the debug overlay's flight paths. */
+  private flights: Live[] = [];
   private unsubscribe: (() => void)[] = [];
   /** Draw the debug overlay: anchors, attack points, paths, phases. */
   debug = false;
@@ -204,6 +206,7 @@ export class Stagehand {
     for (const m of this.marks) m.el.remove();
     this.marks = [];
     this.plan = null;
+    this.flights = [];
     this.follow = null;
     this.bySegments.clear();
     if (this.overlay) this.overlay.innerHTML = "";
@@ -456,6 +459,10 @@ export class Stagehand {
     const live: Live = { plan, el, start, end: plan.end };
     this.live.push(live);
     this.place(live, at);
+    if (this.debug) {
+      this.flights.push(live);
+      this.drawDebug(this.moveOf(plan.from, at));
+    }
     this.trace?.({
       kind: "spawn",
       t: this.loop.clock.time,
@@ -682,13 +689,33 @@ export class Stagehand {
       p ? `<path class="${cls}" d="M${P(p.from)} Q${P(p.via)} ${P(p.to)}"/>` : "";
     const d = move.debug;
     const phase = this.phases.get(move.actor) ?? "";
+    // Each shot as actually flown: from where the muzzle was measured at
+    // release, along its trajectory, to its target's anchor.
+    const flights = this.flights
+      .filter((f) => f.plan.from === move.actor)
+      .map((f) => {
+        const pts = Array.from({ length: 13 }, (_, i) =>
+          flightPoint(
+            {
+              trajectory: f.plan.look.trajectory ?? "linear",
+              start: f.start,
+              end: f.end,
+              arc: f.plan.look.arc,
+              aspect: W / H,
+            },
+            i / 12,
+          ),
+        );
+        return `<polyline class="dbg-flight" points="${pts.map(P).join(" ")}"/>${dot(f.start, "dbg-muzzle", "release (measured)")}`;
+      })
+      .join("");
     el.innerHTML = `<svg viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" width="${W.toFixed(0)}" height="${H.toFixed(0)}">
       ${path(d.approach, "dbg-path")}${path(d.back, "dbg-back")}
       ${dot(d.home, "dbg-home", "home")}
       ${dot(d.attackPoint, "dbg-attack", "attack point")}
       ${dot(d.weapon, "dbg-weapon", "weapon")}
       ${dot(d.hit, "dbg-hit", "target anchor")}
-      ${dot(d.muzzle, "dbg-muzzle", "projectile start")}
+      ${flights || dot(d.muzzle, "dbg-muzzle", "projectile start")}
       <text class="dbg-phase" x="${(d.home.x * W).toFixed(1)}" y="${(d.home.y * H + 16).toFixed(1)}">${move.archetype} · ${phase}</text>
     </svg>`;
   }

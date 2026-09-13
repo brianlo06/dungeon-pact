@@ -2,7 +2,18 @@ import { describe, expect, it } from "vitest";
 import { PresentationClock, FrameLoop } from "../src/client/battle/clock";
 import { attackPoint, lanePath, pathPoint } from "../src/client/battle/attack-point";
 import { flightPoint, flightTime } from "../src/client/battle/trajectory";
-import { scheduleRound, type MoveTimeline } from "../src/client/battle/choreography";
+import {
+  choreograph,
+  layRound,
+  scheduleRound,
+  travelTime,
+  type Cue,
+  type Move,
+  type MoveTimeline,
+  type ProjectilePlan,
+} from "../src/client/battle/choreography";
+import { GENERIC, type Rig } from "../src/client/battle/animation";
+import type { MoveMeta } from "../src/client/battle/choreo-meta";
 import type { Beat } from "../src/shared/model";
 import type { StageGeom, UnitGeom } from "../src/client/battle/stage-geometry";
 
@@ -112,5 +123,215 @@ describe("round scheduling", () => {
     expect(result.moves[1].start).toBe(500);
     expect(result.moves[2].start).toBeGreaterThanOrEqual(1000);
     expect(result.duration).toBeLessThan(3000);
+  });
+});
+
+/* ------------------------------------------------ verified in the Battle Lab -- */
+
+const meta = (o: Partial<MoveMeta> = {}): MoveMeta => ({
+  archetype: "melee",
+  locomotion: "run",
+  speed: 1.35,
+  charge: "normal",
+  timing: {},
+  projectile: { visual: "bolt", trajectory: "linear", speed: 1.7 },
+  strike: "attack",
+  turnToReturn: false,
+  overshoot: 0,
+  unit: {},
+  source: "ability",
+  strikes: 1,
+  ...o,
+});
+const hitBeat = (actor: string, target: string, amount = 10): Beat => ({
+  kind: "damage",
+  actor,
+  target,
+  amount,
+  hp: 50,
+});
+const moveOf = (actor: string, target: string, beats: Beat[]): Move => ({
+  cast: { kind: "cast", actor, target, label: "Strike" },
+  beats,
+  pre: [],
+});
+/** An enemy's bite: it lunges towards negative x, contact at 0.42 of 600ms. */
+const BITER: Rig = {
+  ...GENERIC,
+  attack: {
+    duration: 600,
+    poses: [
+      { at: 0, x: 0 },
+      { at: 0.42, x: -0.36 },
+      { at: 1, x: 0 },
+    ],
+  },
+};
+
+describe("choreography, as verified on the stage", () => {
+  const hero = unit("hero", 200, "hero");
+  const foe = unit("foe", 700, "enemy");
+  const other = unit("other", 820, "enemy");
+  const s = stage([hero, foe, other]);
+  const alive = () => true;
+
+  it("shifts a projectile's own spawn and arrival with its move, not just its cue", () => {
+    const plan: ProjectilePlan = {
+      id: "p",
+      from: "b",
+      to: "x",
+      look: {},
+      spawn: 300,
+      arrive: 600,
+      start: { x: 0, y: 0 },
+      end: { x: 1, y: 0 },
+    };
+    const shot = (actor: string): MoveTimeline => ({
+      actor,
+      archetype: "projectile",
+      duration: 800,
+      release: 700,
+      firstContact: 600,
+      phases: [],
+      segments: [],
+      cues: [{ t: 300, kind: "projectile", plan }],
+      projectiles: [plan],
+      debug: { actor, home: { x: 0, y: 0 } },
+    });
+    const beats = [
+      { kind: "cast", actor: "a", target: "x", label: "Shot" },
+      { kind: "cast", actor: "b", target: "x", label: "Shot" },
+    ] as Beat[];
+    const round = layRound(
+      { beats, alive, choreograph: (m) => shot(m.cast.actor!) },
+      1,
+    );
+    const second = round.moves[1].start;
+    expect(second).toBeGreaterThan(0);
+    const cue = round.cues.filter((c) => c.kind === "projectile")[1] as Extract<
+      Cue,
+      { kind: "projectile" }
+    >;
+    expect(cue.t).toBe(second + 300);
+    expect(cue.plan.spawn).toBe(second + 300);
+    expect(cue.plan.arrive).toBe(second + 600);
+    expect(round.projectiles[1]).toBe(cue.plan);
+  });
+
+  it("holds the anticipation and spends a held pose only when the strike is delivered", () => {
+    const tl = choreograph({
+      move: moveOf("hero", "foe", [hitBeat("hero", "foe")]),
+      meta: meta(),
+      stage: s,
+      rig: GENERIC,
+      alive,
+    });
+    const clips = tl.cues.filter((c) => c.kind === "clip") as Extract<
+      Cue,
+      { kind: "clip" }
+    >[];
+    expect(clips[0]).toMatchObject({ clip: "anticipate", then: "anticipate" });
+    const strike = clips.find((c) => c.clip === "attack")!;
+    const spend = tl.cues.find((c) => c.kind === "spend")!;
+    expect(strike.t).toBeGreaterThan(0);
+    expect(spend.t).toBe(strike.t);
+  });
+
+  it("never restarts a repeated strike before the blow it replays has landed", () => {
+    const tl = choreograph({
+      move: moveOf("foe", "hero", [
+        hitBeat("foe", "hero", 5),
+        hitBeat("foe", "hero", 5),
+      ]),
+      meta: meta({ strikes: 2 }),
+      stage: s,
+      rig: BITER,
+      alive,
+    });
+    const strikes = tl.cues.filter(
+      (c) => c.kind === "clip" && c.clip === "attack",
+    );
+    const hits = tl.cues.filter(
+      (c) => c.kind === "beat" && c.beat.kind === "damage",
+    );
+    expect(strikes).toHaveLength(2);
+    expect(hits).toHaveLength(2);
+    expect(strikes[1].t).toBeGreaterThanOrEqual(hits[0].t + 80);
+    // Each hit is on its own blow's contact.
+    expect(hits[1].t - strikes[1].t).toBeCloseTo(0.42 * 600, 5);
+  });
+
+  it("gives a gait its own floor, so a sprint and a charge differ over a short gap", () => {
+    expect(travelTime(0.02, 2.6, 1)).toBeLessThan(120);
+    expect(travelTime(0.02, 1.1, 1)).toBeGreaterThan(200);
+  });
+
+  it("carries an enemy's overshoot on past its target, not back towards home", () => {
+    const tl = choreograph({
+      move: moveOf("foe", "hero", [hitBeat("foe", "hero")]),
+      meta: meta({ overshoot: 30, turnToReturn: true, speed: 2.6 }),
+      stage: s,
+      rig: BITER,
+      alive,
+    });
+    const recovery = tl.phases.find((p) => p.name === "recovery")!;
+    const run = tl.segments.find((g) => g.start === recovery.start)!;
+    // The enemy faces left: past its target is further left.
+    expect(run.path.to.x).toBeLessThan(run.path.from.x);
+    // It runs on from where the bite carried it, which is further forward
+    // than where it stood to bite, never behind it.
+    expect(run.path.from.x).toBeLessThan(tl.debug.attackPoint!.x);
+  });
+
+  it("lands everything one release sends at the same moment", () => {
+    const tl = choreograph({
+      move: moveOf("hero", "foe", [
+        hitBeat("hero", "foe"),
+        hitBeat("hero", "other"),
+      ]),
+      meta: meta({ archetype: "area", delivery: "shockwave" }),
+      stage: s,
+      rig: GENERIC,
+      alive,
+    });
+    expect(tl.projectiles).toHaveLength(2);
+    expect(new Set(tl.projectiles.map((p) => p.arrive)).size).toBe(1);
+    const hits = tl.cues.filter(
+      (c) => c.kind === "beat" && c.beat.kind === "damage",
+    );
+    for (const h of hits)
+      expect(Math.round(h.t)).toBe(Math.round(tl.projectiles[0].arrive));
+    expect(tl.projectiles[0].look.visual).toBe("wave");
+  });
+
+  it("does not cross the floor or shoot at a unit that has already fallen", () => {
+    const standing = (id: string) => id !== "foe";
+    const melee = choreograph({
+      move: moveOf("hero", "foe", []),
+      meta: meta(),
+      stage: s,
+      rig: GENERIC,
+      alive: standing,
+    });
+    expect(melee.archetype).toBe("self");
+    expect(melee.segments).toEqual([]);
+    const shot = choreograph({
+      move: moveOf("hero", "foe", []),
+      meta: meta({ archetype: "projectile" }),
+      stage: s,
+      rig: GENERIC,
+      alive: standing,
+    });
+    expect(shot.projectiles).toEqual([]);
+    // Aimed at the fallen but resolved on someone standing: it goes for them.
+    const retarget = choreograph({
+      move: moveOf("hero", "foe", [hitBeat("hero", "other")]),
+      meta: meta(),
+      stage: s,
+      rig: GENERIC,
+      alive: standing,
+    });
+    expect(retarget.debug.target).toBe("other");
+    expect(retarget.segments.length).toBeGreaterThan(0);
   });
 });

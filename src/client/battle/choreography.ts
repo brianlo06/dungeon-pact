@@ -589,7 +589,11 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
 
   let archetype = meta.archetype;
   const travels = archetype === "melee" || archetype === "lunge";
-  if (travels && (!target || target.id === actorId)) archetype = "self";
+  // Nobody standing to run at — the only unit it names has already fallen
+  // this round — and it strikes where it stands rather than crossing the
+  // floor to a body.
+  if (travels && (!target || target.id === actorId || !input.alive(target.id)))
+    archetype = "self";
 
   let contactsAt: number[] = [];
   let duration = 0;
@@ -807,7 +811,9 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
     const bowed = archetype === "bow";
     const hitTargets = cons.contacts.length
       ? cons.contacts.map((c) => (c.targets.length ? c.targets : tgt ? [tgt.id] : []))
-      : [tgt ? [tgt.id] : []];
+      : // Nothing resolved: a shot at someone standing still flies, one at
+        // the fallen does not.
+        [tgt && input.alive(tgt.id) ? [tgt.id] : []];
     if (face !== neutral) turn(0, 1, face);
     cues.push({ t: 0, kind: "camera", mode: "focus", units: [actorId], zoom: 1.03 });
     // The build-up, and the moment the shot leaves.
@@ -919,6 +925,12 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
               : delivery === "shockwave"
                 ? "ground"
                 : (look.trajectory ?? "linear");
+        if (trajectory === "ground") {
+          // A shockwave runs out along the floor from the actor's feet: a
+          // flat ring, not a bolt from its hand, never turned.
+          plan.start = frac(stage, home);
+          plan.startAnchor = undefined;
+        }
         const flight = {
           trajectory,
           start: plan.start,
@@ -928,7 +940,10 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
         const time =
           look.duration ??
           flightTime(flight, look.speed ?? 1.6) * (0.8 + 0.2 * pace);
-        plan.look = { ...look, trajectory };
+        plan.look =
+          trajectory === "ground"
+            ? { ...look, trajectory, visual: "wave", rotate: "none", trail: false, onArrival: "burst" }
+            : { ...look, trajectory };
         plan.end = flight.end;
         plan.arrive = r + time;
         arrive = Math.max(arrive, plan.arrive);

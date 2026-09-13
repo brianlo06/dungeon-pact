@@ -1731,7 +1731,8 @@
   fill: #8fdc8a;
 }
 .dbg-path,
-.dbg-back {
+.dbg-back,
+.dbg-flight {
   fill: none;
   stroke: #ffd27a;
   stroke-width: 2;
@@ -1739,6 +1740,9 @@
 }
 .dbg-back {
   stroke: #5ad1ff;
+}
+.dbg-flight {
+  stroke: #8fdc8a;
 }
 .layer-choreo-debug .dbg-phase {
   font-size: 12px;

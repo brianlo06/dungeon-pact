@@ -77,11 +77,17 @@ const ARCHETYPE: Partial<Record<LabMove, Archetype>> = {
 export function synthesise(
   s: Snapshot,
   req: LabRequest,
+  /** Health as the round has left it so far, shared by a round's moves. */
+  hp = new Map([...s.players, ...s.enemies].map((u) => [u.id, u.hp])),
 ): { beats: Beat[]; archetype?: Archetype } {
   const units = [...s.players, ...s.enemies];
   const actor = units.find((u) => u.id === req.actor);
   const target = units.find((u) => u.id === req.target);
   if (!actor || !target) return { beats: [] };
+  // As in the engine: a fallen actor does nothing, and a move at a target
+  // that has fallen earlier in the round fizzles without a cast.
+  if ((hp.get(actor.id) ?? 0) <= 0 || (hp.get(target.id) ?? 0) <= 0)
+    return { beats: [] };
   const names = abilityNames(s, actor.id);
   const move = req.move ?? "ability";
   const label =
@@ -91,8 +97,7 @@ export function synthesise(
   const amount = req.amount ?? 14;
   // A blow that empties a health bar is followed by the fall, as the engine
   // logs it; a second blow on a fallen target is never synthesised.
-  const hp = new Map(units.map((u) => [u.id, u.hp]));
-  const hit = (to: typeof target, n = amount): Beat[] => {
+  const hit =(to: typeof target, n = amount): Beat[] => {
     const left = hp.get(to.id) ?? 0;
     if (left <= 0) return [];
     const dealt = Math.min(left, n);
@@ -119,7 +124,7 @@ export function synthesise(
     };
   if (move === "area") {
     const side = s.enemies.some((e) => e.id === target.id) ? s.enemies : s.players;
-    const row = side.filter((u) => u.row === target.row && u.hp > 0);
+    const row = side.filter((u) => u.row === target.row && (hp.get(u.id) ?? 0) > 0);
     return { beats: [cast, ...row.flatMap((u) => hit(u))], archetype: "area" };
   }
   if (move === "multi")
@@ -253,8 +258,10 @@ export function useChoreoLab(
   const playRound = (reqs: LabRequest[]) => {
     const all: Beat[] = [];
     pending.current = [];
+    const snap = snapRef.current;
+    const hp = new Map([...snap.players, ...snap.enemies].map((u) => [u.id, u.hp]));
     for (const req of reqs) {
-      const { beats, archetype } = synthesise(snapRef.current, req);
+      const { beats, archetype } = synthesise(snap, req, hp);
       if (!beats.length) continue;
       pending.current.push({
         key: keyOf(beats[0]),
@@ -305,10 +312,16 @@ export function useChoreoLab(
     if (!tracing) return;
     let observer: MutationObserver | null = null;
     const find = setInterval(() => {
-      const layer = document.querySelector(".layer-units");
+      const layer = document.querySelector(".world");
       if (!layer || !api.current || observer) return;
       const unitOf = (n: Element) =>
         n.closest<HTMLElement>(".combatant")?.dataset.unit ?? "";
+      // A world-space number stands over its unit's ground point: the same
+      // left as the unit's own.
+      const underPop = (n: HTMLElement) =>
+        [...layer.querySelectorAll<HTMLElement>(".combatant")].find(
+          (c) => c.style.left === n.style.left,
+        )?.dataset.unit ?? "";
       const push = (kind: "pop" | "hp" | "clip", unit: string, name: string) => {
         const t = api.current?.loop.clock.time ?? 0;
         records.current.push({ kind, t, at: t - roundAt.current, unit, name });
@@ -319,6 +332,8 @@ export function useChoreoLab(
             for (const n of m.addedNodes)
               if (n instanceof HTMLElement && n.classList.contains("combatant-pop"))
                 push("pop", unitOf(n), n.textContent ?? "");
+              else if (n instanceof HTMLElement && n.classList.contains("vfx-pop"))
+                push("pop", underPop(n), n.textContent ?? "");
             continue;
           }
           const el = m.target as HTMLElement;
