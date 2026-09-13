@@ -59,23 +59,53 @@ real board: leaves at every ally's feet, briars and spores at every enemy's).
 | # | Shot | ms (FAST) | Camera | Pose | Background / light | VFX | Audio | Target | Transition in | Purpose |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 0 | Call | 400 (240) | battle camera | real Warden `ult:green-listen` — head bows, the open hand lowers, the lantern stills | real battlefield sinks into loam-dark, bars close | call-aura (sap); roots creep along the real floor from the Warden to every unit, a heartbeat ring under each | call bell; one heartbeat through the floor; music ducks | every unit, on board | — | break the round's rhythm: the Warden starts listening |
-| 1 | Hand · detail | 600 (380) | low on the ground at the palm, Dutch −6° → −3°, pushing in | `ult:green-kneel` — down on one knee, the open hand laid flat on the moss | the undergrowth cut away: moss crust, loam below; sap under-light from the soil | the soil in front of the figure; **roots pour down out of the palm into the earth**; spores | the palm on the earth; roots creaking into the soil | no | black 50ms | identity: the hand that heals, put into the ground |
-| 2 | Web · wide cross-section | 1000 (520) | flat, square-on, dead level, slow sink and pull back | `ult:green-kneel` held — small, kneeling, centre-left | the whole cutaway: black air above, loam below | **the root web** spreads from the palm through the soil, forks up to every foot; **a heartbeat bead climbs to each real ally** (the downed one's faint and late); rot-dark tips curl under the **real enemy line** (copied off the board) | Green motif (a wooden heartbeat, four notes); heartbeats | the real party (a downed ally lying) and **every enemy**, which flinch as the roots arrive | **in-folder occlusion: earth rises over the lens** (the camera goes into the ground) | stakes: all of them on one web; title |
+| 1 | Hand · detail | 600 (380) | low on the ground line, the kneeling figure cut at the chin, Dutch −6° → −3.5°, pushing in | `ult:green-kneel` — down on one knee, the open hand laid flat on the moss | the undergrowth cut away: moss crust, loam below; sap under-light from the soil | the soil in front of the figure; **roots pour down out of the palm into the earth**; spores | the palm on the earth; roots creaking into the soil | no | black 50ms | identity: the hand that heals, put into the ground |
+| 2 | Web · wide cross-section | 1000 (520) | flat, square-on, dead level, slow sink and pull back | `ult:green-kneel` held — small, kneeling at the far left, the root of everything | the whole cutaway: black air above, loam below | **the root web** spreads from the palm through the soil, forks up to every foot; **a heartbeat bead climbs to each real ally** (the downed one's faint and late); rot-dark tips curl under the **real enemy line** (copied off the board) | Green motif (a wooden heartbeat, four notes); heartbeats | the real party (a downed ally lying) and **every enemy**, which flinch as the roots arrive | **in-folder occlusion: earth rises over the lens** (the camera goes into the ground) | stakes: all of them on one web; title |
 | 3 | Listen · face close-up (the quiet) | 640 (400) | on the face under the hood, between the antlers, near still | `ult:green-hear` — eyes shut tight, brow knitting to listen; at the faint heart the brow lifts; the mouth sets; **the eyes open** at the last | near-black; sap rim from below | spores hanging still; then the eyes light | music ducked to 3%; two heartbeats, a gap, one faint one; an intake of breath | no | cut | anticipation by subtraction — and the decision |
-| 4 | Reckoning · impact | 740 (540) | low on the floor line, Dutch 4° → 1.5°, easing out | `ult:green-reckon` (contact 0.04) — up out of the kneel, staff raised, open hand flung up, eyes open | exposure spike, then settling; sap tint | **70ms two-tone**; sap bursts up through the crust under every ally (leaves, shoots, a flower each), **the downed ally lifted to its feet**; briars and fungus burst under every enemy and **rot climbs them**; +18 on each ally, Poison 4 on each enemy | layered impact (root snap, sub, earth body, leaf rush) + rot hiss; **150ms stop**; heavy shake | **the party lifted, every enemy recoiling** | cut on the two-tone frame | impact: both halves at once, the result on the frame |
+| 4 | Reckoning · impact | 740 (540) | low on the floor line, Dutch 4° → 1.5°, easing back out | `ult:green-reckon` (contact 0.04) — up out of the kneel, staff raised, open hand flung up, eyes open | exposure spike, then settling; sap tint | **70ms two-tone** (black figures on a sap glow); the web surges out of the Warden's feet; shoots burst up through the crust under every ally and a flower under the Warden, **the downed ally lifted to its feet**; briars and fungus caps burst under every enemy and **rot climbs them**; a chip on the party ("Healed · Regen · Cleansed", or "Revived" on the one who was down) and "Poison 4" on each enemy | layered impact (root snap, sub, earth body, leaf rush) + rot hiss; **150ms stop**; heavy shake | **the party lifted, every enemy recoiling** | cut on the two-tone frame | impact: both halves at once, the result on the frame |
 | 5 | Grown · return | 760 (460) | battle camera | real Warden `ult:green-rest` | real battlefield; bars open | leaves and a sprout at every real ally's feet, rising sap motes; briars and falling spores at every real enemy's | soft wooden chime per ally, tail | on board | flash 80ms | release: what is healing and what is rotting, where they stand |
 
 FULL 4140ms, FAST 2540ms (61%). FAST keeps the web (the idea) shortened, the
 quiet and the impact.
 
 **Framing.** The film has no chosen target (it aims at the Warden itself), so
-the engine's framing stays normal; the enemy line is copied off the board at
-its real relative sizes, so a boss stands over the web as a boss. When the
-line's height would leave the frame, the copies are scaled down together, never
-one alone, and a boss is pulled nearer the camera's centre.
+the engine's framing is always normal and `framing` overrides never apply. The
+enemy line is copied off the board at its real sizes relative to the Warden's
+own board figure, so a boss stands over the web as a boss; when the line would
+leave the frame (its drawing's real top, crown included, or its width past the
+party) the copies are scaled down together, never one alone.
 
 **Voice.** "Hush. Let me hear your hearts." · "Up, all of you. — Not you." ·
 "It keeps growing. On all of you."
+
+## Notes from the lab
+
+- **A presentation copy's root track is never written — in any film.** The
+  cast layer attaches each copy's `.cine-rig` in a ref callback, but the
+  figure's parts register in a passive effect, and `animators.attach` is a
+  no-op for an animator that does not exist yet; `register` then creates it
+  and nothing attaches the root again. Every `poses` root key in every
+  Ultimate clip is silently dropped (the rig's `style.transform` stays empty;
+  root `flash` too). The Warden's kneel is therefore built from the parts
+  (everything sinks together, the legs fold), and the party's lift at the
+  reckoning is a transform on each copy's `.cine-look`. The engine fix is one
+  line in `UltimateCinematic.tsx`: attach the rig node again after
+  `animators.register` in the layout effect.
+- **Under a film the board already stands at the result.** `Combat` passes a
+  unit the replay's health only while a beat is showing, and a film shows
+  none, so a revived hero's board figure gets up the moment the round
+  arrives. The downed ally is found as the call shot mounts, before the
+  board's revive has drawn a frame (a hero rig rotated past −25°, or
+  `data-down`), and written onto the film as `data-green-downed`.
+- **The lab could not stage a downed ally.** `downed=1` was added to
+  `dev/ultimate-lab.tsx` (four additive lines, its own commit): the boss
+  fixture already supported it.
+- The eyes open through `--wdn-eyes`, a CSS variable the film sets on the
+  Warden's copy; the open eyes are drawn inside the `eyes` part only in a
+  close-up (`Warden.tsx`), so a round's Warden is unchanged and the lids
+  still squash with `open`.
+- Copied enemies drop their eye and coal `drop-shadow`s, so nothing that moves
+  in the film carries a filter.
 
 ## What the engine could not do, and what was built instead
 

@@ -502,3 +502,9 @@
 .ult-cinematic[data-cinematic="green-reckoning"] .cine-actor[data-role="allies"] .cine-look {
   transform-origin: 50% 92%;
 }
+
+/* The board's creatures glow their eyes and coals with small drop-shadows; a
+   copy that moves drops them rather than re-filtering them every frame. */
+.gr-foe-art * {
+  filter: none !important;
+}

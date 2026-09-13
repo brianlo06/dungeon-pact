@@ -213,19 +213,19 @@ const Soil = ({ cue }: VfxProps) => {
   for (let x = -800; x <= 2400; x += 22) d += ` L${x} ${(FLOOR - 3 + rand() * 9).toFixed(1)}`;
   d += " L2400 1350 L-800 1350 Z";
   crust.push(d);
-  const stones = Array.from({ length: 34 }, () => ({
+  const stones = Array.from({ length: 22 }, () => ({
     x: -780 + rand() * 3160,
     y: FLOOR + 60 + rand() * 820,
     rx: 14 + rand() * 46,
     ry: 8 + rand() * 20,
     a: (rand() - 0.5) * 40,
   }));
-  const hairs = Array.from({ length: 60 }, () => {
+  const hairs = Array.from({ length: 32 }, () => {
     const x = -780 + rand() * 3160;
     const y = FLOOR + 10 + rand() * 60;
     return `M${x.toFixed(0)} ${y.toFixed(0)} q${((rand() - 0.5) * 60).toFixed(0)} ${(30 + rand() * 60).toFixed(0)} ${((rand() - 0.5) * 30).toFixed(0)} ${(60 + rand() * 120).toFixed(0)}`;
   });
-  const tufts = Array.from({ length: 90 }, () => ({ x: -790 + rand() * 3180, r: 5 + rand() * 9, a: -150 + rand() * 120 }));
+  const tufts = Array.from({ length: 56 }, () => ({ x: -790 + rand() * 3180, r: 5 + rand() * 9, a: -150 + rand() * 120 }));
   // The dead of old fights: a skull, ribs, a long bone, a broken blade, a helm.
   const dead = [
     { x: 180, y: 640, k: "skull", s: 1.1, a: -14 },
