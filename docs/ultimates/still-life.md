@@ -85,10 +85,14 @@ baseline everywhere. Arcanist uses per run 2.71 → 2.70, charge earned 293 →
   nothing in it is a hall of light, a forge, a drowned ledger, a ridge, a
   causeway, a garden, a vault of goods, the ground under the floor, a pit, a
   woodcut field, a wood, a labyrinth or a page.
-- **A still** (`still-plates`), drawn one way everywhere: a copy of a real
-  figure taken off the stage at a flicker of the spark, every fill a pale
-  lavender wash, every line amber. It never moves on its own. A run of them is
-  a figure's moment laid out.
+- **A still** (`still-plates`): a copy of a real figure taken off the stage
+  at a flicker of the spark, every line amber and every fill a faint wash.
+  Where the film has to say *a moment was taken* (the pinch, the impact, the
+  board), the still is a **print**: the copy clipped inside a dark card with a
+  hard pale edge and a dark hairline inside it, tipped a few degrees. A print
+  never lies over its own figure except on the one frame it is thrown home.
+  The line's windup and the stream up the sleeve keep bare stills (a
+  figure's moment laid out, and the moments on their way).
 - **Palette:** indigo black `#0a0914`, still-light lavender `#e6e1f6`, amber
   `#ffb870` (the eye-lights, deepened, and every line of a still). The
   Arcanist's storm blue is nowhere except in its own drawn spark.
@@ -120,12 +124,12 @@ every enemy, and the taken moments given to the party as rising light).
 | # | Shot | ms (FAST) | Camera | Pose | Background / light | VFX | Audio | Target | Transition in | Purpose |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 0 | Call | 420 (240) | battle camera | real Arcanist `ult:still-pinch`: the spark comes up and is pinched small | real battlefield sinks to indigo, bars close | amber call aura; the spark flickers once (`still-flicker`, anchored) | `still-call`: a reversed swell snapping shut; music ducks | on board | — | break the round |
-| 1 | Pinch · extreme close-up | 620 (380) | tight on the glove and spark, Dutch 6° → 4°, a slow push | `ult:still-pinch`: the hand sweeps up across the frame, pinching the spark down to a hard point (`root: false`) | the held fall, far behind and dark; the still-light behind the hand | on each flicker a **still of the hand and spark** is taken and left in the air (`still-plates`, caster, hand only): the gesture laid out in four stills | `still-take` ×3 | no | black 60ms | identity: this spark takes moments |
+| 1 | Pinch · extreme close-up | 620 (380) | tight on the glove and spark, Dutch 6° → 4°, a slow push | `ult:still-pinch`: the hand sweeps up across the frame, pinching the spark down to a hard point (`root: false`) | the held fall, far behind and dark; the still-light behind the hand | on each flicker a **print of the hand** is taken and dealt off it into the dark beside it, already smaller than the hand, to its own place (`still-plates`, caster, hand only, `deal`): three prints, spaced apart and clear of the live hand and weapon | `still-take` ×3 | no | black 60ms | identity: this spark takes moments |
 | 2 | Windup · target | 900 (—) | low on the real line, level, a slow truck left | — (the Chronomancer is not in the shot) | the held fall, stones hanging overhead; the still-light across the floor | **the real line winding up** (`anticipate` → `windup`); at three flickers each enemy's **coming blow is taken as stills**, stepping out ahead of it towards the party, each a little further on, each paler (`still-plates`, targets, step) | **motif**; `still-take` on each flicker | **the real line**, winding up | cut | stakes and target: their next moment, laid out; title |
 | 3 | Sleeve · over the shoulder | 520 (360) | from behind the brim, the hat's black shape filling the top left, the line small beyond; pushes in | `ult:still-gather`: the hand goes back up by the brim, the sleeve turned open towards the line | the held fall; amber back light | every still is **pulled off the line** and streams back past the lens into the sleeve, growing as it comes (`still-plates`, targets, stream); at the end the brim sweeps across the lens (`still-brim`) | a reversed rush (`still-gather`) | the line, small, stills leaving it | cut | escalation: the moments, taken |
 | 4 | Stopped · profile close-up | 560 (380) | side-on, dead level, locked off | `ult:still-hold`: nothing moves; the hat's tip is caught mid-flop and stays there (`root: false`) | exposure right down; the Chronomancer's profile black against the pale band of still-light | the eye-lights come up amber, the only thing that changes (`still-eyes`); the dust hangs (`still-dust`, still) | **music ducked to 5%**; one thin held tone, then a reversed breath drawing in (`still-hush`) | no | the brim, in-folder | the quiet: time stopped, and the Chronomancer the one thing outside it |
-| 5 | Release · impact | 740 (520) | on the target, the Chronomancer's flung arm and sleeve in the left foreground; eases back | `ult:still-release` (contact 0.1): the sleeve flung open at the target, the spark gone | the held fall, blown out amber, then settling | **70ms amber two-tone** held by the stop; **every still arrives in the target at once**, overprinted on it, and blows out through it (`still-plates`, converge); a stepped burst (`still-burst`); the roof comes down: the hanging stones fall and break (`still-fall`); each other enemy's own still arrives in it a beat later | `still-impact` layered; **150ms stop**, heavy shake, a second small shake | **target** `hurt`, shoved and tipped; **the line** `hurt` at 0.36 | cut on the two-tone | impact: the damage on the frame; "There. Have it back." |
-| 6 | Given · return | 680 (460) | battle camera | real Arcanist `ult:still-settle`: the hand to the brim, the spark back in the glove | real battlefield; bars open | a **still left hanging** ahead of every real enemy, fading slowly: its moment, held (`still-held`, anchored); **amber stills of light rising** off every ally: the moments given (`still-given`, anchored) | `still-after`: the motif's last two notes, forwards this time; tail | on board | flash 80ms | release: held on them, given to the party |
+| 5 | Release · impact | 740 (520) | on the target, the Chronomancer's flung arm and sleeve in the left foreground; eases back | `ult:still-release` (contact 0.1): the sleeve flung open at the target, the spark gone | the held fall, blown out amber, then settling | **70ms amber two-tone** held by the stop; the target's **three prints slide home into it and land in register** on the hit, and are printed into the figure *only on the two-tone frame*; on the frames after it (the stop included) they are gone and one print's edge opens out round the target and fades (`still-plates`, converge); each other enemy is struck by one print of its own, the same way, lighter; a stepped burst (`still-burst`); the roof comes down: the hanging stones fall and break (`still-fall`); each other enemy's own still arrives in it a beat later | `still-impact` layered; **150ms stop**, heavy shake, a second small shake | **target** `hurt`, shoved and tipped; **the line** `hurt` at 0.36 | cut on the two-tone | impact: the damage on the frame; "There. Have it back." |
+| 6 | Given · return | 680 (460) | battle camera | real Arcanist `ult:still-settle`: the hand to the brim, the spark back in the glove | real battlefield; bars open | a **small framed still** of every real enemy lifts off its chest and settles beside its head: its moment, held (`still-held`, anchored); an **amber framed still** of every ally does the same on the other side: a moment given (`still-given`, anchored). Cards at 42% of the figure, never on it | `still-after`: the motif's last two notes, forwards this time; tail | on board | flash 80ms | release: held on them, given to the party |
 
 ### Boss framing
 
@@ -187,6 +191,26 @@ used as it is.
   0.109); the motif 0.18; the quiet 0.13; a still taken 0.27–0.36; the call
   0.48–0.75. The shutter's clicks are noise bursts, which vary render to
   render, so they were set low.
+
+## Revision after lead review
+
+Overlapping stills read as blur, not as moments. A still that has to read as
+*taken* is now a print (see above), and three shots were redrawn with it:
+
+- **Pinch.** Three prints, dealt off the hand to fixed places in the dark
+  right of it, each 108 world units on its longest side whatever the hand
+  holds, so a worn weapon is printed small and the live hand and weapon stay
+  clear. The camera pulled back (zoom 2.4 → 2.55, was 3.5 → 3.8) to give the
+  prints room.
+- **Release.** The two-tone frame is the only frame a print lies on the
+  target: `still-plates` marks landed prints, and the stylesheet shows them
+  only while the stage sets `data-two-tone`. The hit-stop after it shows the
+  struck target with one thin print edge opening round it. The burst is
+  smaller and at the target's front; the hot flash at 0.26 was cut. Every
+  other enemy gets one print, not four.
+- **Given.** No copies over the board's figures: a small framed card beside
+  each, lifted off the chest and settled by the head, lavender-edged for an
+  enemy and amber for an ally.
 
 ## Whole-body motion
 

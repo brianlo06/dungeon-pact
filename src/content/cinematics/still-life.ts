@@ -36,7 +36,7 @@ const FLICKER = "#4a3321";
 const BARS = 0.11;
 
 /** The impact's stills: laid out to the left of each figure, then thrown home. */
-const CONVERGE = { from: "targets", mode: "converge", takes: "0,0,0,0", dx: -0.3, dy: 0.015, fade: 0.16, alpha: 0.95, hit: 0.1, lead: 0.1, hit2: 0.36, through: 0.22 };
+const CONVERGE = { from: "targets", mode: "converge", print: true, takes: "0,0,0", others: 1, dx: -0.42, dy: 0.02, fade: 0.2, alpha: 0.95, hit: 0.1, lead: 0.09, hit2: 0.36, through: 0.16 };
 
 const releaseTargets = (at: [number, number], size: number, spread: [number, number], shove: number): ActorCue => ({
   role: "targets",
@@ -86,14 +86,14 @@ export const stillLife: Cinematic = {
       id: "pinch",
       kind: "extreme-close-up",
       purpose:
-        "Identity. The gloved hand sweeps up across the frame and pinches the spark down to a hard point; each time the spark flickers it takes a still of the hand, and the stills stay in the air where the hand was.",
+        "Identity. The gloved hand sweeps up across the frame and pinches the spark down to a hard point; each time the spark flickers it takes a still of the hand, a framed print that is dealt off the hand into the dark beside it: three prints, three moments of one gesture.",
       space: "cinematic",
       ms: 620,
       fastMs: 380,
       transition: { kind: "black", ms: 60 },
       camera: {
-        from: { x: 1080, y: 490, zoom: 3.5, rotate: 6 },
-        to: { x: 1070, y: 466, zoom: 3.8, rotate: 4 },
+        from: { x: 1150, y: 460, zoom: 2.4, rotate: 6 },
+        to: { x: 1140, y: 444, zoom: 2.55, rotate: 4 },
         ease: "out",
       },
       background: "still-fall",
@@ -103,7 +103,7 @@ export const stillLife: Cinematic = {
         { role: "caster", at: [800, 900], size: 760, clip: "ult:still-pinch", then: "ult:still-pinch", look: "rim", rim: AMBER, root: false },
       ],
       vfx: [
-        { kind: "still-plates", at: 0, until: 1, layer: "front", params: { from: "caster", keep: "hand", clip: "ult:still-pinch", mode: "lay", takes: "0.2,0.45,0.7", dx: 0, dy: 0, fade: 0.2, alpha: 0.6 } },
+        { kind: "still-plates", at: 0, until: 1, layer: "front", params: { from: "caster", keep: "hand", clip: "ult:still-pinch", mode: "deal", print: true, abs: true, takes: "0.2,0.45,0.7", to: "1266,372,108,-5;1378,430,108,4;1280,500,108,-2", glide: 0.1, alpha: 1 } },
         { kind: "still-flicker", at: 0, until: 1, scale: 0.55, color: AMBER, layer: "front", params: { at: "0.2,0.45,0.7", len: 0.13, spark: true } },
       ],
       sound: [
@@ -290,7 +290,7 @@ export const stillLife: Cinematic = {
       id: "release",
       kind: "impact",
       purpose:
-        "Impact. The sleeve is flung open at the target from the left foreground, and every still arrives in it at once, overprinted on it, on an amber two-tone frame held by the stop; they blow out through it, the roof comes down, and a beat later each other enemy's own still arrives in it.",
+        "Impact. The sleeve is flung open at the target from the left foreground, and its three prints slide home into it and land in register on the amber two-tone frame, printed into the figure; on the frames after it they are gone, only one print edge opening out round the struck target. The roof comes down, and a beat later each other enemy is struck by a single print of its own.",
       space: "cinematic",
       ms: 740,
       fastMs: 520,
@@ -310,11 +310,10 @@ export const stillLife: Cinematic = {
       vfx: [
         { kind: "still-fall", at: 0, until: 1, layer: "back", params: { drop: 0.14 } },
         { kind: "still-plates", at: 0, until: 1, layer: "front", params: CONVERGE },
-        { kind: "still-burst", at: 0.1, until: 0.42, follow: "target", x: -90, y: -120, scale: 0.8, seed: 7, color: AMBER, layer: "front" },
+        { kind: "still-burst", at: 0.1, until: 0.3, follow: "target", x: -150, y: -110, scale: 0.45, seed: 7, color: AMBER, layer: "front" },
       ],
       screen: [
         { kind: "two-tone", at: 0.1, ms: 70, color: AMBER },
-        { kind: "flash", at: 0.26, ms: 60, color: "#6b4a2a" },
         { kind: "flash", at: 0.36, ms: 60, color: FLICKER },
         { kind: "chromatic", at: 0.12, ms: 150, amount: 0.8 },
       ],
@@ -361,7 +360,7 @@ export const stillLife: Cinematic = {
           vfx: [
             { kind: "still-fall", at: 0, until: 1, layer: "back", params: { drop: 0.14 } },
             { kind: "still-plates", at: 0, until: 1, layer: "front", params: CONVERGE },
-            { kind: "still-burst", at: 0.1, until: 0.42, follow: "target", x: 0, y: -300, scale: 1.5, seed: 7, color: AMBER, layer: "front" },
+            { kind: "still-burst", at: 0.1, until: 0.3, follow: "target", x: -170, y: -260, scale: 0.8, seed: 7, color: AMBER, layer: "front" },
           ],
         },
       },
@@ -372,7 +371,7 @@ export const stillLife: Cinematic = {
       id: "given",
       kind: "return",
       purpose:
-        "Release. Back on the real battlefield the Arcanist touches its brim and its spark is back in the glove. A still hangs ahead of every real enemy, going slowly pale: its moment, held. Stills of amber light rise off every ally: the moments given.",
+        "Release. Back on the real battlefield the Arcanist touches its brim and its spark is back in the glove. A small framed still lifts off every real enemy and hangs beside it: its moment, held. An amber one lifts off every ally and settles beside it: a moment given.",
       space: "battlefield",
       ms: 680,
       fastMs: 460,

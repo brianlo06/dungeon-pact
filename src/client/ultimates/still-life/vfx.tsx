@@ -106,7 +106,10 @@ function still(node: HTMLElement, keep?: string, posed?: { clip: Clip; t: number
   for (const attr of ["data-role", "data-look", "data-root"]) copy.removeAttribute(attr);
   copy.style.display = "";
   copy.style.zIndex = "";
-  if (keep) pruneTo(copy, keep);
+  if (keep) {
+    pruneTo(copy, keep);
+    copy.querySelector(`[data-part="${keep}"]`)?.classList.add("still-keep");
+  }
   for (const inner of copy.querySelectorAll("[data-part], [id], [data-clip], .cine-anchor")) {
     if (inner.classList.contains("cine-anchor")) {
       inner.remove();
@@ -130,26 +133,107 @@ interface Taken {
   k: number;
   /** The figure's ground point and drawn height when taken, world units. */
   at: { x: number; y: number; h: number };
+  /** A print's frame, world units, when the still is printed. */
+  frame?: { x: number; y: number; w: number; h: number };
 }
 
 const taken = new WeakMap<HTMLElement, Taken[]>();
+
+/** A screen rectangle, back into the world units of the stage's world layer. */
+function worldRect(el: HTMLElement, r: DOMRect) {
+  const film = el.closest<HTMLElement>(".ult-cinematic");
+  const world = film?.querySelector<HTMLElement>(".cine-world");
+  if (!film || !world) return null;
+  const root = film.getBoundingClientRect();
+  const m = new DOMMatrix(world.style.transform || "none").inverse();
+  const corners = [
+    [r.left, r.top],
+    [r.right, r.top],
+    [r.left, r.bottom],
+    [r.right, r.bottom],
+  ].map(([x, y]) => m.transformPoint(new DOMPoint(x - root.left, y - root.top)));
+  const xs = corners.map((c) => c.x);
+  const ys = corners.map((c) => c.y);
+  return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
+}
+
+/** The drawn extent of a copied figure (or its kept part), on screen. */
+function drawnRect(copy: HTMLElement) {
+  const kept = copy.querySelector<SVGGraphicsElement>(".still-keep");
+  if (kept) return kept.getBoundingClientRect();
+  const svg = copy.querySelector("svg");
+  let box: DOMRect | null = null;
+  for (const child of svg ? [...svg.children] : []) {
+    if (child.tagName.toLowerCase() === "defs") continue;
+    const r = child.getBoundingClientRect();
+    if (!r.width || !r.height) continue;
+    box = box
+      ? new DOMRect(Math.min(box.left, r.left), Math.min(box.top, r.top), Math.max(box.right, r.right) - Math.min(box.left, r.left), Math.max(box.bottom, r.bottom) - Math.min(box.top, r.top))
+      : r;
+  }
+  return box;
+}
+
+/**
+ * Put a copy in a print: a pale card with a hard edge, the figure inside it
+ * clipped to the card. Measured once, when it is taken.
+ */
+function printed(el: HTMLElement, wrap: HTMLDivElement, copy: HTMLElement): Taken["frame"] {
+  const inner = document.createElement("div");
+  inner.className = "still-inner";
+  inner.appendChild(copy);
+  const card = document.createElement("div");
+  card.className = "still-print";
+  card.appendChild(inner);
+  wrap.appendChild(card);
+  const r = drawnRect(copy);
+  const w = r && worldRect(el, r);
+  if (!w) return undefined;
+  const pad = Math.max(w.w, w.h) * 0.08;
+  const frame = { x: w.x - pad, y: w.y - pad, w: w.w + pad * 2, h: w.h + pad * 2 };
+  const edge = Math.max(2, Math.min(frame.w, frame.h) * 0.035);
+  card.style.left = `${frame.x.toFixed(1)}px`;
+  card.style.top = `${frame.y.toFixed(1)}px`;
+  card.style.width = `${frame.w.toFixed(1)}px`;
+  card.style.height = `${frame.h.toFixed(1)}px`;
+  card.style.setProperty("--edge", `${edge.toFixed(1)}px`);
+  inner.style.left = `${(-frame.x - edge).toFixed(1)}px`;
+  inner.style.top = `${(-frame.y - edge).toFixed(1)}px`;
+  wrap.style.transformOrigin = `${(frame.x + frame.w / 2).toFixed(1)}px ${(frame.y + frame.h / 2).toFixed(1)}px`;
+  return frame;
+}
+
+/** `x,y,scale,rotate;x,y,scale,rotate;…` → per-still placements. */
+const slots = (value: unknown) =>
+  typeof value === "string" && value.trim()
+    ? value.split(";").map((one) => {
+        const [x = 0, y = 0, s = 1, r = 0] = one.split(",").map(Number);
+        return { x, y, s, r };
+      })
+    : [];
 
 /**
  * Stills of the cast.
  *
  * Params: `from` (`caster` | `targets`), `keep` (a part: keep only it, as in
  * the hand's stills), `takes` (comma list of shares of the effect's life at
- * which a still is taken; the same for every figure), `mode` (`lay` |
- * `stream` | `converge`), and per mode:
+ * which a still is taken; the same for every figure), `print` (put each still
+ * in a framed print), `mode` (`lay` | `deal` | `stream` | `converge`), and per
+ * mode:
  *
  *  - lay: each still steps out by (`dx`, `dy`) × its number, in multiples of
  *    the figure's height, over `glide` of the effect;
+ *  - deal: each print, taken where the figure is, slides off it over `glide`
+ *    to its slot in `to` (`x,y,scale,rotate` from where it was taken, world
+ *    units), so the prints lie apart from the figure and from each other;
  *  - stream: laid as above from the start, then from `go` (staggered by
  *    `every` a still) each flies to the caster's ground point plus (`tx`,
  *    `ty`) × the caster's height, growing to `grow`, and is gone on arrival;
- *  - converge: laid as above from the start, the primary's stills arrive in
- *    it at `hit` (every other figure's at `hit2`, a share apart), overprinted,
- *    and blow out through it (`through`) and away.
+ *  - converge: prints laid out along the line from the start, the primary's
+ *    slide back into it and land in register exactly at `hit` (every other
+ *    figure's single print at `hit2`, a share apart), and are gone on that
+ *    frame: only the first print's edge is left, opening out round the
+ *    figure and fading over `through`.
  */
 const plates: Frame = (el, p, age, ctx) => {
   const box = el.querySelector<HTMLElement>(".still-plates");
@@ -158,6 +242,9 @@ const plates: Frame = (el, p, age, ctx) => {
   const mode = box.dataset.mode ?? "lay";
   const takes = list(box.dataset.takes, [0]);
   const keep = box.dataset.keep || undefined;
+  const print = box.dataset.print === "true" || box.dataset.print === "1";
+  // `others`: how many stills of every figure but the first (default: as many).
+  const others = num(box.dataset.others, takes.length);
   // `clip`: the caster's clip, started with the shot, to pose its stills by.
   const clip = box.dataset.clip ? (poses.arcanist as Record<string, Clip | undefined>)[box.dataset.clip] : undefined;
   const length = p > 0 ? age / p : 0;
@@ -177,24 +264,30 @@ const plates: Frame = (el, p, age, ctx) => {
     const at = ctx.actor(id);
     if (!at) return;
     takes.forEach((when, k) => {
+      if (source > 0 && k >= others) return;
       if (p < when || stills!.some((s) => s.source === source && s.k === k)) return;
       const wrap = document.createElement("div");
       wrap.className = "still-shift";
       wrap.style.transformOrigin = `${at.x.toFixed(1)}px ${(at.y - at.h * 0.45).toFixed(1)}px`;
       const posed = clip && length ? { clip, t: clamp((when * length) / clip.duration) } : undefined;
-      wrap.appendChild(still(node, keep, posed));
+      const copy = still(node, keep, posed);
       box.appendChild(wrap);
-      stills!.push({ wrap, source, k, at: { ...at } });
+      let frame: Taken["frame"];
+      if (print) frame = printed(el, wrap, copy);
+      else wrap.appendChild(copy);
+      stills!.push({ wrap, source, k, at: { ...at }, frame });
     });
   });
 
   const caster = ctx.actor("caster");
+  const dealt = slots(box.dataset.to);
   for (const s of stills) {
     const n = s.k + 1;
     const since = p - takes[s.k];
     let ox = dx * s.at.h * n;
     let oy = dy * s.at.h * n;
     let scale = 1;
+    let turn = 0;
     let o = alpha * (1 - shade * s.k);
     if (mode === "lay") {
       const glide = num(box.dataset.glide, 0.12);
@@ -202,6 +295,22 @@ const plates: Frame = (el, p, age, ctx) => {
       ox *= k;
       oy *= k;
       o *= clamp(since / 0.04);
+    } else if (mode === "deal") {
+      const slot = dealt[s.k] ?? { x: 0, y: 0, s: 1, r: 0 };
+      const k = ease("out", clamp(since / num(box.dataset.glide, 0.12)));
+      // `abs`: a slot is where the print's middle lands, in world units.
+      const f = s.frame;
+      const home = box.dataset.abs && f ? { x: slot.x - (f.x + f.w / 2), y: slot.y - (f.y + f.h / 2) } : slot;
+      ox = home.x * k;
+      oy = home.y * k;
+      // A slot's size above 3 is the print's longest side in world units, so
+      // a hand holding a long weapon is printed the same size as a bare one.
+      const size = slot.s > 3 && f ? slot.s / Math.max(f.w, f.h) : slot.s;
+      // A print leaves the hand already smaller than it, so a fresh one never
+      // lies over the hand or over the print before it.
+      scale = lerp(Math.min(1, size * 1.6), size, k);
+      turn = slot.r * k;
+      o = alpha * clamp(since / 0.03);
     } else if (mode === "stream" && caster) {
       const go = num(box.dataset.go, 0.3) + num(box.dataset.every, 0.06) * (s.k + s.source * 1.5);
       const k = ease("in", clamp((p - go) / num(box.dataset.fly, 0.3)));
@@ -218,23 +327,35 @@ const plates: Frame = (el, p, age, ctx) => {
     } else if (mode === "converge") {
       const hit = s.source === 0 ? num(box.dataset.hit, 0.1) : num(box.dataset.hit2, 0.36) + (s.source - 1) * 0.05;
       const lead = num(box.dataset.lead, 0.1);
-      const start = hit - lead * (1 + s.k * 0.25);
+      const start = hit - lead * (1 + s.k * 0.3);
       const k = clamp((p - start) / (hit - start));
       const through = num(box.dataset.through, 0.2);
-      const out = clamp((p - hit) / through);
-      // Arriving: every still slides in along its line and lands on the figure.
-      // They land a little out of register, each a hair further back along its
-      // line, so the frame they land on is a multiple exposure of the figure.
+      // Arriving: each print slides home along its line, tipping level, and
+      // lands in register with the figure on the frame of the hit.
       const arrive = ease("in", k);
-      const blow = ease("out", out);
-      ox = lerp(ox, ox * 0.12, arrive) - dx * s.at.h * n * blow * 1.1;
-      oy = lerp(oy, oy * 0.12, arrive) - dy * s.at.h * n * blow * 1.1;
-      scale = 1 + ease("out", out) * 0.12 * n;
-      o *= out > 0 ? (1 - out) ** 2 : p < start ? 0 : lerp(0.4, 1, k);
-      const hot = out > 0 && out < 0.35;
-      if (s.wrap.dataset.hot !== (hot ? "1" : "0")) s.wrap.dataset.hot = hot ? "1" : "0";
+      ox = lerp(ox, 0, arrive);
+      oy = lerp(oy, 0, arrive);
+      turn = lerp((s.k % 2 ? 1 : -1) * (3 + s.k * 2), 0, arrive);
+      scale = lerp(0.8, 1, arrive);
+      const edge = p >= hit && s.k === 0;
+      if (s.wrap.dataset.edge !== (edge ? "1" : "0")) s.wrap.dataset.edge = edge ? "1" : "0";
+      // Landed: the hit and the hit-stop that holds it. The prints are printed
+      // into the figure on the two-tone frame only (the stylesheet shows them
+      // while the stage marks `data-two-tone`), and the frames after it show
+      // the struck figure alone.
+      const out = clamp((p - hit) / through);
+      const landed = p >= hit && (p - hit) * length < 30 && s.source === 0;
+      if (s.wrap.dataset.landed !== (landed ? "1" : "0")) s.wrap.dataset.landed = landed ? "1" : "0";
+      if (landed) {
+        scale = 1;
+        o = 1;
+      } else if (p >= hit) {
+        // Gone into the figure. Only the first print's edge is left, opening out.
+        scale = 1 + ease("out", out) * 0.35;
+        o = s.k === 0 ? (1 - out) * (s.source === 0 ? 0.8 : 0.45) : 0;
+      } else o *= p < start ? 0 : lerp(0.35, 1, k) * (s.source === 0 ? 1 : 0.5);
     }
-    setTransform(s.wrap, `translate3d(${ox.toFixed(1)}px, ${oy.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`);
+    setTransform(s.wrap, `translate3d(${ox.toFixed(1)}px, ${oy.toFixed(1)}px, 0) rotate(${turn.toFixed(2)}deg) scale(${scale.toFixed(3)})`);
     setOpacity(s.wrap, clamp(o));
   }
 };
@@ -506,73 +627,75 @@ const fall: Frame = (el, p) => {
 /* ── On the board ─────────────────────────────────────────────────────── */
 
 /**
- * A still left hanging ahead of a real enemy: a copy of its figure on the
- * board, taken when the return starts, stepped out towards the party and
- * holding there, slowly going pale. Its moment, held.
+ * A small framed still of a figure on the board: its rig as it is this
+ * frame, printed at `SMALL` of its size in a card with a hard edge. The card
+ * starts over the figure's chest, lifts off it, and settles beside it
+ * (`side`: −1 to its left, +1 to its right), so it is a mark next to the
+ * figure and never a second figure on top of it.
  */
-/** A still of a figure on the board, as its rig is this frame, placed on its feet. */
-function boardStill(box: HTMLElement, unit: string, className: string) {
+const SMALL = 0.42;
+
+function card(box: HTMLElement, unit: string) {
   const rig = document.querySelector<HTMLElement>(`.stage [data-unit="${CSS.escape(unit)}"] .combatant-rig`);
   if (!rig) return false;
   const r = rig.getBoundingClientRect();
+  if (!r.width || !r.height) return false;
   const copy = rig.cloneNode(true) as HTMLElement;
-  copy.className = className;
+  copy.className = "still-board-rig";
   for (const inner of copy.querySelectorAll("[data-part], [id], [data-clip]")) {
     inner.removeAttribute("data-part");
     inner.removeAttribute("id");
     inner.removeAttribute("data-clip");
   }
+  const w = r.width * SMALL;
+  const h = r.height * SMALL;
+  const pad = Math.max(3, w * 0.08);
+  const edge = Math.max(2, w * 0.05);
+  const cw = w + pad * 2;
+  const ch = h + pad * 2;
+  const print = document.createElement("div");
+  print.className = "still-card";
+  print.style.width = `${cw.toFixed(1)}px`;
+  print.style.height = `${ch.toFixed(1)}px`;
+  print.style.left = `${(-cw / 2).toFixed(1)}px`;
+  print.style.top = `${(-ch).toFixed(1)}px`;
+  print.style.setProperty("--edge", `${edge.toFixed(1)}px`);
   copy.style.width = `${r.width.toFixed(1)}px`;
   copy.style.height = `${r.height.toFixed(1)}px`;
-  copy.style.marginLeft = `${(-r.width / 2).toFixed(1)}px`;
-  copy.style.marginTop = `${(-r.height).toFixed(1)}px`;
+  copy.style.left = `${(pad - edge + w / 2 - r.width / 2).toFixed(1)}px`;
+  copy.style.top = `${(pad - edge + h - r.height).toFixed(1)}px`;
+  copy.style.transformOrigin = "50% 100%";
+  copy.style.setProperty("transform", `scale(${SMALL})`, "important");
+  print.appendChild(copy);
+  box.appendChild(print);
   box.dataset.w = r.width.toFixed(1);
   box.dataset.h = r.height.toFixed(1);
-  box.appendChild(copy);
   return true;
 }
 
-const Held = (): ReactNode => <div className="still-held" />;
-
-const held: Frame = (el, p) => {
-  const box = el.querySelector<HTMLElement>(".still-held");
+function settle(el: HTMLElement, p: number, className: string, side: number, delay: number) {
+  const box = el.querySelector<HTMLElement>(`.${className}`);
   const unit = el.dataset.anchor;
   if (!box || !unit) return;
-  if (!box.firstChild && !boardStill(box, unit, "still-board-rig")) return;
+  if (!box.firstChild && !card(box, unit)) return;
   const w = num(box.dataset.w, 100);
-  const out = ease("out", clamp(p / 0.35));
-  setTransform(box, `translate3d(${(-w * 0.42 * out).toFixed(1)}px, 0, 0)`);
-  setOpacity(box, lerp(0.95, 0.55, clamp((p - 0.3) / 0.7)) * clamp(p / 0.06));
-};
+  const h = num(box.dataset.h, 100);
+  const k = ease("out", clamp((p - delay) / 0.4));
+  // From the chest, up and out to beside the head.
+  const x = lerp(0, side * w * 0.62, k);
+  const y = lerp(-h * 0.25, -h * 0.62, k) - Math.sin(k * Math.PI) * h * 0.12;
+  const turn = lerp(0, side * 6, k);
+  setTransform(box, `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotate(${turn.toFixed(2)}deg) scale(${lerp(0.55, 1, k).toFixed(3)})`);
+  setOpacity(box, p < delay ? 0 : Math.min(1, (p - delay) / 0.08) * lerp(1, 0.85, clamp((p - 0.6) / 0.4)));
+}
 
-/**
- * A moment given: a still of a real ally, lifted off it in amber light and
- * rising, going pale as it goes, while a second follows it a beat behind.
- */
-const Given = (): ReactNode => (
-  <div className="still-given">
-    <div className="still-given-a" />
-    <div className="still-given-b" />
-  </div>
-);
+/** A still of a real enemy, lifted off it and hung beside it: its moment, held. */
+const Held = (): ReactNode => <div className="still-held" />;
+const held: Frame = (el, p) => settle(el, p, "still-held", 1, 0);
 
-const given: Frame = (el, p) => {
-  const unit = el.dataset.anchor;
-  const a = el.querySelector<HTMLElement>(".still-given-a");
-  const b = el.querySelector<HTMLElement>(".still-given-b");
-  if (!unit || !a || !b) return;
-  if (!a.firstChild && !boardStill(a, unit, "still-board-rig")) return;
-  if (!b.firstChild) boardStill(b, unit, "still-board-rig");
-  const h = num(a.dataset.h, 100);
-  for (const [node, delay] of [
-    [a, 0],
-    [b, 0.22],
-  ] as const) {
-    const k = clamp((p - delay) / 0.75);
-    setTransform(node, `translate3d(0, ${(-h * 0.32 * ease("out", k)).toFixed(1)}px, 0) scale(${(1 + k * 0.06).toFixed(3)})`);
-    setOpacity(node, k <= 0 ? 0 : Math.min(1, k * 8) * (1 - ease("in", k)) * (delay ? 0.6 : 0.9));
-  }
-};
+/** A still of a real ally, printed in amber light and set beside it: a moment given. */
+const Given = (): ReactNode => <div className="still-given" />;
+const given: Frame = (el, p) => settle(el, p, "still-given", -1, 0.05);
 
 export const renderers: Record<string, (p: VfxProps) => ReactNode> = {
   "still-plates": Plates,

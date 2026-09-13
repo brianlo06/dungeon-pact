@@ -52,6 +52,19 @@ test("its own film: the hand's gesture laid out in stills, copies that nothing m
     all.map((s) => s.querySelector<SVGElement>("svg g[style*='rotate']")?.style.transform ?? ""),
   );
   expect(new Set(turns).size).toBe(3);
+  // Each is a print, dealt clear of the live hand and of the other prints.
+  const prints = page.locator(".fx-still-plates-wrap .still-print");
+  await expect(prints).toHaveCount(3);
+  const boxes = [];
+  for (let k = 0; k < 3; k++) boxes.push((await prints.nth(k).boundingBox())!);
+  const spark = (await page.locator('.cine-actor[data-role="caster"] [data-part="spark"]').boundingBox())!;
+  const apart = (a: { x: number; y: number; width: number; height: number }, b: typeof a) =>
+    a.x + a.width <= b.x || b.x + b.width <= a.x || a.y + a.height <= b.y || b.y + b.height <= a.y;
+  for (const b of boxes) expect(apart(b, spark)).toBe(true);
+  const centres = boxes.map((b) => ({ x: b.x + b.width / 2, y: b.y + b.height / 2, r: Math.min(b.width, b.height) / 2 }));
+  for (let i = 0; i < 3; i++)
+    for (let j = i + 1; j < 3; j++)
+      expect(Math.hypot(centres[i].x - centres[j].x, centres[i].y - centres[j].y)).toBeGreaterThan(centres[i].r);
 });
 
 test("every real enemy winds up, and each flicker lays its next moment out ahead of it", async ({ page }) => {
@@ -80,33 +93,58 @@ test("the quiet holds: a silhouette, its eye-lights up, and nothing loud in it",
   await expect(placed(page, "targets")).toHaveCount(0);
 });
 
-test("the impact lands every still in the target at once, then in the rest of the line", async ({ page }) => {
-  await hold(page, { shot: 5, at: 0.12 }, "release");
+test("the impact lands every print in the target at once, and the struck target reads alone after it", async ({ page }) => {
+  // The hit: three prints of the target landed in register with it.
+  await hold(page, { shot: 5, at: 0.102 }, "release");
   await expect(page.locator(".cine-text-impact")).toBeVisible();
   await expect(placed(page, "caster")).toHaveCount(1);
   const enemies = await enemiesOnBoard(page);
-  await expect(page.locator(".fx-still-plates-wrap .still-shift")).toHaveCount(enemies * 4);
-  // The target's stills are on it, printed hot, within its own figure.
+  // Three prints of the target, one of each of the others.
+  await expect(page.locator(".fx-still-plates-wrap .still-shift")).toHaveCount(3 + (enemies - 1));
+  const landed = page.locator('.fx-still-plates-wrap .still-shift[data-landed="1"] .still-print');
+  await expect(landed).toHaveCount(3);
   const body = await centre(page, '.cine-actors > .cine-actor[data-role="targets"] .cine-sprite');
-  const hot = page.locator('.fx-still-plates-wrap .still-shift[data-hot="1"] .still-plate .still-look');
-  await expect(hot).toHaveCount(4);
-  for (let k = 0; k < 4; k++) {
-    const at = await centre(page, '.fx-still-plates-wrap .still-shift[data-hot="1"] .still-plate .still-look', k);
-    expect(Math.abs(at!.x - body!.x)).toBeLessThan(body!.w * 0.5);
+  for (let k = 0; k < 3; k++) {
+    const at = await centre(page, '.fx-still-plates-wrap .still-shift[data-landed="1"] .still-print', k);
+    expect(Math.abs(at!.x - body!.x)).toBeLessThan(body!.w * 0.35);
   }
-  // A beat later the others' own stills land on them.
-  await hold(page, { shot: 5, at: 0.43 }, "release");
-  expect(
-    await page.locator('.fx-still-plates-wrap .still-shift[data-hot="1"]').count(),
-  ).toBe((enemies - 1) * 4);
+
+  // After the accent: nothing of a print is left on the target but one edge.
+  await hold(page, { shot: 5, at: 0.24 }, "release");
+  expect(await page.locator('.fx-still-plates-wrap .still-shift[data-landed="1"]').count()).toBe(0);
+  const onTarget = await page
+    .locator(".fx-still-plates-wrap .still-shift")
+    .evaluateAll((all) =>
+      all.slice(0, 3).map((s) => ({
+        o: Number((s as HTMLElement).style.opacity),
+        edge: (s as HTMLElement).dataset.edge === "1",
+      })),
+    );
+  expect(onTarget.filter((s) => s.o > 0.01 && !s.edge)).toEqual([]);
+  expect(onTarget.filter((s) => s.edge)).toHaveLength(1);
+
+  // A beat later each of the others is struck by its own print, and only its edge stays.
+  await hold(page, { shot: 5, at: 0.45 }, "release");
+  expect(await page.locator('.fx-still-plates-wrap .still-shift[data-edge="1"]').count()).toBe(enemies);
 });
 
 test("the return leaves a still on every real enemy and light off every ally, and the board has the result", async ({ page }) => {
   await hold(page, { shot: 6, at: 0.5 }, "given");
   const enemies = await enemiesOnBoard(page);
   const party = await page.locator('.stage [data-unit^="p"] .combatant-rig, .stage .combatant[data-side="party"] .combatant-rig').count();
-  await expect(page.locator(".cine-anchored .still-held .still-board-rig")).toHaveCount(enemies);
-  expect(await page.locator(".cine-anchored .still-given-a .still-board-rig").count()).toBeGreaterThanOrEqual(Math.min(party, 2));
+  await expect(page.locator(".cine-anchored .still-held .still-card .still-board-rig")).toHaveCount(enemies);
+  expect(await page.locator(".cine-anchored .still-given .still-card").count()).toBeGreaterThanOrEqual(Math.min(party, 2));
+  // A card sits beside its figure, not on it: smaller than it, and off its middle.
+  for (let i = 0; i < enemies; i++) {
+    const unit = await centre(page, `.stage [data-unit="enemy-${i}"] .combatant-rig`);
+    const mark = await page
+      .locator(".cine-anchored.fx-still-held-wrap")
+      .nth(i)
+      .locator(".still-card")
+      .boundingBox();
+    expect(mark!.width).toBeLessThan(unit!.w * 0.7);
+    expect(Math.abs(mark!.x + mark!.width / 2 - unit!.x)).toBeGreaterThan(unit!.w * 0.35);
+  }
   for (let i = 0; i < enemies; i++) {
     const bar = page.locator(`[data-unit="enemy-${i}"] .combatant-bar i`);
     await expect
