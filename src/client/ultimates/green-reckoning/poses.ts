@@ -145,11 +145,11 @@ const hear: Clip = {
       [1, { ...KNELT, s: SINK - 0.014, head: { rotate: -1, x: 0.015, y: -0.008 }, hand: { ...KNELT.hand, rotate: 88, scale: 1.12 }, staff: { rotate: -10, x: 0.02 } }],
     ),
     ...face(
-      [0, { brow: 0.7, knit: 5, open: 0.8, mouth: 0.9 }],
-      [0.35, { brow: 1.2, knit: 8, open: 0.62, mouth: 0.85 }],
+      [0, { brow: 0.9, knit: 6, open: 0.75, mouth: 0.9 }],
+      [0.35, { brow: 2, knit: 11, open: 0.45, mouth: 0.8, wide: 0.96 }],
       // The heart that barely comes.
-      [0.6, { brow: -1, knit: -8, open: 0.7, mouth: 1.25, wide: 0.92 }],
-      [0.78, { brow: 1, knit: 7, open: 0.72, mouth: 0.6, wide: 1.02 }],
+      [0.6, { brow: -2.2, knit: -13, open: 0.8, mouth: 1.7, wide: 0.88 }],
+      [0.78, { brow: 1.8, knit: 12, open: 0.5, mouth: 0.45, wide: 1.1 }],
       // Open.
       [0.9, { brow: -1.9, knit: 2, open: 1.25, mouth: 0.75 }],
       [1, { brow: -2.1, knit: 3, open: 1.3, mouth: 0.75 }],

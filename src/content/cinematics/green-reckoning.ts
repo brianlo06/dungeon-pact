@@ -161,8 +161,8 @@ export const greenReckoning: Cinematic = {
       fastMs: 400,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 766, y: 268, zoom: 3.0, rotate: 1.2 },
-        to: { x: 766, y: 262, zoom: 3.12, rotate: 0.6 },
+        from: { x: 766, y: 250, zoom: 3.0, rotate: 1.2 },
+        to: { x: 766, y: 244, zoom: 3.12, rotate: 0.6 },
         ease: "linear",
       },
       background: "green-undergrowth",
@@ -217,7 +217,7 @@ export const greenReckoning: Cinematic = {
       ],
       screen: [
         { kind: "two-tone", at: 0.03, ms: 70 },
-        { kind: "flash", at: 0.12, ms: 90, amount: 0.5, color: HOT },
+        { kind: "flash", at: 0.14, ms: 80, amount: 0.5, color: "#5e8f52" },
       ],
       stop: [{ at: 0.04, ms: 150 }],
       shake: [
