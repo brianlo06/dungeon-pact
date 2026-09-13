@@ -960,7 +960,7 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
       let flew = false;
       if (delivery === "cone") {
         // One breath across all of them: aimed at the middle of what it hit,
-        // reaching a little past it, landing on everyone at once.
+        // reaching just to it rather than past it, landing on everyone at once.
         const standing = ids.filter((id) => stage.units.has(id));
         const ends = standing.map((id) => hitPoint(stage.units.get(id)!, input.targetAnchor?.(id)));
         if (ends.length) {
@@ -968,7 +968,7 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
             x: ends.reduce((n, p) => n + p.x, 0) / ends.length,
             y: ends.reduce((n, p) => n + p.y, 0) / ends.length,
           };
-          const end = { x: muzzle.x + (mid.x - muzzle.x) * 1.12, y: muzzle.y + (mid.y - muzzle.y) * 1.12 };
+          const end = { x: muzzle.x + (mid.x - muzzle.x) * 1.04, y: muzzle.y + (mid.y - muzzle.y) * 1.04 };
           if (!debug.hit) debug.hit = frac(stage, mid);
           // How wide it must open where it reaches them: every target's
           // distance off its centre line, both sides, plus a body's width.

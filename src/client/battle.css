@@ -1689,16 +1689,21 @@
  * far target. A white core inside orange inside red, open towards the row.
  */
 .projectile-cone.trajectory-beam {
-  --open: max(calc(clamp(58px, 21cqh, 150px) * 1.1), calc(var(--spread, 0px) * 1.1));
+  /*
+   * It opens to cover its targets, but never into a wall: capped at about a
+   * third of the stage's height, and translucent throughout, so the fighters
+   * it passes over and the row it lands on stay readable through it.
+   */
+  --open: min(max(clamp(44px, 15cqh, 116px), calc(var(--spread, 0px) * 0.8)), 34cqh);
   width: 200px;
   height: var(--open);
   margin-top: calc(var(--open) * -0.5);
   background: linear-gradient(
     90deg,
-    #fff4d6 0%,
-    #ffb85a 18%,
-    rgba(255, 110, 50, 0.9) 55%,
-    rgba(194, 68, 42, 0.55) 85%,
+    rgba(255, 244, 214, 0.78) 0%,
+    rgba(255, 184, 90, 0.62) 18%,
+    rgba(255, 110, 50, 0.42) 55%,
+    rgba(194, 68, 42, 0.2) 85%,
     rgba(194, 68, 42, 0) 100%
   );
   /* Ragged along both edges and the far end, so it reads as flame. */
@@ -1733,8 +1738,8 @@
   inset: 0;
   background: linear-gradient(
     90deg,
-    #ffffff 0%,
-    rgba(255, 244, 214, 0.9) 30%,
+    rgba(255, 255, 255, 0.7) 0%,
+    rgba(255, 244, 214, 0.4) 30%,
     rgba(255, 226, 154, 0) 75%
   );
   clip-path: polygon(0 48%, 100% 30%, 100% 70%, 0 52%);
