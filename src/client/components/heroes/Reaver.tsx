@@ -31,8 +31,33 @@ import {
  * nobody else has anything near.
  */
 const PARTS = ["legs", "body", "head", "hair", "fist", "cleaver"] as const;
-/** The face, moved only in an Ultimate close-up (see `CloseUpContext`). */
-const FACE_PARTS = ["brow", "eyes", "mouth"] as const;
+/**
+ * Parts moved only in an Ultimate close-up (see `CloseUpContext`): the face,
+ * and for Red Ledger the bandage soaking through (`stain`) and the stroke the
+ * fist wipes across the chest (`entry`). Both of those are drawn outside a
+ * clip at rest, so a copy of the figure that no clip drives shows neither.
+ */
+const FACE_PARTS = ["brow", "eyes", "mouth", "stain", "entry"] as const;
+/**
+ * The chest stroke's axis: where the fist lands under the front shoulder,
+ * down across the scar and the strap to the sash. Solved from the fist's arc
+ * in `ultimates/red-ledger/poses.ts`; the stroke's own units are 25 long.
+ */
+const ENTRY = { x: 58.36, y: 47.23, angle: 117.8, along: 0.724, across: 1.25 };
+/**
+ * One stroke of blood, in its own units (x 0 where the fist lands … 25, 6
+ * across): a blunt, flat head where it was pressed on, a solid band dragged
+ * most of the way, and two dry-brush tails where it ran out, with one drip
+ * and one fleck. Red Ledger draws every stroke in its film from this same
+ * shape.
+ */
+export const ENTRY_STROKE = [
+  "M0.5 -2.7 C1 -3.1 2.6 -3.05 4 -3 L17.5 -2.4 L17.2 -0.35 L18.4 0.35 L16.6 1.9 L9 2.6 L3.4 3 C1.7 3.1 0.6 2.9 0.25 2.3 C-0.15 1.2 -0.1 -1.7 0.5 -2.7 Z",
+  "M16.8 -2.4 L24.2 -1.7 L24.9 -1.35 L24.1 -1.0 L16.9 -0.8 Z",
+  "M17.4 0.9 L21.6 1.15 L22.1 1.45 L21.5 1.7 L16.8 1.9 Z",
+  "M4.2 2.9 C4.2 3.6 4 4.3 4 4.8 C4 5.45 4.4 5.8 4.8 5.8 C5.2 5.8 5.6 5.45 5.6 4.8 C5.6 4.3 5.4 3.6 5.4 2.9 Z",
+  "M22.9 0.2 a0.45 0.45 0 1 0 0.9 0 a0.45 0.45 0 1 0 -0.9 0 Z",
+].join(" ");
 
 /**
  * The broadest face in the party: a low forehead, a brow that sticks out past
@@ -71,6 +96,17 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
         <Shade id={g.id("skin")} ramp={RAMP.skinPallid} />
         <Shade id={g.id("sash")} ramp={RAMP.crimson} />
         <Shade id={g.id("blade")} ramp={["#b9b4c2", "#7d7789", "#46404f"]} />
+        {closeUp && (
+          <>
+            <clipPath id={g.id("wrap")}>
+              <circle cx={71} cy={53} r={4.3} />
+            </clipPath>
+            {/* One stroke of blood: heavy where the fist lands, dry-brushed thin where it leaves. */}
+            <clipPath id={g.id("entry")}>
+              <path d={ENTRY_STROKE} />
+            </clipPath>
+          </>
+        )}
       </defs>
 
       <g ref={hold("legs")} data-part="legs" style={at(48, 90)}>
@@ -163,6 +199,20 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
         <GearMount anchor="torso" layer="body" x={48} y={57} />
         <GearMount anchor="waist" layer="front" x={42} y={74} />
         <GearMount anchor="shoulderBack" layer="front" x={37} y={49} />
+        {/* Over whatever the chest wears: the stroke is paint, not a wound. */}
+        {closeUp && (
+          <g
+            transform={`translate(${ENTRY.x} ${ENTRY.y}) rotate(${ENTRY.angle}) scale(${ENTRY.along} ${-ENTRY.across})`}
+            clipPath={`url(#${g.id("entry")})`}
+          >
+            {/* Slid in along the stroke's own axis, so the clip paints it from where the fist lands. */}
+            <g ref={facePart("entry")}>
+              <rect x={-32} y={-4} width={32} height={11} fill="#b3172f" />
+              <path d="M-32 -1.2 H-6 M-28 1.4 H-4" stroke="#e8394f" strokeWidth={0.8} />
+              <path d="M-2.5 -4 C-1 -1 -1 3 -2.5 7 H0 V-4 Z" fill="#e8394f" />
+            </g>
+          </g>
+        )}
       </g>
 
       {/* ---- head: a heavy brow, a stitched scar, teeth gritted, the mane ---- */}
@@ -335,6 +385,20 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={0.9}
         />
         <circle cx={73} cy={55} r={1} fill={RAMP.crimson[1]} />
+        {closeUp && (
+          <g clipPath={`url(#${g.id("wrap")})`}>
+            {/* The bandage soaking through from underneath: below the wrap at rest. */}
+            <g ref={facePart("stain")}>
+              <g transform="translate(0 12)">
+                <path
+                  d="M65 52.5 Q67.5 50.2 70 51.6 Q72.6 49.4 75 51.2 Q76.4 52 77 53 L77 69 L65 69 Z"
+                  fill="#b3172f"
+                />
+                <path d="M68 51.5 H74 M67.5 54.5 H74.5" stroke="#6e0f20" strokeWidth={0.9} opacity={0.7} />
+              </g>
+            </g>
+          </g>
+        )}
       </g>
 
       {/* ---- the cleaver arm, on top: the blade drags on the floor ---- */}
