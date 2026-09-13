@@ -473,7 +473,6 @@ const Crest = ({ cue }: VfxProps): ReactNode => {
   const id = fid(useId());
   const rand = seeded(cue.seed ?? 29);
   const top = RISES[RISES.length - 1];
-  const under = RISES[RISES.length - 2];
   const left = edgeX(-1, top);
   const right = edgeX(1, top);
   return (
@@ -486,14 +485,12 @@ const Crest = ({ cue }: VfxProps): ReactNode => {
       </radialGradient>
       <ellipse className="dry-crest-glow" cx={VP.x} cy={top} rx={(right - left) * 0.9} ry="260" fill={`url(#${id}-crest)`} />
       {Array.from({ length: 13 }, (_, i) => (
-        <g key={i} className="dry-crest-t" data-x={(lerp(left + 20, right - 20, i / 12) + (rand() - 0.5) * 34).toFixed(0)} data-y={top + 22} data-s={(i % 4 === 1 ? 1.35 + rand() * 0.4 : 0.35 + rand() * 0.6).toFixed(2)} data-r={((rand() - 0.5) * 30).toFixed(1)}>
+        <g key={i} className="dry-crest-t" data-x={(lerp(left + 20, right - 20, i / 12) + (rand() - 0.5) * 34).toFixed(0)} data-y={top + 4} data-s={(i % 4 === 1 ? 1.35 + rand() * 0.4 : 0.35 + rand() * 0.6).toFixed(2)} data-r={((rand() - 0.5) * 30).toFixed(1)}>
           <Tongue id={id} ph={i} />
         </g>
       ))}
-      {/* the top riser, in front of the fire's feet */}
-      <path d={`M${left} ${top} L${right} ${top} L${edgeX(1, under)} ${under} L${edgeX(-1, under)} ${under} Z`} fill="#241911" />
       {RISES.slice(-4).map((y, i) => (
-        <path key={y} className="dry-crest-nose" data-i={3 - i} d={`M${edgeX(-1, y)} ${y} L${edgeX(1, y)} ${y}`} stroke={FIRE.gold} strokeWidth={6 + i * 2} strokeLinecap="round" opacity="0" />
+        <path key={y} className="dry-crest-nose" data-i={3 - i} d={`M${edgeX(-1, y) + 6} ${y} L${edgeX(1, y) - 6} ${y}`} stroke={FIRE.gold} strokeWidth={4 + i * 1.5} strokeLinecap="round" opacity="0" />
       ))}
     </svg>
   );
@@ -513,7 +510,7 @@ const crest: Frame = (el, p, age) => {
   // The top nose is lit from the start; the ones below catch the light in turn.
   for (const nose of svg.querySelectorAll<SVGPathElement>(".dry-crest-nose")) {
     const i = num(nose.dataset.i, 0);
-    fade(nose, clamp((0.25 + p * 0.9 - i * 0.28) * 1.6) * (0.75 - i * 0.15));
+    fade(nose, clamp((0.25 + p * 0.9 - i * 0.28) * 1.6) * (0.6 - i * 0.12));
   }
 };
 

@@ -322,8 +322,9 @@ function Steps() {
         const r1 = edgeX(1, top);
         return (
           <g key={i}>
-            <path d={`M${l0} ${bottom} L${l1} ${top} L${r1} ${top} L${r0} ${bottom} Z`} fill={i % 2 ? STONE : FACE} />
-            <path d={`M${l1} ${top} L${r1} ${top}`} stroke={NOSE} strokeWidth={Math.max(3, 10 - i)} />
+            <path d={`M${l0} ${bottom} L${l1} ${top} L${r1} ${top} L${r0} ${bottom} Z`} fill={i % 2 ? "#3a2a1c" : "#45331f"} />
+            <path d={`M${l1} ${top} L${r1} ${top}`} stroke="#8a6c48" strokeWidth={Math.max(3, 10 - i)} />
+            <path d={`M${l1} ${top + 4} L${r1} ${top + 4} L${edgeX(1, top + (bottom - top) * 0.4)} ${top + (bottom - top) * 0.4} L${edgeX(-1, top + (bottom - top) * 0.4)} ${top + (bottom - top) * 0.4} Z`} fill="#000" fillOpacity="0.16" />
             <path d={weed(l1 + 20, top + 2, r1 - l1 - 40, 500 + i, 1 - i * 0.1)} stroke={WEED} strokeWidth={Math.max(2, 5 - i * 0.5)} fill="none" strokeLinecap="round" />
             <path
               d={Array.from({ length: 6 }, () => `M${(l1 + rand() * (r1 - l1)).toFixed(0)} ${top + 6} v${(8 + rand() * (bottom - top) * 0.5).toFixed(0)}`).join(" ")}
