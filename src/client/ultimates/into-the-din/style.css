@@ -1,0 +1,207 @@
+/*
+ * Into the Din — effects and space.
+ *
+ * Sable, argent and one or. No filters and no keyframes: the din's strokes are
+ * paths rebuilt on the combat clock (see `vfx.tsx`), everything else moves on
+ * `--p`, and a glow is a wide translucent stroke, never a blur.
+ */
+
+/* ---- the field ---- */
+.din-field-sky {
+  fill: none;
+  opacity: 0.1;
+}
+.din-field-rays {
+  fill: none;
+  opacity: 0.07;
+}
+.din-field-furrows {
+  opacity: 0.16;
+}
+
+/* ---- world-sized drawings ---- */
+.cine-vfx > .din-sky,
+.cine-vfx > .din-courage-box {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none !important;
+}
+.din-courage-box > svg {
+  position: absolute;
+  inset: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+}
+.din-marker {
+  display: none;
+}
+
+/* ---- the din ---- */
+.din-noise path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: miter;
+}
+.din-ink {
+  stroke: #0b0a0e;
+  stroke-width: calc(9px * var(--w, 1));
+  opacity: 0.85;
+}
+.din-bone {
+  stroke: #f1e6cc;
+  stroke-width: calc(3.4px * var(--w, 1));
+  opacity: 0.82;
+}
+.din-hot {
+  stroke: #fffaf0;
+  stroke-width: calc(4.6px * var(--w, 1));
+  stroke-linejoin: round;
+}
+/* In the quiet what is left of it is dimmer, as well as fewer. */
+.din-noise[data-mode="freeze"] .din-bone {
+  opacity: calc(0.75 - var(--quiet, 0) * 0.45);
+}
+
+/* ---- the ring: hand-cut bands, an ink edge under bone ---- */
+.din-ring-ink {
+  fill: #0b0a0e;
+  stroke: #0b0a0e;
+  stroke-width: 7px;
+  stroke-linejoin: miter;
+  opacity: 0.8;
+}
+.din-ring-cut {
+  fill: #fffaf0;
+}
+
+/* ---- the swing, smeared ---- */
+.din-swing-ink {
+  fill: #0b0a0e;
+  stroke: #0b0a0e;
+  stroke-width: 8px;
+  stroke-linejoin: miter;
+  opacity: calc(0.7 * (1 - var(--p)));
+}
+.din-swing-cut {
+  fill: #fffaf0;
+  opacity: calc(clamp(0, (1 - var(--p)) * 1.6, 1));
+}
+
+/* ---- the blow, drawn ---- */
+.din-clang {
+  width: 640px;
+  height: 640px;
+  overflow: visible;
+}
+.cine-vfx > .din-clang {
+  transform: translate(-50%, -50%) rotate(var(--rot)) scale(calc(var(--s) * (0.55 + var(--pe) * 0.75)));
+  opacity: clamp(0, calc((1 - var(--p)) * 2.4), 1);
+}
+.din-clang-frame {
+  display: none;
+}
+.fx-din-clang-wrap[data-k="0"] .din-clang-frame[data-k="0"],
+.fx-din-clang-wrap[data-k="1"] .din-clang-frame[data-k="1"],
+.fx-din-clang-wrap[data-k="2"] .din-clang-frame[data-k="2"],
+.fx-din-clang-wrap:not([data-k]) .din-clang-frame[data-k="0"] {
+  display: inline;
+}
+.din-clang-wedge {
+  fill: #0b0a0e;
+  stroke: #f1e6cc;
+  stroke-width: 5px;
+  stroke-linejoin: miter;
+}
+.din-clang-ring {
+  fill: none;
+  stroke: #fffaf0;
+  stroke-linecap: butt;
+}
+.din-clang-ring.a {
+  stroke-width: 18px;
+}
+.din-clang-ring.b {
+  stroke-width: 8px;
+  opacity: 0.8;
+}
+.din-clang-core {
+  fill: #fffaf0;
+}
+.din-clang-notch {
+  fill: #0b0a0e;
+}
+
+/* ---- courage: the ring cut through the party ---- */
+.din-gold {
+  stroke: #e7b54a;
+  stroke-width: calc(6.5px * var(--w, 1));
+  stroke-linejoin: round;
+}
+/* ---- on the real board ---- */
+.cine-vfx > .din-board {
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: none;
+}
+.din-board svg {
+  position: absolute;
+  left: calc(var(--unit-w) * -1 * var(--s));
+  width: calc(var(--unit-w) * 2 * var(--s));
+  height: calc(var(--unit-w) * 2 * 220 / 240 * var(--s));
+  bottom: calc(var(--unit-w) * -0.16 * var(--s));
+  overflow: visible;
+}
+.din-board-zig {
+  fill: none;
+  stroke: #f1e6cc;
+  stroke-width: 3.5px;
+  stroke-linecap: round;
+  display: none;
+  opacity: calc(min(1, var(--p) * 5) * (1 - var(--p) * 0.3));
+}
+.fx-din-board-wrap[data-f="0"] .din-board-zig[data-f="0"],
+.fx-din-board-wrap[data-f="1"] .din-board-zig[data-f="1"],
+.fx-din-board-wrap[data-f="2"] .din-board-zig[data-f="2"],
+.fx-din-board-wrap:not([data-f]) .din-board-zig[data-f="0"] {
+  display: inline;
+}
+.din-board-cut {
+  display: none;
+}
+.fx-din-board-wrap[data-f="0"] .din-board-cut[data-f="0"],
+.fx-din-board-wrap[data-f="1"] .din-board-cut[data-f="1"],
+.fx-din-board-wrap[data-f="2"] .din-board-cut[data-f="2"],
+.fx-din-board-wrap:not([data-f]) .din-board-cut[data-f="0"] {
+  display: inline;
+}
+.din-board-cut {
+  opacity: clamp(0, calc(var(--pe) * 3), 1);
+}
+.din-board-floor {
+  fill: #f1e6cc;
+  opacity: 0.7;
+}
+.din-board[data-mode="carry"] .din-board-floor {
+  fill: #e7b54a;
+}
+.din-board-ink {
+  fill: #0b0a0e;
+  stroke: #0b0a0e;
+  stroke-width: 5px;
+  stroke-linejoin: miter;
+  opacity: 0.75;
+}
+.din-board-bone {
+  fill: #fffaf0;
+}
+.din-board-gold {
+  fill: #e7b54a;
+  stroke: #ffe3a1;
+  stroke-width: 1.5px;
+}
