@@ -513,7 +513,19 @@ export function useDirector(
         }
         if (p) {
           const t = time - startAt.current;
+          /**
+           * Actors whose blows landed this frame. A slow frame can reach both
+           * a hit and the clip that follows it — a bite and the run on past —
+           * and the follow-up would replace the strike before its contact
+           * pose was ever drawn. The follow-up waits one frame instead, so
+           * every hit is shown on a frame that draws its blow landing.
+           */
+          const landed = new Set<string>();
           while (cursor.current < p.cues.length && p.cues[cursor.current].t <= t) {
+            const due = p.cues[cursor.current];
+            if (due.kind === "clip" && landed.has(due.unit)) break;
+            if (due.kind === "beat" && due.by && due.beat.actor === due.by)
+              landed.add(due.by);
             const cue = p.cues[cursor.current++];
             play(cue, startAt.current + cue.t);
             if (plan.current !== p) return;

@@ -190,6 +190,8 @@ interface LabWindow {
     trace: () => LabTrace[];
     /** Start tracing, or start again from nothing. */
     clearTrace: () => void;
+    /** Plan later rounds against this replay ceiling; null restores the game's. */
+    setCap: (ms: number | null) => void;
   };
 }
 
@@ -377,6 +379,10 @@ export function useChoreoLab(
       clearTrace: () => {
         records.current = [];
         setTracing(true);
+      },
+      setCap: (ms) => {
+        // Both hook sets share one plan object.
+        base.current.plan!.cap = ms ?? undefined;
       },
     };
   });

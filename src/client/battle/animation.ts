@@ -224,10 +224,16 @@ const mix = (a: Sampled, b: Sampled, k: number): Sampled => ({
   x: lerp(a.x, b.x, k),
   y: lerp(a.y, b.y, k),
   scale: lerp(a.scale, b.scale, k),
-  rotate: lerp(a.rotate, b.rotate, k),
+  // The short way round. A strike that carries its sword through a full
+  // turn ends at 360°, which is drawn exactly as 0°; easing from there into
+  // the next clip by plain arithmetic spun the blade backwards through a
+  // whole circle on every hand-off.
+  rotate: b.rotate - wrap(b.rotate - a.rotate) * (1 - k),
   squash: lerp(a.squash, b.squash, k),
   flash: b.flash,
 });
+/** An angle difference folded into −180…180 degrees. */
+const wrap = (d: number) => d - 360 * Math.round(d / 360);
 
 /** How the choreographer asks for a clip: when it starts, and how fast. */
 export interface PlayOptions {
@@ -734,7 +740,9 @@ export class Animator {
     const from = this.passed?.state === state ? this.passed.t : -1e-9;
     this.passed = { state, t };
     if (t <= from) return;
-    const crossed = (m: number) => from < m && m <= t;
+    // A frame landing exactly on a marker counts: the director shows a hit
+    // when its time is reached, and so must this, floating point or not.
+    const crossed = (m: number) => from < m - 1e-9 && m <= t + 1e-9;
     // Deriving a contact samples the clip 200 times: once per clip is plenty.
     const key = this.facing > 0 ? "right" : "left";
     const known = CONTACTS.get(state.clip);
