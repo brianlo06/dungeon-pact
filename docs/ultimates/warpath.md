@@ -55,8 +55,9 @@ Empowered for the round): nobody is Empowered, and what the party gains is
   hall, sky at dusk with ribbons, no-man's-land, meadow, vault, wood, pit,
   mirror room or labyrinth. The only film in snow.
 - **Palette:** snow `#e9eef2`, drift shadow `#8ea2b6`, slate dusk `#1c2430`,
-  ink `#0b0e13`, and the Warlord's own rust `#e0664a` (its crest, cape and
-  shield, the accent), which is the only warm thing in the film.
+  ink `#0b0e13`, ice `#c6d9e8` (the accent: the call, the UI, the radial on
+  the blow), and the Warlord's own rust `#e0664a` as its rim light — with its
+  crest, cape and shield, the only warm thing in the film.
 - **Signature effect — the trail.** The Warlord wades hip-deep, heaving the
   snow aside with its shield; behind it the snow is broken into a trench, and
   the party wades in it, stepping where it stepped. From above, the trail is
@@ -100,9 +101,9 @@ other Vanguard film looks up at it or rides beside it.
 |---|---|---|---|---|---|---|---|---|---|---|
 | 0 | Call | 400 (240) | battle camera | real Warlord `ult:warpath-call` — sword thrown forward at the enemy, helm up | real battlefield goes slate, bars close | rust call aura; snow starts driving across the real board (`warpath-snow`, screen) | wind rising, a scrape of steel; music ducks | on board | — | break the round: the weather turns |
 | 1 | Roar · face close-up | 620 (380) | tight on the helm in profile, pushing in a little | `ult:warpath-roar` — the helm drawn back (the breath in), then thrown forward and up: the roar; crest and cape whip back in the wind (`root: false`) | snowfield, dusk, slate; rust rim | snow driving past the lens; **a plume of breath bursts from the visor slit and is torn back** (`warpath-breath`) | wind; the roar in the helm; "In my tracks. All of you." | no | black 80ms | identity: a faceless helm's warcry, as breath |
-| 2 | Breaking trail · wide | 1000 (560) | low at the snow surface; the Warlord wades diagonally toward the lens, the camera easing back and right | Warlord `ult:warpath-wade` (loop), shield low as a plough; the real allies `ult:warpath-follow` (loop, in step) in the trench behind it, receding up the frame | snowfield; exposure 0.7; rust rim on the Warlord | **snow to the hips round every figure, heaved aside ahead of the Warlord and broken into a trench behind** (`warpath-drift`); clods thrown off the shield; snow driving | the motif on the footfalls; crunches; wind | **yes**, small, far ahead on the rise, bracing at 0.72 | a sheet of snow across the lens hides the cut (`warpath-gust`) | stakes: who follows, and where to; title |
+| 2 | Breaking trail · wide | 1000 (560) | low at the snow surface; the Warlord wades diagonally toward the lens, the camera easing in and right | Warlord `ult:warpath-wade` (loop), shield low as a plough; the real allies `ult:warpath-follow` (loop, in step) in the trench behind it, receding up the frame | snowfield; exposure 0.7; rust rim on the Warlord | **snow to the hips round every figure, heaved aside ahead of the Warlord and broken into a trench behind** (`warpath-drift`); clods thrown off the shield; snow driving | the motif on the footfalls; crunches; wind | **yes**, small, far ahead on the rise, bracing at 0.72 | a sheet of snow across the lens hides the cut (`warpath-gust`) | stakes: who follows, and where to; title |
 | 3 | The trail · extreme wide, from above (the quiet) | 560 (380) | high and far, dead still | Warlord `ult:warpath-step` (sword drawn back, held); allies `ult:warpath-follow` frozen mid-stride | the plain from above; exposure 0.34 → 0.16 as a cloud's shadow crosses; heavy vignette | **the trail: one dark stroke from the frame's edge to the Warlord**, a step short of the enemy (`warpath-trail`); the snow stops driving and sinks slowly (`warpath-snow` settle) | music ducked to 5%; the wind cut dead; one boot creaks | **yes**, tiny, braced | cut (the wind cuts with it) | the quiet: the whole idea in one frame |
-| 4 | The last step · impact | 820 (600) | medium profile on the contact, Dutch −5° → −2°, easing back | Warlord `ult:warpath-cleave` (contact 0.06): the sword over the top and down on the enemy, the shield flung back; allies step into the frame behind it at 0.45 in its tracks (`ult:warpath-follow`); target `hurt`, shoved, tilted | snowfield; exposure blown to 1, falling; rust tint | **70ms two-tone** (snow to white, figures to ink); the hit-stop holds the blade on the enemy; **a hand-cut wedge of white split open at the contact** (`warpath-cleave`); **snow ripped up and thrown in a fan behind the enemy** (`warpath-throw`); snow to the hips (`warpath-drift`) | layered impact; **150ms stop**; heavy shake | **yes** | cut on the two-tone frame (FAST: invert) | impact: the damage and Marked/Vulnerable on the held frame; "HERE!"; the party arriving where it walked |
+| 4 | The last step · impact | 820 (600) | medium profile on the contact, Dutch −5° → −2°, easing back | Warlord `ult:warpath-cleave` (contact 0.06): the sword over the top and down on the enemy, the shield flung back; allies step into the frame behind it at 0.45 in its tracks (`ult:warpath-follow`); target `hurt`, shoved, tilted | snowfield; exposure blown to 1, falling; rust tint | **24ms two-tone** just before contact (snow to ice, figures to ink), so the held frame is in colour; the hit-stop holds the blade on the enemy; **a hand-cut wedge of white split open at the contact** (`warpath-cleave`); **snow ripped up and thrown in a fan behind the enemy** (`warpath-throw`); snow to the hips (`warpath-drift`) | layered impact; **150ms stop**; heavy shake | **yes** | cut; the two-tone frame on the swing (FAST: invert) | impact: the damage and Marked/Vulnerable on the held frame; "HERE!"; the party arriving where it walked |
 | 5 | Front line · return | 720 (480) | battle camera | real Warlord `ult:warpath-stand` — sword forward, shield up | real battlefield; bars open | **snowy boot prints into the front for every ally, and on from the Warlord to the enemy, trampled round its feet** (`warpath-board`); the snow thinning away | the motif's last two notes on the horn, soft; tail | on board | flash 80ms | release: the party in the front line, the enemy marked by the trail |
 
 ## Framing
@@ -122,3 +123,87 @@ and the target are still in it); the quiet and the impact keep their shape.
 ## Voice
 
 "In my tracks. All of you." · "HERE!" · "The front is wherever I'm standing."
+
+## Performance, without a face
+
+The Vanguard's helm hides its face, so the close-up acts with what the drawing
+has: the helm drawn back 22° as the breath comes in and thrown forward to
++10° into the roar, shaking as it holds; the crest riding the helm; the cape
+lagging a beat and then torn back by the wind; and the **breath** — a jet out
+of the visor slit (probed: the slit's rect) that opens into cloud and is swept
+back over the crest in lobed streamers. Nothing lights the visor (the Lantern
+Wall's quiet does that).
+
+Root tracks play in films. Clips with non-trivial root keys, each authored for
+its shot size: `ult:warpath-wade` and every ally's `ult:warpath-follow` (a
+heavy 7–9° lean and a ±0.015 bob, for the wide), `ult:warpath-step` (upright
+out of the stride), `ult:warpath-cleave` and `ult:warpath-through` (x 0.14–0.16,
+rotate 11–14°, squash, for the medium blow), `ult:warpath-call` and
+`ult:warpath-stand` (small, for the battlefield), `ult:warpath-halt`. The roar's
+close-up sets **`root: false`**, so only the parts move there. Nothing is
+rebuilt on `.cine-look`.
+
+## Notes from the lab
+
+- Every camera and effect was placed from probed positions. The blow's first
+  cut had the sword level with the hound's back and the drawn split below its
+  chest; the struck angle was brought up (206°, blade −70°) so the blade lies
+  across the head and neck on the held frame (probed blade 772,553 → 918,687),
+  and the split sits on the bite at 878,650, laid along the blade (42°). The
+  boss framing's split is at 868,708, where the blade crosses the Collector's
+  robe.
+- The strike is a 130ms clip with contact at 0.3, so the animator's blend into
+  it (a fifth of a clip) is over before the contact the stop holds, and the
+  follow-through is a `react` at 0.16 holding itself, as Into the Din found.
+- The two-tone frame first ran 70ms from the start of the shot and covered the
+  stop, so the held frame was ink with the blade lost in it; it is now 24ms
+  just before contact, and the held frame is in colour with the blade, the
+  split and the number on it.
+- Snow drawn on the effect layers is not under the stage's exposure layer, so
+  its colours are mixed towards dusk by the film's `--exposure` in CSS.
+- The snow round the legs was first a mound per figure, which read as
+  snowballs; it is one channel along the file, lumpy with noise fixed to the
+  world so it does not crawl as figures move.
+- The trail from above first read as a pale road on the snow (a bright stroke
+  with a thin dark line); it is now a trench: a dark floor, a shadowed wall,
+  broken bright rims and prints down it.
+- In the wide, the drawn trail behind the file was hidden by the snow the file
+  wades in and only added a stray band; it is drawn only in the quiet.
+- The board's trample was first a flat white disc that read as a cloud over
+  the enemy's chips; it is now boot prints every way round its feet.
+- The boss's blow framing first cut off the Collector's crown and the
+  Warlord's feet; it pulls back to zoom 0.92 → 0.87.
+- Sounds were rendered offline in the browser and measured against the other
+  Vanguard path film and Into the Din: the impact peaks at 1.24 (Breakwater's
+  break 1.31, the Din's clang 1.63), the motif 0.27 (Breakwater 0.24, the Din
+  0.51), the call 0.27 (the Din's rise 0.26), the roar 0.36, the release 0.11
+  (Breakwater's hold 0.13). The call and the roar were first 0.07 and 0.21.
+- Profile (1920×1080, real GPU, dev build, a shared machine at load 10–12):
+  film p50 16.7ms / p95 33.3ms, 4 frames over 34ms; the round after it p50
+  16.7ms / p95 16.8ms. Peak 952 nodes (788 SVG), 4 live effects, 0 filtered
+  elements.
+
+## What the engine could not do, and what was built instead
+
+- **Allies on the board.** Battlefield clips reach only the caster and the
+  targets, so the real allies cannot be seen stepping into the front in the
+  return; the board re-lays them out into the front row at the reveal (a
+  `move` logs no beat), and the film draws a line of boot prints leading into
+  each of them. The engine would need battlefield clips for `allies`, and a
+  beat for a move so the step could be timed.
+- **A trail between two units on the board.** Anchored effects ride one unit
+  each; the Warlord's prints on to the enemy are laid by a frame function that
+  reads the position of the enemy's anchored effect from the DOM. The engine
+  would need an effect anchored to a pair of units.
+- **The occluder is always a cape** (the Lantern Wall's). The gust of snow
+  across the lens between the roar and the trail is an in-folder screen effect
+  (`warpath-gust`, `in` then `out`, one seed) with the shot's transition left a
+  cut. The engine would need an occlusion whose object is an effect kind.
+- **A row's reactions land together.** The allies arriving behind the Warlord
+  in the blow all halt at once (0.82); their spread is authored so the nearer
+  one arrives last. The engine would need `react[].stagger`.
+- **The status chips.** Marked, Vulnerable and Barrier read from the snapshot,
+  so the board's chips show them under the film from its first frame; the film
+  shows its own version (the trail to the enemy, prints into the front).
+- **Snow under the exposure.** Effects are not darkened by the stage's
+  exposure layer; the film mixes its snow colours by `--exposure` itself.
