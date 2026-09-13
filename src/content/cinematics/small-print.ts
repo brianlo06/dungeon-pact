@@ -167,8 +167,8 @@ export const smallPrint: Cinematic = {
       fastMs: 400,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 748, y: 474, zoom: 3.3 },
-        to: { x: 748, y: 476, zoom: 3.4 },
+        from: { x: 752, y: 512, zoom: 3.05 },
+        to: { x: 752, y: 514, zoom: 3.14 },
         ease: "linear",
       },
       background: "print-page",
@@ -206,8 +206,8 @@ export const smallPrint: Cinematic = {
         ease: "out",
       },
       background: "print-page",
-      lighting: { exposure: 1, tint: [CARBON, 0.25], under: [PAPER, 0.5], rim: [CARBON, 1, 1], vignette: 0.3, letterbox: BARS },
-      toLighting: { exposure: 0.85, tint: [CARBON, 0], under: [PAPER, 0.3], rim: [CARBON, 0.8, 1], vignette: 0.4, letterbox: BARS },
+      lighting: { exposure: 1, tint: [CARBON, 0.1], under: [PAPER, 0.16], back: [CARBON, 0.35], rim: [CARBON, 1, 1], vignette: 0.3, letterbox: BARS },
+      toLighting: { exposure: 0.88, tint: [CARBON, 0], under: [PAPER, 0.14], back: [CARBON, 0.12], rim: [CARBON, 0.8, 1], vignette: 0.4, letterbox: BARS },
       actors: [
         { role: "caster", at: [420, 900], size: 560, clip: "ult:print-snap", then: "ult:print-snap", look: "lit", z: 3 },
         {
@@ -226,7 +226,6 @@ export const smallPrint: Cinematic = {
       ],
       screen: [
         { kind: "two-tone", at: 0.05, ms: 70 },
-        { kind: "flash", at: 0.12, ms: 60, amount: 0.18, color: PAPER },
         { kind: "chromatic", at: 0.05, ms: 120, amount: 0.6 },
       ],
       stop: [{ at: 0.05, ms: 140 }],
