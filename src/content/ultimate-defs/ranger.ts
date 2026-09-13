@@ -34,7 +34,13 @@ export const ultimate: UltimateDef = {
   cost: 100,
   speed: 16,
   presentation: {
+    cinematic: "hundredth-mark",
     theme: "precision",
     accent: "#c7f08a",
+    voice: {
+      activation: "Hold still. I'm counting.",
+      impact: "…a hundred.",
+      after: "The rest are yours!",
+    },
   },
 };
