@@ -30,6 +30,7 @@ import { framingFor, instantsBetween, type Instant } from "../cinematic/timeline
 import { unitPresentation } from "./layout";
 import type { StageGeom } from "./stage-geometry";
 import type { Stagehand } from "./stagehand";
+import type { Tracer } from "./trace";
 import type { Vec } from "./trajectory";
 
 /**
@@ -170,6 +171,8 @@ export interface DirectorHooks {
   onCinematicFocus?: (unit: string | null) => void;
   /** Lab only: force the target framing. */
   framing?: Framing;
+  /** Lab and tests only: report what the replay presented, and when. */
+  onTrace?: Tracer;
 }
 
 export interface DirectorOptions {
@@ -219,6 +222,13 @@ export function useDirector(
   const plan = useRef<RoundTimeline | null>(null);
   const geom = useRef<StageGeom | null>(null);
   const startAt = useRef(0);
+  /**
+   * Whether the planned round has had its first frame. Its time zero is that
+   * frame, not the moment it was planned: the frame that commits a new round
+   * is a slow one, and a clock started before it would jump the first fifth
+   * of a second of the replay — an anticipation — in a single frame.
+   */
+  const started = useRef(false);
   const cursor = useRef(0);
   const keys = useRef(0);
   const live = useRef<DirectorCues>(cues);
@@ -270,9 +280,11 @@ export function useDirector(
       applyRate();
       // Everyone home and at rest, nothing in the air, whatever was playing.
       handRef.current?.reset();
-      if (wasPlaying)
+      if (wasPlaying) {
         for (const u of [...snapshot.players, ...snapshot.enemies])
           hooksRef.current.onSettle?.(u.id);
+        hooksRef.current.onTrace?.({ kind: "end", t: clock.time });
+      }
       publish({
         hp: null,
         beat: null,
@@ -284,15 +296,26 @@ export function useDirector(
         cinematic: null,
       });
     },
-    [applyRate, publish],
+    [applyRate, publish, clock],
   );
 
   /** Turn one beat into everything the screen should do about it. */
   const perform = useCallback(
-    (beat: Beat, at: number) => {
+    (beat: Beat, at: number, by?: string) => {
       const cur = live.current;
       const next: DirectorCues = { ...cur, beat };
       const key = () => ++keys.current;
+      hooksRef.current.onTrace?.({
+        kind: "beat",
+        t: clock.time,
+        due: at,
+        name: beat.kind,
+        unit: beat.actor,
+        to: beat.target,
+        amount: beat.amount,
+        hp: beat.hp,
+        detail: by,
+      });
       const rate = Math.max(0.05, clock.speed * clock.tempo);
 
       if (cur.equipment && beat.equipment)
@@ -347,9 +370,8 @@ export function useDirector(
       switch (beat.kind) {
         case "cast":
           next.title = { text: beat.label ?? "", actor: beat.actor };
-          // Whatever it was holding, it has now spent: the strike hands back
-          // to idle, not to the pose it has just released.
-          if (beat.actor) hooksRef.current.onRest?.(beat.actor, "idle");
+          // Whatever it was holding is spent when the move is delivered, not
+          // when it is named: the choreography's `spend` cue, on the strike.
           add({ kind: "cast", from: beat.actor });
           break;
         case "damage": {
@@ -430,7 +452,7 @@ export function useDirector(
     (cue: Cue, at: number) => {
       switch (cue.kind) {
         case "beat":
-          perform(cue.beat, at);
+          perform(cue.beat, at, cue.by);
           break;
         case "clip":
           hooksRef.current.onClip?.(cue.unit, cue.clip, cue.then, {
@@ -443,14 +465,30 @@ export function useDirector(
         case "settle":
           hooksRef.current.onSettle?.(cue.unit);
           break;
+        case "phase":
+          hooksRef.current.onTrace?.({
+            kind: "phase",
+            t: clock.time,
+            due: at,
+            unit: cue.unit,
+            name: cue.phase,
+          });
+          handRef.current?.cue(cue, at);
+          break;
+        case "spend":
+          // Whatever it was holding, it has now spent: the strike hands back
+          // to idle, not to the pose it has just released.
+          hooksRef.current.onRest?.(cue.unit, "idle");
+          break;
         case "sound":
           hooksRef.current.onSound?.(cue.name);
+          hooksRef.current.onTrace?.({ kind: "sound", t: clock.time, due: at, name: cue.name });
           break;
         default:
           handRef.current?.cue(cue, at);
       }
     },
-    [perform],
+    [perform, clock],
   );
 
   /** Start the choreographed round: the beats that follow any Ultimates. */
@@ -469,9 +507,10 @@ export function useDirector(
       }
       plan.current = planRound(current, beats, g, hooksRef.current.plan);
       cursor.current = 0;
-      startAt.current = clock.time;
+      // Started by the frame loop, on the first frame after the film, like any
+      // round: a clock started here would jump the round's opening.
+      started.current = false;
       applyRate();
-      handRef.current?.begin(plan.current, g, startAt.current);
       publish({
         ...live.current,
         hp: { ...board.current },
@@ -710,9 +749,8 @@ export function useDirector(
     }
     plan.current = planRound(s, beats, g, hooksRef.current.plan);
     cursor.current = 0;
-    startAt.current = clock.time;
+    started.current = false;
     applyRate();
-    handRef.current?.begin(plan.current, g, startAt.current);
     publish({
       ...live.current,
       hp: { ...board.current },
@@ -739,9 +777,31 @@ export function useDirector(
           }
         }
         const p = plan.current;
+        if (p && !started.current && geom.current) {
+          started.current = true;
+          startAt.current = time;
+          handRef.current?.begin(p, geom.current, time);
+          hooksRef.current.onTrace?.({
+            kind: "round",
+            t: time,
+            detail: String(p.duration),
+          });
+        }
         if (p) {
           const t = time - startAt.current;
+          /**
+           * Actors whose blows landed this frame. A slow frame can reach both
+           * a hit and the clip that follows it — a bite and the run on past —
+           * and the follow-up would replace the strike before its contact
+           * pose was ever drawn. The follow-up waits one frame instead, so
+           * every hit is shown on a frame that draws its blow landing.
+           */
+          const landed = new Set<string>();
           while (cursor.current < p.cues.length && p.cues[cursor.current].t <= t) {
+            const due = p.cues[cursor.current];
+            if (due.kind === "clip" && landed.has(due.unit)) break;
+            if (due.kind === "beat" && due.by && due.beat.actor === due.by)
+              landed.add(due.by);
             const cue = p.cues[cursor.current++];
             play(cue, startAt.current + cue.t);
             if (plan.current !== p) return;
@@ -806,7 +866,7 @@ export function useDirector(
         return;
       }
       const p = plan.current;
-      if (!p) return;
+      if (!p || !started.current) return;
       const t = clock.time - startAt.current;
       const next = p.cues
         .slice(cursor.current)
@@ -815,6 +875,7 @@ export function useDirector(
     },
     frameStep: () => clock.step(1000 / 60),
     skip: () => {
+      if (plan.current) hooksRef.current.onTrace?.({ kind: "skip", t: clock.time });
       if (s) finish(s);
     },
     skipCinematic: () => endCinematic(true),
@@ -823,7 +884,7 @@ export function useDirector(
     elapsed: () =>
       cine.current
         ? cine.current.at(clock.time)
-        : plan.current
+        : plan.current && started.current
           ? clock.time - startAt.current
           : null,
   };

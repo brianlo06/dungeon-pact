@@ -142,7 +142,7 @@ export function Bellows({ unitId, animators, className = "" }: CreatureProps) {
       </g>
 
       {/* ---- pleats: the body, and the whole of its breathing ---- */}
-      <g ref={hold("pleats")} style={{ transformOrigin: "76px 60px" }}>
+      <g ref={hold("pleats")} data-part="pleats" style={{ transformOrigin: "76px 60px" }}>
         {FOLDS.slice(0, -1).map((f, i) => {
           const n = FOLDS[i + 1];
           return (
@@ -209,12 +209,12 @@ export function Bellows({ unitId, animators, className = "" }: CreatureProps) {
       </g>
 
       {/* ---- snout: iron collar, brass nozzle, a flared horn for a mouth ---- */}
-      <g ref={hold("snout")} style={{ transformOrigin: "28px 62px" }}>
+      <g ref={hold("snout")} data-part="snout" style={{ transformOrigin: "28px 62px" }}>
         {/*
          * The exhale. At rest it is folded up inside the nozzle, hidden behind
          * the brass; on an attack it is thrown out of the horn and opens.
          */}
-        <g ref={hold("plume")} style={{ transformOrigin: "24px 62px" }}>
+        <g ref={hold("plume")} data-part="plume" style={{ transformOrigin: "24px 62px" }}>
           <path
             d="M13 59 L15 60.5 L14 62 L15.5 63.5 L13 65 L24 63 L24 61 Z"
             fill="url(#bel-fire)"

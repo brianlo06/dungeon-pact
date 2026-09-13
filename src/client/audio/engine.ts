@@ -774,6 +774,78 @@ const VOICES: Record<SfxName, Voice> = {
       });
     },
   },
+  /** A riveting rifle: a dry crack, a low thump, and a metal ring after. */
+  "rivet-fire": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      crash(c, o, t, { seconds: 0.09, gain: 0.42, freq: 3000, q: 0.7 });
+      hit(c, o, t, { type: "sine", from: 210, to: 52, gain: 0.4, decay: 0.2 });
+      hit(c, o, t + 0.02, {
+        type: "square",
+        from: 1450,
+        to: 980,
+        gain: 0.06,
+        decay: 0.3,
+      });
+    },
+  },
+  /** Furnace breath through a horn: a roar that swells and breaks up. */
+  "flame-roar": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      crash(c, o, t, {
+        seconds: 0.55,
+        gain: 0.34,
+        type: "lowpass",
+        freq: 1400,
+        sweepTo: 320,
+        q: 0.6,
+      });
+      crash(c, o, t + 0.03, {
+        seconds: 0.4,
+        gain: 0.12,
+        freq: 2600,
+        sweepTo: 900,
+        q: 1.1,
+      });
+      hit(c, o, t, { type: "sawtooth", from: 90, to: 55, gain: 0.08, decay: 0.45 });
+    },
+  },
+  /** Air pulled in through leather: a slow, rising hush. */
+  "bellows-draw": {
+    bus: "sfx",
+    render: (c, o, t) =>
+      crash(c, o, t, {
+        seconds: 0.6,
+        gain: 0.1,
+        freq: 380,
+        sweepTo: 1500,
+        q: 1.4,
+      }),
+  },
+  /** A weld: short crackling bursts over a hiss. */
+  "weld-hiss": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      crash(c, o, t, { seconds: 0.5, gain: 0.05, freq: 5200, q: 0.9 });
+      for (let i = 0; i < 6; i++)
+        crash(c, o, t + 0.03 + i * 0.075, {
+          seconds: 0.025,
+          gain: 0.12,
+          freq: 3800 + (i % 3) * 700,
+          q: 3,
+        });
+    },
+  },
+  /** A spell landing: a glassy crack over a soft low bloom. */
+  "arcane-burst": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      hit(c, o, t, { type: "sine", from: 1900, to: 620, gain: 0.14, decay: 0.22 });
+      hit(c, o, t, { type: "triangle", from: 260, to: 90, gain: 0.2, decay: 0.26 });
+      crash(c, o, t, { seconds: 0.16, gain: 0.18, freq: 4200, sweepTo: 1600, q: 1 });
+    },
+  },
   /** A coin slapped down on the counter, spinning until it settles. */
   "miser-coin": {
     bus: "sfx",

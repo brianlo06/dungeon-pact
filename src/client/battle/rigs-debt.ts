@@ -456,56 +456,131 @@ const sniper: Rig = {
       ],
     },
   },
-  /** Back-row rivet: settle, hold, fire, kick, re-aim. */
+  /**
+   * Back-row rivet. It settles into the stock and goes dead still on the
+   * sight — the barrel stops drifting, the ears stop — while the rivet heats
+   * in the breech; at `release` the shot leaves the muzzle before the gun has
+   * moved, and only then does it kick up and back into the shoulder, the
+   * body rocking, the brazier and the belt jumping, before it re-aims.
+   */
   attack: {
-    duration: 620,
+    duration: 1000,
+    markers: { release: 0.58 },
     poses: [
-      { at: 0, x: 0, rotate: 0, squash: 1 },
-      { at: 0.26, x: 0.01, rotate: 0, squash: 1.05, y: 0.01 },
-      { at: 0.38, x: 0.01, squash: 1.06, y: 0.012 },
-      { at: 0.46, x: 0.08, rotate: 5, squash: 0.94, flash: 0.35 },
-      { at: 0.62, x: 0.05, rotate: 3, flash: 0.1 },
+      { at: 0, x: 0, rotate: 0, squash: 1, y: 0 },
+      { at: 0.14, x: 0.006, rotate: 0, squash: 1.05, y: 0.01 },
+      { at: 0.58, x: 0.006, rotate: 0, squash: 1.06, y: 0.012 },
+      { at: 0.62, x: 0.09, rotate: 5, squash: 0.93, flash: 0.4 },
+      { at: 0.74, x: 0.055, rotate: 3, flash: 0.1 },
       { at: 1, x: 0, rotate: 0, squash: 1, y: 0, flash: 0 },
     ],
     parts: {
       gun: [
         { at: 0, rotate: 0, x: 0 },
-        { at: 0.26, rotate: -0.6, x: -0.01 },
-        { at: 0.38, rotate: -0.6, x: -0.01 },
-        { at: 0.46, rotate: 14, x: 0.06 },
-        { at: 0.6, rotate: 8, x: 0.03 },
-        { at: 0.84, rotate: 1.5, x: 0 },
+        { at: 0.14, rotate: -0.6, x: -0.01 },
+        { at: 0.58, rotate: -0.6, x: -0.01 },
+        { at: 0.62, rotate: 15, x: 0.07 },
+        { at: 0.74, rotate: 8, x: 0.035 },
+        { at: 0.9, rotate: 1.5, x: 0 },
         { at: 1, rotate: 0, x: 0 },
       ],
       head: [
         { at: 0, rotate: 0, x: 0 },
-        { at: 0.38, rotate: -2, x: -0.01 },
-        { at: 0.48, rotate: 12, x: 0.03 },
-        { at: 0.7, rotate: 3 },
+        { at: 0.14, rotate: -3, x: -0.015 },
+        { at: 0.58, rotate: -3, x: -0.015 },
+        { at: 0.64, rotate: 12, x: 0.03 },
+        { at: 0.8, rotate: 3 },
         { at: 1, rotate: 0, x: 0 },
       ],
       body: [
         { at: 0, rotate: 0 },
-        { at: 0.38, rotate: -2 },
-        { at: 0.5, rotate: 6 },
+        { at: 0.14, rotate: -2 },
+        { at: 0.58, rotate: -2 },
+        { at: 0.64, rotate: 6 },
         { at: 1, rotate: 0 },
       ],
       brazier: [
         { at: 0, rotate: 0, y: 0 },
-        { at: 0.5, rotate: 7, y: -0.02 },
-        { at: 0.72, rotate: -3, y: 0 },
+        { at: 0.58, rotate: 0, y: 0 },
+        { at: 0.65, rotate: 7, y: -0.02 },
+        { at: 0.8, rotate: -3, y: 0 },
         { at: 1, rotate: 0 },
       ],
+      // The belt feeds the rivet in while the gun is held.
       belt: [
         { at: 0, rotate: 0 },
-        { at: 0.52, rotate: 12 },
-        { at: 0.76, rotate: -6 },
+        { at: 0.3, rotate: 3 },
+        { at: 0.58, rotate: 0 },
+        { at: 0.65, rotate: 12 },
+        { at: 0.82, rotate: -6 },
         { at: 1, rotate: 0 },
       ],
       legs: [
         { at: 0, squash: 1 },
-        { at: 0.38, squash: 1.04 },
-        { at: 0.52, squash: 0.97 },
+        { at: 0.14, squash: 1.04 },
+        { at: 0.58, squash: 1.04 },
+        { at: 0.66, squash: 0.97 },
+        { at: 1, squash: 1 },
+      ],
+    },
+  },
+  /**
+   * Kill shot: it comes out of the held wind-up still on the sight, holds
+   * longer than any ordinary shot, and the kick is bigger. Starts from the
+   * wind-up's pose so nothing drops between the two.
+   */
+  signature: {
+    duration: 1400,
+    markers: { release: 0.7 },
+    poses: [
+      { at: 0, x: 0, rotate: 0, squash: 1.04, y: 0.008 },
+      { at: 0.12, x: 0.006, squash: 1.07, y: 0.014 },
+      { at: 0.7, x: 0.006, squash: 1.08, y: 0.015 },
+      { at: 0.74, x: 0.11, rotate: 6, squash: 0.91, flash: 0.6 },
+      { at: 0.86, x: 0.07, rotate: 4, flash: 0.15 },
+      { at: 1, x: 0, rotate: 0, squash: 1, y: 0, flash: 0 },
+    ],
+    parts: {
+      gun: [
+        { at: 0, rotate: -0.4, x: -0.01 },
+        { at: 0.12, rotate: -0.8, x: -0.015 },
+        { at: 0.7, rotate: -0.8, x: -0.015 },
+        { at: 0.74, rotate: 17, x: 0.09 },
+        { at: 0.86, rotate: 10, x: 0.04 },
+        { at: 1, rotate: 0, x: 0 },
+      ],
+      head: [
+        { at: 0, rotate: -3, x: -0.015 },
+        { at: 0.7, rotate: -4, x: -0.02 },
+        { at: 0.76, rotate: 16, x: 0.04 },
+        { at: 0.9, rotate: 3 },
+        { at: 1, rotate: 0, x: 0 },
+      ],
+      body: [
+        { at: 0, rotate: -1 },
+        { at: 0.7, rotate: -3 },
+        { at: 0.76, rotate: 9 },
+        { at: 1, rotate: 0 },
+      ],
+      brazier: [
+        { at: 0, rotate: 0, y: 0 },
+        { at: 0.7, rotate: 0, y: 0 },
+        { at: 0.77, rotate: 11, y: -0.03 },
+        { at: 0.9, rotate: -4, y: 0 },
+        { at: 1, rotate: 0 },
+      ],
+      belt: [
+        { at: 0, rotate: 0 },
+        { at: 0.35, rotate: 3 },
+        { at: 0.7, rotate: 0 },
+        { at: 0.77, rotate: 16 },
+        { at: 0.9, rotate: -8 },
+        { at: 1, rotate: 0 },
+      ],
+      legs: [
+        { at: 0, squash: 1.02 },
+        { at: 0.7, squash: 1.05 },
+        { at: 0.78, squash: 0.95 },
         { at: 1, squash: 1 },
       ],
     },

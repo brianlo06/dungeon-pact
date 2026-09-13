@@ -40,14 +40,11 @@ const PARTS = [
   "bow",
   "draw",
   "arrow",
+  "stringTop",
+  "stringBottom",
 ] as const;
-/**
- * The face, and the bowstring's two halves, moved only in an Ultimate
- * close-up (see `CloseUpContext`). The halves meet where the string's middle
- * is, so at rest they are the one straight string; drawn, each turns about
- * its own tip to meet the nock, and the string comes back to the hand.
- */
-const FACE_PARTS = ["brow", "eyes", "mouth", "stringTop", "stringLow"] as const;
+/** The face, moved only in an Ultimate close-up (see `CloseUpContext`). */
+const FACE_PARTS = ["brow", "eyes", "mouth"] as const;
 
 /**
  * The youngest face in the party: a round cranium, full cheeks and a small
@@ -321,15 +318,31 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
       {/* ---- the bow, held out front: taller than its owner ---- */}
       <g ref={hold("bow")} data-part="bow" style={at(fx, fy)}>
         <Limb d={`M${fx} ${fy} Q68 57 75 58`} fill={RAMP.sage[1]} width={8} />
+        {/*
+          The string, clear of the body: two halves, each hinged at its
+          own nock, so a draw can pull the middle back into a V to the
+          drawing hand and a release can snap it straight again.
+        */}
+        <path
+          ref={hold("stringTop")}
+          data-part="stringTop"
+          style={at(67.5, 23.5)}
+          d="M67.5 23.5 V57.75"
+          stroke="#e9dfcf"
+          strokeWidth={1.1}
+          strokeLinecap="round"
+        />
+        <path
+          ref={hold("stringBottom")}
+          data-part="stringBottom"
+          style={at(67.5, 92)}
+          d="M67.5 92 V57.75"
+          stroke="#e9dfcf"
+          strokeWidth={1.1}
+          strokeLinecap="round"
+        />
         <BaseWeapon>
           {" "}
-          {/* the string, clear of the body: two halves that meet mid-way */}
-          <g ref={facePart("stringTop")} style={at(67.5, 23.5)}>
-            <path d="M67.5 23.5 L67.5 58" stroke="#e9dfcf" strokeWidth={1.1} />
-          </g>
-          <g ref={facePart("stringLow")} style={at(67.5, 92)}>
-            <path d="M67.5 58 L67.5 92" stroke="#e9dfcf" strokeWidth={1.1} />
-          </g>
           <path
             d="M67.5 23.5 C76 32 80 44 77 58 C80 72 76 84 67.5 92"
             fill="none"

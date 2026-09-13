@@ -12,7 +12,9 @@ import {
   type Segment,
 } from "./choreography";
 import { flightPoint, type Vec } from "./trajectory";
+import type { Anchor } from "../../shared/presentation";
 import { feet, scaleAt, type StageGeom, type UnitGeom } from "./stage-geometry";
+import type { Tracer } from "./trace";
 
 /**
  * The stagehand: everything a replay moves that is not a rig.
@@ -58,6 +60,10 @@ interface Live {
   end: Vec;
   /** Arrived, and sticking or fading until then. */
   gone?: number;
+  /** Where it was last drawn, stage pixels. */
+  at?: Vec;
+  /** A beam's drawn width before it is stretched, measured once. */
+  unit?: number;
 }
 
 interface LiveMark {
@@ -67,6 +73,8 @@ interface LiveMark {
   from: number;
   until: number;
   el: HTMLElement;
+  /** A point on the unit's drawing it rides, measured live. */
+  anchor?: Anchor;
 }
 
 export interface StagehandOptions {
@@ -95,11 +103,15 @@ export class Stagehand {
   private follow: { units: string[]; projectiles: boolean; zoom?: number } | null =
     null;
   private phases = new Map<string, PhaseName>();
+  /** Shots flown this round, for the debug overlay's flight paths. */
+  private flights: Live[] = [];
   private unsubscribe: (() => void)[] = [];
   /** Draw the debug overlay: anchors, attack points, paths, phases. */
   debug = false;
   /** Reduced motion: nothing travels; cues are drawn in place. */
   still = false;
+  /** Development only: report projectiles leaving and landing. */
+  trace?: Tracer;
 
   constructor({ loop, camera }: StagehandOptions) {
     this.loop = loop;
@@ -164,7 +176,12 @@ export class Stagehand {
         this.spawn(cue.plan, at);
         break;
       case "mark":
-        this.mark(cue.style, cue.unit, at, this.startAt + cue.until, cue.to);
+        this.mark(cue.style, cue.unit, at, this.startAt + cue.until, cue.to, cue.anchor, cue.tone);
+        break;
+      case "impact":
+        // Heavier than its number: hold the scene and shake the camera.
+        this.loop.clock.hold(cue.stopMs);
+        if (!this.still) this.camera.shake(cue.shake);
         break;
       case "camera":
         this.frameCamera(cue);
@@ -199,6 +216,7 @@ export class Stagehand {
     for (const m of this.marks) m.el.remove();
     this.marks = [];
     this.plan = null;
+    this.flights = [];
     this.follow = null;
     this.bySegments.clear();
     if (this.overlay) this.overlay.innerHTML = "";
@@ -299,6 +317,33 @@ export class Stagehand {
       : { x: home.x / this.geom.width, y: home.y / this.geom.height };
   }
 
+  /**
+   * The paint order for something standing with its feet on ground line
+   * `feetY` (a stage fraction): just in front of the nearest unit whose feet
+   * are at or behind that line.
+   *
+   * The layout's own z comes from each unit's ground point, and a ground
+   * point sits a different distance under the feet of each kind of figure
+   * (an enemy's plate hangs lower), so a traveller's z cannot be computed
+   * from its feet on the same scale; comparing feet with feet, and borrowing
+   * the z of the unit it has just passed in front of, keeps both orders
+   * consistent wherever the two disagree.
+   */
+  paintZ(feetY: number, self?: string): number {
+    const geom = this.geom;
+    if (!geom) return Math.round(feetY * 1000);
+    let behind = -Infinity;
+    let lowest = Infinity;
+    for (const u of geom.units.values()) {
+      if (u.id === self) continue;
+      const z = u.z;
+      lowest = Math.min(lowest, z);
+      if (feet(u).y / geom.height <= feetY + 1e-6) behind = Math.max(behind, z);
+    }
+    if (behind === -Infinity) return Math.max(1, (lowest === Infinity ? 1 : lowest) - 1);
+    return behind + 1;
+  }
+
   /** How far a unit is from home now, stage fractions. */
   private offsetNow(id: string, time: number): Vec {
     const u = this.geom?.units.get(id);
@@ -363,10 +408,10 @@ export class Stagehand {
         n.shadow.style.opacity = h ? (1 - 0.55 * h).toFixed(3) : "";
       }
       n.travel.style.opacity = pose.opacity < 1 ? pose.opacity.toFixed(3) : "";
-      // Paint order follows the ground it is standing on now, exactly as the
-      // layout orders units by where they stand: in front of what it passes
-      // in front of, behind what it passes behind.
-      n.root.style.zIndex = String(Math.round(pose.y * 1000) + 5);
+      // Paint order follows the ground it is standing on now: in front of
+      // everyone whose feet are behind its own, behind everyone whose feet
+      // are in front. Standing at home it keeps the layout's own order.
+      n.root.style.zIndex = Math.abs(pose.y - hy) < 1e-4 ? n.z : String(this.paintZ(pose.y, id));
     }
     if (this.follow)
       this.frameCamera(
@@ -419,11 +464,36 @@ export class Stagehand {
     if (look.trail) el.dataset.trail = "";
     el.dataset.from = plan.from;
     el.dataset.to = plan.to;
+    if (plan.spread)
+      el.style.setProperty("--spread", px(plan.spread * (this.size.width || this.geom?.width || 1)));
     el.innerHTML = PROJECTILE_ART[look.visual ?? "bolt"] ?? "";
     this.projectiles.appendChild(el);
-    const live: Live = { plan, el, start, end: plan.end };
+    // A beam is stretched to its length. A wide one — a cone, drawn at a
+    // real width so its edges stay smooth — is stretched by less.
+    const live: Live = {
+      plan,
+      el,
+      start,
+      end: plan.end,
+      unit: look.trajectory === "beam" ? el.offsetWidth || 1 : undefined,
+    };
     this.live.push(live);
     this.place(live, at);
+    if (this.debug) {
+      this.flights.push(live);
+      this.drawDebug(this.moveOf(plan.from, at));
+    }
+    this.trace?.({
+      kind: "spawn",
+      t: this.loop.clock.time,
+      due: at,
+      unit: plan.from,
+      to: plan.to,
+      name: look.visual ?? "bolt",
+      x: live.at?.x,
+      y: live.at?.y,
+      detail: plan.startAnchor && start !== plan.start ? "measured" : "estimated",
+    });
   }
 
   private place(p: Live, time: number) {
@@ -439,10 +509,11 @@ export class Stagehand {
     const trajectory = plan.look.trajectory ?? "linear";
     const f = flightPoint({ trajectory, start: p.start, end, arc: plan.look.arc, aspect: W / H }, u);
     const el = p.el;
+    p.at = { x: f.x * W, y: f.y * H };
     if (trajectory === "beam") {
       const len = Math.hypot((end.x - p.start.x) * W, (end.y - p.start.y) * H);
       const ang = Math.atan2((end.y - p.start.y) * H, (end.x - p.start.x) * W);
-      el.style.transform = `translate3d(${px(p.start.x * W)}, ${px(p.start.y * H)}, 0) rotate(${ang.toFixed(4)}rad) scaleX(${(len * Math.min(1, u * 1.6)).toFixed(2)})`;
+      el.style.transform = `translate3d(${px(p.start.x * W)}, ${px(p.start.y * H)}, 0) rotate(${ang.toFixed(4)}rad) scaleX(${((len * Math.min(1, u * 1.6)) / (p.unit ?? 1)).toFixed(3)})`;
     } else {
       const rot =
         plan.look.rotate === "none"
@@ -456,7 +527,7 @@ export class Stagehand {
     // target's, in front of each at its own end.
     const g0 = this.feetNow(plan.from, time)?.y ?? p.start.y;
     const g1 = this.feetNow(plan.to, time)?.y ?? end.y;
-    el.style.zIndex = String(Math.round((g0 + (g1 - g0) * u) * 1000) + 8);
+    el.style.zIndex = String(this.paintZ(g0 + (g1 - g0) * u) + 1);
   }
 
   private frameEffects(time: number) {
@@ -469,6 +540,16 @@ export class Stagehand {
           const how = p.plan.look.onArrival ?? "vanish";
           p.gone = time + (how === "stick" ? 420 : how === "burst" ? 180 : 0);
           p.el.dataset.arrived = how;
+          this.trace?.({
+            kind: "arrive",
+            t: time,
+            due: this.startAt + p.plan.arrive,
+            unit: p.plan.from,
+            to: p.plan.to,
+            name: p.plan.look.visual ?? "bolt",
+            x: p.at?.x,
+            y: p.at?.y,
+          });
         }
       } else if (time >= p.gone) {
         p.el.remove();
@@ -497,13 +578,16 @@ export class Stagehand {
     from: number,
     until: number,
     to?: string,
+    anchor?: Anchor,
+    tone?: string,
   ) {
     if (!this.projectiles) return;
     const el = document.createElement("span");
     el.className = `stage-mark mark-${style}`;
     el.dataset.unit = unit;
+    if (tone) el.dataset.tone = tone;
     this.projectiles.appendChild(el);
-    const m: LiveMark = { style, unit, to, from, until, el };
+    const m: LiveMark = { style, unit, to, from, until, el, anchor };
     this.marks.push(m);
     this.placeMark(m, from);
   }
@@ -554,11 +638,15 @@ export class Stagehand {
         : m.style === "charge"
           ? "muzzle"
           : "chest";
-    const p = this.anchorOf(u, where, time);
+    // A mark on a drawn point — power gathering in the hand, a report at the
+    // barrel — follows that point as the rig moves it, once it is showing.
+    const drawn =
+      m.anchor && time >= m.from ? this.probe(m.unit, m.anchor.at, m.anchor.part) : null;
+    const p = drawn ?? this.anchorOf(u, where, time);
     m.el.style.transform = `translate3d(${px(p.x * W)}, ${px(p.y * H)}, 0)`;
-    const ground = this.feetNow(u.id, time)?.y ?? p.y;
-    m.el.style.zIndex =
-      where === "feet" ? String(Math.round(ground * 1000) - 1) : "4400";
+    // A mark on the ground paints just under the unit standing on it.
+    const own = Number(this.nodeFor(u.id)?.root.style.zIndex || u.z);
+    m.el.style.zIndex = where === "feet" ? String(Math.max(0, own - 1)) : "4400";
   }
 
   /* ------------------------------------------------------------ camera -- */
@@ -628,13 +716,33 @@ export class Stagehand {
       p ? `<path class="${cls}" d="M${P(p.from)} Q${P(p.via)} ${P(p.to)}"/>` : "";
     const d = move.debug;
     const phase = this.phases.get(move.actor) ?? "";
+    // Each shot as actually flown: from where the muzzle was measured at
+    // release, along its trajectory, to its target's anchor.
+    const flights = this.flights
+      .filter((f) => f.plan.from === move.actor)
+      .map((f) => {
+        const pts = Array.from({ length: 13 }, (_, i) =>
+          flightPoint(
+            {
+              trajectory: f.plan.look.trajectory ?? "linear",
+              start: f.start,
+              end: f.end,
+              arc: f.plan.look.arc,
+              aspect: W / H,
+            },
+            i / 12,
+          ),
+        );
+        return `<polyline class="dbg-flight" points="${pts.map(P).join(" ")}"/>${dot(f.start, "dbg-muzzle", "release (measured)")}`;
+      })
+      .join("");
     el.innerHTML = `<svg viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" width="${W.toFixed(0)}" height="${H.toFixed(0)}">
       ${path(d.approach, "dbg-path")}${path(d.back, "dbg-back")}
       ${dot(d.home, "dbg-home", "home")}
       ${dot(d.attackPoint, "dbg-attack", "attack point")}
       ${dot(d.weapon, "dbg-weapon", "weapon")}
       ${dot(d.hit, "dbg-hit", "target anchor")}
-      ${dot(d.muzzle, "dbg-muzzle", "projectile start")}
+      ${flights || dot(d.muzzle, "dbg-muzzle", "projectile start")}
       <text class="dbg-phase" x="${(d.home.x * W).toFixed(1)}" y="${(d.home.y * H + 16).toFixed(1)}">${move.archetype} · ${phase}</text>
     </svg>`;
   }
@@ -646,7 +754,12 @@ export class Stagehand {
  * it along its path. New visuals are one entry here and one CSS rule.
  */
 export const PROJECTILE_ART: Record<string, string> = {
-  arrow: `<svg viewBox="-30 -6 40 12" width="40" height="12"><path d="M-26 0 H6" stroke="#171420" stroke-width="3.2" stroke-linecap="round"/><path d="M-26 0 H6" stroke="#c9a276" stroke-width="1.5" stroke-linecap="round"/><path d="M4 -3 L10 0 L4 3 Z" fill="#d4d1dc" stroke="#171420" stroke-width="1.2" stroke-linejoin="round"/><path d="M-29 -3 L-23 0 L-29 3 L-26 0 Z" fill="#c4533f" stroke="#171420" stroke-width="0.9"/></svg>`,
+  // Drawn bolder than the arrow in the Ranger's hand: in flight it is seen
+  // for a fifth of a second at stage scale, so it carries a pale halo that
+  // reads on the dark floor (no filter), a thick shaft, a broad head and
+  // bright fletching. The head's tip sits at 75% of the width, where the
+  // layer puts the projectile's position.
+  arrow: `<svg viewBox="-36 -8 48 16" width="48" height="16"><path d="M-31 0 H9" stroke="#fff4dc" stroke-opacity=".28" stroke-width="8" stroke-linecap="round"/><path d="M-30 0 H6" stroke="#171420" stroke-width="4.2" stroke-linecap="round"/><path d="M-30 0 H6" stroke="#e8c48c" stroke-width="2.2" stroke-linecap="round"/><path d="M2 -4.6 L11.5 0 L2 4.6 L4 0 Z" fill="#e6e3ee" stroke="#171420" stroke-width="1.4" stroke-linejoin="round"/><path d="M-35 -5.5 L-25 0 L-35 5.5 L-31 0 Z" fill="#e0573f" stroke="#171420" stroke-width="1.1" stroke-linejoin="round"/></svg>`,
   bolt: `<i></i>`,
   orb: `<i></i>`,
   mote: `<i></i>`,
@@ -654,6 +767,12 @@ export const PROJECTILE_ART: Record<string, string> = {
   rivet: `<i></i>`,
   shard: `<i></i>`,
   wave: `<i></i>`,
+  /* A forked stroke, head at the origin, tail trailing back up the sky. */
+  lightning: `<svg viewBox="-60 -9 64 18" width="64" height="18"><path d="M2 0 L-12 -5 L-20 3 L-34 -4 L-42 4 L-58 -2" stroke="#3a5bd0" stroke-width="6" fill="none" stroke-linejoin="round" stroke-linecap="round" opacity="0.55"/><path d="M2 0 L-12 -5 L-20 3 L-34 -4 L-42 4 L-58 -2" stroke="#e8f6ff" stroke-width="2.4" fill="none" stroke-linejoin="round" stroke-linecap="round"/><path d="M-20 3 L-26 8" stroke="#bfe8ff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+  /* Slanted drops falling together, not turned. */
+  rain: `<svg viewBox="-24 -30 48 40" width="48" height="40"><g stroke="#9fd6ff" stroke-width="2.2" stroke-linecap="round"><path d="M-16 -24 l-3 9"/><path d="M-6 -16 l-3 9"/><path d="M4 -26 l-3 9"/><path d="M13 -14 l-3 9"/><path d="M-11 -6 l-3 9"/><path d="M8 -2 l-3 9"/></g><g stroke="#e8f6ff" stroke-width="1" stroke-linecap="round"><path d="M-16 -24 l-1.5 4.5"/><path d="M4 -26 l-1.5 4.5"/><path d="M-11 -6 l-1.5 4.5"/></g></svg>`,
+  weld: `<i></i><b></b>`,
+  cone: `<i></i>`,
 };
 
 /** The stage's stagehand, for as long as the stage is mounted. */

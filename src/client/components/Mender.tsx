@@ -65,6 +65,7 @@ export function Mender({ unitId, animators, className = "" }: CreatureProps) {
       {/* ---- legs: thin, too long, holding the body up and forward ---- */}
       <g
         ref={hold("legs")}
+        data-part="legs"
         style={{ transformOrigin: "50px 72px" }}
         stroke="#4e4757"
         strokeWidth="3"
@@ -76,7 +77,7 @@ export function Mender({ unitId, animators, className = "" }: CreatureProps) {
       </g>
 
       {/* ---- flue: raked off the back, always venting ---- */}
-      <g ref={hold("flue")} style={{ transformOrigin: "62px 44px" }}>
+      <g ref={hold("flue")} data-part="flue" style={{ transformOrigin: "62px 44px" }}>
         <path
           d="M60 44 L74 18 L82 22 L68 48 Z"
           fill="url(#mnd-iron)"
@@ -87,7 +88,7 @@ export function Mender({ unitId, animators, className = "" }: CreatureProps) {
       </g>
 
       {/* ---- bellows: the body, and it breathes ---- */}
-      <g ref={hold("bellows")} style={{ transformOrigin: "50px 56px" }}>
+      <g ref={hold("bellows")} data-part="bellows" style={{ transformOrigin: "50px 56px" }}>
         <path
           d="M50 32 C64 32 70 44 68 56 C66 68 58 74 50 74 C42 74 34 68 32 56 C30 44 36 32 50 32 Z"
           fill="url(#mnd-sac)"
@@ -108,18 +109,18 @@ export function Mender({ unitId, animators, className = "" }: CreatureProps) {
       </g>
 
       {/* ---- three instrument limbs, splayed at different angles ---- */}
-      <g ref={hold("armA")} style={{ transformOrigin: "38px 46px" }}>
+      <g ref={hold("armA")} data-part="armA" style={{ transformOrigin: "38px 46px" }}>
         {limb("M38 46 Q22 44 14 32", 14, 32, 150)}
       </g>
-      <g ref={hold("armB")} style={{ transformOrigin: "36px 58px" }}>
+      <g ref={hold("armB")} data-part="armB" style={{ transformOrigin: "36px 58px" }}>
         {limb("M36 58 Q18 62 8 56", 8, 56, 186)}
       </g>
-      <g ref={hold("armC")} style={{ transformOrigin: "40px 66px" }}>
+      <g ref={hold("armC")} data-part="armC" style={{ transformOrigin: "40px 66px" }}>
         {limb("M40 66 Q26 78 16 78", 16, 78, 200)}
       </g>
 
       {/* ---- head: small, lensed, hooded by a heat shield ---- */}
-      <g ref={hold("head")} style={{ transformOrigin: "48px 30px" }}>
+      <g ref={hold("head")} data-part="head" style={{ transformOrigin: "48px 30px" }}>
         <path
           d="M40 30 Q40 16 50 14 Q60 16 60 30 Z"
           fill="url(#mnd-iron)"

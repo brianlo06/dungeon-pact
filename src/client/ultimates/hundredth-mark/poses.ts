@@ -13,7 +13,7 @@ import { face } from "../../battle/face";
  *
  * Parts: `bow` (the front arm and bow, from the front shoulder), `draw` (the
  * drawing arm, from the back shoulder), `arrow` (in the drawing hand),
- * `stringTop` and `stringLow` (the bowstring's halves, nested in `bow`, each
+ * `stringTop` and `stringBottom` (the bowstring's halves, nested in `bow`, each
  * from its own tip), `head` (with the hood), `brow`, `eyes`, `mouth`, `cloak`,
  * `quiver`, `body`, `legs`. The Ranger faces right: forward is +x, and a
  * negative rotation of `draw` swings the hand forward and up.
@@ -39,7 +39,7 @@ const HAND: [number, number] = [35, 64];
 const TOP: [number, number] = [67.5, 23.5];
 const LOW: [number, number] = [67.5, 92];
 /** The string's middle, where its two halves meet at rest. */
-const MID = 58;
+const MID = 57.75;
 
 /** One held moment of a draw: where the two arms and the arrow are. */
 export interface Draw {
@@ -101,7 +101,7 @@ function drawn(at: number, d: Draw): Part {
     draw: [{ at, rotate: d.draw, x: dx, y: dy }],
     arrow: [{ at, rotate: d.arrow, scale: d.loosed ? 0 : as }],
     stringTop: [half(TOP, MID - TOP[1], 1)],
-    stringLow: [half(LOW, LOW[1] - MID, -1)],
+    stringBottom: [half(LOW, LOW[1] - MID, -1)],
   };
 }
 

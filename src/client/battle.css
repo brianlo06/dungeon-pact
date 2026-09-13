@@ -1482,7 +1482,7 @@
   position: absolute;
 }
 .projectile-arrow > svg {
-  width: calc(clamp(58px, 21cqh, 150px) * 0.36);
+  width: calc(clamp(58px, 21cqh, 150px) * 0.42);
   height: auto;
   left: 0;
   top: 0;
@@ -1495,12 +1495,13 @@
   right: 0;
   top: -1px;
   width: calc(clamp(58px, 21cqh, 150px) * 0.5);
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255, 238, 205, 0.45));
+  height: 3px;
+  margin-top: -0.5px;
+  background: linear-gradient(90deg, transparent, rgba(255, 238, 205, 0.6));
   transform-origin: 100% 50%;
 }
 .projectile-arrow[data-trail]::before {
-  right: calc(clamp(58px, 21cqh, 150px) * 0.27);
+  right: calc(clamp(58px, 21cqh, 150px) * 0.32);
 }
 .projectile[data-arrived]::before {
   display: none;
@@ -1513,14 +1514,9 @@
   border-radius: 50%;
   transform: translate(-50%, -50%);
 }
-.projectile-bolt > i,
-.projectile-orb > i {
+.projectile-bolt > i {
   background: radial-gradient(circle, #fff 0 22%, #cbb2ff 45%, transparent 72%);
   box-shadow: 0 0 14px 4px rgba(168, 137, 255, 0.7);
-}
-.projectile-orb > i {
-  width: 20px;
-  height: 20px;
 }
 .projectile-mote > i {
   background: radial-gradient(
@@ -1539,12 +1535,6 @@
     transparent 74%
   );
   box-shadow: 0 0 14px 4px rgba(255, 138, 60, 0.7);
-}
-.projectile-rivet > i {
-  width: 9px;
-  height: 9px;
-  background: radial-gradient(circle, #fff2c4 0 30%, #ff6a3a 60%, #7a2a1a 100%);
-  box-shadow: 0 0 8px 2px rgba(255, 106, 58, 0.7);
 }
 .projectile-shard > i {
   border-radius: 2px;
@@ -1577,6 +1567,182 @@
 }
 .projectile.trajectory-beam > * {
   display: none;
+}
+/*
+ * The Arcanist's spark: a blue-white orb, bigger than a bolt, that bursts
+ * wide where it lands.
+ */
+.projectile-orb > i {
+  width: 22px;
+  height: 22px;
+  background: radial-gradient(
+    circle,
+    #ffffff 0 20%,
+    #bfe8ff 42%,
+    rgba(95, 178, 255, 0.55) 62%,
+    transparent 74%
+  );
+  box-shadow: 0 0 16px 5px rgba(95, 178, 255, 0.6);
+}
+.projectile-orb[data-trail]::before {
+  top: -3px;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent, rgba(191, 232, 255, 0.7));
+}
+.projectile-orb[data-arrived="burst"] > i {
+  animation: orb-burst 0.22s ease-out forwards;
+}
+@keyframes orb-burst {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(3.2);
+  }
+}
+/* Storm needle: a forked stroke falling head first out of the sky. */
+.projectile-lightning > svg {
+  left: 0;
+  top: 0;
+  width: calc(clamp(58px, 21cqh, 150px) * 1.5);
+  height: auto;
+  transform: translate(-94%, -50%);
+}
+.projectile-lightning[data-trail]::before {
+  display: none;
+}
+/* Cloudburst: drops falling together, not turned along their path. */
+.projectile-rain > svg {
+  left: 0;
+  top: 0;
+  width: calc(clamp(58px, 21cqh, 150px) * 0.85);
+  height: auto;
+  transform: translate(-50%, -80%);
+}
+.projectile-rain[data-trail]::before {
+  display: none;
+}
+.projectile[data-arrived="burst"] > svg {
+  animation: stuck 0.18s ease-out forwards;
+}
+/* A red-hot rivet: a short glowing slug with a hot streak behind it. */
+.projectile-rivet > i {
+  width: 13px;
+  height: 7px;
+  border-radius: 40%;
+  background: radial-gradient(
+    ellipse,
+    #fffbe8 0 25%,
+    #ffb257 50%,
+    #d4461f 80%,
+    #7a2a1a 100%
+  );
+  box-shadow: 0 0 10px 3px rgba(255, 120, 50, 0.75);
+}
+.projectile-rivet[data-trail]::before {
+  top: -2px;
+  height: 4px;
+  width: calc(clamp(58px, 21cqh, 150px) * 0.9);
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 110, 50, 0.35) 55%,
+    rgba(255, 226, 154, 0.9)
+  );
+}
+/* The Mender's repair: a white-hot weld spark in a green halo. */
+.projectile-weld > i {
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, #ffffff 0 30%, #ffd27a 55%, transparent 75%);
+  box-shadow: 0 0 10px 3px rgba(255, 210, 122, 0.7);
+}
+.projectile-weld > b {
+  left: 0;
+  top: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    transparent 30%,
+    rgba(143, 220, 138, 0.55) 48%,
+    transparent 72%
+  );
+}
+.projectile-weld[data-trail]::before {
+  top: -2px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgba(170, 245, 150, 0.7));
+}
+.projectile-weld[data-arrived="burst"] > b {
+  animation: orb-burst 0.22s ease-out forwards;
+}
+/*
+ * The Bellows' breath: a cone of flame stretched from the horn to past the
+ * far target. A white core inside orange inside red, open towards the row.
+ */
+.projectile-cone.trajectory-beam {
+  /*
+   * It opens to cover its targets, but never into a wall: capped at about a
+   * third of the stage's height, and translucent throughout, so the fighters
+   * it passes over and the row it lands on stay readable through it.
+   */
+  --open: min(max(clamp(44px, 15cqh, 116px), calc(var(--spread, 0px) * 0.8)), 34cqh);
+  width: 200px;
+  height: var(--open);
+  margin-top: calc(var(--open) * -0.5);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 244, 214, 0.78) 0%,
+    rgba(255, 184, 90, 0.62) 18%,
+    rgba(255, 110, 50, 0.42) 55%,
+    rgba(194, 68, 42, 0.2) 85%,
+    rgba(194, 68, 42, 0) 100%
+  );
+  /* Ragged along both edges and the far end, so it reads as flame. */
+  clip-path: polygon(
+    0 46%,
+    22% 30%,
+    34% 27%,
+    48% 14%,
+    62% 12%,
+    76% 3%,
+    88% 6%,
+    100% 0,
+    94% 18%,
+    100% 34%,
+    92% 50%,
+    100% 66%,
+    94% 82%,
+    100% 100%,
+    86% 94%,
+    72% 97%,
+    58% 86%,
+    44% 84%,
+    30% 72%,
+    18% 66%,
+    0 54%
+  );
+  box-shadow: none;
+}
+.projectile-cone.trajectory-beam::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.7) 0%,
+    rgba(255, 244, 214, 0.4) 30%,
+    rgba(255, 226, 154, 0) 75%
+  );
+  clip-path: polygon(0 48%, 100% 30%, 100% 70%, 0 52%);
 }
 /* Landing: a burst blooms and goes; an arrow sticks, quivers, and fades. */
 .projectile[data-arrived="burst"] > i {
@@ -1656,6 +1822,53 @@
   );
   box-shadow: 0 0 calc(8px + var(--k) * 22px) rgba(255, 214, 130, 0.75);
 }
+/* Power gathering, tinted by what is gathering it. */
+.mark-charge[data-tone="arcane"]::after {
+  background: radial-gradient(
+    circle,
+    #ffffff 0 16%,
+    rgba(191, 232, 255, 0.85) 38%,
+    rgba(95, 178, 255, 0.35) 58%,
+    transparent 72%
+  );
+  box-shadow: 0 0 calc(8px + var(--k) * 24px) rgba(95, 178, 255, 0.7);
+}
+.mark-charge[data-tone="foundry"]::after {
+  width: calc(8px + var(--k) * 20px);
+  height: calc(8px + var(--k) * 20px);
+  background: radial-gradient(
+    circle,
+    #fffbe8 0 14%,
+    rgba(255, 150, 60, 0.9) 36%,
+    rgba(212, 70, 31, 0.4) 56%,
+    transparent 72%
+  );
+  box-shadow: 0 0 calc(6px + var(--k) * 18px) rgba(255, 110, 50, 0.75);
+}
+.mark-charge[data-tone="growth"]::after {
+  background: radial-gradient(
+    circle,
+    #fffbe8 0 16%,
+    rgba(255, 210, 122, 0.8) 34%,
+    rgba(143, 220, 138, 0.45) 56%,
+    transparent 72%
+  );
+  box-shadow: 0 0 calc(6px + var(--k) * 16px) rgba(143, 220, 138, 0.7);
+}
+/* A report at the muzzle: bright, wide and gone. */
+.mark-flash::after {
+  width: calc(26px + var(--k) * 22px);
+  height: calc(18px + var(--k) * 10px);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    #ffffff 0 22%,
+    rgba(255, 210, 122, 0.9) 45%,
+    rgba(255, 110, 50, 0.4) 70%,
+    transparent
+  );
+  opacity: calc(1 - var(--k));
+}
 .mark-sigil::after {
   width: calc(var(--w) * 0.9);
   height: calc(var(--w) * 0.9);
@@ -1731,7 +1944,8 @@
   fill: #8fdc8a;
 }
 .dbg-path,
-.dbg-back {
+.dbg-back,
+.dbg-flight {
   fill: none;
   stroke: #ffd27a;
   stroke-width: 2;
@@ -1739,6 +1953,9 @@
 }
 .dbg-back {
   stroke: #5ad1ff;
+}
+.dbg-flight {
+  stroke: #8fdc8a;
 }
 .layer-choreo-debug .dbg-phase {
   font-size: 12px;

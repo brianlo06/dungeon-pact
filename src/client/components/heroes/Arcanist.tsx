@@ -45,6 +45,7 @@ const PARTS = [
   "head",
   "hat",
   "hand",
+  "spark",
 ] as const;
 
 /** A four-point star, for embroidery. */
@@ -319,22 +320,27 @@ export function Arcanist({ unitId, animators, className, viewBox }: HeroProps) {
         />
         <BaseWeapon>
           {" "}
-          {/* the spark it is holding */}
-          <circle
-            className="ph-arc-spark ph-glow"
-            cx={86}
-            cy={50}
-            r={7.5}
-            fill={g.url("spark")}
-          />
-          <path
-            className="ph-arc-spark"
-            d="M86 44.5 L84.8 48.5 L87.5 49 L85.5 55"
-            stroke="#ffffff"
-            strokeWidth={1.2}
-            fill="none"
-            strokeLinejoin="round"
-          />
+          {/*
+           * The spark it is holding, its own part: it swells into an orb as
+           * power gathers, and is gone from the hand the moment it is thrown.
+           */}
+          <g ref={hold("spark")} data-part="spark" style={at(86, 50)}>
+            <circle
+              className="ph-arc-spark ph-glow"
+              cx={86}
+              cy={50}
+              r={7.5}
+              fill={g.url("spark")}
+            />
+            <path
+              className="ph-arc-spark"
+              d="M86 44.5 L84.8 48.5 L87.5 49 L85.5 55"
+              stroke="#ffffff"
+              strokeWidth={1.2}
+              fill="none"
+              strokeLinejoin="round"
+            />
+          </g>
         </BaseWeapon>
         <GearMount
           anchor="mainHand"
