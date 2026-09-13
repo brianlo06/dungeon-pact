@@ -50,7 +50,7 @@ const trailActors = (targets: [number, number], size: number, spread: [number, n
   { role: "targets", at: targets, size, face: -1, look: "lit", spread, z: 1, clip: "idle" },
 ];
 const trailVfx = (hy: number): VfxCue[] => [
-  { kind: "ff-trail", at: 0.04, until: 1, layer: "back", params: { hx: 0.3, hy, squash: 0.6, bx: 0.86, by: -0.5 } },
+  { kind: "ff-trail", at: 0.04, until: 1, layer: "back", params: { hx: 0.3, hy, squash: 0.72, bx: 0.86, by: -0.5 } },
   { kind: "ff-flakes", at: 0, until: 1, layer: "screen", seed: 52, params: { count: 26 } },
   { kind: "ff-spray", at: 0, until: 0.2, layer: "screen", seed: 61, params: { mode: "out" } },
 ];
@@ -58,9 +58,9 @@ const trailVfx = (hy: number): VfxCue[] => [
 /* ── The quiet ─────────────────────────────────────────────────────────── */
 
 const stepVfx = (x: number, y: number, size: number): VfxCue[] => [
-  { kind: "ff-loop", at: 0, until: 1, x: x + 6, y: y + 8, scale: size / 300, layer: "back", seed: 5, params: { mode: "hidden", squash: 0.26 } },
-  { kind: "ff-print", at: 0, until: 1, x, y, layer: "back", params: { ghost: true, size, squash: 0.3, ra: 0.02, rb: 0.3 } },
-  { kind: "ff-cord", at: 0, until: 1, layer: "back", params: { ax: -120, ay: y + 30, bx: x + size * 0.46, by: y + 4, sag: 8, cw: size / 260 } },
+  { kind: "ff-loop", at: 0, until: 1, x: x + 6, y: y + 8, scale: size / 210, layer: "back", seed: 5, params: { mode: "hidden", squash: 0.26 } },
+  { kind: "ff-print", at: 0, until: 1, x, y, layer: "back", params: { ghost: true, size, squash: 0.4, ra: 0.02, rb: 0.3 } },
+  { kind: "ff-cord", at: 0, until: 1, layer: "back", params: { ax: -120, ay: y + 34, bx: x - size * 0.55, by: y + 12, sag: 8, cw: size / 260 } },
   { kind: "ff-flakes", at: 0, until: 1, layer: "screen", seed: 55, params: { count: 34, still: true } },
 ];
 
@@ -75,14 +75,15 @@ const snared = (at: [number, number], size: number, shove: [number, number], til
   z: 2,
   react: [{ at: 0.06, clip: "hurt" }],
   shove: { at: 0.06, by: shove },
+  // Already going over on the drawn frame: the yank is the cut.
+  tilt: tilt * 0.7,
   toTilt: tilt,
 });
-const HAULER: ActorCue = { role: "caster", at: [300, 830], size: 380, clip: "ult:ff-haul", then: "ult:ff-haul", look: "lit", z: 3 };
+const HAULER: ActorCue = { role: "caster", at: [370, 830], size: 380, clip: "ult:ff-haul", then: "ult:ff-haul", look: "lit", z: 3 };
 const springVfx = (burst: number, loop: number): VfxCue[] => [
   { kind: "ff-cord", at: 0, until: 1, layer: "back", seed: 21, params: { a: "caster", afx: -0.54, afy: 0.29, b: "target", bfx: -0.02, bfy: 0.04, sag: 30, tautat: 0.06, rip: true, cw: 1.2 } },
-  { kind: "ff-loop", at: 0, until: 0.3, follow: "target", y: -6, scale: loop, layer: "front", params: { mode: "cinch", squash: 0.3 } },
-  { kind: "ff-loop", at: 0.3, until: 1, follow: "target", y: -6, scale: loop, layer: "front", params: { mode: "held", squash: 0.3 } },
   { kind: "ff-burst", at: 0, until: 0.95, follow: "target", x: -20, y: 10, scale: burst, seed: 3, layer: "front" },
+  { kind: "ff-hobble", at: 0, until: 1, follow: "target", scale: loop, layer: "front" },
 ];
 
 export const falseFooting: Cinematic = {
@@ -126,16 +127,16 @@ export const falseFooting: Cinematic = {
       fastMs: 400,
       transition: { kind: "black", ms: 50 },
       camera: {
-        from: { x: 780, y: 790, zoom: 2.2, rotate: -6 },
-        to: { x: 795, y: 800, zoom: 2.4, rotate: -4 },
+        from: { x: 930, y: 830, zoom: 2.0, rotate: -6 },
+        to: { x: 945, y: 840, zoom: 2.2, rotate: -4 },
         ease: "out",
       },
       background: "ff-field",
       lighting: { exposure: 0.55, under: [COLD, 0.25], vignette: 0.6, letterbox: BARS },
       toLighting: { exposure: 0.62, under: [COLD, 0.3], vignette: 0.55, letterbox: BARS },
-      actors: [{ role: "caster", at: [700, 900], size: 1300, clip: "ult:ff-touch", then: "ult:ff-touch", look: "lit", root: false }],
+      actors: [{ role: "caster", at: [600, 900], size: 1300, clip: "ult:ff-touch", then: "ult:ff-touch", look: "lit", root: false }],
       vfx: [
-        { kind: "ff-print", at: 0, until: 1, x: 830, y: 925, layer: "back", seed: 11, params: { size: 420, squash: 0.42, ra: 0.3, rb: 0.72, crumbs: true } },
+        { kind: "ff-print", at: 0, until: 1, x: 950, y: 915, layer: "back", seed: 11, params: { size: 500, squash: 0.46, ra: 0.3, rb: 0.72, crumbs: true } },
         { kind: "ff-spray", at: 0.82, until: 1, layer: "screen", seed: 61, params: { mode: "in" } },
       ],
       sound: [
@@ -214,8 +215,8 @@ export const falseFooting: Cinematic = {
       fastMs: 360,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 780, y: 630, zoom: 2.4 },
-        to: { x: 786, y: 636, zoom: 2.55 },
+        from: { x: 770, y: 568, zoom: 2.4 },
+        to: { x: 776, y: 574, zoom: 2.55 },
         ease: "linear",
       },
       background: "ff-field",
@@ -223,9 +224,8 @@ export const falseFooting: Cinematic = {
       toLighting: { exposure: 0.3, under: [COLD, 0.3], vignette: 0.82, letterbox: 0.14 },
       actors: [{ role: "caster", at: [700, 1120], size: 1000, clip: "ult:ff-know", then: "ult:ff-know", look: "lit", root: false }],
       vfx: [
-        { kind: "ff-cord", at: 0, until: 1, layer: "back", params: { ax: 760, ay: 775, bx: 1300, by: 900, sag: 30, tremor: 3, cw: 1.8 } },
         { kind: "ff-breath", at: 0, until: 1, follow: "caster", x: 70, y: -458, params: { puffs: "0,0.26" } },
-        { kind: "ff-drift", at: 0, until: 1, x: 780, y: 900, layer: "front", seed: 71, params: { w: 1400, h: 200 } },
+        { kind: "ff-drift", at: 0, until: 1, x: 780, y: 718, layer: "front", seed: 71, params: { w: 1400, h: 200 } },
         { kind: "ff-spray", at: 0, until: 0.22, layer: "screen", seed: 61, mode: "fast", params: { mode: "out" } },
       ],
       duck: [{ at: 0, level: 0.12, ms: 560 }],
@@ -246,7 +246,7 @@ export const falseFooting: Cinematic = {
       ms: 600,
       fastMs: 400,
       transition: { kind: "cut" },
-      camera: { from: { x: 800, y: 620, zoom: 1.55 } },
+      camera: { from: { x: 930, y: 720, zoom: 1.85 } },
       background: "ff-field",
       lighting: { exposure: 0.46, under: [COLD, 0.22], vignette: 0.75, letterbox: 0.15 },
       toLighting: { exposure: 0.34, under: [COLD, 0.16], vignette: 0.85, letterbox: 0.15 },
@@ -259,14 +259,14 @@ export const falseFooting: Cinematic = {
       markers: [{ at: 0.6, label: "footfall" }],
       framing: {
         large: {
-          camera: { from: { x: 800, y: 580, zoom: 1.35 } },
+          camera: { from: { x: 820, y: 640, zoom: 1.4 } },
           actors: [
             { role: "target", at: [1300, 810], to: [1110, 810], ease: "linear", size: 290, face: -1, look: "lit", z: 2, clip: "approach", then: "approach" },
           ],
           vfx: stepVfx(880, 815, 250),
         },
         boss: {
-          camera: { from: { x: 820, y: 500, zoom: 1.08 } },
+          camera: { from: { x: 840, y: 590, zoom: 1.08 } },
           actors: [
             { role: "target", at: [1330, 830], to: [1150, 830], ease: "linear", size: 250, face: -1, look: "lit", z: 2, clip: "approach", then: "approach" },
           ],
@@ -293,8 +293,8 @@ export const falseFooting: Cinematic = {
       background: "ff-field",
       lighting: { exposure: 1, tint: [SNOWLIGHT, 0.12], back: [SNOWLIGHT, 0.55], under: [COLD, 0.3], vignette: 0.3, letterbox: BARS },
       toLighting: { exposure: 0.66, tint: [SNOWLIGHT, 0], back: [COLD, 0.15], under: [COLD, 0.25], vignette: 0.45, letterbox: BARS },
-      actors: [HAULER, snared([1030, 800], 400, [-80, -14], -16)],
-      vfx: springVfx(1, 0.5),
+      actors: [HAULER, snared([1030, 800], 400, [-80, -14], -20)],
+      vfx: springVfx(1, 1),
       screen: [
         { kind: "two-tone", at: 0, ms: 40 },
         { kind: "flash", at: 0.1, ms: 70, amount: 0.4, color: SNOWLIGHT },
@@ -322,7 +322,7 @@ export const falseFooting: Cinematic = {
             ease: "out",
           },
           actors: [{ ...HAULER, at: [290, 840], size: 340 }, snared([1050, 820], 340, [-50, -6], -10)],
-          vfx: springVfx(1.2, 0.56),
+          vfx: springVfx(1.2, 1),
         },
         boss: {
           camera: {
@@ -330,8 +330,8 @@ export const falseFooting: Cinematic = {
             to: { x: 790, y: 465, zoom: 0.97, rotate: -2 },
             ease: "out",
           },
-          actors: [{ ...HAULER, at: [270, 860], size: 300 }, snared([1080, 850], 290, [-26, 16], -4)],
-          vfx: springVfx(1.5, 0.7),
+          actors: [{ ...HAULER, at: [300, 810], size: 300 }, snared([1080, 820], 290, [-26, 16], -4)],
+          vfx: springVfx(1.5, 0.9),
         },
       },
     },

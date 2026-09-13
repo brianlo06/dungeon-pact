@@ -12,7 +12,8 @@ import "./style.css";
  *   ff-print   one print dented in the snow; its rim lights as it is read
  *   ff-trail   from above: every enemy's trail read up to its feet, the next
  *              step foreseen, a snare under it, and the cords back to the hand
- *   ff-loop    a snare's noose in the snow: hidden, then cinched round a foot
+ *   ff-loop    a snare's noose lying open under the snow
+ *   ff-hobble  the snare sprung: the cord whipped round the enemy's legs
  *   ff-cord    the snare's cord between two points: slack, taut, ripped up
  *   ff-burst   the snow thrown up when the snare bites (boils in three drawings)
  *   ff-breath  breath clouds in the cold, which stop when the breath is held
@@ -29,7 +30,6 @@ import "./style.css";
  */
 
 export const AMBER = "#f2a93b";
-const INK = "#0e1426";
 const LIT = "#eef3fb";
 const SHADOW = "#6f86b8";
 
@@ -202,8 +202,8 @@ const trailFrame: Frame = (el, p, _age, ctx) => {
       g.dataset.key = key;
       g.style.display = "";
       // A print about a sixth of the creature's drawn height, and a stride twice that.
-      const size = Math.max(36, Math.min(110, a.h * 0.2));
-      const stride = size * 1.45;
+      const size = Math.max(52, Math.min(140, a.h * 0.3));
+      const stride = size * 1.3;
       const k = size / 100;
       const steps = g.querySelectorAll<SVGGElement>(".ff-step");
       steps.forEach((step, i) => {
@@ -257,15 +257,41 @@ const Loop = ({ cue }: VfxProps) => {
       </g>
       {q.mode === "hidden" && (
         <g className="ff-loop-snow">
-          {Array.from({ length: 11 }, (_, i) => {
-            const a = (i / 11) * Math.PI * 2 + rand() * 0.3;
-            return <ellipse key={i} cx={Math.cos(a) * 120} cy={Math.sin(a) * 120 * squash} rx={20 + rand() * 18} ry={6 + rand() * 5} />;
+          {Array.from({ length: 6 }, (_, i) => {
+            const a = (i / 6) * Math.PI * 2 + rand() * 0.4;
+            return <ellipse key={i} cx={Math.cos(a) * 120} cy={Math.sin(a) * 120 * squash} rx={26 + rand() * 20} ry={7 + rand() * 4} />;
           })}
         </g>
       )}
     </svg>
   );
 };
+
+/**
+ * The snare, sprung: the cord whipped round the enemy's legs in three tight
+ * turns and knotted where the line comes in, sized from the figure's drawn
+ * height (`--ah`), so a hound is hobbled across all four legs and the
+ * Collector round its ankles. The turns wrap on in the first sixth of its
+ * life.
+ */
+const Hobble = () => (
+  <svg className="ff-hobble" viewBox="-100 -60 200 70" preserveAspectRatio="none">
+    {[0, 1, 2].map((i) => {
+      const y = -10 - i * 14;
+      const d = `M${-78 + i * 6} ${y + 8} C${-40} ${y + 22} ${40} ${y + 16} ${78 - i * 6} ${y - 4}`;
+      const back = `M${-78 + i * 6} ${y + 8} C${-40} ${y - 10} ${40} ${y - 16} ${78 - i * 6} ${y - 4}`;
+      return (
+        <g key={i} style={v({ "--i": i })}>
+          <path d={back} pathLength={1} className="ff-hobble-back" />
+          <path d={d} pathLength={1} className="ff-hobble-rope" />
+          <path d={d} pathLength={1} className="ff-hobble-glint" />
+        </g>
+      );
+    })}
+    <path className="ff-hobble-knot" d="M-92 -18 l16 -8 l8 14 l-12 12 Z" />
+    <path className="ff-hobble-tag" d="M-96 -2 l10 -2 l-2 12 l-10 2 Z" />
+  </svg>
+);
 
 /* ── The cord ──────────────────────────────────────────────────────────── */
 
@@ -393,7 +419,6 @@ const Burst = ({ cue }: VfxProps) => {
             {crown(seed + k * 13).map((c, i) => (
               <path key={i} d={c.d} fill={c.shade} className="ff-burst-clump" />
             ))}
-            <ellipse rx="90" ry="46" cy="-20" fill={LIT} stroke={INK} strokeWidth="5" />
           </g>
         ))}
       </svg>
@@ -549,7 +574,7 @@ const Board = ({ cue }: VfxProps) => {
       <svg viewBox="-200 -120 400 160" className="ff-board-art">
         {mode === "call" ? (
           [0, 1, 2, 3].map((i) => (
-            <g key={i} className="ff-board-step" style={v({ "--d": ((3 - i) * 0.16).toFixed(2) })} transform={`translate(${40 + i * 46} ${-6 - i * 5 + (i % 2) * 10}) scale(0.34 0.13)`}>
+            <g key={i} className="ff-board-step" style={v({ "--d": ((3 - i) * 0.16).toFixed(2) })} transform={`translate(${46 + i * 56} ${-4 - i * 6 + (i % 2) * 12}) scale(0.46 0.18)`}>
               <PrintArt />
             </g>
           ))
@@ -559,9 +584,11 @@ const Board = ({ cue }: VfxProps) => {
             <path className="ff-board-stake-cord" pathLength={1} d="M36 -2 Q110 10 170 -4" />
             <path className="ff-board-stake" d="M166 -4 l6 -26 l6 0 l-2 28 Z" />
             <g className="ff-board-noose">
-              <path className="ff-board-loop-back" d="M-44 -8 Q0 -22 44 -8" />
-              <path className="ff-board-loop" d="M-44 -8 Q0 12 44 -8" />
-              <path className="ff-board-loop b" d="M-40 -18 Q0 0 40 -18" />
+              <path className="ff-board-loop-back" d="M-52 -8 Q0 -26 52 -8" />
+              <path className="ff-board-loop-ink" d="M-52 -8 Q0 14 52 -8" />
+              <path className="ff-board-loop" d="M-52 -8 Q0 14 52 -8" />
+              <path className="ff-board-loop-ink b" d="M-48 -24 Q0 -4 48 -24" />
+              <path className="ff-board-loop b" d="M-48 -24 Q0 -4 48 -24" />
               <path className="ff-board-knot" d="M36 -14 l14 4 l-6 12 l-12 -6 Z" />
               <path className="ff-board-tag" d="M48 -6 l18 -2 l-4 16 l-16 2 Z" />
             </g>
@@ -585,6 +612,7 @@ export const renderers: Record<string, (p: VfxProps) => ReactNode> = {
   "ff-print": Print,
   "ff-trail": Trail,
   "ff-loop": Loop,
+  "ff-hobble": Hobble,
   "ff-cord": Cord,
   "ff-burst": Burst,
   "ff-breath": Breath,

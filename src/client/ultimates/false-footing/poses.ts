@@ -124,12 +124,14 @@ const touch: Clip = {
       { at: 0, rotate: 48, x: 0.02, y: DROP + 0.02 },
       { at: 1, rotate: 49, x: 0.02, y: DROP + 0.02 },
     ],
+    // Reached out past the knee (the arm drawn a little long: the shoulder is
+    // out of the frame) and down onto the print's far rim, sliding along it.
     draw: [
-      { at: 0, rotate: -62, x: 0.06, y: DROP + 0.02 },
-      { at: 0.32, rotate: -34, x: 0.075, y: DROP + 0.07 },
-      { at: 0.62, rotate: -26, x: 0.1, y: DROP + 0.085 },
-      { at: 0.8, rotate: -25, x: 0.105, y: DROP + 0.09 },
-      { at: 1, rotate: -25.5, x: 0.105, y: DROP + 0.092 },
+      { at: 0, rotate: -75, x: 0.22, y: DROP + 0.02, scale: 1.25 },
+      { at: 0.32, rotate: -46, x: 0.25, y: DROP + 0.09, scale: 1.25 },
+      { at: 0.62, rotate: -38, x: 0.27, y: DROP + 0.1, scale: 1.25 },
+      { at: 0.8, rotate: -37, x: 0.275, y: DROP + 0.105, scale: 1.25 },
+      { at: 1, rotate: -37.5, x: 0.275, y: DROP + 0.107, scale: 1.25 },
     ],
     arrow: [
       { at: 0, rotate: 0, scale: 0 },
@@ -200,8 +202,8 @@ const know: Clip = {
       // Found it: the breath is held, the eyes open a hair.
       [0.58, { brow: 0.2, knit: 3, open: 0.8, mouth: 0.35, wide: 0.85 }],
       // Got you.
-      [0.85, { brow: -0.8, knit: -2, open: 0.62, mouth: 1.25, wide: 1.3 }],
-      [1, { brow: -0.9, knit: -2.5, open: 0.6, mouth: 1.3, wide: 1.34 }],
+      [0.85, { brow: -1.4, knit: -3, open: 0.66, mouth: 1.7, wide: 1.55 }],
+      [1, { brow: -1.5, knit: -3.5, open: 0.62, mouth: 1.8, wide: 1.62 }],
     ),
     // The glance: the eyes slide along the trail and come back.
     eyes: glance(
@@ -211,15 +213,16 @@ const know: Clip = {
       [0.85, 0.62, 0],
       [1, 0.6, 0],
     ),
+    // The bow laid down flat across the knee, out of the face's way.
     bow: [
-      { at: 0, rotate: 40, x: 0.01, y: DROP + 0.02 },
-      { at: 1, rotate: 41, x: 0.01, y: DROP + 0.02 },
+      { at: 0, rotate: 72, x: 0.02, y: DROP + 0.06 },
+      { at: 1, rotate: 73, x: 0.02, y: DROP + 0.06 },
     ],
-    // The fist with the cord wound in it, held up under the chin.
+    // The fist with the cord wound in it, low behind the drift.
     draw: [
-      { at: 0, rotate: -96, x: 0.05, y: DROP },
-      { at: 0.58, rotate: -102, x: 0.045, y: DROP - 0.004 },
-      { at: 1, rotate: -104, x: 0.04, y: DROP - 0.006 },
+      { at: 0, rotate: -54, x: 0.05, y: DROP },
+      { at: 0.58, rotate: -58, x: 0.045, y: DROP - 0.004 },
+      { at: 1, rotate: -60, x: 0.04, y: DROP - 0.006 },
     ],
     arrow: [
       { at: 0, rotate: 0, scale: 0 },
@@ -257,11 +260,12 @@ const haul: Clip = {
       { at: 0.25, rotate: -14, y: DROP * 0.8, x: -0.03 },
       { at: 1, rotate: -10, y: DROP * 0.8, x: -0.025 },
     ],
+    // The bow hand flung out low for balance, the bow swung down, not raised.
     bow: [
       { at: 0, rotate: 40, x: 0.01, y: DROP + 0.02 },
-      { at: 0.2, rotate: -52, x: 0.03, y: 0.04 },
-      { at: 0.5, rotate: -46, x: 0.03, y: 0.05 },
-      { at: 1, rotate: -40, x: 0.02, y: 0.06 },
+      { at: 0.2, rotate: 74, x: 0.04, y: 0.08 },
+      { at: 0.5, rotate: 70, x: 0.04, y: 0.085 },
+      { at: 1, rotate: 66, x: 0.035, y: 0.09 },
     ],
     draw: [
       { at: 0, rotate: -64, x: 0.06, y: DROP },

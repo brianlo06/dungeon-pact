@@ -79,7 +79,7 @@
 .ff-ghost-line {
   fill: none;
   stroke: #f2a93b;
-  stroke-width: 4.5;
+  stroke-width: 5.5;
   stroke-dasharray: 7 6;
   stroke-linecap: round;
   opacity: var(--r);
@@ -188,25 +188,38 @@
   fill: #dfe8f6;
 }
 .ff-loop[data-mode="hidden"] .ff-loop-glow {
+  opacity: 0.8;
+  stroke-width: 3;
   stroke-dasharray: 0.12 0.88;
   stroke-dashoffset: calc(var(--p) * -0.7);
 }
 .ff-loop[data-mode="hidden"] .ff-loop-rope {
-  opacity: 0.75;
+  opacity: 0.35;
+}
+.ff-loop[data-mode="hidden"] .ff-loop-shadow {
+  opacity: 0.2;
+}
+.ff-loop-snow ellipse {
+  fill: #56638a;
+  opacity: 0.85;
 }
 .cine-vfx > .ff-loop[data-mode="cinch"] {
-  transform: translate(-50%, -50%) translateY(calc(var(--pe) * -26px)) scale(calc(var(--s) * (1 - var(--pe) * 0.68)), calc(var(--s) * (1 - var(--pe) * 0.5)));
+  transform: translate(-50%, -50%) translateY(calc(var(--pe) * -30px)) scale(calc(var(--s) * (1.3 - var(--pe) * 0.75)), calc(var(--s) * (1.3 - var(--pe) * 0.5)));
 }
 .ff-loop[data-mode="cinch"] .ff-loop-rope,
 .ff-loop[data-mode="held"] .ff-loop-rope {
-  stroke-width: 16;
+  stroke-width: 24;
 }
 .ff-loop[data-mode="cinch"] .ff-loop-glow,
 .ff-loop[data-mode="held"] .ff-loop-glow {
-  stroke-width: 7;
+  stroke-width: 11;
+}
+.ff-loop[data-mode="cinch"] .ff-loop-shadow,
+.ff-loop[data-mode="held"] .ff-loop-shadow {
+  display: none;
 }
 .cine-vfx > .ff-loop[data-mode="held"] {
-  transform: translate(-50%, -50%) translateY(-26px) scale(calc(var(--s) * 0.32), calc(var(--s) * 0.5));
+  transform: translate(-50%, -50%) translateY(-30px) scale(calc(var(--s) * 0.55), calc(var(--s) * 0.8));
 }
 
 /* ---- the bite ---- */
@@ -229,6 +242,7 @@
   fill: #eef3fb;
   stroke: #0e1426;
   stroke-width: 5;
+  opacity: calc(1 - clamp(0, calc(var(--p) * 2.5), 1));
 }
 .ff-burst-clump {
   stroke: #0e1426;
@@ -386,16 +400,20 @@
   opacity: min(1, calc(var(--p) * 10));
 }
 .ff-board-loop,
+.ff-board-loop-ink,
 .ff-board-loop-back {
   fill: none;
   stroke: #f2a93b;
-  stroke-width: 6;
+  stroke-width: 9;
   stroke-linecap: round;
-  paint-order: stroke;
+}
+.ff-board-loop-ink {
+  stroke: #1a120b;
+  stroke-width: 17;
 }
 .ff-board-loop-back {
   stroke: #8a5d22;
-  stroke-width: 5;
+  stroke-width: 8;
 }
 .ff-board-knot,
 .ff-board-tag {
@@ -408,12 +426,13 @@
   fill: #ffe2a8;
 }
 .ff-board:not([data-primary]) .ff-board-tag,
-.ff-board:not([data-primary]) .ff-board-loop.b {
+.ff-board:not([data-primary]) .ff-board-loop.b,
+.ff-board:not([data-primary]) .ff-board-loop-ink.b {
   display: none;
 }
 .ff-board-stake-cord {
   fill: none;
-  stroke: #2b1d12;
+  stroke: #f2a93b;
   stroke-width: 5;
   stroke-dasharray: 1 1;
   stroke-dashoffset: calc(1 - min(1, calc(var(--p) * 3)));
@@ -426,10 +445,56 @@
 }
 .ff-print .ff-ghost-line {
   opacity: var(--r);
-  stroke-width: 3.5;
+  stroke-width: 3;
+  stroke-dasharray: 9 5;
 }
 
 /* ---- the reading hand (Ranger.tsx draws it in a close-up copy) ---- */
 .ult-cinematic[data-cinematic="false-footing"][data-shot="read"] .cine-actor[data-role="caster"] {
   --ff-reach: 1;
+}
+
+/* ---- the snare, sprung round the legs ---- */
+.ff-hobble {
+  width: calc(var(--ah, 300px) * 0.62);
+  height: calc(var(--ah, 300px) * 0.24);
+  overflow: visible;
+}
+.cine-vfx > .ff-hobble {
+  transform: translate(-50%, -86%) rotate(var(--rot)) scale(var(--s));
+}
+.ff-hobble g {
+  --k: clamp(0, calc((var(--p) - var(--i) * 0.03) * 7), 1);
+}
+.ff-hobble-rope,
+.ff-hobble-back,
+.ff-hobble-glint {
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: calc(1 - var(--k));
+  vector-effect: non-scaling-stroke;
+}
+.ff-hobble-back {
+  stroke: #5a3b1d;
+  stroke-width: calc(var(--ah, 300px) * 0.022);
+}
+.ff-hobble-rope {
+  stroke: #1a120b;
+  stroke-width: calc(var(--ah, 300px) * 0.036);
+}
+.ff-hobble-glint {
+  stroke: #f2a93b;
+  stroke-width: calc(var(--ah, 300px) * 0.018);
+}
+.ff-hobble-knot,
+.ff-hobble-tag {
+  fill: #f2a93b;
+  stroke: #1a120b;
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+  opacity: min(1, calc((var(--p) - 0.1) * 12));
+}
+.ff-hobble-tag {
+  fill: #ffe2a8;
 }
