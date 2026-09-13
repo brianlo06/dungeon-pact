@@ -168,15 +168,15 @@ export const eyespot: Cinematic = {
         },
         boss: {
           camera: {
-            from: { x: 820, y: 520, zoom: 1.02 },
-            to: { x: 800, y: 525, zoom: 1.07 },
+            from: { x: 840, y: 520, zoom: 1.02 },
+            to: { x: 820, y: 525, zoom: 1.07 },
             ease: "inOut",
           },
           actors: [
-            { role: "caster", at: [360, 860], size: 290, clip: "ult:spot-beckon", look: "lit", z: 2 },
+            { role: "caster", at: [380, 860], size: 290, clip: "ult:spot-beckon", look: "lit", z: 2 },
             {
               role: "targets",
-              at: [1050, 860],
+              at: [1180, 860],
               spread: [300, -14],
               size: 290,
               face: -1,
@@ -374,7 +374,7 @@ export const eyespot: Cinematic = {
             },
           ],
           vfx: [
-            { kind: "spot-moon", at: 0, until: 1, x: 820, y: 470, layer: "back", params: { size: 900 } },
+            { kind: "spot-moon", at: 0, until: 1, x: 740, y: 480, layer: "back", params: { size: 1000 } },
             { kind: "spot-robe", at: 0, until: 1, x: 530, y: 880, layer: "back", seed: 9, params: { size: 290, burstAt: 0.0 } },
             { kind: "spot-cut", at: 0, until: 1, follow: "target", layer: "front", params: { angle: -24 } },
             { kind: "spot-moths", at: 0.3, until: 1, x: 530, y: 760, layer: "front", seed: 31, params: { mode: "stream", count: 16, size: 260 } },

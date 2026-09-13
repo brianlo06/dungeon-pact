@@ -155,4 +155,69 @@ Root tracks play in films. Keys authored for their shot size:
 `ult:spot-call` (a small sway, battlefield size), `ult:spot-beckon` (a
 lean), `ult:spot-cut` (the lunge from behind: x 0.07, rotate 6°, squash),
 `ult:spot-settle` (a small lift). `ult:spot-wink` has only a hair of root
-motion, and its close-up sets `root: false`.
+motion, and its close-up sets `root: false`. Nothing is rebuilt on
+`.cine-look`.
+
+## Notes from the lab
+
+- The moon in the background (`spot-garden`, at world 660, 330) was placed so
+  one moon serves three shots: behind the hood's horns in the close-up, over
+  the Beguiler in the wide and peeking over it in the quiet. Because the
+  exposure layer darkens the background, those shots lay a `spot-moon` drawing
+  exactly over it on the effects layer so it stays bright.
+- The impact's drawn frame works because the moon is the size of the sky
+  behind everyone: the two-tone sends it to cream and every figure to ink, so
+  the robe's horned outline, the lunging target, the crescent and the
+  Beguiler behind it read as four silhouettes in a row. Before the moon was
+  moved under the robe, the robe was ink on a black sky and did not read. The
+  cream flash that first followed the two-tone was removed: it whited out the
+  frame after the accent.
+- The swarm is the film's wipe: the same seeded moths close the close-up
+  (`phase: in`, the first half of their flight) and open the next shot
+  (`phase: out`), and a dark band of wing-dust travels with them so the frame
+  is fully covered on the cut (the browser test checks the band spans the
+  frame at 0.995 of the close-up).
+- Moths on the robe were first a dense grey scatter that read as debris; they
+  read as eyes at about a seventh of the robe's width with the eyespot a
+  fifth of the wing, and a faint green disc behind each eye (no filter).
+- Sounds were rendered offline in the browser and measured against the other
+  two Beguiler films: the impact peaks at 1.19 (the Hall of Mirrors' 1.20,
+  the Open Mind's 1.18), the motif at 0.15 (0.15, 0.28), the call at 0.42
+  (0.48, 0.38), the release at 0.11 (0.12).
+- Performance (dev build, `GPU=1 scripts/profile-ultimate.ts`, 1920×1080, on a
+  shared machine at load average 25–35, so only the comparisons mean
+  anything): film p50 16.7ms / p95 66.7ms, 15 frames over 34ms; the round
+  after it p50 16.7 / p95 50.1. The Hall of Mirrors minutes later: film p50
+  33.3 / p95 183, the round after it p50 16.7 / p95 66.6; the Open Mind
+  earlier: p50 16.7 / p95 83.4 against its round's 66.7. No filtered
+  elements; peak 1,405 nodes, 3 live effects. The meadow's flowers and stars
+  were thinned (peak 1,543 before), and every moth is two `<use>`s of one
+  wing symbol and one of its body.
+
+## What the engine could not do, and what was built instead
+
+- **An enemy that only takes Weak is not in the cast.** Solved in gameplay:
+  every other enemy takes the moths' 0-base sliver, as the other two Beguiler
+  films do.
+- **An occlusion with another object.** The occluder is always a cape, so the
+  swarm of moths across the lens is an in-folder screen effect straddling the
+  cut (`spot-moths` swarm, `phase` in and out, same seed), with the shot's
+  transition left as a `cut`. The engine would need an `occlusion` whose
+  object is an effect kind.
+- **A decoy of the caster.** Only `reflection` is handed a figure, so the robe
+  the enemy lunges at is the Beguiler's outline redrawn from `Beguiler.tsx`
+  (robe, hood, horns) as cloth, not a copy of the presentation figure. It
+  does not wear the caster's equipment. The engine would need an effect slot
+  for a second copy of the caster.
+- **Effects that ride a figure's parts.** A `follow` effect rides the ground
+  point only, so the moths on the robe do not tilt with the head in the
+  beckon (the clip keeps that tilt small). The engine would need a follow
+  anchor on a named part.
+- **One reveal covers every target.** The whole line's damage and Weak land
+  on the target's contact; the other enemies are not in the impact shot, and
+  their moths are shown on the board in the return.
+- **Moving an enemy into the front logs no beat**, so the board's re-layout at
+  the reveal is the only sign of it; the film shows the lunge carrying the
+  target forward and does not claim the row.
+- **A row of targets shares one facing**, and with four enemies the wide's
+  line is crowded to the frame's right edge.

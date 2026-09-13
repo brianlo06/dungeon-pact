@@ -56,13 +56,13 @@ function flower(x: number, y: number, s: number, lean: number, key: number, ligh
 
 function MothGarden() {
   const rand = seeded(41);
-  const stars = Array.from({ length: 60 }, () => [-800 + rand() * 3200, -450 + rand() * 900, 1 + rand() * 2.2, 0.15 + rand() * 0.45] as const);
+  const stars = Array.from({ length: 36 }, () => [-800 + rand() * 3200, -450 + rand() * 900, 1 + rand() * 2.2, 0.15 + rand() * 0.45] as const);
   // Ranks of flowers, far to near: smaller and dimmer towards the hills.
   const ranks = [
-    { y: 640, s: 0.34, n: 26, light: 0.28 },
-    { y: 700, s: 0.5, n: 20, light: 0.42 },
-    { y: 770, s: 0.72, n: 14, light: 0.62 },
-    { y: 850, s: 0.95, n: 10, light: 0.8 },
+    { y: 640, s: 0.34, n: 18, light: 0.28 },
+    { y: 700, s: 0.5, n: 14, light: 0.42 },
+    { y: 770, s: 0.72, n: 11, light: 0.62 },
+    { y: 850, s: 0.95, n: 8, light: 0.8 },
   ];
   const flowers = ranks.flatMap((r, ri) =>
     Array.from({ length: r.n }, (_, i) => {
