@@ -116,7 +116,8 @@ function stock() {
   const bays: number[] = [];
   for (let x = -780; x < 2400; x += 250) bays.push(x);
   const rows = [-270, -80, 110, 300, 480];
-  for (const bx of bays)
+  // Stocked only where a camera can see: the box is wider than any shot.
+  for (const bx of bays.filter((x) => x > -400 && x < 1900))
     for (const [r, y] of rows.entries()) {
       // The row under the lamp stays emptier, so figures read against it.
       if (r >= 3 && bx > 380 && bx < 1100 && rand() < 0.6) continue;
