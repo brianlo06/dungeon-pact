@@ -78,7 +78,9 @@ function measure(on: boolean): Tally {
         t.uses[h] = (t.uses[h] ?? 0) + n;
       for (const [h, n] of Object.entries(r.charge))
         t.charge[h] = (t.charge[h] ?? 0) + n;
-      if (r.depth >= 6) {
+      // A run that entered any boss chamber. Depth stopped meaning "the boss"
+      // when routes gained floors.
+      if (r.state.map.some((n) => n.type === "boss" && n.visited)) {
         t.bossRuns++;
         t.bossUses += r.bossUltimates;
         if (r.bossUltimates) t.bossFightsWithUltimate++;
