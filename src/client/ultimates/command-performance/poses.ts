@@ -28,9 +28,9 @@ import type { Clip, Pose, Rig } from "../../battle/animation";
 
 const turn = (...keys: [number, number][]): Pose[] => keys.map(([at, rotate]) => ({ at, rotate }));
 /** A part held out of sight for the whole clip. */
-const gone = (duration = 1): Pose[] => [
+const gone = (): Pose[] => [
   { at: 0, scale: 0 },
-  { at: duration, scale: 0 },
+  { at: 1, scale: 0 },
 ];
 
 /**
@@ -148,32 +148,6 @@ const cast: Clip = {
 };
 
 /**
- * The work: the fingers walking the puppet, the bar rocked left and right in
- * small quick tilts, one to a step. Small in frame, and mostly off it.
- */
-const work: Clip = {
-  duration: 520,
-  poses: [
-    { at: 0, y: 0 },
-    { at: 1, y: 0 },
-  ],
-  parts: {
-    control: [
-      { at: 0, rotate: -20, y: -0.03 },
-      { at: 0.17, rotate: -34, y: -0.05 },
-      { at: 0.34, rotate: -10, y: -0.02 },
-      { at: 0.5, rotate: -34, y: -0.05 },
-      { at: 0.67, rotate: -10, y: -0.02 },
-      { at: 0.84, rotate: -34, y: -0.05 },
-      { at: 1, rotate: -22, y: -0.035 },
-    ],
-    strings: gone(),
-    doll: gone(),
-    head: turn([0, 10], [1, 10]),
-  },
-};
-
-/**
  * The yank. The shot opens with the bar already up and back; contact (0.04)
  * is the bar ripped down and across, the whole body behind it, the head
  * going over. Then the follow-through and the hold: the bar low, the arm
@@ -244,7 +218,6 @@ export const poses: Record<string, Rig> = {
     "ult:perf-call": call,
     "ult:perf-snip": snip,
     "ult:perf-cast": cast,
-    "ult:perf-work": work,
     "ult:perf-yank": yank,
     "ult:perf-bow": bow,
   },

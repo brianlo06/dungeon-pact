@@ -43,7 +43,7 @@
   stroke: #2a170c;
   stroke-width: calc(var(--sw) * 1.1px);
 }
-/* On the drawn frame the strings stay light and the sheaf burns bright. */
+/* The sheaf is ink, so it reads on the lamp's hot field; on the drawn frame the strings' cores stay white. */
 .ult-cinematic[data-two-tone] .perf-string-core {
   stroke: #ffffff;
 }
