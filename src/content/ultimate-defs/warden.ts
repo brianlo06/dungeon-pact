@@ -53,7 +53,13 @@ export const ultimate: UltimateDef = {
   cost: 100,
   speed: 12,
   presentation: {
+    cinematic: "green-reckoning",
     theme: "growth",
     accent: "#9be38a",
+    voice: {
+      activation: "Hush. Let me hear your hearts.",
+      impact: "Up, all of you. — Not you.",
+      after: "It keeps growing. On all of you.",
+    },
   },
 };

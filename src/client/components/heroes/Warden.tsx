@@ -310,7 +310,30 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
               strokeWidth={1.5}
               fill="none"
               strokeLinecap="round"
+              style={closeUp ? { opacity: "calc(1 - var(--wdn-eyes, 0))" } : undefined}
             />
+            {/*
+             * Open. Drawn only in an Ultimate's close-up, and even there
+             * invisible unless the film sets `--wdn-eyes` (Green Reckoning
+             * opens them once), so the Warden a round draws is unchanged.
+             */}
+            {closeUp && (
+              <g style={{ opacity: "var(--wdn-eyes, 0)" }}>
+                <circle cx={53} cy={31.5} r={4.2} fill={g.url("mote")} opacity={0.75} />
+                <circle cx={60.2} cy={31.2} r={3.6} fill={g.url("mote")} opacity={0.65} />
+                <path
+                  d="M50.1 31.6 Q53 28.7 56 31.4 Q53 34 50.1 31.6 Z M58 31.2 Q60.1 28.9 62.2 31.1 Q60.1 33.3 58 31.2 Z"
+                  fill="#effbe0"
+                  stroke={INK}
+                  strokeWidth={1}
+                  strokeLinejoin="round"
+                />
+                <circle cx={53.3} cy={31.45} r={1.35} fill="#6fcf5a" />
+                <circle cx={60.45} cy={31.15} r={1.15} fill="#6fcf5a" />
+                <circle cx={53.4} cy={31.45} r={0.55} fill={INK} />
+                <circle cx={60.55} cy={31.15} r={0.48} fill={INK} />
+              </g>
+            )}
           </g>
           {/* a leaf marked on the cheek */}
           <path
