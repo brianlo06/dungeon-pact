@@ -1,0 +1,350 @@
+/* ----------------------------------------------------- Warpath (wp-) -- */
+/*
+ * Everything here moves on the variables the cinematic stage writes on an
+ * effect (--p, --pe, --pi, --pb, --f) or in a frame function. No keyframes,
+ * no filters, nothing blurred: soft edges are gradients on small elements.
+ *
+ * Palette: snow #e9eef2, drift shadow #8ea2b6, slate #1c2430, ink #0b0e13,
+ * and the Warlord's rust #e0664a, used only where the Warlord is.
+ */
+
+/* ---- the snowfield (background) ---- */
+.wp-bg-drift {
+  fill: #edf1f4;
+}
+.wp-bg-lee {
+  fill: #bccad6;
+}
+.wp-bg-lip {
+  fill: none;
+  stroke: #ffffff;
+  stroke-opacity: 0.8;
+  stroke-linecap: round;
+}
+.wp-bg-stone {
+  fill: #4a5664;
+}
+.wp-bg-cap {
+  fill: #e3e9ee;
+}
+
+/* ---- snow on the wind ---- */
+.wp-snow {
+  overflow: hidden;
+  --unit: 1;
+}
+.wp-snow i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--size) * var(--unit) * 1px);
+  height: calc(var(--size) * var(--unit) * 1px);
+  margin: calc(var(--size) * var(--unit) * -0.5px);
+  border-radius: 50%;
+  background: #f3f6f8;
+  opacity: calc(
+    var(--o) * min(1, var(--p) / max(0.001, var(--fin))) *
+      (1 - max(0, var(--p) - var(--fout)) / max(0.001, 1 - var(--fout)))
+  );
+  will-change: transform;
+}
+.wp-snow i[data-big] {
+  background: radial-gradient(closest-side, #f6f9fb 45%, rgba(246, 249, 251, 0) 100%);
+}
+
+/* ---- breath ---- */
+.wp-breath {
+  width: 0;
+  height: 0;
+  overflow: visible;
+}
+.wp-puff,
+.wp-streamer {
+  --k: clamp(0, (var(--p) - var(--d)) / var(--len), 1);
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: calc(min(1, var(--k) * 10) * (1 - var(--k) * var(--k) * var(--k)) * var(--o));
+  transform: translate(
+      calc((var(--vx) * var(--k) - var(--back) * var(--k) * var(--k)) * 1px),
+      calc((var(--y0) + var(--vy) * var(--k) - 40 * var(--k) * var(--k)) * 1px)
+    )
+    scale(calc(var(--s0) + (var(--s1) - var(--s0)) * var(--k)));
+}
+.wp-puff {
+  width: 110px;
+  height: 80px;
+  margin: -40px -55px;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(248, 251, 253, 0.95) 0%,
+    rgba(236, 242, 247, 0.75) 45%,
+    rgba(210, 222, 232, 0.28) 72%,
+    rgba(210, 222, 232, 0) 100%
+  );
+}
+.wp-streamer {
+  width: 320px;
+  height: 160px;
+  margin: -80px -300px;
+  overflow: visible;
+  transform-origin: 300px 80px;
+}
+.wp-streamer path {
+  fill: #eef3f7;
+  fill-opacity: 0.8;
+}
+
+/* ---- snow round the legs ---- */
+/*
+ * Snow drawn on the effect layers is not under the stage's exposure, so it is
+ * darkened with it here: `--lit` follows the shot's exposure (inherited from
+ * the film), and every snow colour is mixed towards the dusk by it.
+ */
+.cine-vfx:has(> .wp-drift),
+.cine-vfx:has(> .wp-trail),
+.cine-vfx:has(> .wp-throw),
+.cine-vfx:has(> .wp-breath) {
+  --lit: clamp(0.25, calc(var(--exposure, 1) * 0.9 + 0.12), 1);
+}
+.cine-vfx > .wp-drift,
+.cine-vfx > .wp-trail {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  transform: none !important;
+  overflow: visible;
+}
+.wp-snowbody {
+  fill: color-mix(in srgb, #e9eef2 calc(var(--lit) * 100%), #1c2430);
+}
+.wp-snowshade {
+  fill: color-mix(in srgb, #a3b4c4 calc(var(--lit) * 100%), #151b24);
+}
+.wp-crust {
+  fill: none;
+  stroke: #0b0e13;
+  stroke-width: 3.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.wp-clod {
+  fill: color-mix(in srgb, #f2f5f8 calc(var(--lit) * 100%), #1c2430);
+  stroke: #0b0e13;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+/* ---- the trail from above ---- */
+.wp-trail path {
+  stroke-linejoin: round;
+}
+.wp-trail-lip {
+  fill: color-mix(in srgb, #f7f9fb calc(var(--lit) * 100%), #1c2430);
+}
+.wp-trail-floor {
+  fill: color-mix(in srgb, #55687c calc(var(--lit) * 100%), #0f141b);
+  stroke: #0b0e13;
+  stroke-width: 2.4;
+}
+.wp-trail-wall {
+  fill: color-mix(in srgb, #2a3644 calc(var(--lit) * 100%), #0b0e13);
+}
+.wp-trail-prints {
+  fill: color-mix(in srgb, #2b3746 calc(var(--lit) * 100%), #07090c);
+}
+
+/* ---- the gust across the lens ---- */
+.wp-gust {
+  overflow: hidden;
+  --t: calc(1 - var(--pi));
+}
+.wp-gust[data-phase="out"] {
+  --t: calc(-1 * var(--pe));
+}
+.wp-gust-sheet {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  left: -40%;
+  width: 180%;
+  background: linear-gradient(
+    90deg,
+    rgba(220, 229, 236, 0) 0%,
+    rgba(220, 229, 236, 0.85) 18%,
+    #dde5eb 30%,
+    #dde5eb 70%,
+    rgba(220, 229, 236, 0.85) 82%,
+    rgba(220, 229, 236, 0) 100%
+  );
+  transform: translateX(calc(var(--t) * 78%));
+  will-change: transform;
+}
+.wp-gust-core {
+  background: linear-gradient(
+    90deg,
+    rgba(245, 248, 250, 0) 20%,
+    rgba(245, 248, 250, 0.9) 38%,
+    rgba(245, 248, 250, 0.9) 62%,
+    rgba(245, 248, 250, 0) 80%
+  );
+  transform: translateX(calc(var(--t) * 92%));
+}
+.wp-gust i {
+  position: absolute;
+  top: var(--y);
+  left: calc(var(--x) * 100%);
+  width: var(--l);
+  height: var(--h);
+  border-radius: 99px;
+  background: #f8fafc;
+  opacity: calc(var(--o) * (1 - max(var(--t), -1 * var(--t)) * 0.6));
+  transform: translateX(calc(var(--t) * var(--sp) * var(--gw, 1280px)));
+}
+
+/* ---- the blow ---- */
+.wp-cleave {
+  width: 640px;
+  height: 640px;
+  overflow: visible;
+  opacity: calc(1 - max(0, var(--p) - 0.55) * 2.2);
+}
+.wp-cleave g {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  transform: scale(calc(0.55 + var(--pe) * 0.7));
+}
+.wp-cleave-frame {
+  display: none;
+}
+.cine-vfx[data-k="0"] .wp-cleave-frame[data-k="0"],
+.cine-vfx[data-k="1"] .wp-cleave-frame[data-k="1"],
+.cine-vfx[data-k="2"] .wp-cleave-frame[data-k="2"],
+.cine-vfx:not([data-k]) .wp-cleave-frame[data-k="0"] {
+  display: inline;
+}
+.wp-cleave-ink {
+  fill: #0b0e13;
+}
+.wp-cleave-white {
+  fill: #f4f7f9;
+}
+.wp-cleave-core {
+  fill: #ffffff;
+  stroke: var(--c);
+  stroke-width: 5;
+}
+.wp-cleave-shards {
+  fill: #f4f7f9;
+  stroke: #0b0e13;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+
+/* ---- snow thrown ---- */
+.wp-throw {
+  width: 0;
+  height: 0;
+  overflow: visible;
+}
+.wp-throw-clod {
+  --k: clamp(0, (var(--p) - var(--d)) / (1 - var(--d)), 1);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--size) * 1px);
+  height: calc(var(--size) * 1px);
+  margin: calc(var(--size) * -0.5px);
+  overflow: visible;
+  transform: translate(
+      calc(var(--vx) * var(--k) * 1px),
+      calc((var(--vy) * var(--k) + var(--g) * var(--k) * var(--k)) * 1px)
+    )
+    rotate(calc(var(--r) * var(--k)));
+  opacity: calc(min(1, var(--k) * 30) * (1 - max(0, var(--k) - 0.7) * 3.3));
+}
+.wp-clod-body {
+  fill: color-mix(in srgb, #f2f5f8 calc(var(--lit) * 100%), #1c2430);
+  stroke: #0b0e13;
+  stroke-width: 6;
+  stroke-linejoin: round;
+}
+.wp-clod-shade {
+  fill: color-mix(in srgb, #9fb2c4 calc(var(--lit) * 100%), #151b24);
+}
+.wp-powder {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--pr) * 2px);
+  height: calc(var(--pr) * 1.4px);
+  margin: calc(var(--pr) * -0.7px) calc(var(--pr) * -1px);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(244, 247, 250, 0.9) 0%,
+    rgba(232, 238, 243, 0.55) 55%,
+    rgba(232, 238, 243, 0) 100%
+  );
+  transform: translate(calc(var(--px) * var(--pe) * 1px), calc(var(--py) * var(--pe) * 1px))
+    scale(calc(0.3 + var(--pe) * 1.2));
+  opacity: calc(var(--po) * min(1, var(--p) * 8) * (1 - var(--p)));
+}
+
+/* ---- on the real board ---- */
+.wp-board {
+  width: 0;
+  height: 0;
+  overflow: visible;
+  --u: calc(var(--unit-h, 150px) * 0.5);
+}
+.wp-print {
+  --in: clamp(0, (var(--p) * 2.2 - var(--i)) * 5, 1);
+  position: absolute;
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  width: calc(var(--u) * 0.36);
+  height: calc(var(--u) * 0.24);
+  margin: calc(var(--u) * -0.12) calc(var(--u) * -0.18);
+  overflow: visible;
+  transform: rotate(var(--r)) scale(calc(0.5 + 0.5 * var(--in)));
+  opacity: calc(var(--in) * (1 - max(0, var(--p) - 0.88) * 6));
+}
+.wp-print-rim {
+  fill: #eef3f7;
+  stroke: #0b0e13;
+  stroke-width: 2.5;
+  stroke-opacity: 0.7;
+}
+.wp-print-sole,
+.wp-print-heel {
+  fill: #6f8499;
+}
+.wp-board-trample {
+  position: absolute;
+  left: calc(var(--u) * -1.3);
+  top: calc(var(--u) * -0.5);
+  width: calc(var(--u) * 2.6);
+  height: calc(var(--u) * 1);
+  overflow: visible;
+  transform: scale(calc(0.55 + var(--pe) * 0.45));
+  opacity: calc(min(1, var(--p) * 4) * (1 - max(0, var(--p) - 0.88) * 6));
+}
+.wp-trample-rim {
+  fill: #e6edf2;
+  stroke: #0b0e13;
+  stroke-width: 3;
+  stroke-opacity: 0.65;
+}
+.wp-trample-pit {
+  fill: #dfe7ee;
+  fill-opacity: 0.55;
+}
+.wp-trample-lump {
+  fill: #f1f5f8;
+  stroke: #0b0e13;
+  stroke-width: 2;
+  stroke-opacity: 0.6;
+}

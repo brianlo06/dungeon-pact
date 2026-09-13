@@ -76,7 +76,7 @@ export const ultimate: UltimateDef = {
   presentation: {
     cinematic: "warpath",
     theme: "guard",
-    accent: "#e0664a",
+    accent: "#c6d9e8",
     voice: {
       activation: "In my tracks. All of you.",
       impact: "HERE!",
