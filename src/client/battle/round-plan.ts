@@ -13,6 +13,7 @@ import {
 import { moveMeta, unitChoreography } from "./choreo-meta";
 import { hitStop, REPLAY_CAP } from "./pacing";
 import type { StageGeom } from "./stage-geometry";
+import { ARROW } from "../../content/choreography/kit";
 
 /**
  * A round's replay, planned: the one place the content's annotations, the
@@ -76,7 +77,14 @@ export function planRound(
     choreograph: (move, pace, alive) => {
       const meta = moveMeta(s, move.cast);
       const forced = opts.archetype?.(move.cast);
-      if (forced) meta.archetype = forced;
+      if (forced && forced !== meta.archetype) {
+        // A forced archetype brings its own way of landing, not the move's:
+        // an AoE forced on a bolt runs a shockwave along the ground.
+        meta.archetype = forced;
+        meta.delivery =
+          forced === "area" ? "shockwave" : forced === "beam" ? "beam" : undefined;
+        if (forced === "bow") meta.projectile = { ...ARROW };
+      }
       const blows = opts.strikes?.(move.cast);
       if (blows) meta.strikes = blows;
       // Who is standing now, for paths that must not walk through bodies.

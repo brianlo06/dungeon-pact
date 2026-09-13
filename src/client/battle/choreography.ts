@@ -116,7 +116,8 @@ export type MarkStyle =
   | "line";
 
 export type Cue =
-  | { t: number; kind: "beat"; beat: Beat }
+  /** `by`: the actor whose move shows it, once laid into a round. */
+  | { t: number; kind: "beat"; beat: Beat; by?: string }
   | {
       t: number;
       kind: "clip";
@@ -128,6 +129,13 @@ export type Cue =
     }
   /** Back to rest: its rest loop, whatever was playing. */
   | { t: number; kind: "settle"; unit: string }
+  /**
+   * The move is being delivered: whatever pose the actor was holding — a
+   * boss's announced wind-up — is spent, and its rest loop is idle from now.
+   * Placed on the strike itself, never earlier, so a held wind-up carries
+   * through the anticipation and the approach instead of dropping to idle.
+   */
+  | { t: number; kind: "spend"; unit: string }
   | { t: number; kind: "sound"; name: SfxName }
   | { t: number; kind: "phase"; unit: string; phase: PhaseName }
   | {
@@ -362,8 +370,13 @@ export function travelTime(
   pace: number,
   scale = 1,
 ) {
+  // The floor is a gait's, not a distance's: across a short gap a sprinter
+  // is still over in a blink and a heavy charge still takes its steps, so
+  // two creatures that close the same small distance do not arrive in the
+  // same 170ms. Relative to a run (1.35 stage widths a second).
+  const floor = TIMING.travel.min * Math.max(0.6, Math.min(1.8, 1.35 / Math.max(0.1, speed)));
   const natural = Math.max(
-    TIMING.travel.min,
+    floor,
     Math.min(TIMING.travel.max, (distance / Math.max(0.1, speed)) * 1000 * scale),
   );
   // Squeezed, a run is quicker, never a teleport.
@@ -473,9 +486,13 @@ function strikeSchedule(clip: Clip, facing: 1 | -1, hits: number, start: number)
     if (k < marks.length) at.push(start + marks[k] * dur);
     else {
       // Out of authored blows: strike again from the top, no retreat, the
-      // next contact a readable beat after the last.
+      // next contact a readable beat after the last. The clip is never
+      // restarted before the blow it is replaying has landed on screen: a
+      // restart at or before the previous contact would cut that blow off
+      // before it was ever drawn, and its hit would show over a coil.
       const prev = at[at.length - 1];
-      const again = prev + Math.max(200, dur * 0.42) - marks[0] * dur;
+      const lead = marks[0] * dur;
+      const again = prev + Math.max(200, lead + 80) - lead;
       starts.push(again);
       at.push(again + marks[0] * dur);
     }
@@ -526,6 +543,7 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
     const f = followCues(at, cons, pace, t);
     cues.push(...f.cues);
     const end = Math.max(t, f.last) + pick(TIMING.settle, pace);
+    cues.push({ t: 0, kind: "spend", unit: actorId });
     return {
       actor: actorId,
       archetype: meta.archetype,
@@ -571,7 +589,11 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
 
   let archetype = meta.archetype;
   const travels = archetype === "melee" || archetype === "lunge";
-  if (travels && (!target || target.id === actorId)) archetype = "self";
+  // Nobody standing to run at — the only unit it names has already fallen
+  // this round — and it strikes where it stands rather than crossing the
+  // floor to a body.
+  if (travels && (!target || target.id === actorId || !input.alive(target.id)))
+    archetype = "self";
 
   let contactsAt: number[] = [];
   let duration = 0;
@@ -610,7 +632,9 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
 
     // Anticipation: plant, raise, set the jaw.
     phase("anticipation", 0, ant);
-    cues.push({ t: 0, kind: "clip", unit: actorId, clip: "anticipate" });
+    // Held at its last pose: an anticipation longer than the clip stays
+    // coiled rather than dropping to the rest loop before it sets off.
+    cues.push({ t: 0, kind: "clip", unit: actorId, clip: "anticipate", then: "anticipate" });
     cues.push({ t: 0, kind: "camera", mode: "focus", units: [actorId], zoom: 1.05 });
     if (face !== neutral || travel > 0)
       turn(0, ant, face);
@@ -679,8 +703,10 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
       const off = lastHit + 90;
       const lastStart = plan.starts[plan.starts.length - 1];
       const bodyW = (actor.body.right - actor.body.left) * point.scale;
+      // A rig's x is already in screen space for the way it is drawn facing
+      // (an enemy's bite is negative x); turned round, the mirror flips it.
       const carried = sample(strike, Math.min(1, (off - lastStart) / strike.duration)).x;
-      const at = { x: dest.x + carried * neutral * bodyW * (face === neutral ? 1 : -1), y: dest.y };
+      const at = { x: dest.x + carried * bodyW * (face === neutral ? 1 : -1), y: dest.y };
       const s = scaleAt(actor, dest.y, stage.height);
       const past = {
         x: at.x + face * overshoot * s * ((actor.body.right - actor.body.left) / actor.view.width),
@@ -785,7 +811,9 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
     const bowed = archetype === "bow";
     const hitTargets = cons.contacts.length
       ? cons.contacts.map((c) => (c.targets.length ? c.targets : tgt ? [tgt.id] : []))
-      : [tgt ? [tgt.id] : []];
+      : // Nothing resolved: a shot at someone standing still flies, one at
+        // the fallen does not.
+        [tgt && input.alive(tgt.id) ? [tgt.id] : []];
     if (face !== neutral) turn(0, 1, face);
     cues.push({ t: 0, kind: "camera", mode: "focus", units: [actorId], zoom: 1.03 });
     // The build-up, and the moment the shot leaves.
@@ -862,6 +890,7 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
     hitTargets.forEach((ids, k) => {
       const r = releases[Math.min(k, releases.length - 1)];
       let arrive = r;
+      const flying: ProjectilePlan[] = [];
       for (const [j, id] of ids.entries()) {
         const u = stage.units.get(id);
         if (!u) continue;
@@ -896,6 +925,12 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
               : delivery === "shockwave"
                 ? "ground"
                 : (look.trajectory ?? "linear");
+        if (trajectory === "ground") {
+          // A shockwave runs out along the floor from the actor's feet: a
+          // flat ring, not a bolt from its hand, never turned.
+          plan.start = frac(stage, home);
+          plan.startAnchor = undefined;
+        }
         const flight = {
           trajectory,
           start: plan.start,
@@ -905,15 +940,23 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
         const time =
           look.duration ??
           flightTime(flight, look.speed ?? 1.6) * (0.8 + 0.2 * pace);
-        plan.look = { ...look, trajectory };
+        plan.look =
+          trajectory === "ground"
+            ? { ...look, trajectory, visual: "wave", rotate: "none", trail: false, onArrival: "burst" }
+            : { ...look, trajectory };
         plan.end = flight.end;
         plan.arrive = r + time;
         arrive = Math.max(arrive, plan.arrive);
+        flying.push(plan);
         projectiles.push(plan);
         cues.push({ t: r, kind: "projectile", plan });
         if (!bowed) cues.push({ t: r, kind: "sound", name: "projectile-release" });
         else cues.push({ t: r + 40, kind: "sound", name: "arrow-whoosh" });
       }
+      // One contact is one impact: everything this release sends lands
+      // together, so a row struck by a volley or a shockwave reacts as one,
+      // and nothing arrives early and vanishes before its target reacts.
+      for (const plan of flying) plan.arrive = arrive;
       contactsAt.push(arrive);
       cues.push(...beatCues(arrive, cons.contacts[k]?.beats ?? []));
     });
@@ -981,6 +1024,16 @@ export function choreograph(input: ChoreoInput): MoveTimeline {
     duration = Math.max(t + (away ? 440 : 0) + 900, ...cues.map((c) => c.t)) ;
     release = Math.max(release > t ? t + pick(TIMING.banner, pace) : release, t);
   }
+
+  // The held pose, if any, is spent on the first clip that delivers the move.
+  const delivers = cues.find(
+    (c) =>
+      c.kind === "clip" &&
+      c.unit === actorId &&
+      c.clip !== "anticipate" &&
+      c.clip !== "approach",
+  );
+  cues.push({ t: delivers?.t ?? 0, kind: "spend", unit: actorId });
 
   cues.sort((a, b) => a.t - b.t);
   return {
@@ -1142,11 +1195,27 @@ export function layRound(input: RoundInput, pace: number): RoundTimeline {
       // since it aims at where the target stands.
       if (tl.segments.length && at < free) at = free;
     }
-    for (const c of tl.cues) cues.push({ ...c, t: c.t + at } as Cue);
+    // Every time in a move is relative to the move; laid into the round, all
+    // of them move by its start — a projectile's spawn and arrival included,
+    // which the stage reads straight off the plan its cue carries. (Shifting
+    // the cue and not the plan in it once made every shot after the round's
+    // first arrive the instant it left.)
+    const shifted = new Map<ProjectilePlan, ProjectilePlan>();
+    for (const p of tl.projectiles) {
+      const moved = { ...p, spawn: p.spawn + at, arrive: p.arrive + at };
+      shifted.set(p, moved);
+      projectiles.push(moved);
+    }
+    for (const c of tl.cues)
+      cues.push(
+        c.kind === "projectile"
+          ? { ...c, t: c.t + at, plan: shifted.get(c.plan) ?? { ...c.plan, spawn: c.plan.spawn + at, arrive: c.plan.arrive + at } }
+          : c.kind === "beat"
+            ? { ...c, t: c.t + at, by: actor }
+            : ({ ...c, t: c.t + at } as Cue),
+      );
     for (const s of tl.segments)
       segments.push({ ...s, start: s.start + at, end: s.end + at });
-    for (const p of tl.projectiles)
-      projectiles.push({ ...p, spawn: p.spawn + at, arrive: p.arrive + at });
     moves.push({ start: at, timeline: tl });
     if (tl.segments.length) busy.set(actor, at + tl.duration);
     for (const c of tl.cues)

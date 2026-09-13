@@ -100,6 +100,19 @@ export function attackPoint(
       ? target.gx + target.figure.left + inset
       : target.gx + target.figure.right - inset;
   let x = surface - face * reachPx;
+  // Its own body never ends up inside what it hits. A heavy figure whose
+  // outline reaches further than its authored reach — a ram out in front of
+  // a shield wall — would otherwise stop with its weapon on the surface and
+  // its front half through the target. At contact its painted front (the
+  // outline, carried forward by the strike's lunge) may touch the target's
+  // near edge and bite into it as far as a blow does, and no further.
+  const bodyReach = front * k + Math.max(0, strike.lunge) * bodyWidth;
+  const edge =
+    face > 0
+      ? target.gx + target.figure.left + BITE * width(target.figure)
+      : target.gx + target.figure.right - BITE * width(target.figure);
+  const clear = edge - face * bodyReach;
+  if (face * (x - clear) > 0) x = clear;
   // Never inside the thing it is hitting: its centre stays short of the
   // target's near half, however short its reach.
   const limit = target.gx - face * width(target.figure) * 0.35;
