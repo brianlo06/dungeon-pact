@@ -458,7 +458,9 @@ export function Combat({
           ),
         }}
       >
-        {me.hp > 0 && !locked && places.get(me.id) && (
+        {/* Hidden while a round plays back: attackers now cross the stage,
+            and the move being performed names itself in the callout. */}
+        {me.hp > 0 && !locked && !replay.playing && places.get(me.id) && (
           <ActionFan
             me={me}
             place={places.get(me.id)!}
@@ -468,7 +470,7 @@ export function Combat({
             onCancel={cancel}
             occupied={[...places.values()].filter((pl) => pl.id !== me.id)}
             mode={mode}
-            disabled={disabled || replay.playing}
+            disabled={disabled}
           />
         )}
       </BattleStage>

@@ -875,3 +875,32 @@ test.describe("the reference fighters follow their phases", () => {
     expect(await leftovers(page)).toEqual(CLEAN);
   });
 });
+
+test("the action menu stands down while a round plays, and the move names itself", async ({
+  page,
+}, info) => {
+  test.skip(
+    at1440(info.project.name),
+    "a whole real round; the same at every size",
+  );
+  await open(page, { ...SMOKE, motion: 1 });
+  // Choosing: the fan is up.
+  await expect(page.locator(".action-fan")).toHaveCount(1);
+  await page.evaluate(() =>
+    (window as never as Lab).__lab.round([
+      { actor: "Ada", ability: "Shieldbreaker", target: "Iron Bulwark" },
+    ]),
+  );
+  await page.locator(".stage.is-replaying").waitFor();
+  // Attackers cross the stage during a replay, so nothing of the menu may sit
+  // over them — and the move being performed is announced instead.
+  await expect(page.locator(".action-fan")).toHaveCount(0);
+  // The callout, not the commit bar, which also shows the chosen ability.
+  await page
+    .locator(".ability-title strong", { hasText: "Shieldbreaker" })
+    .waitFor({ state: "attached", timeout: 30_000 });
+  await expect(page.locator(".action-fan")).toHaveCount(0);
+  await waitEnd(page);
+  // The round is over and the next decision is open: the fan is back.
+  await expect(page.locator(".action-fan")).toHaveCount(1);
+});
