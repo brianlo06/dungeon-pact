@@ -1,0 +1,304 @@
+/*
+ * Command Performance: the strings, the splinters, the rail, the lamp and the
+ * curtain. Everything is driven by the combat clock through custom properties
+ * written by the effects' frame functions (`--q`, `--drop`, …) or the stage
+ * (`--p`, `--pe`); no keyframes, no filters.
+ */
+
+/* ---- world-sized drawing ---- */
+.cine-vfx > .perf-sky {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none !important;
+}
+
+/* ---- the strings ---- */
+.perf-strings path {
+  fill: none;
+  stroke-linecap: round;
+}
+.perf-string-glow {
+  stroke: #ff5aa5;
+  stroke-width: calc(var(--sw) * 4.5px);
+  opacity: 0.16;
+}
+.perf-string-edge {
+  stroke: #1a0f0a;
+  stroke-width: calc(var(--sw) * 1.9px);
+  opacity: 0.55;
+}
+.perf-string-core {
+  stroke: #fff0d4;
+  stroke-width: calc(var(--sw) * 0.8px);
+}
+.perf-hook {
+  fill: #d9a54a;
+  stroke: #1a0f0a;
+  stroke-width: 1.5px;
+}
+.perf-sheaf-line {
+  stroke: #2a170c;
+  stroke-width: calc(var(--sw) * 1.1px);
+}
+/* The sheaf is ink, so it reads on the lamp's hot field; on the drawn frame the strings' cores stay white. */
+.ult-cinematic[data-two-tone] .perf-string-core {
+  stroke: #ffffff;
+}
+
+/* ---- splinters and chips ---- */
+.cine-vfx > .perf-splinters {
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: none !important;
+}
+.perf-burst {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  --q: 0;
+}
+.perf-burst-flash {
+  position: absolute;
+  left: calc(var(--u) * -0.22);
+  top: calc(var(--u) * -0.22);
+  width: calc(var(--u) * 0.44);
+  height: calc(var(--u) * 0.44);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff4dc 0%, #ff8cc2 45%, rgba(255, 90, 165, 0) 100%);
+  opacity: calc(clamp(0, 1 - var(--q) * 6, 1));
+  transform: scale(calc(0.6 + var(--q) * 5));
+}
+.perf-burst i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--u) * var(--l));
+  height: calc(var(--u) * var(--w));
+  margin-left: calc(var(--u) * var(--l) * -0.5);
+  margin-top: calc(var(--u) * var(--w) * -0.5);
+  background: var(--c);
+  border: 1.5px solid #120a06;
+  border-radius: 1px 40% 1px 40%;
+  opacity: calc(clamp(0, (1 - var(--q)) * 3, 1) * clamp(0, var(--q) * 40, 1));
+  transform: translate(
+      calc(var(--u) * var(--dx) * (1 - (1 - var(--q)) * (1 - var(--q)))),
+      calc(var(--u) * (var(--dy) * (1 - (1 - var(--q)) * (1 - var(--q))) + var(--q) * var(--q) * 0.5))
+    )
+    rotate(calc(var(--r0) + var(--spin) * var(--q)));
+}
+.perf-burst i[data-chip] {
+  border-radius: 30% 10% 45% 20%;
+}
+.cine-anchored > .perf-splinters {
+  transform: none !important;
+  --u: calc(var(--unit-h, 120px) * 1.3);
+}
+
+/* ---- strings onto the board ---- */
+.cine-anchored > .perf-drop {
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: none !important;
+}
+.perf-drop-string {
+  position: absolute;
+  bottom: calc(var(--unit-h, 100px) * 0.9);
+  left: 0;
+  width: 2px;
+  height: calc(var(--top) - var(--unit-h, 100px) * 0.9);
+  margin-left: -1px;
+  background: linear-gradient(#fff0d4, #ffe0ad);
+  box-shadow: 0 0 0 1px rgba(26, 15, 10, 0.45);
+  transform-origin: 50% 0;
+  transform: rotate(var(--sway)) scaleY(var(--q));
+}
+.perf-drop-string[data-k="0"] {
+  left: calc(var(--unit-w, 80px) * -0.3);
+  bottom: calc(var(--unit-h, 100px) * 0.55);
+  height: calc(var(--top) - var(--unit-h, 100px) * 0.55);
+  transform: rotate(calc(var(--sway) * 1.3 + 0.8deg)) scaleY(var(--q));
+}
+.perf-drop-string[data-k="2"] {
+  left: calc(var(--unit-w, 80px) * 0.3);
+  bottom: calc(var(--unit-h, 100px) * 0.55);
+  height: calc(var(--top) - var(--unit-h, 100px) * 0.55);
+  transform: rotate(calc(var(--sway) * 0.8 - 0.8deg)) scaleY(var(--q));
+}
+.perf-drop-string b {
+  position: absolute;
+  left: -4px;
+  bottom: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d9a54a;
+  border: 1.5px solid #1a0f0a;
+  opacity: calc(clamp(0, (var(--q) - 0.9) * 10, 1));
+}
+.perf-drop[data-mode="drop"] .perf-drop-string {
+  box-shadow:
+    0 0 0 1px rgba(26, 15, 10, 0.45),
+    0 0 calc(var(--snap) * 10px) calc(var(--snap) * 3px) rgba(255, 90, 165, 0.8);
+}
+
+/* ---- the snip ---- */
+.perf-snip {
+  width: 120px;
+  height: 120px;
+}
+.perf-snip svg {
+  width: 100%;
+  height: 100%;
+}
+.perf-snip-edge {
+  stroke: #fff6e2;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: calc(100 - 100 * clamp(0, var(--p) * 4, 1));
+  opacity: calc(clamp(0, 1 - (var(--p) - 0.25) * 4, 1));
+}
+.perf-snip-star {
+  fill: #fff8ea;
+  transform: translate(calc(-46px + 86px * clamp(0, var(--p) * 4, 1)), calc(18px - 40px * clamp(0, var(--p) * 4, 1)))
+    scale(calc(clamp(0, 1 - max(var(--p) - 0.14, 0.14 - var(--p)) * 7, 1)));
+}
+.perf-snip-end {
+  opacity: calc(clamp(0, var(--p) * 12 - 1.2, 1) * clamp(0, (1 - var(--p)) * 3, 1));
+}
+.perf-snip-end path {
+  fill: none;
+  stroke-linecap: round;
+  transform-origin: 0 0;
+  transform: translateY(calc(-30px * var(--pe))) rotate(calc((var(--k) - 1) * 26deg * var(--pe)))
+    scaleY(calc(1 - 0.5 * var(--pe)));
+}
+.perf-snip-end-edge {
+  stroke: #1a0f0a;
+  stroke-width: 4px;
+}
+.perf-snip-end-core {
+  stroke: #fff0d4;
+  stroke-width: 1.8px;
+}
+
+/* ---- the rail ---- */
+.cine-vfx > .perf-rail {
+  left: 0;
+  top: 0;
+  width: var(--w);
+  height: 400px;
+  transform: rotate(var(--rot)) scale(var(--s)) !important;
+  transform-origin: 0 0;
+}
+.perf-rail svg {
+  width: 100%;
+  height: 100%;
+}
+.perf-rail-beam {
+  fill: #2e1e14;
+  stroke: #0c0705;
+  stroke-width: 6px;
+}
+.perf-rail-post {
+  fill: #22160f;
+  stroke: #0c0705;
+  stroke-width: 6px;
+}
+.perf-rail-lit {
+  stroke: #ffb45c;
+  stroke-width: 4px;
+  opacity: 0.45;
+}
+.perf-rail-line {
+  stroke: #3a2a1f;
+  stroke-width: 7px;
+}
+.perf-rail-coil {
+  fill: none;
+  stroke: #4d3828;
+  stroke-width: 8px;
+}
+
+/* ---- the lamp's pool ---- */
+.perf-lamp {
+  width: 0;
+  height: 0;
+}
+.perf-lamp i {
+  position: absolute;
+  left: calc(var(--rx) * -1);
+  top: calc(var(--ry) * -1);
+  width: calc(var(--rx) * 2);
+  height: calc(var(--ry) * 2);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 234, 196, 0.95) 0%,
+    rgba(255, 196, 120, 0.75) 32%,
+    rgba(214, 132, 58, 0.32) 66%,
+    rgba(120, 60, 20, 0) 100%
+  );
+}
+
+/* Behind a blow: a field of light hot enough that everything in front of it is ink. */
+.perf-lamp[data-hot] i {
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 244, 222, 1) 0%,
+    rgba(255, 214, 150, 1) 42%,
+    rgba(240, 160, 80, 0.85) 70%,
+    rgba(120, 60, 20, 0) 100%
+  );
+}
+
+/* ---- the curtain ---- */
+.cine-screen > .cine-vfx > .perf-curtain {
+  overflow: hidden;
+}
+.perf-curtain-drop {
+  position: absolute;
+  left: -2%;
+  right: -2%;
+  top: 0;
+  height: 108%;
+  transform: translateY(calc((var(--drop, 0) - 1) * 100%));
+}
+.perf-curtain-cloth {
+  position: absolute;
+  inset: 0 0 7% 0;
+  background:
+    linear-gradient(rgba(10, 2, 4, 0.55), rgba(10, 2, 4, 0) 30%, rgba(10, 2, 4, 0) 80%, rgba(10, 2, 4, 0.4)),
+    repeating-linear-gradient(
+      90deg,
+      #2a070c 0%,
+      #5c1420 3.2%,
+      #7a1d2b 4.6%,
+      #4a0f18 6.4%,
+      #2a070c 8.5%
+    );
+}
+.perf-curtain-fringe {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 8%;
+  background:
+    radial-gradient(ellipse 50% 70% at 50% 0%, #e0b25c 0 55%, #7a5320 62%, transparent 66%) 0 55% / 2.4% 90% repeat-x,
+    linear-gradient(#b8893e, #6d4a1c) 0 0 / 100% 50% no-repeat;
+}
+
+/* The hot field only burns for the blow, then the theatre comes back up behind it. */
+.perf-lamp[data-hot] {
+  opacity: calc(1 - clamp(0, (var(--p) - 0.1) * 1.5, 0.62));
+}
