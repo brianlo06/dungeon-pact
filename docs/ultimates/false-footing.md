@@ -104,7 +104,8 @@ light one after another from where it came from up to where it stands, and
 then — past its feet, in unmarked snow — one more print appears, dashed:
 where its next foot will fall. Under it a loop of cord shows through the snow,
 and the cord runs back across the field to the kid's hand. On the impact the
-cord rips up out of the snow along its whole length and the loop cinches.
+cord rips up out of the snow along its whole length and whips round the
+enemy's legs in three turns.
 
 ## Sound
 
@@ -127,8 +128,8 @@ above: the whole trail read up to the enemy, the next step foreseen, a snare
 under it, the cord back to the kid; title) → anticipation (the face in the
 cold: reading, the breath clouds stop, a small grin) → **quiet** (at the snow,
 the enemy walks towards the dashed print in the dark; nothing else moves, the
-flakes hang) → **impact** (the cord rips out of the snow; the loop bites; the
-enemy's feet go out from under it in a burst of snow) → release (the real
+flakes hang) → **impact** (the cord rips out of the snow and whips round its
+legs; the enemy's feet go out from under it in a burst of snow) → release (the real
 board: a snare cinched at every enemy's feet, the target's knotted and staked).
 
 ## Shots
@@ -140,7 +141,7 @@ board: a snare cinched at every enemy's feet, the target's knotted and staked).
 | 2 | Trail · high wide | 1000 (—) | from above over the field, drifting down the trail | Ranger small, lower left, `ult:ff-watch` — kneeling, head up, cord in hand | snowfield from above | **the real enemy line** standing in the snow; **each enemy's trail lights print by print up to its feet**, then **one dashed print ahead** of it, a **loop** showing under it, and **the cords** running back across the snow to the kid's hand; the target's brightest | **motif** (four footfalls); crunches | **every enemy**, unaware | in-folder: a spray of powder thrown across the lens from the print | stakes and escalation; title |
 | 3 | Know · face close-up | 560 (360) | on the face low behind a drift lip, level, slow drift | `ult:ff-know` (`root: false`) — brow knits reading, eyes narrow and glance, breath clouds; then the breath stops, the brow lifts, a slow grin | snowfield, low exposure, bars deepen | **breath clouds** from the mouth that stop; **the cord** wound in the fist, running out of frame, trembling taut | breath out, breath out, held; cord creak; music 12% | no | cut | anticipation: it knows |
 | 4 | Step · the quiet, low profile | 600 (400) | at snow level, dead still | — | snowfield near black (exposure 0.3 → 0.2) | the target walks towards the **dashed print**; the **loop** under the snow; the cord slack along the snow to the left edge; **the flakes hang still** | music 3%; one slow crunch; a held breath | **yes** — `approach`, walking in | cut | anticipation by subtraction: it steps where it was read |
-| 5 | Spring · impact | 760 (560) | low wide at the snow, Dutch −7° easing out | `ult:ff-haul` — the kid hauls back with the whole body; target `hurt`, feet yanked towards the kid, tilted | exposure blown to 1, then settling; snow glare behind the target | **two-tone frame (40ms)**: the enemy's silhouette in a white burst with the cord a black line; then in colour: **the cord tears out of the snow** along its length, the **loop cinches**, a **snow burst** boils (three drawings) with chunks | cord rip + layered impact; **150ms stop**; heavy shake | **yes** | cut on the two-tone frame | impact: the result on the frame; damage |
+| 5 | Spring · impact | 760 (560) | low wide at the snow, Dutch −7° easing out | `ult:ff-haul` — the kid hauls back with the whole body; target `hurt`, feet yanked towards the kid, tilted | exposure blown to 1, then settling; snow glare behind the target | **two-tone frame (40ms)**: the enemy and the kid as black shapes, the burst and the cord drawn in ink; then, held in colour: **the cord taut out of the snow** with powder torn off it along its length, **three turns of cord round the enemy's legs** (`ff-hobble`), a **snow burst** of uneven clumps boiling in three drawings | cord rip + layered impact; **150ms stop**; heavy shake | **yes** | cut on the two-tone frame | impact: the result on the frame; damage |
 | 6 | Snared · return | 760 (480) | battle camera | real Ranger `ult:ff-coil` — stands, winds the cord in, bow back up | real battlefield; the blue-hour tint lifts; bars open | **a snare cinched at every real enemy's feet**, one after another, each with a puff of snow and a cord staked off along the floor; **the target's knotted twice with an amber tag** (Marked, hobbled) | a creak and cinch for each; tail | on board | flash 80ms | release: every enemy caught, the one that mattered hobbled |
 
 FULL 4740ms, FAST 2440ms (51%). FAST drops the high wide (the title moves to
