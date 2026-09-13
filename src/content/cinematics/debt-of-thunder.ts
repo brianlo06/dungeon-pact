@@ -65,8 +65,8 @@ export const debtOfThunder: Cinematic = {
       fastMs: 400,
       transition: { kind: "black", ms: 60 },
       camera: {
-        from: { x: 690, y: 560, zoom: 2.6, rotate: -6 },
-        to: { x: 700, y: 520, zoom: 2.9, rotate: -4 },
+        from: { x: 690, y: 480, zoom: 2.05, rotate: -6 },
+        to: { x: 700, y: 440, zoom: 2.3, rotate: -4 },
         ease: "out",
       },
       background: "storm-ledger",
@@ -88,8 +88,8 @@ export const debtOfThunder: Cinematic = {
         { role: "caster", at: [800, 880], size: 720, clip: "ult:open", then: "ult:open", look: "rim", rim: STORM },
       ],
       vfx: [
-        { kind: "pages", at: 0.3, until: 1, follow: "caster", x: -120, y: -300, scale: 1, seed: 21, layer: "front" },
-        { kind: "gather", at: 0.1, until: 0.9, follow: "caster", x: -120, y: -300, scale: 0.7, color: STORM, layer: "front" },
+        { kind: "pages", at: 0.3, until: 1, follow: "caster", x: -221, y: -440, scale: 1, seed: 21, layer: "front" },
+        { kind: "glint", at: 0.2, until: 0.5, follow: "caster", x: -221, y: -440, scale: 0.9, layer: "front" },
         { kind: "rain", at: 0, until: 1, layer: "screen", color: STORM, seed: 5 },
       ],
       sound: [
@@ -120,14 +120,14 @@ export const debtOfThunder: Cinematic = {
       actors: [
         {
           role: "targets",
-          at: [960, 740],
-          spread: [190, -18],
-          size: 280,
+          at: [900, 740],
+          spread: [240, -20],
+          size: 270,
           face: -1,
           z: 1,
           react: [{ at: 0.22, clip: "block" }],
         },
-        { role: "caster", at: [250, 960], size: 640, clip: "ult:call", then: "ult:call", look: "silhouette", z: 3 },
+        { role: "caster", at: [230, 980], size: 660, clip: "ult:call", then: "ult:call", look: "rim", rim: STORM, z: 3 },
       ],
       vfx: [
         { kind: "rune-circle", at: 0.2, until: 1, x: 1040, y: 150, scale: 1.4, color: STORM, layer: "back" },
@@ -156,8 +156,8 @@ export const debtOfThunder: Cinematic = {
       fastMs: 360,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 820, y: 560, zoom: 3.4, rotate: 3 },
-        to: { x: 820, y: 548, zoom: 3.8, rotate: 2 },
+        from: { x: 790, y: 430, zoom: 3.1, rotate: 3 },
+        to: { x: 800, y: 422, zoom: 3.45, rotate: 2 },
         ease: "linear",
       },
       background: "storm-ledger",
@@ -165,8 +165,8 @@ export const debtOfThunder: Cinematic = {
       toLighting: { exposure: 0.06, rim: [STORM, 1, 1], vignette: 0.92, letterbox: 0.15 },
       actors: [{ role: "caster", at: [800, 1000], size: 900, clip: "ult:gaze", then: "ult:gaze", look: "rim", rim: STORM }],
       vfx: [
-        { kind: "drops", at: 0, until: 1, follow: "caster", x: 30, y: -560, scale: 1.4, color: STORM, layer: "front", params: { still: true } },
-        { kind: "drops", at: 0.55, until: 1, follow: "caster", x: 90, y: -560, scale: 1.4, color: STORM, seed: 9, layer: "front" },
+        { kind: "drops", at: 0, until: 1, follow: "caster", x: -10, y: -600, scale: 1.8, color: STORM, layer: "front", params: { still: true } },
+        { kind: "drops", at: 0.55, until: 1, follow: "caster", x: 60, y: -600, scale: 1.8, color: STORM, seed: 9, layer: "front" },
       ],
       duck: [{ at: 0, level: 0.06, ms: 560 }],
       sound: [
@@ -225,9 +225,9 @@ export const debtOfThunder: Cinematic = {
         { role: "caster", at: [520, 810], size: 420, clip: "ult:strike", look: "rim", rim: STORM, z: 2 },
         {
           role: "targets",
-          at: [1080, 800],
-          spread: [170, -22],
-          size: 380,
+          at: [1060, 800],
+          spread: [230, -26],
+          size: 360,
           face: -1,
           z: 1,
           react: [
@@ -246,8 +246,9 @@ export const debtOfThunder: Cinematic = {
         { kind: "sparks", at: 0.16, until: 0.7, follow: "target", x: 0, y: -160, scale: 1.2, color: PALE, seed: 4, layer: "front" },
       ],
       screen: [
-        { kind: "invert", at: 0.14, ms: 60, mode: "full" },
-        { kind: "flash", at: 0.14, ms: 110, amount: 0.8, color: PALE },
+        // A black frame, then the sky: the bolt reads against the dark.
+        { kind: "black", at: 0.13, ms: 45, mode: "full" },
+        { kind: "flash", at: 0.2, ms: 70, amount: 0.45, color: PALE },
         { kind: "chromatic", at: 0.16, ms: 160, amount: 1 },
       ],
       stop: [{ at: 0.15, ms: 140 }],

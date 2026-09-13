@@ -985,15 +985,15 @@
   stroke-linejoin: round;
 }
 .fx-bolt-glow {
-  stroke-width: 42;
-  opacity: 0.35;
+  stroke-width: 80;
+  opacity: 0.4;
 }
 .fx-bolt-branch {
-  stroke-width: 7;
-  opacity: 0.7;
+  stroke-width: 10;
+  opacity: 0.75;
 }
 .fx-bolt-core {
-  stroke-width: 11;
+  stroke-width: 20;
 }
 .fx-bolt-foot {
   opacity: calc(0.8 - var(--p) * 0.6);
