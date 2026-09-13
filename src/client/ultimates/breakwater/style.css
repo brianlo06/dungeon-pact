@@ -1,0 +1,393 @@
+/* Breakwater — the Aegis Knight's Ultimate. Everything here reads the
+ * player's per-frame variables (--p, --pe, --pi, --pb, --f); no keyframes,
+ * no filters. Class names are prefixed `bw-`. */
+
+/* ---- the tide: a wave of ink with a crest of blades ---- */
+/* The svg's local origin — where the lip lands — sits 400px in and 1000px
+ * down its box, and is pinned to the cue's point. */
+.cine-vfx > .bw-tide {
+  width: 2100px;
+  height: 1100px;
+  overflow: visible;
+  transform-origin: 400px 1000px;
+  transform: translate(-400px, -1000px) scale(var(--s)) !important;
+  /* Its own layer: the wave moves as a picture, it is not redrawn per frame. */
+  will-change: transform;
+}
+.cine-vfx > .bw-tide[data-mode="rise"] {
+  transform: translate(-400px, -1000px) translateX(calc((1 - var(--pe)) * 420px)) scale(var(--s))
+    scaleY(calc(0.2 + var(--pe) * 0.8)) skewX(calc((1 - var(--pe)) * 18deg)) !important;
+}
+/* Hanging: nothing in it moves at all — that is the shot. */
+.cine-vfx > .bw-tide[data-mode="hang"] {
+  will-change: auto;
+}
+/* Coming down on the shield: the crest drives in and the body slumps. */
+.cine-vfx > .bw-tide[data-mode="fall"] {
+  transform: translate(-400px, -1000px) translate(calc(var(--pe) * -30px), calc(var(--pi) * 120px)) scale(var(--s))
+    scaleY(calc(0.62 - var(--pi) * 0.45)) skewX(calc(var(--pe) * -8deg)) !important;
+  opacity: calc(1 - max(0, var(--p) - 0.55) * 2.2);
+}
+.bw-tide-blades path {
+  fill: #d9e2e5;
+  stroke: #05080a;
+  stroke-width: 6;
+  stroke-linejoin: round;
+}
+.bw-tide-far path {
+  fill: #1c262c;
+  stroke: none;
+}
+.bw-tide-face {
+  opacity: 0.35;
+}
+.bw-tide[data-mode="hang"] .bw-tide-face {
+  opacity: 1;
+}
+.bw-tide-streaks path {
+  fill: none;
+  stroke: #56707a;
+  stroke-width: 7;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.bw-tide-foam,
+.bw-tide-foam-glow {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.bw-tide-foam {
+  stroke: #f2faf7;
+  stroke-width: 14;
+}
+.bw-tide-foam-glow {
+  stroke-width: 44;
+  opacity: 0.35;
+}
+.bw-tide-ground {
+  fill: #05070a;
+}
+.bw-tide-shards path {
+  fill: #eef6f3;
+  stroke: #05080a;
+  stroke-width: 2.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: translate(var(--x), var(--y)) translate(calc(var(--dx) * var(--p)), calc(var(--dy) * var(--p)))
+    rotate(calc(var(--r) + var(--p) * 30deg)) scale(var(--sc));
+  opacity: 0;
+}
+.bw-tide[data-mode="hang"] .bw-tide-shards path {
+  opacity: 1;
+  transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(var(--sc));
+}
+.bw-tide[data-mode="rise"] .bw-tide-shards path {
+  opacity: calc(max(0, var(--p) - 0.6) * 2.5);
+}
+
+/* ---- the tally: dents lighting on the shield ---- */
+.cine-vfx > .bw-tally {
+  /* The shield face at this figure's size: `--ah` is the figure's height. */
+  width: calc(var(--ah, 500px) * 0.42);
+  height: calc(var(--ah, 500px) * 0.52);
+  transform: translate(-50%, -50%) rotate(var(--rot)) scale(var(--s)) !important;
+}
+.bw-dent {
+  position: absolute;
+  width: calc(var(--ah, 500px) * 0.1 * var(--ds));
+  height: calc(var(--ah, 500px) * 0.1 * var(--ds));
+  overflow: visible;
+  translate: -50% -50%;
+  --on: clamp(0, calc((var(--p) - var(--d)) * 16), 1);
+  --pop: clamp(0, calc(1 - max(var(--p) - var(--d) - 0.03, var(--d) + 0.03 - var(--p)) * 18), 1);
+  --all: clamp(0, calc((var(--p) - 0.8) * 9), 1);
+}
+.bw-dent-glow {
+  opacity: calc(var(--on) * 0.22 + var(--pop) * 0.5 + var(--all) * 0.35);
+  transform: scale(calc(0.3 + var(--pop) * 0.9 + var(--all) * 0.5));
+  transform-box: fill-box;
+  transform-origin: center;
+  mix-blend-mode: screen;
+}
+.bw-dent-crack {
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  opacity: calc(var(--on) * 0.85 + var(--all) * 0.15);
+}
+.bw-dent-pit {
+  opacity: calc(0.35 + var(--on) * 0.55);
+}
+.bw-dent-rim {
+  fill: none;
+  stroke-width: 1.6;
+  opacity: calc(var(--on) * 0.9);
+}
+.bw-dent-ring {
+  stroke-width: calc(3 - var(--pop) * 1.5);
+  opacity: var(--pop);
+  transform: scale(calc(0.4 + (1 - var(--pop)) * 1.2));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* ---- heater ripples ---- */
+.bw-rings {
+  width: calc(var(--unit-w, 260px) * 1.6);
+  height: calc(var(--unit-w, 260px) * 1.6);
+  overflow: visible;
+}
+.cine-anchored > .bw-rings {
+  /* Centred on the figure rather than its rig box, which carries its shadow. */
+  transform: translate(calc(-50% + var(--unit-w) * 0.05), calc(-50% - var(--unit-h) * 0.36)) !important;
+}
+.bw-ring {
+  fill: none;
+  stroke-width: 7;
+  transform-box: view-box;
+  transform-origin: 200px 200px;
+  --q: clamp(0, calc((var(--pe) - var(--k)) / (1 - var(--k))), 1);
+  transform: scale(calc(0.35 + var(--q) * 1.35));
+  opacity: calc(min(1, var(--q) * 6) * (1 - var(--q)));
+}
+
+/* ---- the break: the blades shatter on the shield ---- */
+.bw-break {
+  width: 0;
+  height: 0;
+}
+/* The ink of the wave climbing the shield and leaning back over its own side. */
+.bw-splash {
+  position: absolute;
+  left: -300px;
+  top: -760px;
+  width: 600px;
+  height: 780px;
+  overflow: visible;
+  transform-origin: 300px 760px;
+  transform: translateX(60px) skewX(-12deg) scale(calc(0.15 + var(--pe) * 0.95));
+  opacity: calc(1 - clamp(0, (var(--p) - 0.45) * 2.6, 1));
+}
+.bw-splash path,
+.bw-splash ellipse {
+  fill: #0d1418;
+  stroke: #eef8f4;
+  stroke-width: 8;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+.bw-splash-drop {
+  fill: #0d1418;
+  stroke: #eef8f4;
+  stroke-width: 5;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: translate(calc(var(--pe) * 0px), calc(var(--pi) * 90px));
+}
+.bw-flare {
+  position: absolute;
+  left: -40px;
+  top: -150px;
+  width: 360px;
+  height: 22px;
+  margin-top: -11px;
+  border-radius: 11px;
+  background: linear-gradient(90deg, #fff, color-mix(in srgb, var(--c) 60%, #fff) 40%, transparent);
+  box-shadow: 0 0 30px var(--c);
+  transform-origin: 40px 50%;
+  transform: scaleX(calc(0.3 + var(--pe) * 1.4)) scaleY(calc(1.4 - var(--pe)));
+  opacity: calc(1 - clamp(0, (var(--p) - 0.08) * 4, 1));
+}
+.bw-break i {
+  position: absolute;
+  width: var(--w);
+  height: var(--l);
+  margin: calc(var(--l) / -2) calc(var(--w) / -2);
+  background: #f1f7f5;
+  clip-path: polygon(40% 0, 100% 35%, 70% 100%, 0 80%);
+  box-shadow: inset -3px -3px 0 #7f959a;
+  transform: translate(calc(var(--pe) * var(--dx)), calc(var(--pe) * var(--dy) + var(--pi) * 380px))
+    rotate(calc(var(--r) + var(--p) * var(--spin)));
+  opacity: calc(1 - max(0, var(--p) - 0.72) * 3.5);
+}
+.bw-break i.dark {
+  background: #1a2328;
+  box-shadow: inset -3px -3px 0 #dfeee8;
+}
+.bw-seam {
+  position: absolute;
+  left: -11px;
+  top: -300px;
+  width: 22px;
+  height: 330px;
+  border-radius: 11px;
+  background: linear-gradient(180deg, transparent, #fff 20%, #fff 80%, transparent);
+  box-shadow: 0 0 34px var(--c), 0 0 10px #fff;
+  transform: scaleY(calc(0.6 + var(--pe) * 0.5)) scaleX(calc(1.8 - var(--pe) * 1.2));
+  opacity: calc(1 - clamp(0, (var(--p) - 0.14) * 3.5, 1));
+}
+
+/* ---- the return: ripples and blows across the enemy line ---- */
+.bw-return {
+  width: 0;
+  height: 0;
+}
+.bw-return-ring {
+  position: absolute;
+  left: -160px;
+  top: -400px;
+  width: 320px;
+  height: 400px;
+  overflow: visible;
+  --q: clamp(0, calc((var(--pe) - var(--k)) / (1 - var(--k))), 1);
+  transform-origin: 50% 100%;
+  will-change: transform;
+  transform: translateX(calc(var(--q) * 1150px)) scale(calc(0.7 + var(--q) * 1.3), calc(0.8 + var(--q) * 0.9));
+  opacity: calc(min(1, var(--q) * 8) * (1 - var(--q) * 0.9));
+}
+.bw-return-ring path {
+  fill: none;
+  stroke-width: 5;
+}
+.bw-return i {
+  position: absolute;
+  left: 0;
+  top: var(--y);
+  width: var(--l);
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 5px;
+  background: linear-gradient(90deg, transparent, var(--c) 55%, #fff);
+  will-change: transform;
+  --q: clamp(0, calc((var(--p) - var(--d)) / (1 - var(--d))), 1);
+  transform: translateX(calc(var(--q) * 1250px * var(--sp) - var(--l)));
+  opacity: calc(min(1, var(--q) * 10) * (1 - max(0, var(--q) - 0.7) * 3.3));
+}
+
+/* ---- a blow landing on one enemy ---- */
+.cine-vfx > .bw-chip {
+  width: 0;
+  height: 0;
+  transform: translate(0, calc(var(--ah, 300px) * -0.5)) scale(var(--s)) !important;
+}
+.bw-chip-ring {
+  position: absolute;
+  left: -70px;
+  top: -70px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 6px solid #f2fff9;
+  box-shadow: 0 0 22px var(--c), inset 0 0 18px var(--c);
+  transform: scale(calc(0.2 + var(--pe) * 1.5));
+  opacity: calc(1 - var(--p) * 1.6);
+}
+.bw-chip i {
+  position: absolute;
+  width: var(--w);
+  height: var(--l);
+  margin: calc(var(--l) / -2) calc(var(--w) / -2);
+  background: #e7eef0;
+  outline: 2px solid #0b0f12;
+  clip-path: polygon(50% 0, 100% 80%, 40% 100%, 0 60%);
+  transform: translate(calc(var(--pe) * var(--dx)), calc(var(--pe) * var(--dy) + var(--pi) * 160px))
+    rotate(calc(var(--p) * var(--r)));
+  opacity: calc(1 - max(0, var(--p) - 0.6) * 2.5);
+}
+
+/* ---- on the board: the Knight's mark over an ally ---- */
+.bw-link {
+  width: 0;
+  height: 0;
+}
+.bw-link i,
+.bw-link svg {
+  position: absolute;
+}
+.bw-link-mark {
+  left: calc(var(--unit-w) * -0.22);
+  top: calc(var(--unit-h) * -1.28);
+  width: calc(var(--unit-w) * 0.44);
+  height: calc(var(--unit-w) * 0.55);
+  overflow: visible;
+  transform-origin: 50% 100%;
+  transform: translateY(calc((1 - var(--pb)) * 24px)) scale(calc(0.4 + var(--pb) * 0.6));
+  opacity: calc(min(1, var(--p) * 6) * (1 - max(0, var(--p) - 0.82) * 5));
+}
+.bw-link-outer {
+  fill: none;
+  stroke-width: 12;
+}
+.bw-link-inner {
+  opacity: 0.9;
+}
+.bw-link-beam {
+  left: calc(var(--unit-w) * -0.03);
+  bottom: calc(var(--unit-h) * 0.02);
+  width: calc(var(--unit-w) * 0.06);
+  height: calc(var(--unit-h) * 0.95);
+  background: linear-gradient(0deg, transparent, color-mix(in srgb, var(--c) 70%, transparent));
+  transform-origin: bottom;
+  transform: scaleY(var(--pe));
+  opacity: calc(0.8 * (1 - max(0, var(--p) - 0.6) * 2.5));
+  mix-blend-mode: screen;
+}
+.bw-link-floor {
+  left: calc(var(--unit-w) * -0.55);
+  top: calc(var(--unit-w) * -0.12);
+  width: calc(var(--unit-w) * 1.1);
+  height: calc(var(--unit-w) * 0.24);
+  border-radius: 50%;
+  border: 3px solid var(--c);
+  box-shadow: 0 0 14px var(--c);
+  transform: scale(calc(0.4 + var(--pe) * 0.7));
+  opacity: calc(1 - var(--p) * 0.8);
+}
+
+/* ---- on the board: a snapped blade over an enemy ---- */
+.bw-snapped {
+  width: 0;
+  height: 0;
+}
+.bw-snapped svg {
+  position: absolute;
+  --bw: min(calc(var(--unit-w) * 0.62), 64px);
+  left: calc(var(--unit-w) * -0.5 - var(--bw) * 0.9);
+  top: calc(var(--unit-h) * -0.9);
+  width: var(--bw);
+  height: calc(var(--bw) * 1.5);
+  overflow: visible;
+  transform: scale(calc(0.5 + var(--pb) * 0.5));
+  opacity: calc(min(1, var(--p) * 6) * (1 - max(0, var(--p) - 0.82) * 5));
+}
+.bw-snapped-badge {
+  fill: #0b1216;
+  stroke: var(--c);
+  stroke-width: 7;
+  opacity: 0.92;
+}
+.bw-snapped-top {
+  transform: translate(calc(var(--pe) * -5px), calc(var(--pe) * -12px)) rotate(calc(var(--pe) * -14deg));
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.bw-snapped-bottom {
+  transform: translate(calc(var(--pe) * 3px), calc(var(--pe) * 6px)) rotate(calc(var(--pe) * 6deg));
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+}
+.bw-snapped-spark {
+  opacity: calc(1 - var(--p) * 2);
+}
+
+/* ---- the causeway of broken blades ---- */
+.bw-bg-blade {
+  fill: #06080b;
+}
+.bw-bg-edge {
+  fill: none;
+  stroke: #6f8f88;
+  stroke-width: 3;
+  opacity: 0.55;
+}
