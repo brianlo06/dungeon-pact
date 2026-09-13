@@ -236,10 +236,15 @@ function ordering(rec: Rec[]) {
     const since = (e: Rec) =>
       e.unit === b.to && e.t > (prev?.t ?? cast?.t ?? 0);
     const sign = b.name === "heal" ? "+" : "−";
+    // The number on the figure is signed; the one over the stage is not.
+    const number = [
+      `${sign}${b.amount}`,
+      `${b.name === "heal" ? "+" : ""}${b.amount}`,
+    ];
     const shown = [
       b.t,
       rec.find(
-        (e) => e.kind === "pop" && since(e) && e.name === `${sign}${b.amount}`,
+        (e) => e.kind === "pop" && since(e) && number.includes(e.name ?? ""),
       )?.t,
       rec.find(
         (e) => e.kind === "hp" && since(e) && e.name?.startsWith(`${b.hp}/`),
