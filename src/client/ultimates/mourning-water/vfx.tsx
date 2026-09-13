@@ -197,7 +197,7 @@ const PALM_MARKUP = (() => {
     <path class="mourn-palm-lit"/>
     <ellipse class="mourn-palm-ring" cx="${PALM.x}" cy="${PALM.y}"/>
     <g class="mourn-palm-crown" transform="translate(${PALM.x} ${PALM.y})">${crown}</g>
-    <g class="mourn-palm-fall"><path d="${DROP(1.25)}"/><circle class="mourn-tear-lit" cx="-0.42" cy="0.2" r="0.36"/></g>
+    <g class="mourn-palm-fall"><path d="${DROP(1.6)}"/><circle class="mourn-tear-lit" cx="-0.52" cy="0.25" r="0.45"/></g>
   `;
 })();
 
@@ -211,7 +211,7 @@ const palm: Frame = (el, p) => {
   // The tear, falling into the palm from above the frame.
   const fall = g.querySelector<SVGGElement>(".mourn-palm-fall");
   const k = span(p, 0, land);
-  const fy = PALM.y - 44 + 44 * ease("in", k) - 1.2;
+  const fy = PALM.y - 17 + 17 * ease("in", k) - 2;
   const falling = p < land;
   setAttr(fall, "transform", falling ? `translate(${PALM.x} ${f2(fy)}) scale(1 ${f2(1 + 0.4 * k)})` : "scale(0)");
   // The crown it throws up.

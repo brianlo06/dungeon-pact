@@ -64,6 +64,39 @@ const drowned = (at: [number, number], size: number, shove: number, tilt: number
   toTilt: tilt,
 });
 
+/** The wide on the mere: the Warden at the left, the target standing in the water. */
+const mereActors = (target: [number, number], size: number): ActorCue[] => [
+  { role: "caster", at: [350, 770], size: 300, clip: "ult:mourn-pour", then: "ult:mourn-pour", look: "rim", rim: COLD, z: 3 },
+  {
+    role: "target",
+    at: target,
+    size,
+    face: -1,
+    look: "lit",
+    z: 2,
+    react: [{ at: 0.56, clip: "anticipate", then: "idle" }],
+  },
+];
+const mereVfx = (rise: number): VfxCue[] => [
+  { kind: "mourn-lens", at: 0, until: 0.32, layer: "screen", params: { mode: "open", cx: 0.25, cy: 0.79 } },
+  // As the water climbs the target, the lantern gutters and goes out.
+  { kind: "mourn-grasp", at: 0, until: 1, params: { from: 0, to: 0, mote: 0, lampFrom: 1, lampTo: 0, la: 0.7, lb: 0.95 } },
+  shallows({ depth: 0.12, rise, ra: 0.5, rb: 1 }),
+  { kind: "mourn-rings", at: 0.02, until: 1, layer: "front", params: { ox: 0.3, oy: -0.1, flat: 0.1 } },
+  { kind: "mourn-spill", at: 0, until: 1, layer: "front", params: { hx: 0.3, hy: 0.5, wy: 0.1 } },
+];
+
+/** The impact's effects, with the fist sized for the target's framing. */
+const drownVfx = (fist: number): VfxCue[] => [
+  { kind: "mourn-grasp", at: 0, until: 1, params: { from: 1, to: 1, lampFrom: 0, lampTo: 0, mote: 0 } },
+  { kind: "mourn-glare", at: 0, until: 0.4, follow: "target", layer: "back", scale: fist },
+  { kind: "mourn-fist", at: 0, until: 1, follow: "target", layer: "back", scale: fist, params: { part: "back" } },
+  shallows({ who: "targets", depth: 0.2 }),
+  { kind: "mourn-cling", at: 0.36, until: 1, follow: "target", layer: "front", scale: fist * 1.06, seed: 4, params: { grow: 0.4 } },
+  { kind: "mourn-fist", at: 0, until: 1, follow: "target", layer: "front", scale: fist, seed: 9, params: { part: "front" } },
+];
+const FAR_CASTER: ActorCue = { role: "caster", at: [430, 486], size: 120, clip: "ult:mourn-fist", then: "ult:mourn-fist", look: "silhouette", z: 1 };
+
 export const mourningWater: Cinematic = {
   id: "mourning-water",
   heroId: "warden",
@@ -180,26 +213,8 @@ export const mourningWater: Cinematic = {
       background: "mourn-hollow",
       lighting: { exposure: 0.7, back: [COLD, 0.12], rim: [COLD, 0.6, 1], vignette: 0.5, letterbox: BARS },
       toLighting: { exposure: 0.62, back: [COLD, 0.16], rim: [COLD, 0.7, 1], vignette: 0.56, letterbox: BARS },
-      actors: [
-        { role: "caster", at: [350, 770], size: 300, clip: "ult:mourn-pour", then: "ult:mourn-pour", look: "rim", rim: COLD, z: 3 },
-        {
-          role: "target",
-          at: [1170, 730],
-          size: 300,
-          face: -1,
-          look: "lit",
-          z: 2,
-          react: [{ at: 0.56, clip: "anticipate", then: "idle" }],
-        },
-      ],
-      vfx: [
-        { kind: "mourn-lens", at: 0, until: 0.32, layer: "screen", params: { mode: "open", cx: 0.25, cy: 0.79 } },
-        // As the water climbs the target, the lantern gutters and goes out.
-        { kind: "mourn-grasp", at: 0, until: 1, params: { from: 0, to: 0, mote: 0, lampFrom: 1, lampTo: 0, la: 0.7, lb: 0.95 } },
-        shallows({ depth: 0.12, rise: 0.34, ra: 0.5, rb: 1 }),
-        { kind: "mourn-rings", at: 0.02, until: 1, layer: "front", params: { ox: 0.3, oy: -0.1, flat: 0.1 } },
-        { kind: "mourn-spill", at: 0, until: 1, layer: "front", params: { hx: 0.3, hy: 0.5, wy: 0.1 } },
-      ],
+      actors: mereActors([1170, 730], 300),
+      vfx: mereVfx(0.34),
       sound: [
         { at: 0.02, sfx: "mourn-motif" },
         { at: 0.1, sfx: "mourn-rings" },
@@ -212,6 +227,26 @@ export const mourningWater: Cinematic = {
         { at: 0.2, label: "title" },
         { at: 0.52, label: "reaches it" },
       ],
+      framing: {
+        large: {
+          camera: {
+            from: { x: 780, y: 500, zoom: 1.08 },
+            to: { x: 820, y: 505, zoom: 1.12 },
+            ease: "inOut",
+          },
+          actors: mereActors([1180, 740], 250),
+          vfx: mereVfx(0.26),
+        },
+        boss: {
+          camera: {
+            from: { x: 800, y: 440, zoom: 0.94 },
+            to: { x: 830, y: 445, zoom: 0.98 },
+            ease: "inOut",
+          },
+          actors: mereActors([1190, 760], 215),
+          vfx: mereVfx(0.2),
+        },
+      },
     },
 
     /* 4 · HOLD — the quiet: the raised hand, huge, closing on the far-off enemy. */
@@ -262,18 +297,8 @@ export const mourningWater: Cinematic = {
       background: "mourn-hollow",
       lighting: { exposure: 1, tint: [PALE, 0.08], back: [PALE, 0.8], rim: [COLD, 1, 1], vignette: 0.3, letterbox: BARS },
       toLighting: { exposure: 0.55, tint: [PALE, 0], back: [COLD, 0.18], rim: [COLD, 0.7, 1], vignette: 0.5, letterbox: BARS },
-      actors: [
-        { role: "caster", at: [430, 486], size: 120, clip: "ult:mourn-fist", then: "ult:mourn-fist", look: "silhouette", z: 1 },
-        drowned([900, 760], 340, 26, 4),
-      ],
-      vfx: [
-        { kind: "mourn-grasp", at: 0, until: 1, params: { from: 1, to: 1, lampFrom: 0, lampTo: 0, mote: 0 } },
-        { kind: "mourn-glare", at: 0, until: 0.4, follow: "target", layer: "back", scale: 0.85 },
-        { kind: "mourn-fist", at: 0, until: 1, follow: "target", layer: "back", scale: 0.85, params: { part: "back" } },
-        shallows({ who: "targets", depth: 0.2 }),
-        { kind: "mourn-cling", at: 0.36, until: 1, follow: "target", layer: "front", scale: 0.9, seed: 4, params: { grow: 0.4 } },
-        { kind: "mourn-fist", at: 0, until: 1, follow: "target", layer: "front", scale: 0.85, seed: 9, params: { part: "front" } },
-      ],
+      actors: [FAR_CASTER, drowned([900, 760], 340, 26, 4)],
+      vfx: drownVfx(0.85),
       screen: [
         { kind: "two-tone", at: 0.02, ms: 40 },
         { kind: "flash", at: 0.14, ms: 70, amount: 0.3, color: PALE },
@@ -298,6 +323,26 @@ export const mourningWater: Cinematic = {
         { at: 0.075, label: "closed" },
         { at: 0.3, label: "lets go" },
       ],
+      framing: {
+        large: {
+          camera: {
+            from: { x: 880, y: 500, zoom: 1.2, rotate: 5 },
+            to: { x: 870, y: 492, zoom: 1.12, rotate: 2 },
+            ease: "out",
+          },
+          actors: [FAR_CASTER, drowned([900, 780], 290, 18, 3)],
+          vfx: drownVfx(0.78),
+        },
+        boss: {
+          camera: {
+            from: { x: 900, y: 470, zoom: 1.14, rotate: 4 },
+            to: { x: 890, y: 462, zoom: 1.06, rotate: 1.5 },
+            ease: "out",
+          },
+          actors: [{ ...FAR_CASTER, at: [420, 480] }, drowned([920, 810], 250, 12, 1.5)],
+          vfx: drownVfx(0.62),
+        },
+      },
     },
 
     /* 6 · STILL — the real board: the drowned hanging with water, the rest soaked. */
