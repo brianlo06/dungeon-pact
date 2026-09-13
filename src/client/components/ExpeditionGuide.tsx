@@ -32,11 +32,15 @@ export function ExpeditionGuide({
           ? "Invite at least one friend, choose heroes, then ready up. Every hero must be ready before anyone can begin."
           : s.phase === "COMBAT"
             ? "Read enemy intentions before locking. Weak reduces damage; interrupt a WINDUP to cancel it. Front-row heroes draw most attacks; the Rivet Sniper prefers the back. A row attack is aimed at a row when it is announced, so leaving that row before it lands dodges it entirely; row support rewards grouping allies."
-            : s.phase === "SHOP"
-              ? "Choose a recipient at the fixed-price shop. Purchases need a party majority and recipient consent. Preview freely, keep a revival reserve, and ready together to leave."
-              : s.phase === "AUCTION"
-                ? "All purchases use the shared treasury. Interest chooses who wants the item; contested bids raise its price. Large purchases need party approval. A new item surrenders your old equipment in that slot."
-                : "Vote together on the next chamber. Spend gold on equipment, supplies, mentors or recovery. Keeping a reserve funds revivals; hoarding too much strengthens the Miser."}
+            : s.phase === "TOLL"
+              ? "The keepers want paying. One vote for the whole party: pay to pass unharmed with no reward, or fight for the reward and a branch upgrade."
+              : s.phase === "SHRINE"
+                ? "The altar answers one hero. Choose who before anyone offers: blood costs maximum HP, gold costs the treasury, and both give Power for the rest of the run."
+                : s.phase === "SHOP"
+                  ? "Choose a recipient at the fixed-price shop. Purchases need a party majority and recipient consent. Preview freely, keep a revival reserve, and ready together to leave."
+                  : s.phase === "AUCTION"
+                    ? "All purchases use the shared treasury. Interest chooses who wants the item; contested bids raise its price. Large purchases need party approval. A new item surrenders your old equipment in that slot."
+                    : "Vote together on the next chamber. Spend gold on equipment, supplies, mentors or recovery. Keeping a reserve funds revivals; hoarding too much strengthens the Miser."}
       </p>
       <p>
         Downed heroes can grant one spirit ward or resource each round. Standing

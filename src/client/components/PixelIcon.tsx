@@ -15,6 +15,13 @@ const shapes: Record<string, string> = {
   pin: "M5 1h6v2h2v6h-2v2H9v4H7v-4H5V9H3V3h2zM7 4v4h2V4z",
   // A stoppered flask, so a consumable lot never reads as another relic.
   potion: "M6 1h4v2h2v2h1v9H3V5h1V3h2zM6 6v6h4V6z",
+  // A hazard: a warning triangle, so a room that fights back is never read as
+  // an ordinary fight.
+  warn: "M7 1h2v2h2v4h2v4h2v4H1v-4h2V7h2V3h2zM7 6v4h2V6zM7 11v2h2v-2z",
+  // A shrine: an altar with a flame standing on it.
+  altar: "M7 1h2v2h2v4H5V3h2zM3 8h10v2h-2v4h2v2H3v-2h2v-4H3z",
+  // A workbench: an anvil.
+  anvil: "M1 3h12v2h2v2h-4v2H9v3h3v3H4v-3h3V9H5V7H3V5H1z",
 };
 export function PixelIcon({
   name,

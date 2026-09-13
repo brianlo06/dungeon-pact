@@ -316,6 +316,19 @@ export function Combat({
           <b>ROUND {s.round}</b>
           {chamber}
         </span>
+        {/* A hazard is told the way a boss's objective is: on the strip,
+            for the whole fight, because it is a rule of this room and a
+            player deciding a round needs it in front of them. */}
+        {s.hazard && (
+          <span className="strip-objective strip-hazard">
+            <b>HAZARD</b>
+            {s.hazard === "vents"
+              ? `Vents scald the front row for ${VENT_SCALD} as each round begins, from round two.`
+              : s.round < COLLAPSE_ROUND
+                ? `The back catwalk gives way on round ${COLLAPSE_ROUND}: anyone standing there drops to the front.`
+                : "The catwalk is gone. There is only the front now."}
+          </span>
+        )}
         {bossDef?.objective && (
           <span className="strip-objective" title={bossDef.objective}>
             <b>OBJECTIVE</b>
@@ -541,3 +554,4 @@ export function Combat({
   );
 }
 import { reachError, reachText } from "../../shared/reach";
+import { COLLAPSE_ROUND, VENT_SCALD } from "../../content/hazards";

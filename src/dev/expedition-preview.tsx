@@ -5,7 +5,15 @@ import { enterAuction, nextLot } from "../engine/auction";
 import { ExpeditionGuide } from "../client/components/ExpeditionGuide";
 import { Auction } from "../client/components/Auction";
 import { Shop } from "../client/components/Shop";
-import { Mentor } from "../client/components/RunScreens";
+import {
+  DungeonMap,
+  Mentor,
+  Shrine,
+  TollGate,
+} from "../client/components/RunScreens";
+import { enterShrine, enterToll } from "../engine/chambers";
+import { enterForge } from "../engine/shop";
+import { generateMap } from "../engine/map";
 import { mentors } from "../content/evolutions";
 import { enterShop } from "../engine/shop";
 import { Onboarding } from "../client/components/Onboarding";
@@ -24,6 +32,23 @@ function Lab() {
       nextLot(state);
     }
     if (new URLSearchParams(location.search).has("shop")) enterShop(state);
+    const q = new URLSearchParams(location.search);
+    if (q.has("toll")) enterToll(state);
+    if (q.has("shrine")) enterShrine(state);
+    if (q.has("forge")) {
+      state.players[1].items = ["blood-price", "thornmail"];
+      enterForge(state);
+    }
+    if (new URLSearchParams(location.search).has("map")) {
+      // `?map=2` stages the second floor.
+      state.floor = Number(q.get("map")) || 1;
+      state.map = generateMap(state);
+      state.phase = "MAP";
+      // Standing in the first chamber, so the live route out of it is drawn.
+      const entry = state.map.find((n) => n.depth === 0)!;
+      entry.visited = true;
+      state.currentNode = entry.id;
+    }
     if (new URLSearchParams(location.search).has("mentor")) {
       // A ground that raises Vanguards, with a Warden standing in it: the two
       // offers this screen has to tell apart.
@@ -65,7 +90,13 @@ function Lab() {
           {p.name}: {p.items.join(", ")}
         </p>
       ))}
-      {s.phase === "MENTOR" ? (
+      {s.phase === "TOLL" ? (
+        <TollGate s={snap} send={send} disabled={false} />
+      ) : s.phase === "SHRINE" ? (
+        <Shrine s={snap} send={send} disabled={false} />
+      ) : s.phase === "MAP" && s.map.length ? (
+        <DungeonMap s={snap} send={send} disabled={false} />
+      ) : s.phase === "MENTOR" ? (
         <Mentor s={snap} send={send} disabled={false} />
       ) : s.phase === "SHOP" ? (
         <Shop s={snap} send={send} disabled={false} />

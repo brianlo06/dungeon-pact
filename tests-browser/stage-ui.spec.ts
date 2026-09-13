@@ -1,5 +1,15 @@
 import { test, expect, type Page } from "@playwright/test";
 
+/*
+ * Melee screening (see `shared/reach.ts`) means the first enemy body on the
+ * field is frequently not a legal target for the ability just chosen, so every
+ * one of these reaches for one the game will actually accept. The tests that
+ * clicked blindly were written before screening existed and have been failing
+ * since it landed.
+ */
+const ENEMY_TARGET =
+  ".combatant[data-side='enemy'] .combatant-body:not([disabled])";
+
 /**
  * Picking a target, and reading what the enemy intends, on a stage where every
  * combatant is drawn.
@@ -75,6 +85,22 @@ function marks(page: Page) {
   );
 }
 
+/**
+ * What the field will actually accept, straight from the buttons. Marks exist
+ * to show a player where an ability may be aimed, so the invariant worth
+ * holding is that the two agree — not that any particular unit is marked,
+ * which is a rule that has already changed twice.
+ */
+function legal(page: Page) {
+  return page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>(".combatant")].map((c) => ({
+      name: c.querySelector(".combatant-name")?.textContent ?? "",
+      side: c.dataset.side,
+      allowed: !c.querySelector<HTMLButtonElement>(".combatant-body")?.disabled,
+    })),
+  );
+}
+
 test.describe("picking a target never ghosts the field", () => {
   test("no combatant fades while an enemy target is picked", async ({
     page,
@@ -116,12 +142,24 @@ test.describe("legal targets are marked, and only they are", () => {
 
     await choose(page, "Shieldbreaker");
     const all = await marks(page);
-    const enemies = all.filter((m) => m.side === "enemy" && m.alive);
-    const heroes = all.filter((m) => m.side === "hero");
-    expect(enemies.length).toBeGreaterThan(2);
-    for (const m of enemies)
-      expect(m).toMatchObject({ marked: true, ground: true, plate: true });
-    for (const m of heroes)
+    const allowed = await legal(page);
+    // Shieldbreaker is melee, so the back rank is screened off and must not be
+    // marked. Something has to be reachable or the assertion proves nothing.
+    const reachable = allowed.filter((u) => u.side === "enemy" && u.allowed);
+    expect(reachable.length).toBeGreaterThan(0);
+    expect(reachable.length).toBeLessThan(
+      allowed.filter((u) => u.side === "enemy").length,
+    );
+    all.forEach((m, i) => {
+      const want = allowed[i].allowed && m.alive;
+      expect({ name: allowed[i].name, ...m }).toMatchObject({
+        name: allowed[i].name,
+        marked: want,
+        ground: want,
+        plate: want,
+      });
+    });
+    for (const m of all.filter((m) => m.side === "hero"))
       expect(m).toMatchObject({ marked: false, ground: false, plate: false });
   });
 
@@ -131,8 +169,20 @@ test.describe("legal targets are marked, and only they are", () => {
     await lab(page, { party: 4 });
     await choose(page, "Intercept");
     const all = await marks(page);
-    for (const m of all.filter((m) => m.side === "hero"))
-      expect(m).toMatchObject({ marked: true, ground: true, plate: true });
+    const allowed = await legal(page);
+    // Intercept takes someone else's hit, so the hero casting it is not a
+    // legal target for it. Every other standing ally is.
+    const allies = allowed.filter((u) => u.side === "hero" && u.allowed);
+    expect(allies.length).toBeGreaterThan(1);
+    all.forEach((m, i) => {
+      const want = allowed[i].allowed && m.alive;
+      expect({ name: allowed[i].name, ...m }).toMatchObject({
+        name: allowed[i].name,
+        marked: want,
+        ground: want,
+        plate: want,
+      });
+    });
     for (const m of all.filter((m) => m.side === "enemy"))
       expect(m).toMatchObject({ marked: false, ground: false, plate: false });
   });
@@ -142,7 +192,10 @@ test.describe("legal targets are marked, and only they are", () => {
   }) => {
     await lab(page, { encounter: "hunting-pack", party: 4 });
     await choose(page, "Shieldbreaker");
-    const target = page.locator(".combatant[data-side='enemy']").nth(1);
+    const target = page
+      .locator(".combatant[data-side='enemy']")
+      .filter({ has: page.locator(".combatant-body:not([disabled])") })
+      .first();
     await target.locator(".combatant-body").click();
     await expect(target.locator(".combatant-ring")).toHaveCount(1);
     // The ring replaces the floor brackets rather than stacking on them.
@@ -185,9 +238,7 @@ test.describe("legal targets are marked, and only they are", () => {
   }) => {
     await lab(page, { encounter: "hunting-pack", party: 4 });
     await choose(page, "Shieldbreaker");
-    const body = page
-      .locator(".combatant[data-side='enemy'] .combatant-body")
-      .first();
+    const body = page.locator(ENEMY_TARGET).first();
     await body.hover();
     const s = await body.evaluate((el) => {
       const c = getComputedStyle(el);
@@ -500,10 +551,7 @@ test.describe("intent chips stay readable and on screen", () => {
     // Marking the targets changes nothing any chip is laid out against.
     await choose(page, "Shieldbreaker");
     expect(await offsets(page)).toEqual(settled);
-    await page
-      .locator(".combatant[data-side='enemy'] .combatant-body")
-      .first()
-      .click();
+    await page.locator(ENEMY_TARGET).first().click();
     await page.waitForTimeout(600); // the camera leans toward the target
     expect(await offsets(page)).toEqual(settled);
     expect((await chipFaults(page)).faults).toEqual([]);

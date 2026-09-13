@@ -49,6 +49,18 @@ const lessons: Partial<Record<Phase, [string, string][]>> = {
       "The first lot uses rising bids. The second uses falling asks: if everyone passes, the price drops. Simultaneous claims use a draw. Expensive purchases still require party approval.",
     ],
   ],
+  TOLL: [
+    [
+      "Pay or fight",
+      "Paying keeps the party's health but wins nothing. Fighting risks health and pays the usual reward and a branch upgrade. Pay when you are hurt and the purse can spare it.",
+    ],
+  ],
+  SHRINE: [
+    [
+      "One hero, one bargain",
+      "The altar answers a single hero and then goes dark. Decide together who takes the Power before anyone offers, because the first offering is the only one.",
+    ],
+  ],
   SHOP: [
     [
       "Equip the party",

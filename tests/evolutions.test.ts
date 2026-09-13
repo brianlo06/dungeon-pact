@@ -44,8 +44,10 @@ it("gives every class one path per mentor", () => {
     }
 });
 
-it("puts a mentor on the route at three rising tiers", () => {
-  const map = generateMap(createRun("MAP", "seed-paths"));
+it("keeps the three rising tiers on a legacy single-floor route", () => {
+  const run = createRun("MAP", "seed-paths");
+  delete run.floor;
+  const map = generateMap(run);
   const nodes = map.filter((n) => n.type === "mentor");
   expect(nodes.length).toBe(3);
   expect(new Set(nodes.map((n) => mentorTier(n.depth))).size).toBe(3);
@@ -53,6 +55,28 @@ it("puts a mentor on the route at three rising tiers", () => {
   // visits one node per depth.
   for (const n of nodes)
     expect(map.some((x) => x.depth === n.depth && x.id !== n.id)).toBe(true);
+});
+
+/**
+ * A floor holds one mentor and there are three, so a run meets two. The first
+ * floor always teaches the Whetstone; the second draws the Reliquary or the
+ * Cipher. Over enough runs every mentor appears, and tiers never go backwards.
+ */
+it("teaches a rising mentor on each floor, and every mentor across runs", () => {
+  const seen = new Set<number>();
+  for (let seed = 0; seed < 40; seed++) {
+    const run = createRun("MAP", `floors-${seed}`);
+    const tiers = [1, 2].map((floor) => {
+      run.floor = floor;
+      const mentorsHere = generateMap(run).filter((n) => n.type === "mentor");
+      expect(mentorsHere).toHaveLength(1);
+      return mentorsHere[0].tier!;
+    });
+    expect(tiers[0]).toBe(1);
+    expect(tiers[1]).toBeGreaterThan(tiers[0]);
+    tiers.forEach((t) => seen.add(t));
+  }
+  expect([...seen].sort()).toEqual([1, 2, 3]);
 });
 
 it("swaps the signature ability and applies the path's stat cost", () => {
@@ -135,7 +159,8 @@ it("branches the route instead of linking every node to every node", () => {
   for (const seed of ["route-a", "route-b", "route-c"]) {
     const map = generateMap(createRun("MAP", seed));
     const byDepth = (d: number) => map.filter((n) => n.depth === d);
-    for (let d = 0; d < 6; d++) {
+    const last = Math.max(...map.map((n) => n.depth));
+    for (let d = 0; d < last; d++) {
       const row = byDepth(d);
       const below = byDepth(d + 1);
       // Nobody dead-ends, and every chamber below is reachable from some

@@ -186,12 +186,15 @@ export function ActionFan({
         } as React.CSSProperties
       }
     >
-      <div className="fan-anchor" aria-hidden="true">
-        <span className="fan-seal" />
-        <span className="fan-who">
-          {me.resource}/{def.maxResource} {def.resource}
-        </span>
-      </div>
+      {/*
+       * The anchor is gone. It marked whose fan this was with a pulsing gold
+       * diamond and spelled the class resource out beneath the hero's feet,
+       * seven pixels tall. The resource is pips on the name plate now, where a
+       * player is already looking, and the plate itself is gold for the hero
+       * you control — so the diamond was left covering the very row that
+       * replaced it. Its going also takes one perpetual animation with a glow
+       * on it off the stage for the whole planning phase.
+       */}
       <div
         ref={block}
         className="fan-block"

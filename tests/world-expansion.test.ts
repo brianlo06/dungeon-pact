@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { FLOOR_DEPTH } from "../src/content/floors";
 import { createRun, addPlayer } from "../src/engine/game";
 import { enterCombat, validatePlan } from "../src/engine/combat";
 import { generateMap } from "../src/engine/map";
@@ -15,6 +16,9 @@ function fixture() {
   const s = createRun("WORLD", "world-test");
   addPlayer(s, "a", "Ada");
   addPlayer(s, "b", "Bea");
+  // Floor two opens in the Cistern and closes in the Archive, which is where
+  // the regional encounters these tests read live.
+  s.floor = 2;
   s.map = generateMap(s);
   s.currentNode = "2-0";
   enterCombat(s);
@@ -33,16 +37,37 @@ describe("new world content", () => {
     expect(bows.every(Boolean)).toBe(true);
     expect(new Set(bows).size).toBe(6);
   });
-  it("maps reproducibly traverse three biomes without changing route length", () => {
+  it("maps reproducibly traverse three biomes across the run's two floors", () => {
     const a = createRun("A", "world"),
       b = createRun("B", "world");
     expect(generateMap(a)).toEqual(generateMap(b));
-    const map = generateMap(createRun("C", "world"));
-    expect(new Set(map.map((n) => n.biome))).toEqual(
-      new Set(["foundry", "cistern", "archive"]),
+    const run = createRun("C", "world");
+    const floors = [1, 2].map((floor) => {
+      run.floor = floor;
+      return generateMap(run);
+    });
+    // The Foundry is floor one; the Cistern and the Archive are floor two.
+    expect(new Set(floors[0].map((n) => n.biome))).toEqual(
+      new Set(["foundry"]),
     );
-    expect(Math.max(...map.map((n) => n.depth))).toBe(6);
-    expect(new Set(map.map((n) => n.name)).size).toBe(map.length);
+    expect(new Set(floors[1].map((n) => n.biome))).toEqual(
+      new Set(["cistern", "archive"]),
+    );
+    for (const map of floors) {
+      expect(Math.max(...map.map((n) => n.depth))).toBe(FLOOR_DEPTH - 1);
+      expect(new Set(map.map((n) => n.name)).size).toBe(map.length);
+    }
+    // Each floor ends at its own boss, and the chamber before it is a rest.
+    expect(floors[0].find((n) => n.type === "boss")!.name).toBe(
+      "The Collector's Hoard",
+    );
+    expect(floors[1].find((n) => n.type === "boss")!.name).toBe(
+      "The Counting House",
+    );
+    for (const map of floors)
+      expect(
+        map.filter((n) => n.depth === FLOOR_DEPTH - 2).map((n) => n.type),
+      ).toEqual(["camp"]);
   });
   it("regional formations follow the authoritative chamber; legacy maps use original encounters", () => {
     const s = fixture();

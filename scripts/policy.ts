@@ -17,6 +17,7 @@ import { EXPLOIT, WEAK, status } from "../src/engine/effects";
 import { reviveCost, standing } from "../src/engine/combat";
 import { availableNodes } from "../src/engine/map";
 import { reachError } from "../src/shared/reach";
+import { parseForgeKey, reforgeCost } from "../src/engine/shop";
 
 /**
  * Simulation policies. These are evaluation instruments, not game rules: the
@@ -29,6 +30,8 @@ export interface Policy {
   plan(s: RunState, p: Player): { ability: string; target: string };
   upgrade(s: RunState, p: Player): string;
   train(s: RunState, p: Player): boolean;
+  /** What this hero offers a shrine, if anything. */
+  shrine(s: RunState, p: Player): "blood" | "gold" | "leave";
   /**
    * The shop that replaced the auction: which item to put to the party, and
    * for whom, or null to leave. Returning a purchase the same policy would
@@ -261,6 +264,7 @@ export const attackPolicy: Policy = {
         ) ?? availableNodes(s)[0]
       ).id;
     if (s.phase === "CAMP") return s.gold >= 120 ? "restore" : "rest";
+    if (s.phase === "TOLL") return "fight";
     return events.find((e) => e.id === s.eventId)!.choices.at(-1)!.id;
   },
   plan(s, p) {
@@ -289,13 +293,19 @@ export const attackPolicy: Policy = {
     return upgradeOffer(p)[0]?.id ?? "none";
   },
   train: () => false,
+  shrine: () => "leave",
   shop(s) {
+    if (s.shop!.kind === "forge") return null;
     // As blunt as its bidding was: the first thing it can comfortably afford.
     const item = s
       .shop!.stock.filter((id) => !s.shop!.sold.includes(id))
       .map((id) => items.find((i) => i.id === id)!)
       .find((i) => i.price < s.gold * 0.5);
-    return item ? { item: item.id, recipient: s.players[0].id } : null;
+    // A fallen hero cannot receive gear until a camp raises them.
+    const recipient = s.players.find((p) => !p.fallen);
+    return item && recipient
+      ? { item: item.id, recipient: recipient.id }
+      : null;
   },
   interest(s, p) {
     return p.id === s.players[0].id && s.auction!.price < s.gold * 0.5;
@@ -349,6 +359,12 @@ export const tacticalPolicy: Policy = {
         if (t === "elite") return hurt ? 0 : 4;
         if (t === "auction") return 3;
         if (t === "mystery") return s.gold > 420 ? 3 : 2;
+        // The newer chambers, weighted so the bot actually walks into each.
+        // An instrument that never enters a room reports that it does nothing.
+        if (t === "forge") return s.gold > 300 ? 3 : 1;
+        if (t === "shrine") return hurt ? 1 : 3;
+        if (t === "toll") return hurt && s.gold > 260 ? 3 : 2;
+        if (t === "hazard") return hurt ? 0 : 3;
         return hurt ? 1 : 3;
       };
       const score = (n: (typeof open)[number]) =>
@@ -356,6 +372,12 @@ export const tacticalPolicy: Policy = {
       return [...open].sort(
         (a, b) => score(b) - score(a) || a.id.localeCompare(b.id),
       )[0].id;
+    }
+    if (s.phase === "TOLL") {
+      // Pay when the party is hurt and the purse can bear it; otherwise the
+      // fight is worth its reward and its upgrade.
+      const price = s.toll ?? 0;
+      return wounded(s) > 0.3 && s.gold - price >= reserve(s) ? "pay" : "fight";
     }
     if (s.phase === "CAMP") {
       const broken = s.players.some((p) => p.fallen || p.hp <= 0);
@@ -723,9 +745,35 @@ export const tacticalPolicy: Policy = {
     // commit while the treasury still covers the reserve afterwards.
     return s.gold - fee >= reserve(s);
   },
+  shrine(s, p) {
+    // The sturdiest standing hero bleeds for the power; nobody frail does, and
+    // nobody pays gold the reserve needs.
+    if (s.shrine?.taken || p.fallen) return "leave";
+    const sturdiest = [...s.players]
+      .filter((x) => !x.fallen)
+      .sort((a, b) => b.maxHp - a.maxHp)[0];
+    if (sturdiest?.id === p.id && p.maxHp >= 60) return "blood";
+    return "leave";
+  },
   shop(s) {
     const shop = s.shop!;
     const budget = s.gold - reserve(s);
+    if (shop.kind === "forge") {
+      // Reforge whatever the best-suited hero carries, if the purse allows.
+      let pick: { item: string; recipient: string; fit: number } | null = null;
+      for (const key of shop.stock) {
+        if (shop.sold.includes(key)) continue;
+        const { owner, item: id } = parseForgeKey(key);
+        const item = items.find((i) => i.id === id)!;
+        if (reforgeCost(item) > budget) continue;
+        const hero = s.players.find((x) => x.id === owner && !x.fallen);
+        if (!hero) continue;
+        const fit = itemFit(s, hero, item);
+        if (fit >= 3 && (!pick || fit > pick.fit))
+          pick = { item: key, recipient: owner, fit };
+      }
+      return pick && { item: pick.item, recipient: pick.recipient };
+    }
     let best: { item: string; recipient: string; fit: number } | null = null;
     for (const id of shop.stock) {
       if (shop.sold.includes(id)) continue;
@@ -775,6 +823,7 @@ export const hoardPolicy: Policy = {
   ...tacticalPolicy,
   name: "hoard",
   shop: () => null,
+  shrine: () => "leave",
   approve: (s, p) => !s.shop && tacticalPolicy.approve(s, p),
   interest: () => false,
   bid: () => false,
@@ -784,6 +833,7 @@ export const hoardPolicy: Policy = {
     // Everything that costs gold is declined; a battlefield revival is not,
     // because spending at the boss is the pressure valve being measured.
     if (s.phase === "CAMP") return "rest";
+    if (s.phase === "TOLL") return "fight";
     if (s.phase === "EVENT") {
       const choices = events.find((e) => e.id === s.eventId)!.choices;
       return (

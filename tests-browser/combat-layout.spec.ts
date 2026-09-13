@@ -1,5 +1,15 @@
 import { test, expect, type Page } from "@playwright/test";
 
+/*
+ * Melee screening (see `shared/reach.ts`) means the first enemy body on the
+ * field is frequently not a legal target for the ability just chosen, so every
+ * one of these reaches for one the game will actually accept. The tests that
+ * clicked blindly were written before screening existed and have been failing
+ * since it landed.
+ */
+const ENEMY_TARGET =
+  ".combatant[data-side='enemy'] .combatant-body:not([disabled])";
+
 /**
  * Combat has to fit one viewport at every size people play at, in every state
  * a fight actually reaches. The CSS contract tests guard the rules that make
@@ -223,10 +233,9 @@ test.describe("the back row's health stays on screen when the camera leans in", 
         .locator(".fan-slip:not([data-common]) > button")
         .first()
         .click();
-      const enemies = page.locator(
-        ".combatant[data-side='enemy'] .combatant-body",
-      );
-      // The back rank is the one that tips the camera furthest up.
+      const enemies = page.locator(ENEMY_TARGET);
+      // The back rank is the one that tips the camera furthest up — of the
+      // ranks this ability can actually reach.
       for (let i = 0; i < (await enemies.count()); i++) {
         await enemies.nth(i).click();
         await cameraSettled(page);
@@ -248,10 +257,7 @@ test.describe("the back row's health stays on screen when the camera leans in", 
       true,
     );
     await page.locator(".fan-slip:not([data-common]) > button").first().click();
-    await page
-      .locator(".combatant[data-side='enemy'] .combatant-body")
-      .first()
-      .click();
+    await page.locator(ENEMY_TARGET).first().click();
     await page.getByRole("button", { name: "Finish round" }).click();
     const playback = page.locator(".strip-playback");
     await expect(playback).toBeVisible();
@@ -460,10 +466,7 @@ test.describe("the action interface belongs to the hero", () => {
     // The fan collapses to the chosen slip so the field is clear to click.
     expect(await page.locator(".fan-slips .fan-slip").count()).toBe(1);
 
-    await page
-      .locator(".combatant[data-side='enemy'] .combatant-body")
-      .first()
-      .click();
+    await page.locator(ENEMY_TARGET).first().click();
     await expect(page.locator(".lock-action")).toBeEnabled();
 
     // Backing out returns to choosing, and never gets stuck.
@@ -497,10 +500,7 @@ test.describe("the action interface belongs to the hero", () => {
   }) => {
     await open(page, { party: 4, stage: "objective" });
     await page.locator(".fan-slip:not([data-common]) > button").first().click();
-    await page
-      .locator(".combatant[data-side='enemy'] .combatant-body")
-      .first()
-      .click();
+    await page.locator(ENEMY_TARGET).first().click();
     await page.waitForTimeout(500); // let the camera settle on the target
     const o = await overflow(page);
     expect(o.vertical).toBeLessThanOrEqual(TOLERANCE);
@@ -611,10 +611,7 @@ test.describe("the new visual layer stays inside the viewport", () => {
     expect(blocking).toEqual([]);
     // And an enemy is still clickable through it.
     await page.locator(".fan-slip:not([data-common]) > button").first().click();
-    await page
-      .locator(".combatant[data-side='enemy'] .combatant-body")
-      .nth(1)
-      .click();
+    await page.locator(ENEMY_TARGET).first().click();
     await expect(page.locator(".lock-action")).toBeEnabled();
   });
 

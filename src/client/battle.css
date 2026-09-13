@@ -501,7 +501,7 @@
 .combatant-bar {
   position: relative;
   width: calc(var(--size) * 0.92);
-  height: 7px;
+  height: 11px;
   background: #17131d;
   border: 1px solid #0f0d15;
   overflow: hidden;
@@ -520,6 +520,62 @@
 }
 .combatant[data-side="hero"] .combatant-bar i {
   background: linear-gradient(#9ec27a, #5f8f55);
+}
+/*
+ * Health, in figures. A bar says "hurt"; a number says "one more hit". The
+ * playtest asked for both, and the plate has no room to stack them, so the
+ * figures sit on the bar and the bar grew to carry them.
+ */
+.combatant-bar u {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 8px var(--pixel);
+  color: #fff6e2;
+  text-decoration: none;
+  text-shadow:
+    0 1px 2px #000,
+    0 0 3px #000;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+.combatant-bar u s {
+  text-decoration: none;
+  opacity: 0.72;
+}
+/*
+ * The class resource, which used to be seven pixels of text under the action
+ * fan and nowhere else. One pip per point, so it reads as a count without
+ * being read: a Vanguard sees four of six lit and knows Intercept is on.
+ */
+.combatant-resource {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+}
+.combatant-resource i {
+  width: 5px;
+  height: 5px;
+  background: #2a2535;
+  border: 1px solid #0f0d15;
+  transform: rotate(45deg);
+}
+.combatant-resource i[data-filled] {
+  background: var(--gold);
+}
+.combatant[data-you] .combatant-resource i[data-filled] {
+  background: #ffd98a;
+}
+.combatant-resource em {
+  font: 7px var(--pixel);
+  font-style: normal;
+  letter-spacing: 0.06em;
+  color: #b7a68f;
+  margin-left: 2px;
+  text-shadow: 0 1px 2px #000;
 }
 .combatant-bar b {
   position: absolute;
@@ -994,38 +1050,6 @@
   height: 0;
   pointer-events: none;
   --step-x: 9px;
-}
-.fan-anchor {
-  position: absolute;
-  left: 50%;
-  bottom: -6px;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-.fan-seal {
-  width: 12px;
-  height: 12px;
-  background: var(--gold);
-  transform: rotate(45deg);
-  box-shadow: 0 0 10px rgba(238, 184, 96, 0.7);
-  animation: seal 2.2s ease-in-out infinite;
-}
-@keyframes seal {
-  0%,
-  100% {
-    transform: rotate(45deg) scale(1);
-  }
-  50% {
-    transform: rotate(45deg) scale(1.18);
-  }
-}
-.fan-who {
-  font: 7px var(--pixel);
-  color: var(--muted);
-  text-shadow: 0 1px 2px #000;
 }
 /*
  * One block, placed beside the hero by measurement (battle/fan-layout.ts):
@@ -2066,4 +2090,9 @@
 :root[data-motion="reduced"] .mnd-tip,
 :root[data-motion="reduced"] .mnd-lens {
   animation: none;
+}
+
+/* A hazard reads as a warning, not as an objective to pursue. */
+.strip-hazard b {
+  color: #f0a15a;
 }

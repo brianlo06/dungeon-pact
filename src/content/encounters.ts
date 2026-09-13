@@ -1,3 +1,4 @@
+import { runDepth } from "./floors";
 import type { RunState } from "../shared/model";
 import { pick } from "../engine/rng";
 export interface EncounterDef {
@@ -105,7 +106,12 @@ export const encounters: EncounterDef[] = [
   },
 ];
 export function chooseEncounter(s: RunState): EncounterDef {
-  const depth = s.map.find((n) => n.id === s.currentNode)?.depth ?? 0;
+  // Across the whole run, not this floor: depth restarts on each floor, and
+  // reading it raw would hand floor two the entry fights of floor one.
+  const depth = runDepth(
+    s,
+    s.map.find((n) => n.id === s.currentNode)?.depth ?? 0,
+  );
   const biome = s.map.find((n) => n.id === s.currentNode)?.biome;
   return pick(
     s,

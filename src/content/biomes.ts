@@ -35,6 +35,10 @@ export function chamberName(
           auction: "The Sluice Exchange",
           mystery: "Salvager’s Counter",
           boss: "The Pressure Vault",
+          toll: "The Floodgate Levy",
+          hazard: "The Burst Main",
+          shrine: "The Drowned Altar",
+          forge: "The Pump-Wright’s Bench",
         }
       : {
           combat: "The Index of Debts",
@@ -44,6 +48,10 @@ export function chamberName(
           auction: "The Probate Exchange",
           mystery: "The Clerk’s Counter",
           boss: "The Counting House",
+          toll: "The Stamp Duty Gate",
+          hazard: "The Collapsing Stacks",
+          shrine: "The Altar of Arrears",
+          forge: "The Binder’s Press",
         };
   return names[type];
 }

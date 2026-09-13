@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import { Sprite } from "./Sprite";
 import {
   gildedPurse,
@@ -6,9 +7,11 @@ import {
   WEALTH_PER_HERO,
 } from "../../content/pacts";
 import { PixelIcon } from "./PixelIcon";
-import type { Snapshot } from "../../shared/model";
+import type { MapNode, Snapshot } from "../../shared/model";
 import type { Intent } from "../../shared/protocol";
 import { heroes } from "../../content/heroes";
+import { OFFERINGS } from "../../content/shrines";
+import { FLOORS } from "../../content/floors";
 import { events } from "../../content/events";
 import { items } from "../../content/items";
 import { upgradeOffer, lines } from "../../content/upgrades";
@@ -172,6 +175,54 @@ export function Pact(props: Props) {
     </section>
   );
 }
+/**
+ * The route.
+ *
+ * The links used to be drawn in a percentage viewBox that assumed every row
+ * was the same height and every card the same size, while the cards themselves
+ * were laid out by flexbox. The two never agreed: lines ran under cards, ended
+ * in the middle of them, and crossed each other on the way. A player could not
+ * tell which chamber led to which, which is the one thing this screen exists
+ * to say.
+ *
+ * So the cards are laid out first and the links are measured off them. Each
+ * link leaves the bottom edge of a chamber and arrives at the top edge of the
+ * next, curving so that two links out of one card are told apart by shape and
+ * not only by where they end.
+ */
+function useRouteGeometry(nodes: MapNode[]) {
+  const frame = useRef<HTMLDivElement>(null);
+  const [seen, setSeen] = useState<{
+    width: number;
+    height: number;
+    at: Record<string, { x: number; top: number; bottom: number }>;
+  }>({ width: 0, height: 0, at: {} });
+  useLayoutEffect(() => {
+    const root = frame.current;
+    if (!root) return;
+    const measure = () => {
+      const base = root.getBoundingClientRect();
+      const at: Record<string, { x: number; top: number; bottom: number }> = {};
+      for (const el of root.querySelectorAll<HTMLElement>("[data-node]")) {
+        const r = el.getBoundingClientRect();
+        at[el.dataset.node!] = {
+          x: r.left - base.left + r.width / 2,
+          top: r.top - base.top,
+          bottom: r.bottom - base.top,
+        };
+      }
+      setSeen({ width: base.width, height: base.height, at });
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(root);
+    for (const el of root.querySelectorAll("[data-node]")) observer.observe(el);
+    return () => observer.disconnect();
+  }, [nodes]);
+  return { frame, ...seen };
+}
+
 export function DungeonMap(props: Props) {
   const { s } = props;
   const current = s.map.find((n) => n.id === s.currentNode);
@@ -184,65 +235,89 @@ export function DungeonMap(props: Props) {
     camp: "fire",
     mentor: "book",
     boss: "crown",
+    toll: "gavel",
+    hazard: "warn",
+    shrine: "altar",
+    forge: "anvil",
   };
   const label: Record<string, string> = {
     mystery: "SALVAGE SHOP",
     mentor: "TRAINING",
     auction: "GEAR SHOP",
+    camp: "REST",
+    toll: "TOLL GATE",
+    hazard: "HAZARD",
+    shrine: "SHRINE",
+    forge: "WORKBENCH",
   };
   const depth = Math.max(0, ...s.map.map((n) => n.depth)) + 1;
   const rows = Array.from({ length: depth }, (_, d) =>
     s.map.filter((n) => n.depth === d),
   );
-  /** Route geometry in percentages, so the links line up with the grid. */
-  const at = (id: string) => {
-    const node = s.map.find((n) => n.id === id)!;
-    const row = rows[node.depth];
-    const lane = row.findIndex((x) => x.id === id);
-    return {
-      x: ((lane + 0.5) / row.length) * 100,
-      y: ((node.depth + 0.5) / depth) * 100,
-    };
-  };
+  const { frame, width, height, at } = useRouteGeometry(s.map);
+  const reachable = (id: string) =>
+    current
+      ? current.next.includes(id)
+      : s.map.find((n) => n.id === id)?.depth === 0;
   const links = s.map.flatMap((n) =>
-    n.next.map((id) => ({
-      key: `${n.id}>${id}`,
-      from: at(n.id),
-      to: at(id),
-      // Before the first move the entry chamber is where the party stands.
-      live: current ? current.id === n.id : n.depth === 0,
-      walked: n.visited && s.map.find((x) => x.id === id)!.visited,
-    })),
+    n.next.flatMap((id) => {
+      const from = at[n.id];
+      const to = at[id];
+      if (!from || !to) return [];
+      const drop = Math.max(12, (to.top - from.bottom) * 0.55);
+      return [
+        {
+          key: `${n.id}>${id}`,
+          d: `M${from.x} ${from.bottom} C${from.x} ${from.bottom + drop} ${to.x} ${to.top - drop} ${to.x} ${to.top}`,
+          // The step you could take right now, the steps you have taken, and
+          // everything else — three weights, never more.
+          state:
+            reachable(id) && current?.id === n.id
+              ? "live"
+              : n.visited && s.map.find((x) => x.id === id)!.visited
+                ? "walked"
+                : "far",
+        },
+      ];
+    }),
   );
+  const open = s.map.filter((n) => reachable(n.id));
   return (
     <>
       <div className="section-heading">
         <div>
-          <span className="eyebrow">REGION I · THE EMBER FOUNDRY</span>
-          <h1>Into the Foundry.</h1>
-          <p>The furnace still burns. Choose your next chamber together.</p>
+          <span className="eyebrow">
+            {s.floor
+              ? `FLOOR ${s.floor} OF ${FLOORS} · ${s.floor <= 1 ? "THE EMBER FOUNDRY" : "THE DROWNED CISTERN"}`
+              : "REGION I · THE EMBER FOUNDRY"}
+          </span>
+          <h1>
+            {!s.floor || s.floor <= 1
+              ? "Into the Foundry."
+              : "Further down, where it floods."}
+          </h1>
+          <p>
+            {s.votes[s.you]
+              ? "Your vote is cast. The party decides together."
+              : open.length > 1
+                ? `Two ways on. ${open.map((n) => label[n.type] ?? n.type.toUpperCase()).join(" or ")}.`
+                : "The furnace still burns. Choose your next chamber together."}
+          </p>
         </div>
         <span className="badge">
           {s.map.filter((n) => n.visited).length} / {depth} chambers
         </span>
       </div>
-      <div className="map-route">
+      <div className="map-route" ref={frame}>
         <svg
           className="map-links"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
+          viewBox={`0 0 ${width || 1} ${height || 1}`}
+          width={width || undefined}
+          height={height || undefined}
           aria-hidden="true"
         >
           {links.map((l) => (
-            <line
-              key={l.key}
-              x1={l.from.x}
-              y1={l.from.y}
-              x2={l.to.x}
-              y2={l.to.y}
-              vectorEffect="non-scaling-stroke"
-              className={l.live ? "live" : l.walked ? "walked" : ""}
-            />
+            <path key={l.key} d={l.d} className={l.state} />
           ))}
         </svg>
         <div className="map-grid">
@@ -252,31 +327,34 @@ export function DungeonMap(props: Props) {
                 {String(d + 1).padStart(2, "0")}
               </small>
               {row.map((n) => {
-                const open = current ? current.next.includes(n.id) : d === 0;
+                const canGo = reachable(n.id);
                 const here = current?.id === n.id;
                 const votes = Object.values(s.votes).filter(
                   (v) => v === n.id,
                 ).length;
                 return (
                   <button
-                    className={`map-node type-${n.type} ${open ? "open" : ""} ${n.visited ? "walked" : ""} ${here ? "here" : ""} ${s.votes[s.you] === n.id ? "picked" : ""}`}
-                    disabled={!open || props.disabled || !!s.votes[s.you]}
+                    data-node={n.id}
+                    className={`map-node type-${n.type} ${canGo ? "open" : ""} ${n.visited ? "walked" : ""} ${here ? "here" : ""} ${s.votes[s.you] === n.id ? "picked" : ""}`}
+                    disabled={!canGo || props.disabled || !!s.votes[s.you]}
                     key={n.id}
                     onClick={() => props.send({ type: "vote", choice: n.id })}
                   >
                     <span className="map-glyph">
                       <PixelIcon name={here ? "pin" : icons[n.type]} />
                     </span>
-                    <small>{label[n.type] ?? n.type.toUpperCase()}</small>
-                    <strong>{n.name}</strong>
-                    {n.biome && (
-                      <small title={biomes[n.biome].description}>
-                        {biomes[n.biome].name}
-                      </small>
-                    )}
+                    <span className="map-what">
+                      <small>{label[n.type] ?? n.type.toUpperCase()}</small>
+                      <strong>{n.name}</strong>
+                      {n.biome && (
+                        <em title={biomes[n.biome].description}>
+                          {biomes[n.biome].name}
+                        </em>
+                      )}
+                    </span>
                     {votes > 0 && (
                       <span className="map-votes">
-                        {"●".repeat(votes)}
+                        {"\u25cf".repeat(votes)}
                         <em>{votes} for this</em>
                       </span>
                     )}
@@ -349,6 +427,108 @@ export function Camp(props: Props) {
     </section>
   );
 }
+/**
+ * The toll gate: pay the keepers or fight them. Both options are spelled out
+ * with what they cost *and* what they forgo, because the fight is the one that
+ * pays — a party that only reads "pay 110 gold" or "fight" is choosing blind.
+ */
+export function TollGate(props: Props) {
+  const { s } = props;
+  const price = s.toll ?? 0;
+  return (
+    <section className="center-screen">
+      <span className="large-symbol">
+        <PixelIcon name="gavel" />
+      </span>
+      <span className="eyebrow">A TOLL GATE</span>
+      <h1>The keepers want paying.</h1>
+      <p>One decision for the whole party. The treasury holds {s.gold} gold.</p>
+      <div className="choices">
+        <Choice
+          {...props}
+          id="pay"
+          title={`Pay ${price} gold`}
+          text="Pass unharmed. Nobody bleeds, and nothing is won: no reward and no branch upgrade."
+          cost={price}
+        />
+        <Choice
+          {...props}
+          id="fight"
+          title="Refuse and fight"
+          text="The keepers draw. Win, and the gate pays the usual reward and a branch upgrade. Lose health doing it."
+        />
+      </div>
+    </section>
+  );
+}
+
+/**
+ * The shrine. One hero may strike its bargain; the rest walk past. The screen
+ * names who already has, so nobody makes an offering the altar will refuse.
+ */
+export function Shrine({ s, send, disabled }: Props) {
+  const me = s.players.find((p) => p.id === s.you)!;
+  const shrine = s.shrine;
+  const taker = s.players.find((p) => p.id === shrine?.taken);
+  const answered = shrine?.answered.includes(me.id);
+  const blood = OFFERINGS.blood;
+  const gold = OFFERINGS.gold;
+  return (
+    <section className="center-screen">
+      <span className="large-symbol">
+        <PixelIcon name="altar" />
+      </span>
+      <span className="eyebrow">A SHRINE</span>
+      <h1>The altar will answer one of you.</h1>
+      <p>
+        A permanent bargain for a single hero. Decide together who takes it:
+        once it has answered someone, it goes dark for everyone else.
+      </p>
+      {answered ? (
+        <p>Your answer is given. Waiting for the rest of the pact.</p>
+      ) : taker ? (
+        <p>The altar has already answered {taker.name}.</p>
+      ) : (
+        <div className="choices">
+          <button
+            className="choice"
+            disabled={disabled || me.fallen || me.maxHp + blood.maxHp < 1}
+            onClick={() => send({ type: "shrine", offering: "blood" })}
+          >
+            <h3>Offer your blood</h3>
+            <p>
+              +{blood.power} Power for the rest of the run. You lose{" "}
+              {-blood.maxHp} maximum HP, for good.
+            </p>
+            <span>{me.name} bleeds for it</span>
+          </button>
+          <button
+            className="choice"
+            disabled={disabled || me.fallen || s.gold < gold.gold}
+            onClick={() => send({ type: "shrine", offering: "gold" })}
+          >
+            <h3>Offer the party's gold</h3>
+            <p>
+              +{gold.power} Power for the rest of the run. The shared treasury
+              pays {gold.gold}; you keep your health.
+            </p>
+            <span>{s.gold} gold in the treasury</span>
+          </button>
+          <button
+            className="choice"
+            disabled={disabled}
+            onClick={() => send({ type: "shrine", offering: "leave" })}
+          >
+            <h3>Walk past</h3>
+            <p>Leave the bargain for someone else, or for no one.</p>
+            <span>Costs nothing</span>
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function Mentor({ s, send, disabled }: Props) {
   const me = s.players.find((p) => p.id === s.you)!;
   const teacher = mentor(s.mentorId ?? "");
