@@ -39,7 +39,13 @@ export const ultimate: UltimateDef = {
   cost: 100,
   speed: 18,
   presentation: {
+    cinematic: "anthem-of-the-unpaid",
     theme: "resonance",
     accent: "#ffb3d1",
+    voice: {
+      activation: "Nobody's paying us for this. Sing anyway.",
+      impact: "All of us — now!",
+      after: "Hear that? That's what you're worth.",
+    },
   },
 };
