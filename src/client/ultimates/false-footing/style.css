@@ -519,3 +519,7 @@
 .ff-spray[data-mode="out"] u {
   transform: translate(calc(-1 * var(--x)), -50%);
 }
+/* A small print warms its hollow instead of a floor it does not draw. */
+.ff-trail .ff-step .ff-dent-hollow {
+  fill: color-mix(in srgb, #f2a93b calc(var(--r, 0) * 45%), #4b5f91);
+}

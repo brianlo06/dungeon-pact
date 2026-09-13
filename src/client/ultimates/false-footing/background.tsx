@@ -183,7 +183,7 @@ const HIGH_SWELLS = Array.from({ length: 16 }, (_, i) => {
   const k = 0.5 + (y - HIGH_HORIZON) / 900;
   return { x: -900 + highRand() * 3000, y, w: (900 + highRand() * 900) * k, h: (26 + highRand() * 22) * k, tilt: -8 + highRand() * 6 };
 });
-const HIGH_RIPPLES = Array.from({ length: 160 }, () => {
+const HIGH_RIPPLES = Array.from({ length: 90 }, () => {
   const y = HIGH_HORIZON + 20 + highRand() * 1250;
   const k = 0.4 + (y - HIGH_HORIZON) / 1000;
   return { x: -800 + highRand() * 3200, y, w: (30 + highRand() * 50) * k, lit: highRand() < 0.5 };

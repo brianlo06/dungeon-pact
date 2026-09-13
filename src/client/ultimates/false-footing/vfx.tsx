@@ -68,7 +68,7 @@ const CLAWS = "M-20 -32 L-33 -40 M-33 -3 L-48 -4 M-20 32 L-33 40";
 const SHAPES = [PAD, ...TOES];
 
 /** One print, as the shapes in it, for any `<g>` that places and squashes it. */
-function PrintArt({ ghost = false, hot = false }: { ghost?: boolean; hot?: boolean }) {
+function PrintArt({ ghost = false, hot = false, lite = false }: { ghost?: boolean; hot?: boolean; lite?: boolean }) {
   if (ghost)
     return (
       <g className="ff-ghost">
@@ -87,12 +87,15 @@ function PrintArt({ ghost = false, hot = false }: { ghost?: boolean; hot?: boole
       {SHAPES.map((d, i) => (
         <path key={`h${i}`} d={d} className="ff-dent-hollow" />
       ))}
-      {SHAPES.map((d, i) => (
-        <path key={`f${i}`} d={d} className="ff-dent-floor" transform="translate(1.5 3) scale(0.72)" />
-      ))}
-      {SHAPES.map((d, i) => (
-        <path key={`w${i}`} d={d} className="ff-dent-warm" transform="translate(1.5 3) scale(0.72)" />
-      ))}
+      {/* A print seen small (the trail, the board) is lip, hollow and rim only. */}
+      {!lite &&
+        SHAPES.map((d, i) => (
+          <path key={`f${i}`} d={d} className="ff-dent-floor" transform="translate(1.5 3) scale(0.72)" />
+        ))}
+      {!lite &&
+        SHAPES.map((d, i) => (
+          <path key={`w${i}`} d={d} className="ff-dent-warm" transform="translate(1.5 3) scale(0.72)" />
+        ))}
       <path d={CLAWS} className="ff-dent-claw" />
       {/* Read: the rim fills with amber from the touch, both ways round. */}
       {SHAPES.map((d, i) => (
@@ -161,7 +164,7 @@ const Trail = ({ cue }: VfxProps) => (
         <path className="ff-cord-glint" pathLength={1} />
         {Array.from({ length: TRAIL_STEPS }, (_, i) => (
           <g key={i} className="ff-step" data-step={i}>
-            <PrintArt />
+            <PrintArt lite />
           </g>
         ))}
         <g className="ff-next">
@@ -585,7 +588,7 @@ const Board = ({ cue }: VfxProps) => {
         {mode === "call" ? (
           [0, 1, 2, 3].map((i) => (
             <g key={i} className="ff-board-step" style={v({ "--d": ((3 - i) * 0.16).toFixed(2) })} transform={`translate(${46 + i * 56} ${-4 - i * 6 + (i % 2) * 12}) scale(0.46 0.18)`}>
-              <PrintArt />
+              <PrintArt lite />
             </g>
           ))
         ) : (
