@@ -245,7 +245,7 @@ export const stillLife: Cinematic = {
       ],
       vfx: [
         { kind: "still-plates", at: 0, until: 1, layer: "front", params: { from: "targets", mode: "stream", takes: "0,0.04,0.08", dx: -0.3, dy: 0.02, fade: 0.2, alpha: 0.9, go: 0.14, every: 0.05, fly: 0.34, tx: 0.3, ty: 0.6, grow: 3 } },
-        { kind: "still-brim", at: 0.82, until: 1, layer: "screen", params: { half: "out" } },
+        { kind: "still-brim", at: 0.7, until: 1, layer: "screen", params: { half: "out" } },
       ],
       sound: [
         { at: 0, sfx: "still-motif", mode: "fast" },
@@ -275,7 +275,7 @@ export const stillLife: Cinematic = {
       vfx: [
         { kind: "still-motes", at: 0, until: 1, x: 800, y: 370, scale: 0.6, seed: 17, color: AMBER, layer: "front" },
         { kind: "still-eyes", at: 0, until: 1, color: AMBER, layer: "front" },
-        { kind: "still-brim", at: 0, until: 0.16, layer: "screen", params: { half: "in" } },
+        { kind: "still-brim", at: 0, until: 0.3, layer: "screen", params: { half: "in" } },
       ],
       duck: [{ at: 0, level: 0.05, ms: 560 }],
       sound: [

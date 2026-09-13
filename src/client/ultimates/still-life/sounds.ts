@@ -53,7 +53,7 @@ export const voices: Record<string, Voice> = {
     render: (c, o, t) => {
       back(c, o, t, 43, 0.22, 0.34);
       inhale(c, o, t + 0.04, 0.3, 0.12, 900);
-      shutter(c, o, t + 0.34, 0.5);
+      shutter(c, o, t + 0.34, 0.3);
       swell(c, o, t + 0.36, { type: "sine", freq: hz(67), gain: 0.03, attack: 0.02, hold: 0.2, release: 0.8, cutoff: 2000 });
     },
   },
@@ -63,7 +63,7 @@ export const voices: Record<string, Voice> = {
     render: (c, o, t) => {
       inhale(c, o, t, 0.12, 0.16, 2400);
       back(c, o, t, 83, 0.035, 0.12);
-      shutter(c, o, t + 0.12, 0.42);
+      shutter(c, o, t + 0.12, 0.28);
     },
   },
   /**
@@ -128,8 +128,8 @@ export const voices: Record<string, Voice> = {
   "still-impact": {
     bus: "sfx",
     render: (c, o, t) => {
-      shutter(c, o, t, 0.9);
-      crash(c, o, t, { seconds: 0.05, gain: 0.8, type: "highpass", freq: 2400, q: 0.5 });
+      shutter(c, o, t, 0.6);
+      crash(c, o, t, { seconds: 0.05, gain: 0.6, type: "highpass", freq: 2400, q: 0.5 });
       hit(c, o, t, { type: "sine", from: 140, to: 26, gain: 1, attack: 0.002, decay: 0.95 });
       hit(c, o, t, { type: "triangle", from: 300, to: 70, gain: 0.32, attack: 0.002, decay: 0.34 });
       crash(c, o, t + 0.004, { seconds: 0.35, gain: 0.3, type: "bandpass", freq: 900, sweepTo: 200, q: 1.1 });
@@ -159,8 +159,8 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       for (let i = 0; i < 3; i++) {
-        shutter(c, o, t + i * 0.07, 0.36 - i * 0.07);
-        hit(c, o, t + i * 0.07, { type: "sine", from: 110 - i * 10, to: 40, gain: 0.26 - i * 0.06, attack: 0.002, decay: 0.26 });
+        shutter(c, o, t + i * 0.07, 0.22 - i * 0.05);
+        hit(c, o, t + i * 0.07, { type: "sine", from: 110 - i * 10, to: 40, gain: 0.18 - i * 0.04, attack: 0.002, decay: 0.26 });
       }
     },
   },

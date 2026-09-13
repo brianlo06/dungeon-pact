@@ -315,9 +315,11 @@ const flicker: Frame = (el, p) => {
 const Brim = ({ cue }: VfxProps): ReactNode => (
   <div className="still-brim" data-half={String(cue.params?.half ?? "out")}>
     <svg viewBox="0 0 200 100" preserveAspectRatio="none">
-      <path d="M-40 -10 C40 -14 150 8 250 -4 L250 110 L-40 110 Z" fill="#05040a" />
-      <path d="M-40 -10 C40 -14 150 8 250 -4" fill="none" stroke="#e7b556" strokeWidth="2.5" strokeOpacity="0.8" vectorEffect="non-scaling-stroke" />
-      <path d="M-40 2 C40 -2 150 20 250 8" fill="none" stroke="#2c2a4a" strokeWidth="6" vectorEffect="non-scaling-stroke" />
+      {/* the brim's leading edge is its curve; behind it, all hat */}
+      <path d="M-400 -30 L110 -30 C168 -8 196 30 186 60 C176 92 140 116 -400 130 Z" fill="#07060e" />
+      <path d="M110 -30 C168 -8 196 30 186 60 C176 92 140 116 -80 130" fill="none" stroke="#3a3660" strokeWidth="10" vectorEffect="non-scaling-stroke" />
+      <path d="M104 -30 C158 -6 184 30 175 58 C166 88 132 108 -80 120" fill="none" stroke="#ffb870" strokeWidth="3" strokeOpacity="0.85" vectorEffect="non-scaling-stroke" />
+      <path d="M60 -30 C110 -6 132 30 124 58 C116 86 90 102 -80 110" fill="none" stroke="#b99345" strokeWidth="14" strokeOpacity="0.55" vectorEffect="non-scaling-stroke" />
     </svg>
   </div>
 );
@@ -325,7 +327,9 @@ const Brim = ({ cue }: VfxProps): ReactNode => (
 const brim: Frame = (el, p) => {
   const node = el.querySelector<HTMLElement>(".still-brim");
   if (!node) return;
-  const k = node.dataset.half === "in" ? 0.5 + ease("out", p) * 0.62 : ease("in", p) * 0.5;
+  // One steady sweep split across the cut: in, it arrives covering; out, it
+  // leaves from covering.
+  const k = node.dataset.half === "in" ? 0.5 + p * 0.62 : p * 0.5;
   // 0: off the left edge; 0.5: covering; ~1.1: gone off the right.
   setTransform(node, `translate3d(${((k - 0.5) * 230).toFixed(2)}%, 0, 0) rotate(${((0.5 - k) * 6).toFixed(2)}deg)`);
 };
