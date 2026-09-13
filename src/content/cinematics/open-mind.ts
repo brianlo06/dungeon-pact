@@ -26,7 +26,6 @@ import type { Cinematic } from "../../shared/cinematic";
 
 const GREEN = "#c7f06a";
 const PALE = "#f2ffd2";
-const AMBER = "#ffb347";
 const WALL = "#b7a9cf";
 const NIGHT = "#07060b";
 const BARS = 0.11;

@@ -1,8 +1,9 @@
 /* ------------------------------------------------- The Open Mind (mind-) -- */
 /*
- * Everything here moves on the variables the cinematic stage writes: --p,
- * --pe, --pi, --pb and --f on an effect, --bgt on the film. No keyframes, no
- * filters, nothing blurred: glows are wide translucent strokes and gradients.
+ * Everything here moves on the variables the cinematic stage writes on an
+ * effect: --p, --pe, --pi, --pb and --f. No keyframes, no filters, nothing
+ * blurred: glows are wide translucent strokes and gradients. The background
+ * does not move at all (see background.tsx).
  *
  * Palette: night #07060b, the Mindflayer's green #c7f06a, wall-ink violet
  * #b7a9cf, the enemy's plan amber #ffb347.
@@ -24,7 +25,6 @@
 .cine-vfx > .mind-disc[data-held] {
   --in: 1;
 }
-.fx-mind-disc-wrap[data-follow-index="0"] > .mind-disc[data-skip-first],
 .fx-mind-hole-wrap[data-follow-index="0"] > .mind-hole[data-echo],
 .fx-mind-hole-wrap:not([data-follow-index]) > .mind-hole[data-echo] {
   display: none;

@@ -157,7 +157,7 @@ function Coil({ coil }: { coil: string }) {
  * A mind over a figure's head. Params: `held` (already there when the shot
  * begins), `doubt` (the target's shows doubt's path winding in), `holed`
  * (after: a hole through the centre and no coil), `small` (on the board),
- * `skipFirst` (every mind but the target's).
+ * `spin` (degrees it turns over the effect's life).
  */
 const Disc = ({ cue }: VfxProps) => {
   const m = maze(cue.seed ?? 11);
@@ -168,8 +168,8 @@ const Disc = ({ cue }: VfxProps) => {
       data-held={cue.params?.held ? "" : undefined}
       data-holed={holed || undefined}
       data-small={cue.params?.small ? "" : undefined}
-      data-skip-first={cue.params?.skipFirst ? "" : undefined}
-      style={v({ "--spin": `${Number(cue.params?.spin ?? 24)}deg`, "--turn0": `${((cue.seed ?? 11) * 47) % 360}deg` })}
+      // Unturned at the start, like the room-sized one: the same labyrinth.
+      style={v({ "--spin": `${Number(cue.params?.spin ?? 24)}deg` })}
     >
       <svg viewBox="-130 -130 260 260">
         <circle className="mind-disc-halo" r="124" />
@@ -183,6 +183,7 @@ const Disc = ({ cue }: VfxProps) => {
           ))}
           {cue.params?.doubt ? (
             <g className="mind-doubt">
+              {/* Only the stretch the film ever walks: a dot is a node to style every frame. */}
               {m.doubt.filter((p) => p.k <= 0.42).map((p, i) => (
                 <circle key={i} cx={f1(p.x)} cy={f1(p.y)} r="4.4" style={v({ "--k": p.k.toFixed(3) })} />
               ))}
