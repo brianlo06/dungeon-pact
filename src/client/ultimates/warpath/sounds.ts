@@ -57,10 +57,10 @@ export const voices: Record<string, Voice> = {
   "warpath-call": {
     bus: "sfx",
     render: (c, o, t) => {
-      wind(c, o, t, 0.9, 0.2, 1.2);
-      crash(c, o, t + 0.12, { seconds: 0.26, gain: 0.12, type: "bandpass", freq: 3200, sweepTo: 5400, q: 6 });
-      crash(c, o, t + 0.16, { seconds: 0.18, gain: 0.07, type: "bandpass", freq: 2100, sweepTo: 3000, q: 8 });
-      helmRing(c, o, t + 0.3, 0.035, 0.4);
+      wind(c, o, t, 0.9, 0.8, 1.2);
+      crash(c, o, t + 0.12, { seconds: 0.26, gain: 0.48, type: "bandpass", freq: 3200, sweepTo: 5400, q: 6 });
+      crash(c, o, t + 0.16, { seconds: 0.18, gain: 0.28, type: "bandpass", freq: 2100, sweepTo: 3000, q: 8 });
+      helmRing(c, o, t + 0.3, 0.14, 0.4);
     },
   },
   /** Under the close-up and the trail: the blizzard. */
@@ -80,27 +80,27 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       // The breath in.
-      crash(c, o, t, { seconds: 0.26, gain: 0.08, type: "bandpass", freq: 1600, sweepTo: 2600, q: 1.4 });
+      crash(c, o, t, { seconds: 0.26, gain: 0.192, type: "bandpass", freq: 1600, sweepTo: 2600, q: 1.4 });
       const at = t + 0.24;
       // The throat: a low buzz, and the vowel it is pushed through.
       for (const [f, g] of [
-        [98, 0.1],
-        [147, 0.06],
+        [98, 0.16],
+        [147, 0.096],
       ] as const)
         swell(c, o, at, { type: "sawtooth", freq: f, gain: g, attack: 0.03, hold: 0.36, release: 0.3, cutoff: 1100, detune: -14 });
       for (const [f, g, q] of [
-        [560, 0.22, 5],
-        [920, 0.16, 6],
-        [2400, 0.07, 8],
+        [560, 0.352, 5],
+        [920, 0.256, 6],
+        [2400, 0.112, 8],
       ] as const)
         crash(c, o, at, { seconds: 0.62, gain: g, freq: f, sweepTo: f * 0.86, q });
       // Rung through the steel: the helm answers the voice.
-      helmRing(c, o, at + 0.01, 0.06, 0.7);
-      helmRing(c, o, at + 0.2, 0.03, 0.5);
+      helmRing(c, o, at + 0.01, 0.144, 0.7);
+      helmRing(c, o, at + 0.2, 0.072, 0.5);
       // Mail and plate shaken.
       const r = rng(7);
       for (let i = 0; i < 10; i++)
-        crash(c, o, at + r() * 0.5, { seconds: 0.025, gain: 0.05 + r() * 0.04, freq: 3000 + r() * 3000, q: 5 });
+        crash(c, o, at + r() * 0.5, { seconds: 0.025, gain: 0.12 + r() * 0.04, freq: 3000 + r() * 3000, q: 5 });
     },
   },
   /** The motif on the footfalls: A2, C3, B2 on a war-horn, and E2 held. */
@@ -138,8 +138,8 @@ export const voices: Record<string, Voice> = {
   "warpath-gust": {
     bus: "sfx",
     render: (c, o, t) => {
-      crash(c, o, t, { seconds: 0.36, gain: 0.26, type: "bandpass", freq: 700, sweepTo: 2600, q: 0.9 });
-      crash(c, o, t + 0.05, { seconds: 0.3, gain: 0.1, type: "highpass", freq: 3000, sweepTo: 6000, q: 0.6 });
+      crash(c, o, t, { seconds: 0.36, gain: 0.286, type: "bandpass", freq: 700, sweepTo: 2600, q: 0.9 });
+      crash(c, o, t + 0.05, { seconds: 0.3, gain: 0.11, type: "highpass", freq: 3000, sweepTo: 6000, q: 0.6 });
     },
   },
   /**

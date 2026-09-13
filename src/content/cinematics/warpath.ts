@@ -52,11 +52,11 @@ const BARS = 0.1;
  */
 const CASTER = { x: 640, y: 860 };
 const TARGET = { x: 1000, y: 860 };
-const CONTACT = { x: 905, y: 640 };
+const CONTACT = { x: 878, y: 650 };
 const BOSS = {
   caster: { x: 640, y: 900 },
   target: { x: 1050, y: 900 },
-  contact: { x: 930, y: 660 },
+  contact: { x: 868, y: 708 },
 };
 
 export const warpath: Cinematic = {
@@ -350,13 +350,13 @@ export const warpath: Cinematic = {
       ],
       vfx: [
         { kind: "warpath-drift", at: 0, until: 1, layer: "front", seed: 7, params: { depth: 0.2, targetDepth: 0.1, heave: 0 } },
-        { kind: "warpath-cleave", at: 0.045, until: 0.42, x: CONTACT.x, y: CONTACT.y, rotate: 28, scale: 0.75, layer: "front", seed: 4 },
+        { kind: "warpath-cleave", at: 0.045, until: 0.42, x: CONTACT.x, y: CONTACT.y, rotate: 42, scale: 0.8, layer: "front", seed: 4 },
         { kind: "warpath-throw", at: 0.05, until: 0.95, x: TARGET.x + 60, y: TARGET.y - 40, scale: 1, layer: "front", seed: 8, params: { dir: 1 } },
         { kind: "warpath-snow", at: 0.1, until: 1, layer: "screen", seed: 19, params: { count: 70, wind: -1.2, fall: 0.45, near: 0.05, fadeIn: 0.3 } },
       ],
       screen: [
-        { kind: "two-tone", at: 0.04, ms: 50, color: SNOW, mode: "full" },
-        { kind: "invert", at: 0.04, ms: 40, mode: "fast" },
+        { kind: "two-tone", at: 0.014, ms: 24, color: SNOW, mode: "full" },
+        { kind: "invert", at: 0.014, ms: 20, mode: "fast" },
         { kind: "chromatic", at: 0.047, ms: 160, amount: 0.8 },
         { kind: "radial", at: 0.047, ms: 220, amount: 0.8, color: ICE },
       ],
@@ -372,7 +372,7 @@ export const warpath: Cinematic = {
       ],
       reveal: [{ at: 0.047, reveal: "impact" }],
       text: [
-        { kind: "impact", at: 0.06, until: 0.9, text: "$damage", x: 0.72, y: 0.24, rotate: 5 },
+        { kind: "impact", at: 0.048, until: 0.9, text: "$damage", x: 0.72, y: 0.24, rotate: 5 },
         { kind: "voice", at: 0.3, until: 1, text: "$voice.impact" },
       ],
       markers: [{ at: 0.047, label: "contact" }],
@@ -386,8 +386,8 @@ export const warpath: Cinematic = {
         },
         boss: {
           camera: {
-            from: { x: 880, y: 500, zoom: 1.02, rotate: -4 },
-            to: { x: 860, y: 495, zoom: 0.96, rotate: -1.5 },
+            from: { x: 880, y: 545, zoom: 0.92, rotate: -4 },
+            to: { x: 860, y: 540, zoom: 0.87, rotate: -1.5 },
             ease: "out",
           },
           actors: [
@@ -428,7 +428,7 @@ export const warpath: Cinematic = {
           ],
           vfx: [
             { kind: "warpath-drift", at: 0, until: 1, layer: "front", seed: 7, params: { depth: 0.2, targetDepth: 0.05, heave: 0 } },
-            { kind: "warpath-cleave", at: 0.045, until: 0.42, x: BOSS.contact.x, y: BOSS.contact.y, rotate: 28, scale: 1, layer: "front", seed: 4 },
+            { kind: "warpath-cleave", at: 0.045, until: 0.42, x: BOSS.contact.x, y: BOSS.contact.y, rotate: 42, scale: 1.05, layer: "front", seed: 4 },
             { kind: "warpath-throw", at: 0.05, until: 0.95, x: BOSS.target.x + 40, y: BOSS.target.y - 40, scale: 1.4, layer: "front", seed: 8, params: { dir: 1 } },
             { kind: "warpath-snow", at: 0.1, until: 1, layer: "screen", seed: 19, params: { count: 70, wind: -1.2, fall: 0.45, near: 0.05, fadeIn: 0.3 } },
           ],
