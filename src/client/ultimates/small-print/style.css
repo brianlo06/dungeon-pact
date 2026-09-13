@@ -1,0 +1,271 @@
+/*
+ * The Small Print — effects and space.
+ *
+ * Paper cream, iron-gall ink, the umber dark and one carbon blue. No filters
+ * and no keyframes: leaves are paths rebuilt on the combat clock (`vfx.tsx`),
+ * everything else moves on `--p` or a variable a frame writes, and a glow is a
+ * wide translucent stroke, never a blur.
+ */
+
+/* ---- the page ---- */
+.print-page-rules {
+  fill: none;
+  stroke-width: 2;
+  opacity: 0.32;
+}
+.print-page-script {
+  fill: none;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  opacity: 0.34;
+}
+.print-page-small {
+  fill: none;
+  stroke-width: 2.2;
+  opacity: 0.4;
+}
+.print-page-rosette {
+  fill: none;
+  stroke-width: 2.4;
+  opacity: 0.1;
+}
+
+/* ---- world-sized drawings ---- */
+.cine-vfx > .print-world {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none !important;
+}
+.print-leaf-lit {
+  fill: #efe3c6;
+  stroke: #1d160f;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.print-leaf-shade {
+  fill: #c9b58f;
+  stroke: #1d160f;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.print-leaf-border {
+  fill: none;
+  stroke: #8b95ff;
+  stroke-width: 3;
+  stroke-dasharray: 1.5 3.5;
+}
+.print-leaf-script {
+  fill: none;
+  stroke: #1d160f;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  opacity: 0.45;
+}
+.print-leaf-crease {
+  fill: none;
+  stroke: #fffaf0;
+  stroke-width: 2.4;
+  opacity: 0.9;
+}
+.print-leaf-shadow {
+  fill: #1d160f;
+  opacity: 0.22;
+}
+.print-signature {
+  fill: none;
+  stroke: #5b63d9;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.print-taut {
+  fill: none;
+  stroke: #fffaf0;
+  stroke-width: calc(2.5px + var(--taut, 0) * 8px);
+  stroke-linejoin: miter;
+  stroke-linecap: round;
+}
+.print-taut-glow {
+  fill: none;
+  stroke: #8b95ff;
+  stroke-width: 30;
+  stroke-linejoin: round;
+  opacity: calc(var(--taut, 0) * 0.6);
+}
+.print-wad .print-leaf-lit,
+.print-wad .print-leaf-shade {
+  stroke-width: 2.2;
+}
+
+/* ---- the page turning over the lens ---- */
+.cine-screen > .cine-vfx > .print-turn {
+  width: 100%;
+  height: 100%;
+}
+.print-turn-face {
+  fill: #efe3c6;
+}
+.print-turn-back {
+  fill: #c9b58f;
+}
+.print-turn-rules {
+  fill: none;
+  stroke: #8fa0c8;
+  stroke-width: 2;
+  opacity: 0.4;
+}
+.print-turn-crease {
+  fill: none;
+  stroke: #fffaf0;
+  stroke-width: 5;
+}
+.print-turn-shadow {
+  fill: #000;
+  opacity: 0.35;
+}
+
+/* ---- the quiet: the lenses and the page's edge ---- */
+.cine-vfx > .print-lens {
+  overflow: visible;
+}
+.print-lens-lines {
+  fill: none;
+  stroke: #fff6de;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  opacity: 0.38;
+}
+.print-lens-sheen {
+  fill: #efe3c6;
+  opacity: 0.12;
+}
+.cine-screen > .cine-vfx > .print-margin {
+  top: auto;
+  bottom: 0;
+  height: 26%;
+}
+.print-margin-sheet {
+  fill: #efe3c6;
+}
+.print-margin-rule {
+  stroke: #8b95ff;
+  stroke-width: 2;
+  fill: none;
+}
+.print-margin-print {
+  fill: none;
+  stroke: #1d160f;
+  stroke-width: 3;
+  opacity: 0.55;
+}
+
+/* ---- the crease snapping taut ---- */
+.cine-screen > .cine-vfx > .print-crack {
+  overflow: hidden;
+}
+.print-crack svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.print-crack-glow {
+  fill: none;
+  stroke: #8b95ff;
+  stroke-width: 44;
+  stroke-linejoin: miter;
+  opacity: calc(0.55 * (1 - var(--k, 0)));
+  vector-effect: non-scaling-stroke;
+}
+.print-crack-core {
+  fill: none;
+  stroke: #fffaf0;
+  stroke-width: 9;
+  stroke-linejoin: miter;
+  opacity: calc(1 - var(--k, 0));
+  vector-effect: non-scaling-stroke;
+}
+.print-sliver {
+  position: absolute;
+  width: var(--w);
+  height: calc(var(--w) * 0.36);
+  background: #efe3c6;
+  border: 2px solid #1d160f;
+  transform: translate3d(calc(var(--dx) * var(--k, 0)), calc(var(--dy) * var(--k, 0)), 0) rotate(calc(var(--r) * var(--k, 0)));
+  opacity: calc(1 - var(--p) * 1.1);
+}
+
+/* ---- on the board ---- */
+.cine-anchored > .print-slip {
+  position: absolute;
+  width: calc(var(--unit-w) * 0.62);
+  height: calc(var(--unit-w) * 0.62);
+  left: calc(var(--unit-w) * -0.06);
+  bottom: calc(var(--unit-h) * 0.12);
+  transform: none;
+}
+.print-slip svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.print-slip-stack {
+  fill: #c9b58f;
+  stroke: #1d160f;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.print-slip-stack.b {
+  fill: #efe3c6;
+}
+.print-slip-fold {
+  fill: #efe3c6;
+  stroke: #1d160f;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  transform: rotate(calc(var(--k, 0) * -70deg)) scaleY(calc(1 - var(--k, 0) * 0.3));
+}
+.print-slip-border {
+  fill: none;
+  stroke: #8b95ff;
+  stroke-width: 2.4;
+  stroke-dasharray: 1.5 3;
+  opacity: calc(1 - var(--k, 0));
+}
+.cine-anchored > .print-cover {
+  position: absolute;
+  width: calc(var(--unit-h) * 0.52);
+  height: calc(var(--unit-h) * 0.52);
+  left: calc(var(--unit-w) * 0.08);
+  bottom: calc(var(--unit-h) * -0.04);
+  transform: none;
+}
+.print-cover svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.cine-anchored > .print-bill-box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: none;
+}
+.print-bill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+}
+.print-bill svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
