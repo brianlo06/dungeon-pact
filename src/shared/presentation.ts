@@ -109,7 +109,17 @@ export type SfxName =
   /** Power gathering before a spell or a charged shot. */
   | "charge-rise"
   /** Something thrown or fired leaving its source. */
-  | "projectile-release";
+  | "projectile-release"
+  /** A riveting rifle's crack: a hard, dry report with a metal tail. */
+  | "rivet-fire"
+  /** A furnace breath leaving a horn: a long, low roar. */
+  | "flame-roar"
+  /** A bellows drawing breath: air pulled in, rising. */
+  | "bellows-draw"
+  /** Welding: a crackling hiss in short bursts. */
+  | "weld-hiss"
+  /** A spell landing: a bright, glassy burst. */
+  | "arcane-burst";
 
 export type CameraPreset =
   | "neutral"
@@ -183,6 +193,8 @@ export interface AbilityPresentation {
   /** Overrides the unit's own locomotion for this move: a pounce is a leap. */
   locomotion?: Locomotion;
   timing?: TimingHints;
+  /** What each moment of the move sounds like. */
+  sounds?: MoveSounds;
 }
 
 /* ------------------------------------------------------------ choreography -- */
@@ -234,6 +246,11 @@ export type Delivery =
   | "sigil"
   /** Light blooms on the target where it stands. */
   | "bloom"
+  /**
+   * One breath from the muzzle that spreads across every target at once — a
+   * flame cone. One visual and one arrival; nobody is visited individually.
+   */
+  | "cone"
   /** A mote of healing travels from the caster to the ally. */
   | "mote";
 
@@ -262,7 +279,15 @@ export type ProjectileVisual =
   | "ember"
   | "rivet"
   | "shard"
-  | "wave";
+  | "wave"
+  /** A jagged stroke of lightning, head first. */
+  | "lightning"
+  /** A burst of rain falling together. */
+  | "rain"
+  /** A white-hot weld spark carrying a repair. */
+  | "weld"
+  /** A cone of flame, stretched from the muzzle to the far target. */
+  | "cone";
 
 /** The path a projectile takes. */
 export type Trajectory =
@@ -289,10 +314,38 @@ export interface ProjectileLook {
   onArrival?: "stick" | "vanish" | "burst";
   /** The effect at the target on arrival. */
   impact?: VfxName;
+  /** A flash at the muzzle as it leaves: a gun's report. */
+  muzzleFlash?: boolean;
+}
+
+/**
+ * The sounds a move makes at each of its moments, over the generic ones.
+ * `null` silences a moment the choreographer would otherwise voice. Sounds
+ * the engine's beats carry — a hit's thud, a heal's chime — still play;
+ * these are layered over them.
+ */
+export interface MoveSounds {
+  /** Power gathering, from the start of the build-up. */
+  charge?: SfxName | null;
+  /** The shot or spell leaving the muzzle. */
+  release?: SfxName | null;
+  /** Something passing through the air, just after release. */
+  travel?: SfxName;
+  /** A melee swing, just before contact. */
+  swing?: SfxName | null;
+  /** Layered on the moment of contact or arrival. */
+  impact?: SfxName;
+  /** Each footfall of a heavy approach. */
+  step?: SfxName;
 }
 
 /** Nudges to a move's timing. Milliseconds at 1×; all optional. */
 export interface TimingHints {
+  /**
+   * The build-up before the strike clip starts. For a ranged move, how long
+   * power gathers before its clip begins: 0 when the clip performs the whole
+   * build-up itself.
+   */
   anticipation?: number;
   /** How long the aim or charge is held before release. */
   hold?: number;

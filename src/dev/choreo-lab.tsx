@@ -59,6 +59,23 @@ export function abilityNames(s: Snapshot, id: string): string[] {
     : [];
 }
 
+/** Whether a named ability of a unit's heals and deals no damage. */
+function heals(s: Snapshot, id: string, name: string): boolean {
+  const enemy = s.enemies.find((e) => e.id === id);
+  const hero = s.players.find((p) => p.id === id);
+  const list = enemy
+    ? enemyAbilities(enemies.find((d) => d.id === enemy.definition)!, s.combatVersion)
+    : hero
+      ? abilities(hero.heroId, s.combatVersion, hero.upgrades, hero.evolution, hero.items)
+      : [];
+  const a = list.find((x) => x.name === name);
+  return (
+    !!a &&
+    a.effects.some((e) => e.kind === "heal") &&
+    !a.effects.some((e) => e.kind === "damage")
+  );
+}
+
 const ARCHETYPE: Partial<Record<LabMove, Archetype>> = {
   melee: "melee",
   bow: "bow",
@@ -112,6 +129,11 @@ export function synthesise(
   if (target.id === actor.id)
     return {
       beats: [cast, { kind: "heal", actor: actor.id, target: actor.id, amount: 8, hp: actor.hp }],
+    };
+  // A repair on an ally is shown as the heal it is, not as a hit.
+  if (move === "ability" && heals(s, actor.id, label))
+    return {
+      beats: [cast, { kind: "heal", actor: actor.id, target: target.id, amount: amount, hp: target.hp }],
     };
   return { beats: [cast, hit(target)], archetype: ARCHETYPE[move] };
 }
