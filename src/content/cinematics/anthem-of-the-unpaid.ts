@@ -72,16 +72,17 @@ export const anthemOfTheUnpaid: Cinematic = {
     /* 1 · NOTE — extreme close-up: the horn blown, eyes shut, towards the party. */
     {
       id: "note",
-      kind: "extreme-close-up",
+      kind: "dutch",
       purpose:
         "Identity. The Herald has turned its back on the fight to face its own people: the horn at the lips, blown with the eyes shut and the brows up, and the one note unfurls out of the bell towards them. The eyes open at the end of it.",
       space: "cinematic",
       ms: 640,
       fastMs: 400,
-      transition: { kind: "black", ms: 60 },
+      // Long enough to hide the copy blending out of its rest pose into the horn.
+      transition: { kind: "black", ms: 130 },
       camera: {
-        from: { x: 930, y: 470, zoom: 2.4, rotate: 6 },
-        to: { x: 880, y: 470, zoom: 2.55, rotate: 3 },
+        from: { x: 900, y: 520, zoom: 1.7, rotate: 9 },
+        to: { x: 860, y: 510, zoom: 1.82, rotate: 6 },
         ease: "out",
       },
       background: "anthem-ridge",
@@ -91,7 +92,7 @@ export const anthemOfTheUnpaid: Cinematic = {
         { role: "caster", at: [1000, 1000], size: 820, face: -1, clip: "ult:anthem-call", then: "ult:anthem-call", look: "rim", rim: ROSE },
       ],
       vfx: [
-        { kind: "anthem-note", at: 0.08, until: 1, layer: "front", params: { x1: 820, y1: 520, x2: -100, y2: 420, width: 44, amp: 40 } },
+        { kind: "anthem-note", at: 0.08, until: 1, layer: "front", params: { x1: 770, y1: 490, x2: 300, y2: 400, width: 34, amp: 30, ring: 0 } },
       ],
       sound: [{ at: 0.04, sfx: "anthem-horn" }],
       text: [{ kind: "voice", at: 0.3, until: 1, text: "$voice.activation" }],
@@ -128,7 +129,7 @@ export const anthemOfTheUnpaid: Cinematic = {
           react: [{ at: 0.12, clip: "ult:anthem-answer", then: "ult:anthem-answer" }],
         },
       ],
-      vfx: [{ kind: "anthem-voices", at: 0, until: 1, layer: "front", params: { mode: "answer", x1: 1750, x2: -150, row: 0.6 } }],
+      vfx: [{ kind: "anthem-voices", at: 0, until: 1, layer: "back", params: { mode: "answer", x1: 1560, x2: -150, row: 0.74 } }],
       sound: [
         { at: 0.1, sfx: "anthem-answer" },
       ],
@@ -149,14 +150,14 @@ export const anthemOfTheUnpaid: Cinematic = {
       ms: 580,
       fastMs: 360,
       transition: { kind: "cut" },
-      camera: { from: { x: 830, y: 420, zoom: 3.1 } },
+      camera: { from: { x: 850, y: 505, zoom: 3.6 } },
       background: "anthem-ridge",
-      lighting: { exposure: 0.2, rim: [ROSE, 0.85, -1], vignette: 0.85, letterbox: 0.14 },
-      toLighting: { exposure: 0.16, rim: [ROSE, 1, -1], vignette: 0.9, letterbox: 0.14 },
+      lighting: { exposure: 0.1, rim: [ROSE, 0.3, -1], vignette: 0.9, letterbox: 0.14 },
+      toLighting: { exposure: 0.08, rim: [ROSE, 0.45, -1], vignette: 0.92, letterbox: 0.14 },
       actors: [
         { role: "caster", at: [900, 1030], size: 820, face: -1, clip: "ult:anthem-breathe", then: "ult:anthem-breathe", look: "rim", rim: ROSE },
       ],
-      vfx: [{ kind: "anthem-voices", at: 0, until: 1, layer: "back", params: { mode: "hang", cx: 800, cy: 330, span: 700 } }],
+      vfx: [{ kind: "anthem-voices", at: 0, until: 1, layer: "back", params: { mode: "hang", cx: 820, cy: 430, span: 760 } }],
       duck: [{ at: 0, level: 0.03, ms: 580 }],
       sound: [
         { at: 0, sfx: "anthem-hush" },
@@ -177,8 +178,8 @@ export const anthemOfTheUnpaid: Cinematic = {
       fastMs: 560,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 780, y: 520, zoom: 1.5, rotate: -4 },
-        to: { x: 790, y: 500, zoom: 1.2, rotate: -1 },
+        from: { x: 700, y: 540, zoom: 1.45, rotate: -4 },
+        to: { x: 690, y: 510, zoom: 1.18, rotate: -1 },
         ease: "out",
       },
       background: "anthem-ridge",
@@ -188,7 +189,7 @@ export const anthemOfTheUnpaid: Cinematic = {
         {
           role: "allies",
           at: [640, 830],
-          spread: [-190, -22],
+          spread: [-205, -22],
           size: 360,
           look: "lit",
           z: 1,
@@ -198,7 +199,7 @@ export const anthemOfTheUnpaid: Cinematic = {
         { role: "caster", at: [900, 860], size: 440, clip: "ult:anthem-cry", then: "ult:anthem-cry", look: "rim", rim: ROSE, z: 3 },
       ],
       vfx: [
-        { kind: "anthem-banner", at: 0, until: 1, layer: "back", params: { y: 160, sag: 70 } },
+        { kind: "anthem-banner", at: 0, until: 1, layer: "back", params: { y: 250, sag: 50 } },
         { kind: "anthem-ward", at: 0.02, until: 1, layer: "back", params: { half: "back" } },
         { kind: "anthem-ward", at: 0.02, until: 1, layer: "front", params: { half: "front" } },
         { kind: "anthem-chord", at: 0.02, until: 0.8, follow: "caster", x: 40, y: -470, scale: 1.2, color: ROSE, layer: "front" },
@@ -206,7 +207,7 @@ export const anthemOfTheUnpaid: Cinematic = {
       screen: [
         { kind: "two-tone", at: 0, ms: 70, color: ROSE, mode: "full" },
         { kind: "invert", at: 0, ms: 50, mode: "fast" },
-        { kind: "flash", at: 0.02, ms: 110, amount: 0.7, color: "#fff1f6" },
+        { kind: "flash", at: 0.12, ms: 110, amount: 0.55, color: "#fff1f6" },
         { kind: "chromatic", at: 0.03, ms: 150, amount: 0.8 },
         { kind: "radial", at: 0.02, ms: 260, amount: 0.8, color: ROSE },
       ],

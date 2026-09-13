@@ -336,7 +336,7 @@ export const renderers: Record<string, (p: VfxProps) => ReactNode> = {
 type Frame = (el: HTMLElement, p: number, age: number, ctx: VfxContext) => void;
 
 /** Where a figure sings from, and where what it carries is, from its ground point. */
-const mouth = (a: { x: number; y: number; h: number }): Pt => [a.x + a.h * 0.1, a.y - a.h * 0.82];
+const mouth = (a: { x: number; y: number; h: number }): Pt => [a.x + a.h * 0.05, a.y - a.h * 0.74];
 
 export const frames: Record<string, Frame> = {
   "anthem-note": (el, p, age) => {
@@ -411,7 +411,7 @@ export const frames: Record<string, Frame> = {
       waves: 2.4,
       phase: age * 0.011,
       twist: 3,
-      taper: -0.2,
+      taper: 0.3,
     });
     colourRibbon(groups[0], ROSE);
 
@@ -429,7 +429,7 @@ export const frames: Record<string, Frame> = {
       colourRibbon(g, voiceOf(hero));
       const [mx, my] = mouth(at);
       drawRibbon(g, since <= 0 ? null : {
-        line: bowed([mx, my], [mx + at.h * 0.75, my - at.h * 1.05], -at.h * 0.18),
+        line: bowed([mx, my], [mx + at.h * 1.15, my - at.h * 0.85], -at.h * 0.3),
         to: easeOut(k),
         width: at.h * 0.085,
         amp: at.h * 0.06,
@@ -442,8 +442,8 @@ export const frames: Record<string, Frame> = {
       if (look) {
         const lift = since <= 0 ? 0 : easeBack(since / 0.16);
         const settle = clamp((since - 0.16) / 0.3);
-        const y = -lift * (6 - settle * 2.5);
-        const r = -lift * (3 - settle * 1.2);
+        const y = -lift * (10 - settle * 4);
+        const r = -lift * (4.5 - settle * 1.5);
         const t = lift ? `translateY(${y.toFixed(2)}px) rotate(${r.toFixed(2)}deg)` : "";
         if (look.style.transform !== t) look.style.transform = t;
       }

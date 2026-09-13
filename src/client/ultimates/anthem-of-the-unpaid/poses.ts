@@ -42,7 +42,7 @@ const billow = (base: number, reach: number, squash = 0.08): Pose[] => [
 /* ── The Herald ────────────────────────────────────────────────────────── */
 
 /** The horn at the lips: the rig's rallying note, held. */
-const HORN_UP: Pose = { at: 0, rotate: -100, x: 0.03, y: -0.08, scale: 1.04 };
+const HORN_UP: Pose = { at: 0, rotate: -86, x: 0.07, y: -0.135, scale: 1.04 };
 
 /** On the board: the horn comes up, the chest fills, the banner is set. */
 const lift: Clip = {
@@ -60,7 +60,11 @@ const lift: Clip = {
       { ...HORN_UP, at: 0.8 },
       { ...HORN_UP, at: 1 },
     ],
-    banner: turn([0, 0], [0.35, -5], [1, -4]),
+    banner: [
+      { at: 0, rotate: 0, y: 0 },
+      { at: 0.35, rotate: -5, y: 0 },
+      { at: 1, rotate: 3, y: -0.1 },
+    ],
     flag: billow(0, -8),
     head: turn([0, 0], [0.4, 2], [0.8, -7], [1, -7]),
     legs: [
@@ -87,12 +91,15 @@ const call: Clip = {
   parts: {
     horn: [
       { ...HORN_UP, at: 0 },
-      { ...HORN_UP, at: 0.3, rotate: -104, scale: 1.07 },
-      { ...HORN_UP, at: 0.75, rotate: -103, scale: 1.06 },
-      { ...HORN_UP, at: 1, rotate: -101 },
+      { ...HORN_UP, at: 0.3, rotate: -89, scale: 1.07 },
+      { ...HORN_UP, at: 0.75, rotate: -88, scale: 1.06 },
+      { ...HORN_UP, at: 1, rotate: -87 },
     ],
-    head: turn([0, -7], [0.3, -11], [0.75, -10], [1, -8]),
-    banner: turn([0, -4], [1, -5]),
+    head: turn([0, -3], [0.3, -5], [0.75, -5], [1, -4]),
+    banner: [
+      { at: 0, rotate: 3, y: -0.1 },
+      { at: 1, rotate: 5, y: -0.11 },
+    ],
     flag: billow(-4, -10),
     body: [
       { at: 0, squash: 1 },
@@ -309,8 +316,8 @@ function answer(hero: string): Clip {
         ? face(
             [0, {}],
             [0.22, { brow: -0.8, open: 1.25, mouth: 0.9 }],
-            [0.55, { brow: -1.4, knit: -3, open: 1.1, mouth: 2, wide: 0.9 }],
-            [1, { brow: -1.5, knit: -3, open: 1.05, mouth: 2.1, wide: 0.9 }],
+            [0.55, { brow: -1.6, knit: -3, open: 1.2, mouth: 2.6, wide: 0.92 }],
+            [1, { brow: -1.7, knit: -3, open: 1.15, mouth: 2.7, wide: 0.92 }],
           )
         : {}),
     },
