@@ -25,7 +25,8 @@ import "./style.css";
  *                in from off the frame (`sweep`)
  *   din-clang    the blow drawn: a struck disc, wedges of ink and bone, and
  *                broken rings, boiling between three drawings
- *   din-walk     the Warcaller's stride, written on its copy's `.cine-look`
+ *   din-body     the Warcaller's stride, coil and lean, written on its
+ *                copy's `.cine-look` (`mode`: walk | draw | blow)
  *   din-courage  the ring reaching the party: every ally lurches forward at
  *                once and carries a ring of or before it
  *   din-board    on the real board: the din over a unit, the target still
@@ -344,18 +345,38 @@ function useRestore(role: "caster" | "allies") {
   return ref;
 }
 
-function Walk() {
+function Body({ cue }: VfxProps) {
   const ref = useRestore("caster");
-  return <span ref={ref} className="din-marker" />;
+  return <span ref={ref} className="din-marker" data-mode={String(cue.params?.mode ?? "walk")} />;
 }
 
-const walk = (el: HTMLElement, _p: number, age: number) => {
+/**
+ * The whole figure's weight, which a copy's root track cannot give it today:
+ * the stride's bob (`walk`), the coil under the raised weapon (`draw`), and
+ * the lean into the blow and the give out of it (`blow`). Pixels are in the
+ * figure's own 100-unit box, so they scale with the shot.
+ */
+const body = (el: HTMLElement, p: number, age: number) => {
   const look = rootOf(el)?.querySelector<HTMLElement>('.cine-actor[data-role="caster"] .cine-look');
   if (!look) return;
-  // Two steps a clip: down on each footfall, up between, a little roll.
-  const phase = (age / 450) * Math.PI;
-  const bob = Math.abs(Math.sin(phase));
-  const t = `translateY(${(-bob * 2.4 + 0.8).toFixed(2)}px) rotate(${(Math.sin(phase) * 1.1).toFixed(2)}deg)`;
+  const mode = el.querySelector<HTMLElement>(".din-marker")?.dataset.mode ?? "walk";
+  let t = "";
+  if (mode === "walk") {
+    // Two steps a clip: down on each footfall, up between, a little roll.
+    const phase = (age / 450) * Math.PI;
+    const bob = Math.abs(Math.sin(phase));
+    t = `translateY(${(-bob * 2.4 + 0.8).toFixed(2)}px) rotate(${(Math.sin(phase) * 1.1).toFixed(2)}deg)`;
+  } else if (mode === "draw") {
+    // Sink back onto the rear foot under the weapon, then hold dead still.
+    const k = easeInOut(p / 0.4);
+    t = `translate(${(-2.5 * k).toFixed(2)}px, ${(1.5 * k).toFixed(2)}px) rotate(${(-4 * k).toFixed(2)}deg) scale(${(1 + 0.03 * k).toFixed(3)}, ${(1 - 0.03 * k).toFixed(3)})`;
+  } else {
+    // Everything into the blow on the frame it lands, then a slow give back.
+    const hit = clamp(p / 0.04);
+    const back = easeOut((p - 0.04) / 0.6);
+    const lean = hit * (1 - back * 0.4);
+    t = `translate(${(9 * lean).toFixed(2)}px, ${(3 * lean).toFixed(2)}px) rotate(${(9 * lean).toFixed(2)}deg) scale(${(1 + 0.05 * lean).toFixed(3)}, ${(1 - 0.07 * lean).toFixed(3)})`;
+  }
   if (look.style.transform !== t) look.style.transform = t;
 };
 
@@ -486,7 +507,7 @@ export const renderers: Record<string, (p: VfxProps) => ReactNode> = {
   "din-noise": Din,
   "din-ring": Ring,
   "din-clang": Clang,
-  "din-walk": Walk,
+  "din-body": Body,
   "din-courage": Courage,
   "din-board": Board,
 };
@@ -497,7 +518,7 @@ export const frames: Record<string, Frame> = {
   "din-noise": noise,
   "din-ring": ring,
   "din-clang": clang,
-  "din-walk": walk,
+  "din-body": body,
   "din-courage": courage,
   "din-board": board,
 };

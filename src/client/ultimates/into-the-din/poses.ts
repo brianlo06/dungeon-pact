@@ -21,7 +21,8 @@ import { face, type Expression } from "../../battle/face";
  *
  * Root tracks are kept sensible, but a film copy's root is not animated today
  * (the rig is attached before its animator exists), so every clip here moves
- * through its parts, and the walk's bob and the surge's lurch are written on
+ * through its parts; the walk's bob, the coil under the weapon, the lean into
+ * the blow (`din-body`) and the surge's lurch (`din-courage`) are written on
  * the copy's `.cine-look` by the film's own effects.
  *
  * Nothing here that plays on the battlefield (`din-step`, `din-hold`) drives a
@@ -109,7 +110,7 @@ const grin: Clip = {
 /**
  * Walking out, not charging: two unhurried steps, the weapon on the shoulder
  * and the horn arm swinging with the stride. The figure's bob is the film's
- * (`din-walk`); here the legs take the weight and the body answers it.
+ * (`din-body`); here the legs take the weight and the body answers it.
  */
 const walk: Clip = {
   duration: 900,

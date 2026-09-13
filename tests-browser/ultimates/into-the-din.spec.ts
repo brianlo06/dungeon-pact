@@ -81,8 +81,8 @@ test("the quiet is over the enemy's shoulder, the face acts, and the din goes ou
   const late = await strokes(page, "bone");
   expect(late).toBeLessThan(early * 0.25);
   expect(await page.locator(".fx-din-clang-wrap, .fx-din-ring-wrap, .cine-accent").count()).toBe(0);
-  // The walk's stride was put back when its shot ended.
-  expect(await caster.locator(".cine-look").evaluate((e) => (e as HTMLElement).style.transform)).toBe("");
+  // The stride was put back when the walk ended; here the figure only sinks under the weapon.
+  expect(await caster.locator(".cine-look").evaluate((e) => (e as HTMLElement).style.transform)).not.toContain("translateY");
 });
 
 test("the blow is drawn, tunes the din and reveals the damage on the frame", async ({ page }) => {

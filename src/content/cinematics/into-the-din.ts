@@ -160,7 +160,7 @@ export const intoTheDin: Cinematic = {
       vfx: [
         { kind: "din-noise", at: 0, until: 1, layer: "back", seed: 31, params: { mode: "loud", around: "targets,allies", field: 80, dense: 1.2 } },
         { kind: "din-noise", at: 0, until: 1, layer: "front", seed: 37, params: { mode: "loud", around: "targets", field: 0, dense: 0.8, width: 0.9 } },
-        { kind: "din-walk", at: 0, until: 1, layer: "back" },
+        { kind: "din-body", at: 0, until: 1, layer: "back", params: { mode: "walk" } },
       ],
       sound: [{ at: 0.12, sfx: "din-motif" }],
       text: [
@@ -248,6 +248,7 @@ export const intoTheDin: Cinematic = {
       ],
       vfx: [
         { kind: "din-noise", at: 0, until: 1, layer: "back", seed: 41, params: { mode: "freeze", around: "caster", field: 70, dense: 1.4, width: 0.8 } },
+        { kind: "din-body", at: 0, until: 1, layer: "back", params: { mode: "draw" } },
       ],
       duck: [{ at: 0, level: 0.04, ms: 580 }],
       sound: [{ at: 0.06, sfx: "din-heart" }],
@@ -301,8 +302,9 @@ export const intoTheDin: Cinematic = {
       vfx: [
         { kind: "din-noise", at: 0, until: 1, layer: "back", seed: 51, params: { mode: "tune", around: "caster,targets", field: 110, dense: 1.2, ox: CONTACT.x, oy: CONTACT.y, speed: 1500, from: 0.04 } },
         { kind: "din-ring", at: 0.04, until: 1, layer: "front", params: { ox: CONTACT.x, oy: CONTACT.y, speed: 1700, gap: 60, rings: 5 } },
-        { kind: "din-clang", at: 0.03, until: 0.42, x: CONTACT.x, y: CONTACT.y, scale: 1, layer: "front", seed: 4 },
+        { kind: "din-clang", at: 0.03, until: 0.32, x: CONTACT.x, y: CONTACT.y, scale: 0.62, layer: "front", seed: 4 },
         { kind: "sparks", at: 0.04, until: 0.6, x: CONTACT.x, y: CONTACT.y, scale: 1.3, color: HOT, seed: 17, layer: "front" },
+        { kind: "din-body", at: 0, until: 1, layer: "back", params: { mode: "blow" } },
       ],
       screen: [
         { kind: "two-tone", at: 0, ms: 70, color: BONE, mode: "full" },
@@ -356,8 +358,9 @@ export const intoTheDin: Cinematic = {
           vfx: [
             { kind: "din-noise", at: 0, until: 1, layer: "back", seed: 51, params: { mode: "tune", around: "caster,targets", field: 110, dense: 1.2, ox: 790, oy: 720, speed: 1700, from: 0.04 } },
             { kind: "din-ring", at: 0.04, until: 1, layer: "front", params: { ox: 790, oy: 720, speed: 1900, gap: 70, rings: 5 } },
-            { kind: "din-clang", at: 0.03, until: 0.42, x: 790, y: 720, scale: 1.25, layer: "front", seed: 4 },
+            { kind: "din-clang", at: 0.03, until: 0.32, x: 790, y: 720, scale: 0.85, layer: "front", seed: 4 },
             { kind: "sparks", at: 0.04, until: 0.6, x: 790, y: 720, scale: 1.5, color: HOT, seed: 17, layer: "front" },
+            { kind: "din-body", at: 0, until: 1, layer: "back", params: { mode: "blow" } },
           ],
         },
       },
@@ -374,8 +377,8 @@ export const intoTheDin: Cinematic = {
       fastMs: 360,
       transition: { kind: "whip", ms: 100, dir: -1 },
       camera: {
-        from: { x: 720, y: 560, zoom: 1.45 },
-        to: { x: 700, y: 575, zoom: 1.56 },
+        from: { x: 700, y: 560, zoom: 1.34 },
+        to: { x: 690, y: 572, zoom: 1.44 },
         ease: "out",
       },
       background: "din-field",
@@ -385,8 +388,8 @@ export const intoTheDin: Cinematic = {
         { role: "caster", at: [1110, 700], size: 230, clip: "ult:din-front", then: "ult:din-front", look: "rim", rim: BONE, z: 1 },
         {
           role: "allies",
-          at: [600, 880],
-          spread: [-250, 14],
+          at: [650, 880],
+          spread: [-210, 14],
           size: 500,
           look: "lit",
           rim: OR,
