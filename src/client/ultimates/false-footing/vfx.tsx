@@ -390,7 +390,7 @@ function crown(seed: number) {
   const n = 9;
   for (let i = 0; i < n; i++) {
     const a = Math.PI * (1.08 + (i / (n - 1)) * 0.84) + (rand() - 0.5) * 0.35;
-    const len = 60 + rand() * 200;
+    const len = 50 + rand() * 140;
     const w = 16 + rand() * 36;
     const ex = Math.cos(a) * len;
     const ey = Math.sin(a) * len;
@@ -401,7 +401,7 @@ function crown(seed: number) {
   }
   for (let i = 0; i < 7; i++) {
     const a = Math.PI * (1.05 + rand() * 0.9);
-    const r = 150 + rand() * 150;
+    const r = 110 + rand() * 130;
     clumps.push({ d: blob(Math.cos(a) * r, Math.sin(a) * r * 0.9, 10 + rand() * 22), shade: rand() < 0.7 ? LIT : "#c9d6ee" });
   }
   return clumps;

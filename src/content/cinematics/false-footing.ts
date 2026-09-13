@@ -295,10 +295,8 @@ export const falseFooting: Cinematic = {
       toLighting: { exposure: 0.66, tint: [SNOWLIGHT, 0], back: [COLD, 0.15], under: [COLD, 0.25], vignette: 0.45, letterbox: BARS },
       actors: [HAULER, snared([1030, 800], 400, [-110, -10], -20)],
       vfx: springVfx(1, 1),
-      screen: [
-        { kind: "two-tone", at: 0, ms: 40 },
-        { kind: "flash", at: 0.1, ms: 70, amount: 0.4, color: SNOWLIGHT },
-      ],
+      // The two-tone frame is over before the stop, so the held frame is in colour.
+      screen: [{ kind: "two-tone", at: 0, ms: 40 }],
       stop: [{ at: 0.06, ms: 150 }],
       shake: [
         { at: 0.06, amount: 0.034 },
@@ -322,7 +320,7 @@ export const falseFooting: Cinematic = {
             ease: "out",
           },
           actors: [{ ...HAULER, at: [290, 840], size: 340 }, snared([1050, 820], 340, [-50, -6], -10)],
-          vfx: springVfx(1.2, 1),
+          vfx: springVfx(1, 1),
         },
         boss: {
           camera: {
@@ -331,7 +329,7 @@ export const falseFooting: Cinematic = {
             ease: "out",
           },
           actors: [{ ...HAULER, at: [300, 810], size: 300 }, snared([1080, 820], 290, [-26, 16], -4)],
-          vfx: springVfx(1.5, 0.9),
+          vfx: springVfx(1.15, 0.9),
         },
       },
     },
