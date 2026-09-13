@@ -447,10 +447,23 @@ Chromium on the real GPU (`GPU=1 scripts/profile-ultimate.ts`), dev build.
 - Simulation test: zero rejected plans across every composition with the bots
   calling Ultimates.
 
-Full unit suite: 395 passing. The existing browser suites at 1280×720 show 13
-failures in `combat-layout` and `stage-ui`; **the same 13 fail on a clean
-checkout of `a8fb81e`**, so they predate this branch (the other session has
-uncommitted edits to those spec files).
+- `tests-browser/ultimates/<id>.spec.ts`: one per authored film (Debt of
+  Thunder 3, Hall of Mirrors 7, Breakwater 6, The Hundredth Mark 4).
+
+On `a4fa312` (production `cecf3f6` merged in): the unit suite passes (424; the
+simulation tests time out only when the machine is saturated). The whole
+browser suite, 724 checks at four resolutions, one worker, fails in exactly
+three places, and **each fails the same way on a clean checkout of
+`cecf3f6`**, so none is from this branch:
+
+- `boss-moves` "the wind-up lands as the signature" (every resolution);
+- `stage-ui` "chips hold still" (1280×720, 1366×768);
+- `motion` "a revived hero stands" at 1920×1080 (the Pact revival option is
+  never stable enough to click).
+
+The suite did catch one regression here, since fixed: the face parts were held
+on the battlefield too, so a round's figure had parts the animator never wrote
+(`party.spec`).
 
 ---
 
