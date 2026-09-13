@@ -225,6 +225,12 @@ const Mill = ({ cue }: VfxProps) => (
 
 const Proceeds = () => <div className="fc-proceeds" data-fc="" />;
 
+/**
+ * The lamp's pool thrown up behind the target at the blow, so the drawn
+ * brass-and-ink frame has brass behind the target to cut its silhouette on.
+ */
+const Glow = () => <i className="fc-glow" />;
+
 const Ward = () => (
   <div className="fc-ward">
     <i className="fc-ward-ring" />
@@ -563,6 +569,9 @@ interface Flight {
   arrive: number;
   lift: number;
   size: number;
+  /** Where it lands, relative to the effect, last measured. */
+  tx?: number;
+  ty?: number;
 }
 const flights = new WeakMap<HTMLElement, Flight[]>();
 
@@ -594,23 +603,35 @@ const proceeds: Frame = (el, p, age) => {
   const oy = parseFloat(el.style.top) || 0;
   const ah = parseFloat(el.style.getPropertyValue("--ah")) || 120;
   const from = [0, -ah * 0.55];
-  let treasury: DOMRect | null = null;
-  const rootBox = root.getBoundingClientRect();
-  for (const f of list) {
-    let tx = 0;
-    let ty = 0;
-    if (f.to) {
-      tx = (parseFloat(f.to.style.left) || 0) - ox;
-      ty = (parseFloat(f.to.style.top) || 0) - oy - (parseFloat(f.to.style.getPropertyValue("--ah")) || ah) * 0.5;
-    } else {
-      treasury ??= document.querySelector<HTMLElement>(".strip-treasury")?.getBoundingClientRect() ?? null;
-      if (!treasury) {
-        setStyle(f.node, "opacity", "0");
+  // Where each coin is going, read off the board before anything is written,
+  // and only now and then: the board does not move under a film. A ward not
+  // yet in its window has not been placed by the engine, so it is measured
+  // the way the engine will place it.
+  const last = Number(box.dataset.measured ?? -1e9);
+  if (age - last > 200 || age < last || !list.some((f) => f.tx !== undefined)) {
+    box.dataset.measured = String(age);
+    const rootBox = root.getBoundingClientRect();
+    const treasury = document.querySelector<HTMLElement>(".strip-treasury")?.getBoundingClientRect();
+    for (const f of list) {
+      const unit = f.to?.dataset.anchor;
+      const r = unit
+        ? document.querySelector<HTMLElement>(`.stage [data-unit="${CSS.escape(unit)}"] .combatant-rig`)?.getBoundingClientRect()
+        : treasury;
+      if (!r || !r.width) {
+        f.tx = undefined;
         continue;
       }
-      tx = treasury.left + treasury.width * 0.2 - rootBox.left - ox;
-      ty = treasury.top + treasury.height / 2 - rootBox.top - oy;
+      f.tx = unit ? r.left + r.width * 0.5 - rootBox.left - ox : r.left + r.width * 0.2 - rootBox.left - ox;
+      f.ty = unit ? r.bottom - r.height * 0.45 - rootBox.top - oy : r.top + r.height / 2 - rootBox.top - oy;
     }
+  }
+  for (const f of list) {
+    if (f.tx === undefined || f.ty === undefined) {
+      setStyle(f.node, "opacity", "0");
+      continue;
+    }
+    const tx = f.tx;
+    const ty = f.ty;
     const flight = 0.26;
     const k = (p - (f.arrive - flight)) / flight;
     if (k < 0 || k > 1.02) {
@@ -629,6 +650,17 @@ const proceeds: Frame = (el, p, age) => {
   }
 };
 
+const glow: Frame = (el, p, _age, ctx) => {
+  const node = el.querySelector<HTMLElement>(".fc-glow");
+  const t = ctx.actor("targets-0");
+  if (!node || !t) return;
+  const d = t.h * 2.3;
+  setStyle(node, "width", `${d.toFixed(1)}px`);
+  setStyle(node, "height", `${d.toFixed(1)}px`);
+  setTransform(node, `translate3d(${(-d / 2 - t.h * 0.2).toFixed(1)}px, ${(-d / 2 - t.h * 0.5).toFixed(1)}px, 0)`);
+  setStyle(node, "opacity", (1 - 0.75 * ease("out", clamp(p / 0.6))).toFixed(3));
+};
+
 /* ── Registered ────────────────────────────────────────────────────────── */
 
 export const renderers: Record<string, (p: VfxProps) => ReactNode> = {
@@ -638,6 +670,7 @@ export const renderers: Record<string, (p: VfxProps) => ReactNode> = {
   "foreclosure-coin": Coin,
   "foreclosure-mill": Mill,
   "foreclosure-proceeds": Proceeds,
+  "foreclosure-glow": Glow,
   "foreclosure-ward": Ward,
 };
 
@@ -667,5 +700,6 @@ export const frames: Record<string, Frame> = {
   "foreclosure-coin": withParams(coin),
   "foreclosure-mill": withParams(mill),
   "foreclosure-proceeds": withParams(proceeds),
+  "foreclosure-glow": glow,
 };
 

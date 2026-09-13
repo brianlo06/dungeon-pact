@@ -20,6 +20,24 @@ function coin(c: AudioContext, o: AudioNode, t: number, midi: number, gain = 0.1
   hit(c, o, t, { type: "sine", from: f * 5.4, gain: gain * 0.22, attack: 0.002, decay: ring * 0.3 });
 }
 
+/**
+ * A coin spun on brass for `length` seconds: the rattle speeds up and drops in
+ * pitch as it lies over, ends on one clack, and then there is nothing.
+ */
+function spin(c: AudioContext, o: AudioNode, t: number, length: number) {
+  let at = 0;
+  let i = 0;
+  while (at < length && i < 90) {
+    const k = at / length;
+    const gap = (0.045 * (1 - k) ** 1.6 + 0.004) * (length / 0.52);
+    crash(c, o, t + at, { seconds: 0.012, gain: 0.05 + 0.07 * k, freq: 5200 - 3600 * k, q: 6 });
+    if (i % 3 === 0) hit(c, o, t + at, { type: "sine", from: 2400 - 1500 * k, gain: 0.012, decay: 0.03 });
+    at += Math.max(0.004, gap);
+    i++;
+  }
+  coin(c, o, t + length, 96, 0.05, 0.12);
+}
+
 export const voices: Record<string, Voice> = {
   /** A shop's counter bell, struck once: the target has been priced. */
   "foreclosure-bell": {
@@ -82,24 +100,9 @@ export const voices: Record<string, Voice> = {
    * The quiet: a coin spun on brass, wobbling down. The rattle speeds up and
    * drops in pitch as it lies over, and stops dead.
    */
-  "foreclosure-spin": {
-    bus: "sfx",
-    render: (c, o, t) => {
-      const length = 0.5;
-      let at = 0;
-      let i = 0;
-      while (at < length && i < 90) {
-        const k = at / length;
-        const gap = 0.045 * (1 - k) ** 1.6 + 0.004;
-        crash(c, o, t + at, { seconds: 0.012, gain: 0.05 + 0.07 * k, freq: 5200 - 3600 * k, q: 6 });
-        if (i % 3 === 0) hit(c, o, t + at, { type: "sine", from: 2400 - 1500 * k, gain: 0.012, decay: 0.03 });
-        at += gap;
-        i++;
-      }
-      // The last clack as it lies flat.
-      coin(c, o, t + length, 96, 0.05, 0.12);
-    },
-  },
+  "foreclosure-spin": { bus: "sfx", render: (c, o, t) => spin(c, o, t, 0.52) },
+  /** The same, for the FAST cut's shorter quiet: it still stops as the coin lies flat. */
+  "foreclosure-spin-fast": { bus: "sfx", render: (c, o, t) => spin(c, o, t, 0.335) },
   /**
    * The blow, in layers: the ledger's leather slap, a sub that drops away, a
    * struck brass plate (the collateral knocked off), and the room.

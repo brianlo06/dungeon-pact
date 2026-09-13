@@ -129,7 +129,9 @@ const settle: Clip = {
       { at: 1, rotate: 1, y: 0.002 },
     ],
     ...face([0, WATCH], [0.4, { ...WATCH, open: 0.62 }], [0.72, COLD], [0.86, COLD], [1, SMILE]),
-    ledger: turn([0, 20], [0.4, 70], [0.8, 132], [1, 148]),
+    // Drawn back behind the body, not raised: raised, a worn weapon (longer
+    // than the book) lies across the face this shot is for.
+    ledger: turn([0, 0], [0.6, -10], [1, -26]),
     // The balance let down, out of the picture: nothing between the face and the coin.
     scales: turn([0, 20], [1, 24]),
     pans: turn([0, -20], [0.5, -23], [1, -24]),

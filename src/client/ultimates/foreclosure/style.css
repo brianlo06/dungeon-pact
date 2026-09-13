@@ -236,6 +236,14 @@
   transform: rotate(9deg);
 }
 
+.cine-vfx > .fc-glow {
+  left: 0;
+  top: 0;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff0bf 0%, rgba(243, 212, 135, 0.85) 38%, rgba(243, 212, 135, 0) 100%);
+  will-change: transform;
+}
+
 /* ---- the proceeds, over the real board ---- */
 .fc-flying {
   opacity: 0;

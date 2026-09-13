@@ -195,7 +195,7 @@ export const foreclosure: Cinematic = {
       id: "settle",
       kind: "face-close-up",
       purpose:
-        "The quiet. The coin spins down on the brass in the foreground while the music falls away; the Broker's eyes follow it, the brows come down onto the spectacles, the mouth goes flat — and as the whirr stops dead and the ledger rises out of frame, one corner of it lifts.",
+        "The quiet. The coin spins down on the brass in the foreground while the music falls away; the Broker's eyes follow it, the brows come down onto the spectacles, the mouth goes flat — and as the whirr stops dead and the book is drawn back out of frame, one corner of it lifts.",
       space: "cinematic",
       ms: 620,
       fastMs: 400,
@@ -211,7 +211,10 @@ export const foreclosure: Cinematic = {
       actors: [{ role: "caster", at: [620, 1500], size: 1100, clip: "ult:settle", then: "ult:settle", look: "rim", rim: BRASS }],
       vfx: [{ kind: "foreclosure-coin", at: 0, until: 1, x: 900, y: 915, layer: "front", params: { mode: "spin", size: 120, flat: 0.86 } }],
       duck: [{ at: 0, level: 0.05, ms: 700 }],
-      sound: [{ at: 0.02, sfx: "foreclosure-spin" }],
+      sound: [
+        { at: 0.02, sfx: "foreclosure-spin", mode: "full" },
+        { at: 0.02, sfx: "foreclosure-spin-fast", mode: "fast" },
+      ],
       markers: [{ at: 0.86, label: "flat" }],
     },
 
@@ -247,6 +250,7 @@ export const foreclosure: Cinematic = {
         },
       ],
       vfx: [
+        { kind: "foreclosure-glow", at: 0, until: 1, follow: "target", layer: "back" },
         { kind: "foreclosure-collateral", at: 0, until: 1, follow: "target", layer: "front", seed: 41, params: { mode: "seize", hit: 0.07, ox: -0.2, oy: 0.5, size: 0.95, fly: -1 } },
         { kind: "foreclosure-tag", at: 0, until: 1, follow: "target", layer: "front", params: { mode: "tear", hit: 0.07, ox: 0.12, oy: 0.95 } },
         { kind: "foreclosure-mill", at: 0.07, until: 0.5, follow: "target", layer: "front", params: { ox: -0.3, oy: 0.55, size: 1 } },
@@ -300,6 +304,7 @@ export const foreclosure: Cinematic = {
             },
           ],
           vfx: [
+            { kind: "foreclosure-glow", at: 0, until: 1, follow: "target", layer: "back" },
             { kind: "foreclosure-collateral", at: 0, until: 1, follow: "target", layer: "front", seed: 41, params: { mode: "seize", hit: 0.07, ox: -0.14, oy: 0.46, size: 0.8, fly: -1 } },
             { kind: "foreclosure-tag", at: 0, until: 1, follow: "target", layer: "front", params: { mode: "tear", hit: 0.07, ox: 0.1, oy: 0.9, size: 0.8 } },
             { kind: "foreclosure-mill", at: 0.07, until: 0.5, follow: "target", layer: "front", params: { ox: -0.24, oy: 0.5, size: 0.9 } },
