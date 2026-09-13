@@ -8,16 +8,6 @@
  * #b7a9cf, the enemy's plan amber #ffb347.
  */
 
-/* ---- the floor of the thinking ---- */
-.mind-bg-drift {
-  transform: translate(calc(sin(var(--bgt, 0) * 0.9 + var(--i)) * 14px), calc(var(--bgt, 0) * -22px));
-}
-.mind-bg-turn {
-  transform: rotate(calc(var(--bgt, 0) * 2deg));
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-}
-
 /* ---- a mind, over a head ---- */
 .cine-vfx > .mind-disc {
   --size: calc(var(--ah, 240px) * 0.55 + 40px);
@@ -364,15 +354,21 @@
 .cine-screen > .cine-vfx > .mind-iris {
   overflow: hidden;
 }
+/*
+ * One screen-sized gradient, not a shadow: a ring of black around a hole,
+ * with a thin green edge. A spread shadow big enough to cover the frame is a
+ * layer many times the screen's size.
+ */
 .mind-iris i {
   position: absolute;
-  left: var(--cx, 50%);
-  top: var(--cy, 50%);
-  width: calc(var(--rr) * 2);
-  height: calc(var(--rr) * 2);
-  margin: calc(var(--rr) * -1);
-  border-radius: 50%;
-  box-shadow: 0 0 0 300vmax #030206, inset 0 0 0 3px rgba(199, 240, 106, 0.55);
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--cx, 50%) var(--cy, 50%),
+    transparent calc(var(--rr) - 3px),
+    rgba(199, 240, 106, 0.6) calc(var(--rr) - 2px),
+    rgba(199, 240, 106, 0.6) var(--rr),
+    #030206 calc(var(--rr) + 1px)
+  );
 }
 .mind-iris[data-mode="close"] i {
   --rr: calc(var(--r, 60px) + (1 - var(--pe)) * 1500px);

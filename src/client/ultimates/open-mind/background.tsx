@@ -1,4 +1,4 @@
-import type { ComponentType, CSSProperties } from "react";
+import type { ComponentType } from "react";
 import "./style.css";
 
 /**
@@ -9,7 +9,7 @@ import "./style.css";
  * stands on it. Each wall is a pale violet line with a dark face under it,
  * the way a wall cut into paper has a shadow. A black sky, a low green haze
  * along the horizon where the Mindflayer's gaze is coming from, and a few
- * half-formed thoughts rising off the floor: little unfinished spirals.
+ * half-formed thoughts hanging over the floor: little unfinished spirals.
  * Nothing is lit but the walls. It is the inside of a head, and there is no
  * glass in it.
  *
@@ -22,10 +22,10 @@ const CX = 980;
 const CY = 790;
 /** Perspective squash of the floor. */
 const SQ = 0.2;
-const RADII = [120, 230, 360, 510, 690, 900, 1150, 1440, 1780, 2180, 2650];
+const RADII = [120, 230, 360, 510, 690, 900, 1150, 1440, 1780];
 
 /** Door angles per ring, fixed. Radians, 0 is towards the viewer's right. */
-const DOORS = [1.1, 4.2, 2.3, 5.6, 0.4, 3.3, 5.0, 1.9, 4.6, 0.9, 3.9];
+const DOORS = [1.1, 4.2, 2.3, 5.6, 0.4, 3.3, 5.0, 1.9, 4.6];
 
 function ring(r: number, door: number, w: number) {
   const a = door + w / 2;
@@ -76,13 +76,6 @@ function FloorOfTheThinking() {
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="mind-air" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#020104" />
-          <stop offset="0.4" stopColor="#07050c" />
-          <stop offset="0.5" stopColor="#141022" />
-          <stop offset="0.5" stopColor="#0b0913" />
-          <stop offset="1" stopColor="#040308" />
-        </linearGradient>
         <radialGradient id="mind-haze" cx="0.5" cy="0.5" r="0.5">
           <stop offset="0" stopColor="#c7f06a" stopOpacity="0.2" />
           <stop offset="0.5" stopColor="#8fb04a" stopOpacity="0.07" />
@@ -92,17 +85,15 @@ function FloorOfTheThinking() {
           <stop offset="0" stopColor="#b7a9cf" stopOpacity="0.12" />
           <stop offset="1" stopColor="#b7a9cf" stopOpacity="0" />
         </radialGradient>
-        <linearGradient id="mind-fade" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#020104" stopOpacity="1" />
-          <stop offset="0.36" stopColor="#020104" stopOpacity="0.9" />
-          <stop offset="0.43" stopColor="#020104" stopOpacity="0" />
-        </linearGradient>
-        <radialGradient id="mind-dark" cx="0.5" cy="0.55" r="0.62">
-          <stop offset="0.45" stopColor="#000" stopOpacity="0" />
-          <stop offset="1" stopColor="#000" stopOpacity="0.85" />
-        </radialGradient>
       </defs>
-      <rect x="-800" y="-450" width="3200" height="1800" fill="url(#mind-air)" />
+      {/*
+        Flat fills, not gradients across the whole box: the camera zooms over
+        this drawing in two shots, and a gradient the size of the box is
+        re-rasterised with it every frame. The shot's own vignette darkens
+        the edges instead.
+      */}
+      <rect x="-800" y="-450" width="3200" height="1800" fill="#040308" />
+      <rect x="-800" y="350" width="3200" height="1000" fill="#0a0812" />
       {/* the haze where the gaze comes from, low on the horizon, left of centre */}
       <ellipse cx="200" cy="360" rx="1500" ry="240" fill="url(#mind-haze)" />
 
@@ -112,33 +103,32 @@ function FloorOfTheThinking() {
         {RADII.map((r, i) => {
           const w = Math.min(0.5, 60 / r);
           const d = ring(r, DOORS[i], w) + (i ? ` ${spokes(i)}` : "");
-          const far = i / RADII.length;
+          const far = (i / RADII.length) ** 0.8;
+          // Opacity on the strokes, never on a group: a group's opacity is
+          // an offscreen layer the size of the whole floor, every raster.
           return (
-            <g key={r} opacity={(1 - far * 0.55).toFixed(2)}>
-              <path d={d} fill="none" stroke="#030206" strokeWidth={14 - far * 8} transform={`translate(0 ${(9 - far * 6).toFixed(1)})`} strokeLinecap="round" />
-              <path d={d} fill="none" stroke="#b7a9cf" strokeOpacity={0.5 - far * 0.3} strokeWidth={4.5 - far * 2.5} strokeLinecap="round" />
+            <g key={r}>
+              <path d={d} fill="none" stroke="#030206" strokeOpacity={(1 - far * 0.55).toFixed(2)} strokeWidth={14 - far * 8} transform={`translate(0 ${(9 - far * 6).toFixed(1)})`} strokeLinecap="round" />
+              <path d={d} fill="none" stroke="#b7a9cf" strokeOpacity={((0.5 - far * 0.3) * (1 - far * 0.75)).toFixed(2)} strokeWidth={4.5 - far * 2.5} strokeLinecap="round" />
             </g>
           );
         })}
       </g>
-      {/* the far floor goes into the dark before it reaches the sky */}
-      <rect x="-800" y="-450" width="3200" height="1800" fill="url(#mind-fade)" />
       <path d="M-800 350 H2400" stroke="#c7f06a" strokeOpacity="0.08" strokeWidth="3" />
 
+      {/* Held still: anything moving inside this drawing re-rasterises all of it. */}
       {THOUGHTS.map(([x, y, s], i) => (
-        <g key={i} className="mind-bg-drift" style={{ "--i": i } as CSSProperties}>
-          <path
-            d={spiral(s * 2.2)}
-            transform={`translate(${x} ${y})`}
-            fill="none"
-            stroke="#b7a9cf"
-            strokeOpacity={0.12 + (i % 3) * 0.05}
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-        </g>
+        <path
+          key={i}
+          d={spiral(s * 2.2)}
+          transform={`translate(${x} ${y})`}
+          fill="none"
+          stroke="#b7a9cf"
+          strokeOpacity={0.12 + (i % 3) * 0.05}
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
       ))}
-      <rect x="-800" y="-450" width="3200" height="1800" fill="url(#mind-dark)" />
     </svg>
   );
 }

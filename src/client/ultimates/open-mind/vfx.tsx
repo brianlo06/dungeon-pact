@@ -183,7 +183,7 @@ const Disc = ({ cue }: VfxProps) => {
           ))}
           {cue.params?.doubt ? (
             <g className="mind-doubt">
-              {m.doubt.map((p, i) => (
+              {m.doubt.filter((p) => p.k <= 0.42).map((p, i) => (
                 <circle key={i} cx={f1(p.x)} cy={f1(p.y)} r="4.4" style={v({ "--k": p.k.toFixed(3) })} />
               ))}
             </g>
@@ -236,7 +236,7 @@ const Labyrinth = ({ cue }: VfxProps) => {
         </g>
         {mode === "bore" ? (
           <g className="mind-doubt">
-            {m.doubt.map((p, i) => (
+            {m.doubt.filter((p) => p.k <= 0.5).map((p, i) => (
               <circle key={i} cx={f1(p.x)} cy={f1(p.y)} r="1.5" style={v({ "--k": p.k.toFixed(3) })} />
             ))}
           </g>

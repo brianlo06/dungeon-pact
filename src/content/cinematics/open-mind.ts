@@ -296,7 +296,7 @@ export const openMind: Cinematic = {
       ],
       reveal: [{ at: 0.04, reveal: "impact" }],
       text: [
-        { kind: "impact", at: 0.06, until: 0.95, text: "$damage", x: 0.3, y: 0.22, rotate: -4 },
+        { kind: "impact", at: 0.03, until: 0.95, text: "$damage", x: 0.3, y: 0.22, rotate: -4 },
         { kind: "voice", at: 0.46, until: 1, text: "$voice.impact" },
       ],
       markers: [

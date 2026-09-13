@@ -72,7 +72,8 @@ export const voices: Record<string, Voice> = {
     render: (c, o, t) => {
       let at = t;
       for (let i = 0; i < 6; i++) {
-        crash(c, o, at, { seconds: 0.02, gain: 0.05 - i * 0.005, type: "bandpass", freq: 1500 - i * 90, q: 6 });
+        crash(c, o, at, { seconds: 0.03, gain: 0.2 - i * 0.02, type: "bandpass", freq: 1500 - i * 90, q: 4 });
+        hit(c, o, at, { type: "sine", from: 900 - i * 40, gain: 0.03, attack: 0.002, decay: 0.05 });
         at += 0.06 + i * 0.03 + (i % 2) * 0.02;
       }
     },
@@ -149,9 +150,9 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       pin(c, o, t, 0.05);
-      tone(c, o, t, 67, 0.07, 0.6);
+      tone(c, o, t, 67, 0.11, 0.6);
       pin(c, o, t + 0.28, 0.04);
-      tone(c, o, t + 0.28, 62, 0.06, 1.1);
+      tone(c, o, t + 0.28, 62, 0.1, 1.1);
     },
   },
 };
