@@ -154,6 +154,32 @@ const box = (page: Page, id: string) =>
       return { left: r.left, right: r.right, top: r.top, bottom: r.bottom };
     });
 
+/**
+ * A figure's box relative to its own combatant, in the stage's pixels: what a
+ * choreography offset would move, with the camera (which may still be easing
+ * back when a replay ends) and the layout (which may re-place units once the
+ * board's health springs back) both divided out.
+ */
+const placedBox = (page: Page, id: string) =>
+  page.locator(`.combatant[data-unit="${id}"]`).evaluate((root) => {
+    const layer = root.closest<HTMLElement>(".layer-units")!;
+    const k = layer.getBoundingClientRect().width / layer.offsetWidth;
+    const c = root.getBoundingClientRect();
+    const r = root
+      .querySelector("svg.combatant-sprite")!
+      .getBoundingClientRect();
+    return { left: (r.left - c.left) / k, bottom: (r.bottom - c.top) / k };
+  });
+
+/** Home again: within the idle loop's own breathing (about 2px). */
+const expectHome = (
+  a: { left: number; bottom: number },
+  b: { left: number; bottom: number },
+) => {
+  expect(Math.abs(a.left - b.left)).toBeLessThan(4);
+  expect(Math.abs(a.bottom - b.bottom)).toBeLessThan(4);
+};
+
 const travel = (page: Page, id: string) =>
   page
     .locator(`.combatant[data-unit="${id}"] .combatant-travel`)
@@ -272,6 +298,7 @@ test("a melee attacker leaves home, gets near its target, and returns home", asy
   const u = await ids(page);
   const [ada, bulwark] = [u["Ada"], u["Iron Bulwark"]];
   const home = await box(page, ada);
+  const placed = await placedBox(page, ada);
   await playPaused(page, [{ actor: ada, target: bulwark, move: "ability" }]);
 
   await seek(page, await phaseAt(page, 0, "contact"));
@@ -300,9 +327,10 @@ test("a melee attacker leaves home, gets near its target, and returns home", asy
   );
   await waitEnd(page);
   expect(await leftovers(page)).toEqual(CLEAN);
-  const back = await box(page, ada);
-  expect(Math.abs(back.left - home.left)).toBeLessThan(2);
-  expect(Math.abs(back.bottom - home.bottom)).toBeLessThan(2);
+  // The rig eases back into its idle over a quarter second after the replay
+  // ends; the travel offset is already gone (above), so measure once it has.
+  await page.waitForTimeout(500);
+  expectHome(await placedBox(page, ada), placed);
 });
 
 test("a travelling attacker paints over the target it strikes", async ({
@@ -409,7 +437,7 @@ test("Skip mid-approach and mid-flight puts everyone home and clears the air", a
   await open(page, { ...SMOKE, motion: 1 });
   const u = await ids(page);
   const homes = await Promise.all(
-    [u["Ada"], u["Slag Hound"]].map((id) => box(page, id)),
+    [u["Ada"], u["Slag Hound"]].map((id) => placedBox(page, id)),
   );
   await playPaused(page, [
     { actor: u["Cora"], target: u["Living Bellows"], move: "ability" },
@@ -426,11 +454,10 @@ test("Skip mid-approach and mid-flight puts everyone home and clears the air", a
   await expect(page.locator(".stage.is-replaying")).toHaveCount(0);
   expect(await leftovers(page)).toEqual(CLEAN);
   const after = await Promise.all(
-    [u["Ada"], u["Slag Hound"]].map((id) => box(page, id)),
+    [u["Ada"], u["Slag Hound"]].map((id) => placedBox(page, id)),
   );
   after.forEach((b, i) => {
-    expect(Math.abs(b.left - homes[i].left)).toBeLessThan(2);
-    expect(Math.abs(b.bottom - homes[i].bottom)).toBeLessThan(2);
+    expectHome(b, homes[i]);
   });
   expect((await trace(page)).some((e) => e.kind === "skip")).toBe(true);
 });
