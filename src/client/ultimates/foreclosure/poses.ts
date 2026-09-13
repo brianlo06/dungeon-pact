@@ -130,8 +130,9 @@ const settle: Clip = {
     ],
     ...face([0, WATCH], [0.4, { ...WATCH, open: 0.62 }], [0.72, COLD], [0.86, COLD], [1, SMILE]),
     ledger: turn([0, 20], [0.4, 70], [0.8, 132], [1, 148]),
-    scales: turn([0, -8], [1, -6]),
-    pans: turn([0, 8], [0.5, 5], [1, 6]),
+    // The balance let down, out of the picture: nothing between the face and the coin.
+    scales: turn([0, 20], [1, 24]),
+    pans: turn([0, -20], [0.5, -23], [1, -24]),
     purse: turn([0, 0], [1, -3]),
     body: [
       { at: 0, squash: 1, y: 0 },
@@ -150,13 +151,21 @@ const foreclose: Clip = {
   markers: { contact: 0.07 },
   poses: [
     { at: 0, x: -0.03, y: 0.006, rotate: -5, squash: 1.07 },
-    { at: 0.07, x: 0.07, y: -0.004, rotate: 9, squash: 0.88, scale: 1.04 },
-    { at: 0.2, x: 0.06, y: 0, rotate: 7, squash: 0.95, scale: 1.02 },
-    { at: 0.45, x: 0.05, y: 0.004, rotate: 5, squash: 1.02, scale: 1 },
-    { at: 1, x: 0.045, y: 0.002, rotate: 4, squash: 1, scale: 1 },
+    { at: 0.07, x: 0.14, y: -0.004, rotate: 10, squash: 0.88, scale: 1.04 },
+    { at: 0.2, x: 0.12, y: 0, rotate: 8, squash: 0.95, scale: 1.02 },
+    { at: 0.45, x: 0.1, y: 0.004, rotate: 6, squash: 1.02, scale: 1 },
+    { at: 1, x: 0.09, y: 0.002, rotate: 5, squash: 1, scale: 1 },
   ],
   parts: {
-    ledger: turn([0, 168], [0.07, 252], [0.2, 272], [0.45, 262], [1, 258]),
+    // The arm is short and the Broker is round: the book is thrown forward
+    // off the shoulder a little to reach past the belly.
+    ledger: [
+      { at: 0, rotate: 150, x: -0.02 },
+      { at: 0.07, rotate: 226, x: 0.07, y: 0.02 },
+      { at: 0.2, rotate: 246, x: 0.06, y: 0.02 },
+      { at: 0.45, rotate: 240, x: 0.04, y: 0.01 },
+      { at: 1, rotate: 236, x: 0.03, y: 0.01 },
+    ],
     scales: turn([0, -12], [0.07, 24], [0.25, 16], [0.5, 20], [1, 18]),
     pans: turn([0, 10], [0.08, -34], [0.22, 28], [0.38, -16], [0.55, 9], [0.75, -4], [1, 0]),
     head: turn([0, -4], [0.07, 10], [0.25, 7], [1, 5]),

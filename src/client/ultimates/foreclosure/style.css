@@ -1,0 +1,265 @@
+/* ------------------------------------------------------ Foreclosure -- */
+/*
+ * Everything the Broker's Ultimate draws. Positions and sizes are written by
+ * the frame functions in `vfx.tsx` from where the cast really is; progress
+ * arrives as the film's variables. No keyframes, no filters, no blur.
+ */
+
+/* Every box of ours is placed by its frame function, from the wrapper's point. */
+.cine-vfx > .fc-tag-box,
+.cine-vfx > .fc-collateral,
+.cine-vfx > .fc-coin,
+.cine-vfx > .fc-mill,
+.cine-vfx > .fc-proceeds,
+.cine-vfx > .fc-ward {
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: none;
+}
+.cine-screen > .cine-vfx > .fc-coin {
+  inset: auto;
+  width: 0;
+  height: 0;
+}
+
+/* ---- the price tag ---- */
+.cine-vfx > .fc-tag-box {
+  width: 80px;
+  height: 400px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.fc-tag {
+  display: block;
+  width: 80px;
+  height: 400px;
+  overflow: visible;
+  transform-origin: 40px 0;
+  transform: rotate(var(--sw, 0deg));
+}
+.fc-tag-string {
+  stroke: #9b3026;
+  stroke-width: 3.5;
+  fill: none;
+}
+.fc-tag-card {
+  fill: #eadcb6;
+  stroke: #120c08;
+  stroke-width: 3.5;
+  stroke-linejoin: round;
+}
+.fc-tag-ink {
+  stroke: #3b2a1a;
+  stroke-width: 3;
+  stroke-linecap: round;
+  fill: none;
+}
+.fc-tag-red {
+  stroke: #a3271d;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+.fc-tag-hole {
+  fill: #0b0806;
+  stroke: #b4913f;
+  stroke-width: 2.5;
+}
+.fc-tag-half {
+  transform-box: view-box;
+  transform-origin: 0 12px;
+}
+
+/* ---- the vault's balance ---- */
+.cine-vfx > .fc-balance {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none;
+}
+.fc-post {
+  fill: #2b1f10;
+  stroke: #07100b;
+  stroke-width: 6;
+  stroke-linejoin: round;
+}
+.fc-beam-ink {
+  fill: none;
+  stroke: #07100b;
+  stroke-width: 12;
+  stroke-linejoin: round;
+}
+.fc-beam {
+  fill: #d8b35e;
+  stroke: #f7e3a4;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+.fc-tongue {
+  stroke: #07100b;
+  stroke-width: 13;
+  stroke-linecap: round;
+}
+.fc-pivot {
+  fill: #b58d3a;
+  stroke: #07100b;
+  stroke-width: 7;
+}
+.fc-pivot-in {
+  fill: #fff0bf;
+}
+.fc-finial {
+  fill: #e5c270;
+  stroke: #07100b;
+  stroke-width: 6;
+}
+.fc-hang {
+  stroke: #8f7134;
+  stroke-width: 5;
+  stroke-dasharray: 14 6;
+  fill: none;
+}
+.fc-pan-in {
+  fill: #3a2b12;
+  stroke: #07100b;
+  stroke-width: 6;
+}
+.fc-pan-bowl {
+  fill: #c69d48;
+  stroke: #07100b;
+  stroke-width: 7;
+  stroke-linejoin: round;
+}
+.fc-pan-lip {
+  fill: none;
+  stroke: #fbe7a8;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+/* ---- what the target stands behind ---- */
+.fc-collateral-disc,
+.fc-shed,
+.fc-flying,
+.fc-coin-face,
+.fc-spin-rim {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+.fc-disc,
+.fc-coin-holder,
+.fc-coin-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.fc-shed {
+  opacity: 0;
+}
+
+/* ---- the coin ---- */
+.fc-spin-rim .fc-coin-art circle {
+  fill: #4a3612;
+  stroke: #2a1d08;
+}
+.fc-spin-rim .fc-coin-art path {
+  display: none;
+}
+/* The brass it spins on: the near rim of a pan, filling the foot of the frame. */
+.fc-spin-plate {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 50% 50% at 50% 40%, #e2bd66 0%, #b08634 45%, #5a4015 80%, #2a1d08 100%);
+  box-shadow: inset 0 6px 0 #fbe7a8, 0 -4px 0 #07100b;
+}
+.fc-spin-shadow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 120%;
+  height: 16%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.55), transparent);
+  transform-origin: 50% 50%;
+}
+
+/* ---- the drawn impact: a coin's milled rim ---- */
+.cine-vfx > .fc-mill {
+  width: 100px;
+  height: 100px;
+  opacity: calc(1 - max(0, var(--p) - 0.15) * 1.5);
+  will-change: transform;
+}
+.fc-mill svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.fc-mill-wedges path {
+  fill: #07100b;
+}
+.fc-mill-core {
+  fill: #fff5d2;
+  opacity: calc(1 - min(1, var(--p) * 6));
+}
+.fc-mill-ring {
+  fill: none;
+  stroke: #f3d487;
+  stroke-width: 12;
+}
+.fc-mill-ticks {
+  fill: none;
+  stroke: #07100b;
+  stroke-width: 26;
+  stroke-dasharray: 3 7;
+  display: none;
+}
+.fc-mill[data-k="0"] .fc-mill-ticks.a,
+.fc-mill[data-k="2"] .fc-mill-ticks.a,
+.fc-mill[data-k="1"] .fc-mill-ticks.b {
+  display: block;
+}
+.fc-mill-ticks.b {
+  stroke-dashoffset: 5;
+}
+.fc-mill[data-k="1"] .fc-mill-wedges {
+  transform: rotate(9deg);
+}
+
+/* ---- the proceeds, over the real board ---- */
+.fc-flying {
+  opacity: 0;
+}
+
+/* ---- the minted disc on each of the party ---- */
+.fc-ward-disc {
+  position: absolute;
+  width: calc(var(--unit-h, 120px) * 0.5);
+  height: calc(var(--unit-h, 120px) * 0.5);
+  left: calc(var(--unit-w, 100px) * 0.34);
+  top: calc(var(--unit-h, 120px) * -0.3);
+  transform: translate(-50%, -50%) scale(calc(0.2 + var(--k) * 0.8));
+  opacity: calc(0.4 + min(1, var(--k) * 3) * 0.55);
+}
+.fc-ward-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--unit-w, 100px) * 1.5);
+  height: calc(var(--unit-w, 100px) * 0.34);
+  border-radius: 50%;
+  border: 3px solid #f3d487;
+  box-shadow: inset 0 0 0 5px rgba(255, 241, 196, 0.35);
+  transform: translate(-50%, -50%) scale(calc(0.3 + var(--r) * 0.9));
+  opacity: calc(1 - var(--r));
+}
