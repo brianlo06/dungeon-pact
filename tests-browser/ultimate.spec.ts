@@ -139,7 +139,7 @@ test("FAST is the condensed cut, and 2× plays the same film in half the time", 
       if (shot && w.shots.at(-1) !== shot) w.shots.push(shot);
       if (film && !began) began = performance.now();
       if (!film && began && w.filmMs === undefined) w.filmMs = performance.now() - began;
-    }).observe(document, { subtree: true, attributes: true, childList: true });
+    }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-shot", "data-mode"] });
   });
   await open(page, { auto: 1, mode: "fast" });
   await expect(cinematic(page)).toHaveAttribute("data-mode", "fast", { timeout: 30_000 });

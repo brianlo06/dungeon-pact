@@ -155,7 +155,7 @@ test("FAST keeps the eye, the walls, the silence and the impact, and drops the w
       if (shot && w.shots.at(-1) !== shot) w.shots.push(shot);
       const mode = el?.getAttribute("data-mode");
       if (mode && !w.modes.includes(mode)) w.modes.push(mode);
-    }).observe(document, { subtree: true, attributes: true, childList: true });
+    }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-shot", "data-mode"] });
   });
   await open(page, { auto: 1, mode: "fast" });
   // A FAST film can be over before a locator gets a look at it: watch the record.

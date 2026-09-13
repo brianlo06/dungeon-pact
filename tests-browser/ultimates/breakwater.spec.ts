@@ -96,7 +96,7 @@ test("FAST keeps the quiet and the break, and drops the tide", async ({ page }) 
     new MutationObserver(() => {
       const shot = document.querySelector(".ult-cinematic")?.getAttribute("data-shot");
       if (shot && w.shots.at(-1) !== shot) w.shots.push(shot);
-    }).observe(document, { subtree: true, attributes: true, childList: true });
+    }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-shot", "data-mode"] });
   });
   await open(page, { auto: 1, mode: "fast" });
   await expect(cinematic(page)).toHaveAttribute("data-mode", "fast", { timeout: 30_000 });
