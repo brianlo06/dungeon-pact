@@ -93,14 +93,14 @@ export const redLedger: Cinematic = {
       ],
       sound: [
         { at: 0.04, sfx: "ledger-clench" },
-        // The wipe starts 280ms into the clip, whichever cut this is.
-        { at: 0.4, sfx: "ledger-entry", mode: "full" },
-        { at: 0.6, sfx: "ledger-entry", mode: "fast" },
+        // The wipe starts 246ms into the clip, whichever cut this is.
+        { at: 0.35, sfx: "ledger-entry", mode: "full" },
+        { at: 0.54, sfx: "ledger-entry", mode: "fast" },
       ],
       text: [{ kind: "voice", at: 0.2, until: 1, text: "$voice.activation" }],
       markers: [
-        { at: 0.37, label: "soaked" },
-        { at: 0.59, label: "entered" },
+        { at: 0.32, label: "soaked" },
+        { at: 0.53, label: "entered" },
       ],
     },
 

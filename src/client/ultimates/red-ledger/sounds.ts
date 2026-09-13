@@ -30,8 +30,8 @@ export const voices: Record<string, Voice> = {
   "ledger-scrape": {
     bus: "sfx",
     render: (c, o, t) => {
-      crash(c, o, t, { seconds: 0.34, gain: 0.16, freq: 1500, sweepTo: 3200, q: 4 });
-      crash(c, o, t + 0.02, { seconds: 0.3, gain: 0.1, type: "lowpass", freq: 500, sweepTo: 200, q: 0.6 });
+      crash(c, o, t, { seconds: 0.34, gain: 0.42, freq: 1500, sweepTo: 3200, q: 4 });
+      crash(c, o, t + 0.02, { seconds: 0.3, gain: 0.26, type: "lowpass", freq: 500, sweepTo: 200, q: 0.6 });
       hit(c, o, t + 0.3, { type: "triangle", from: 190, to: 150, gain: 0.07, decay: 0.3 });
     },
   },
@@ -79,8 +79,8 @@ export const voices: Record<string, Voice> = {
   "ledger-heart": {
     bus: "sfx",
     render: (c, o, t) => {
-      beat(c, o, t, 0.6);
-      swell(c, o, t, { type: "sine", freq: 41, gain: 0.03, attack: 0.1, hold: 0.1, release: 0.3 });
+      beat(c, o, t, 0.36);
+      swell(c, o, t, { type: "sine", freq: 41, gain: 0.02, attack: 0.1, hold: 0.1, release: 0.3 });
     },
   },
   /** A single drop leaving the fist, in the silence. */
@@ -99,8 +99,8 @@ export const voices: Record<string, Voice> = {
   "ledger-cut": {
     bus: "sfx",
     render: (c, o, t) => {
-      crash(c, o, t, { seconds: 0.035, gain: 0.95, type: "highpass", freq: 2600, q: 0.6 });
-      hit(c, o, t, { type: "sine", from: 120, to: 26, gain: 1, attack: 0.002, decay: 0.8 });
+      crash(c, o, t, { seconds: 0.035, gain: 0.8, type: "highpass", freq: 2600, q: 0.6 });
+      hit(c, o, t, { type: "sine", from: 120, to: 26, gain: 0.78, attack: 0.002, decay: 0.8 });
       hit(c, o, t + 0.004, { type: "triangle", from: 260, to: 90, gain: 0.42, decay: 0.16 });
       crash(c, o, t + 0.004, { seconds: 0.2, gain: 0.5, freq: 420, sweepTo: 140, q: 1.8 });
       hit(c, o, t + 0.01, { type: "square", from: 587, to: 560, gain: 0.03, decay: 0.34 });

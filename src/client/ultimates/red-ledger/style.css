@@ -93,18 +93,18 @@
   stroke-linejoin: round;
 }
 .ledger-groove-shadow {
-  stroke: rgba(60, 40, 24, 0.35);
-  stroke-width: 16px;
+  stroke: rgba(52, 34, 20, 0.45);
+  stroke-width: 26px;
 }
 .ledger-groove-cut {
-  stroke: #2a1b14;
-  stroke-width: 5px;
+  stroke: #1c110c;
+  stroke-width: 9px;
 }
 .ledger-groove-lip {
   stroke: #fff3d8;
-  stroke-width: 2px;
-  transform: translateY(-4px);
-  opacity: 0.7;
+  stroke-width: 3px;
+  transform: translateY(-6px);
+  opacity: 0.8;
 }
 
 /* ---- the impact frame ---- */

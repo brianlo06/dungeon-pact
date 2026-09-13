@@ -155,7 +155,7 @@ const Groove = ({ cue }: VfxProps) => {
       <path className="ledger-groove-cut" />
       <path className="ledger-groove-lip" />
       {Array.from({ length: 12 }, (_, i) => (
-        <ellipse key={i} className="ledger-groove-spot" data-k={((i + rand() * 0.6) / 12).toFixed(3)} rx={4 + rand() * 7} ry={2 + rand() * 2} fill={BLOOD} />
+        <ellipse key={i} className="ledger-groove-spot" data-k={((i + rand() * 0.6) / 12).toFixed(3)} rx={7 + rand() * 9} ry={3 + rand() * 3} fill={BLOOD} />
       ))}
     </svg>
   );

@@ -112,7 +112,7 @@ const clench: Clip = {
  * shakes, the bandage soaking red from inside; then the fist dragged down
  * across the chest, and the stroke left behind it.
  */
-const WIPE = wipe(0.5, 0.74);
+const WIPE = wipe(0.44, 0.66);
 
 // Short enough that FAST's cut of the shot still sees the stroke painted.
 const price: Clip = {
@@ -127,25 +127,25 @@ const price: Clip = {
     fist: [
       // Clenched until it shakes, where it always is: up in front.
       { at: 0, rotate: HELD + 4, scale: 0.98 },
-      { at: 0.08, rotate: HELD - 2, scale: 0.88 },
-      { at: 0.15, rotate: HELD + 2, scale: 0.93 },
-      { at: 0.22, rotate: HELD - 3, scale: 0.87 },
-      { at: 0.29, rotate: HELD + 2, scale: 0.92 },
-      { at: 0.36, rotate: HELD - 3, scale: 0.86 },
-      { at: 0.42, rotate: HELD + 1, scale: 0.9 },
+      { at: 0.07, rotate: HELD - 2, scale: 0.88 },
+      { at: 0.13, rotate: HELD + 2, scale: 0.93 },
+      { at: 0.19, rotate: HELD - 3, scale: 0.87 },
+      { at: 0.25, rotate: HELD + 2, scale: 0.92 },
+      { at: 0.31, rotate: HELD - 3, scale: 0.86 },
+      { at: 0.37, rotate: HELD + 1, scale: 0.9 },
       // Pressed to the chest, and dragged down across it.
       ...WIPE.fist,
       // Then back up off it, dripping, so the stroke is seen whole.
-      { at: 0.88, rotate: HELD + 6, x: 0.01, y: 0, scale: 0.95 },
+      { at: 0.78, rotate: HELD + 6, x: 0.01, y: 0, scale: 0.95 },
       { at: 1, rotate: HELD + 2, x: 0.01, y: 0, scale: 0.94 },
     ],
     stain: [
       { at: 0, y: 0 },
-      { at: 0.1, y: -0.025 },
-      { at: 0.46, y: -0.12 },
+      { at: 0.08, y: -0.025 },
+      { at: 0.4, y: -0.12 },
       { at: 1, y: -0.12 },
     ],
-    entry: [{ at: 0, x: 0 }, ...WIPE.entry, { at: 0.88, x: 0.25 }, { at: 1, x: 0.25 }],
+    entry: [{ at: 0, x: 0 }, ...WIPE.entry, { at: 0.78, x: 0.25 }, { at: 1, x: 0.25 }],
     cleaver: turn([0, -12], [0.5, -14], [1, -10]),
     head: turn([0, 8], [0.45, 11], [0.8, 6], [1, 5]),
     hair: turn([0, 2], [0.5, 4], [0.7, -6], [1, -2]),
