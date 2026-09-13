@@ -1,7 +1,7 @@
 # False Footing — Ranger · Pathfinder
 
 **The idea, in one sentence:** the Pathfinder reads the enemy's own tracks in
-fresh snow until they say where its next foot will fall, and the snare is
+the mud until they say where its next foot will fall, and the snare is
 already waiting under that exact spot when it does.
 
 Only the Pathfinder could have it. The path's title is the plot: *Know the
@@ -76,73 +76,84 @@ Tests: `tests/ultimates-false-footing.test.ts`.
 
 ## Space, palette, shape
 
-- **Space: the snowfield in the blue hour.** Fresh snow just after it stopped
-  falling, a long white field under a slate sky with no sun and no moon, low
-  drifts, a far line of bare hills, and nothing in it but tracks. Seen from the
-  tracker's two heights: at eye level with the snow (the print, the step) and
-  from above (the whole trail read at once). Not a hall, a forge, a storm, a
-  fog wood, a causeway, a ridge at dusk, a vault, a pit, a mere, a moth garden,
-  a page, a labyrinth, a no-man's-land, a mirror room or the ground cut away.
-  No roots, no cracks, no water, no underground. The ground is read from on
-  top of it.
-- **Palette:** snow shadow blue `#6f86b8`, dusk ink `#0e1426`, lit snow
-  `#e3ebf7`, and one warm colour, amber `#f2a93b` (the accent), kept for what
-  the Pathfinder *knows*: a print it has read, the next step it has foreseen,
-  the cord of its snare. Figures are lit from below by the snow (`under`), a
-  cold bounce, never a rim of their own colour.
-- **Shape language:** the **print** (a clawed pad dented in snow, with a lit
-  far rim and a blue-shadowed hollow); the **ghost print** (the same shape as
-  a dashed amber outline in untouched snow); the **loop** (a running noose
-  just under the surface, a gleam of cord); the **cord** (slack and sagging,
-  then a straight line tearing up out of the snow).
+- **Space: the hound run, at dusk.** The Ember Foundry keeps hunting packs,
+  and they are run on a strip of waste ground behind the works: dark peat mud
+  churned by a hundred paws, the leaning posts of an old run fence, tussocks
+  of dead grass, and beyond it the foundry's spoil heaps and cold chimneys
+  under a sky of old smoke. Nothing burns. The ground is all prints, most of
+  them old: anyone can see hounds were here, and only a tracker finds the one
+  trail that matters. Seen from the tracker's two heights: at eye level with
+  the mud (the print, the step) and from above (the whole run, one trail read
+  out of it). Not snow (Warpath), sand (Red Ledger), water (Mourning Water),
+  a fog wood (the Hundredth Mark), roots under the floor (Green Reckoning), a
+  held chamber (Still Life), nor any other film's hall, forge, ridge,
+  causeway, vault, pit, garden, page, labyrinth, no-man's-land or mirrors. No
+  cracks and nothing underground: the ground is read from on top of it, and
+  the mud never shines, so it never reads as water.
+- **Palette:** peat mud `#45372a` fading to `#5b4d3b` at the far edge, print
+  hollows `#1d150f`, squeezed-up lips catching the sky `#8a775b`–`#a08a68`,
+  smoke-khaki sky `#6a644c` over `#141310`, ink `#0f0c09`, dead grass
+  `#7a6d45`; and one warm colour, amber `#f2a93b` (the accent), kept for what
+  the Pathfinder *knows*: a print it has read, the step it foresaw, the cord
+  of its snare. Figures are lit from below by the smoky sky bounced off the
+  mud (`under` `#a39676`). Warm-dark and matt, where Warpath is pale, cold and
+  blue-grey.
+- **Shape language:** the **print** (a clawed pad pressed into mud, its rim
+  squeezed up and lit on the far side, its hollow near black); the **ghost
+  print** (the same shape as a dashed amber outline in untrodden mud); the
+  **loop** (a running noose under a skin of mud, a gleam of cord); the
+  **cord** (slack along the ground, then a straight line tearing up out of
+  it); the **old prints** that cover the run, unlit.
 
 ## Signature effect — the trail read forward
 
-Prints are the film's whole vocabulary. Read, a print's rim fills with amber
-from the kid's fingertip round both sides. From above, the enemy's tracks
-light one after another from where it came from up to where it stands, and
-then — past its feet, in unmarked snow — one more print appears, dashed:
-where its next foot will fall. Under it a loop of cord shows through the snow,
-and the cord runs back across the field to the kid's hand. On the impact the
-cord rips up out of the snow along its whole length and whips round the
-enemy's legs in three turns.
+Prints are the film's whole vocabulary, and the run is covered in them. Read,
+a print's rim fills with amber from the kid's fingertip round both sides. From
+above, out of a hundred old prints, the enemy's own tracks light one after
+another from where it came from up to where it stands, and then — past its
+feet, in untrodden mud — one more print appears, dashed: where its next foot
+will fall. Under it a loop of cord shows through the mud, and the cord runs
+back across the run to the kid's hand. On the impact the cord rips up out of
+the mud along its whole length and whips round the enemy's legs in three
+turns.
 
 ## Sound
 
 - **Motif (original):** four footfalls tuned like a wooden marimba muffled in
-  snow — A3, E4, D4, then a low A2 thud — uneven, like a stride with a limp in
+  mud — A3, E4, D4, then a low A2 thud — uneven, like a stride with a limp in
   it. Struck and damped, not plucked and not blown (the Hundredth Mark's call
-  is a plucked E4–A4–G4–E5).
-- **Signature sound:** the cord ripping up out of crusted snow — a fast zip of
-  crunches along its length ending in a taut twang.
+  is a plucked E4–A4–G4–E5; Warpath's is a war-horn on A2–C3–B2–E2).
+- **Signature sound:** the cord tearing up out of mud — a fast zip of wet
+  sucks along its length ending in a taut twang.
 - **Impact, layered:** a whip-crack of cord (transient), a sub drop, a heavy
-  snow thump with a body of crunched ice (body), and a long powder hiss
-  falling back (tail).
-- **The quiet:** music at 3%, the wind is gone, one slow crunch of the enemy's
-  step, and the kid's breath held.
+  slap of mud thrown up (body), and clods pattering back down (tail).
+- **The quiet:** music at 3%, no wind, one slow step coming down in the mud.
+  In the face before it, the thin whine of midges round the hood stops dead
+  when the breath is held.
 
 ## Rhythm
 
 identity (the fingertip on the print; it lights) → escalation and stakes (from
-above: the whole trail read up to the enemy, the next step foreseen, a snare
-under it, the cord back to the kid; title) → anticipation (the face in the
-cold: reading, the breath clouds stop, a small grin) → **quiet** (at the snow,
-the enemy walks towards the dashed print in the dark; nothing else moves, the
-flakes hang) → **impact** (the cord rips out of the snow and whips round its
-legs; the enemy's feet go out from under it in a burst of snow) → release (the real
-board: a snare cinched at every enemy's feet, the target's knotted and staked).
+above: one trail read out of the churned run up to the enemy, the next step
+foreseen, a snare under it, the cord back to the kid; title) → anticipation
+(the face behind a bank of mud and dead grass: reading, the midges stop dead
+as the breath is held, a small grin) → **quiet** (at the mud, the enemy walks
+towards the dashed print in the dark; the midges hang) → **impact** (the cord
+rips out of the mud and whips round its legs; the enemy's feet go out from
+under it in a burst of mud) → release (the real board: a snare cinched at
+every enemy's feet, the target's knotted and staked).
 
 ## Shots
 
 | # | Shot | ms (FAST) | Camera | Pose | Background / light | VFX | Audio | Target | Transition in | Purpose |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 0 | Call | 420 (240) | battle camera | real Ranger `ult:ff-kneel` — drops to one knee, the drawing hand to the floor, bow laid across | real battlefield tinted blue-hour, bars close | amber call aura; prints dent the real floor behind every real enemy, lighting one by one towards its feet | call bell; a crunch; music ducks | on board | — | break the round: the kid gets down to read the ground |
-| 1 | Read · extreme close-up | 640 (400) | at the snow surface on one print, Dutch −6°, pushing in | `ult:ff-touch` (`root: false`) — the drawing hand comes down into frame, two fingers on the print's rim, sliding along it | snowfield at eye level, low exposure, cold under-light | **one print huge in the foreground**; its rim lights amber from the fingertip both ways; crumbs of snow tip into it | fingertip in dry snow; a low damped note | no | black 50ms | identity: a hand that reads a track |
-| 2 | Trail · high wide | 1000 (—) | from above over the field, drifting down the trail | Ranger small, lower left, `ult:ff-watch` — kneeling, head up, cord in hand | snowfield from above | **the real enemy line** standing in the snow; **each enemy's trail lights print by print up to its feet**, then **one dashed print ahead** of it, a **loop** showing under it, and **the cords** running back across the snow to the kid's hand; the target's brightest | **motif** (four footfalls); crunches | **every enemy**, unaware | in-folder: a spray of powder thrown across the lens from the print | stakes and escalation; title |
-| 3 | Know · face close-up | 560 (360) | on the face low behind a drift lip, level, slow drift | `ult:ff-know` (`root: false`) — brow knits reading, eyes narrow and glance, breath clouds; then the breath stops, the brow lifts, a slow grin | snowfield, low exposure, bars deepen | **breath clouds** from the mouth that stop; **the cord** wound in the fist, running out of frame, trembling taut | breath out, breath out, held; cord creak; music 12% | no | cut | anticipation: it knows |
-| 4 | Step · the quiet, low profile | 600 (400) | at snow level, dead still | — | snowfield near black (exposure 0.3 → 0.2) | the target walks towards the **dashed print**; the **loop** under the snow; the cord slack along the snow to the left edge; **the flakes hang still** | music 3%; one slow crunch; a held breath | **yes** — `approach`, walking in | cut | anticipation by subtraction: it steps where it was read |
-| 5 | Spring · impact | 760 (560) | low wide at the snow, Dutch −7° easing out | `ult:ff-haul` — the kid hauls back with the whole body; target `hurt`, feet yanked towards the kid, tilted | exposure blown to 1, then settling; snow glare behind the target | **two-tone frame (40ms)**: the enemy and the kid as black shapes, the burst and the cord drawn in ink; then, held in colour: **the cord taut out of the snow** with powder torn off it along its length, **three turns of cord round the enemy's legs** (`ff-hobble`), a **snow burst** of uneven clumps boiling in three drawings | cord rip + layered impact; **150ms stop**; heavy shake | **yes** | cut on the two-tone frame | impact: the result on the frame; damage |
-| 6 | Snared · return | 760 (480) | battle camera | real Ranger `ult:ff-coil` — stands, winds the cord in, bow back up | real battlefield; the blue-hour tint lifts; bars open | **a snare cinched at every real enemy's feet**, one after another, each with a puff of snow and a cord staked off along the floor; **the target's knotted twice with an amber tag** (Marked, hobbled) | a creak and cinch for each; tail | on board | flash 80ms | release: every enemy caught, the one that mattered hobbled |
+| 0 | Call | 420 (240) | battle camera | real Ranger `ult:ff-kneel` — drops to one knee, the drawing hand to the floor, bow laid across | real battlefield tinted smoky dusk, bars close | amber call aura; prints press into the real floor behind every real enemy, lighting one by one towards its feet | call bell; a squelch; music ducks | on board | — | break the round: the kid gets down to read the ground |
+| 1 | Read · extreme close-up | 640 (400) | at the mud's surface on one print, Dutch −6°, pushing in | `ult:ff-touch` (`root: false`) — the gloved drawing hand comes down into frame, two fingers on the print's squeezed-up rim, sliding along it | the run at eye level, old prints and clods, smoky under-light | **one print huge in the foreground**; its rim lights amber from the fingertip both ways; crumbs of mud tip into it | fingertip on wet mud; a low damped note | no | black 50ms | identity: a hand that reads a track |
+| 2 | Trail · high wide | 1000 (—) | from above over the run, drifting down the trail | Ranger small, lower left, `ult:ff-watch` — kneeling, head up, cord in hand | the run from above: old prints everywhere, clods, fence posts | **the real enemy line** standing on the run; **each enemy's own trail lights print by print out of the old ones up to its feet**, then **one dashed print ahead** of it, a **loop** showing under it, and **the cords** running back across the mud to the kid's hand; the target's brightest; midges | **motif** (four footfalls); soft steps | **every enemy**, unaware | in-folder: mud flung across the lens (`ff-spray`) | stakes and escalation; title |
+| 3 | Know · face close-up | 560 (360) | on the face low behind a bank of mud and dead grass, level, slow drift | `ult:ff-know` (`root: false`) — brow knits reading, eyes narrow and glance; the breath is held; the brow lifts, a slow grin | the run, low exposure, bars deepen | **midges** round the hood that **stop dead in the air** at the held breath; the bank in front | a thin midge whine that stops; cord creak; music 12% | no | cut | anticipation: it knows |
+| 4 | Step · the quiet, low profile | 600 (400) | at mud level, dead still | — | the run near black (exposure 0.46 → 0.34) | the target walks towards the **dashed print**; the **loop** under its skin of mud; the cord slack along the ground to the left edge; **the midges hang still** | music 3%; one slow step in the mud | **yes** — `approach`, walking in | cut | anticipation by subtraction: it steps where it was read |
+| 5 | Spring · impact | 760 (560) | low wide at the mud, Dutch −7° easing out | `ult:ff-haul` — the kid hauls back with the whole body; target `hurt`, feet yanked towards the kid, tilted | exposure blown to 1, then settling; a smoke-pale glare thrown up behind the target (`ff-glare`) | **two-tone frame (40ms)**: the enemy black against the glare, the kid black at the left, the cord a line between; then, held in colour: **the cord taut out of the mud** with clods torn off it along its length, **three turns of cord round the enemy's legs** (`ff-hobble`), a **burst of mud** in uneven clods boiling in three drawings | cord rip + layered impact; **150ms stop**; heavy shake | **yes** | cut on the two-tone frame | impact: the result on the frame; damage |
+| 6 | Snared · return | 760 (480) | battle camera | real Ranger `ult:ff-coil` — stands, winds the cord in, bow back up | real battlefield; the dusk tint lifts; bars open | **a snare cinched at every real enemy's feet**, one after another, each with a splash of mud and a cord staked off along the floor; **the target's knotted twice with an amber tag** (Marked, hobbled) | a creak and cinch for each; tail | on board | flash 80ms | release: every enemy caught, the one that mattered hobbled |
 
 FULL 4740ms, FAST 2440ms (51%). FAST drops the high wide (the title moves to
 the read shot) and keeps the read, the face, the quiet with the target in it,
@@ -176,7 +187,7 @@ Nothing out there bites."
   `--ff-reach` (this film's `read` shot, by a CSS rule on
   `[data-cinematic][data-shot]`). The mitten circle fades out by the same
   variable. A round's Ranger and every other film are unchanged. The first
-  read shot, without it, was a brown disc on a blue blob.
+  read shot, without it, was a brown disc on a blob.
 - In the read the drawing arm is posed a little long (`scale` 1.25, carried
   forward 0.27) so the hand reaches past the knee onto the print; its
   shoulder is out of frame.
@@ -202,11 +213,11 @@ Nothing out there bites."
   at full strength whatever its `amount`, so a 70ms flash after the stop was
   a blank pale frame straight after the result. The two-tone frame (40ms) is
   the accent and ends before the stop, so the held frame is in colour.
-- **The powder wipe** (`ff-spray`) was first a flat sheet with a straight
+- **The wipe** (`ff-spray`) was first a flat sheet with a straight
   edge that read as a UI panel. Its edge is now a column of overlapping soft
   clumps with grains flung ahead, entering from the left over the read and
   leaving off the right of the high wide (or the face, in FAST).
-- The drift in front of the face and the effects in the quiet are not dimmed
+- The bank in front of the face and the effects in the quiet are not dimmed
   by the shot's exposure (only the background is), so they are drawn in the
   darker values of the shot they are in.
 - Sounds were rendered offline (`OfflineAudioContext`, peak and loudest-300ms
@@ -224,6 +235,36 @@ Nothing out there bites."
   p50 16.7ms / p95 33.4ms, 10 frames over 34ms; the round after it p50 16.7ms
   / p95 33.4ms, 9 over 34ms. Peak 1957 nodes (1825 SVG), 3 live effects, 0
   filtered elements.
+
+## Re-grounded: from snow to the hound run
+
+The first cut was set in a snowfield at the blue hour. Warpath (the
+Warlord's Ultimate) merged in the meantime with a snowfield, a trench through
+deep snow and boot prints in its return, so two films owned the same ground.
+The idea, gameplay, the face, the impact and its held frame, the return and
+the glove were kept; the ground, palette, weather and sounds were changed:
+
+- **Why mud, and why the hound run.** A tracker in this game reads the
+  ground the enemy walked, and the first chambers belong to the Ember
+  Foundry's hunting packs. Soft mud takes the deepest, sharpest prints there
+  are, with rims squeezed up that catch light, so a print still reads as a
+  print at every size, from the read close-up to the board. And a run is
+  already covered in prints, which makes the tracker's skill the picture:
+  one trail found among a hundred. Dust on flagstones was considered and set
+  aside: its prints are faint at board scale, and a dark dungeon chamber is
+  Still Life's.
+- **Changed:** both backgrounds (`ff-field`, `ff-high`) redrawn as the run;
+  prints, loop, cord, burst, board marks and the lens wipe re-paletted to mud
+  and amber; the falling flakes became midges (`ff-midges`), which stop dead
+  when the breath is held, replacing the breath clouds (Warpath's warcry is
+  drawn as breath); the drift became a bank of mud and dead grass
+  (`ff-bank`); a smoke-pale glare (`ff-glare`) behind the bite, because dark
+  mud goes black in the two-tone frame and the enemy vanished into it; the
+  snow crunches became mud squelches (`ff-squelch`, `ff-hold`, and the rip,
+  impact and motif footfalls).
+- **Levels after the change:** `ff-impact` 1.13 / 0.247 against the
+  Hundredth Mark's 1.16 / 0.253; the motif 0.26 / 0.054; the rip 0.27 /
+  0.045.
 
 ## What the engine could not do, and what was built instead
 

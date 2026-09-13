@@ -3,80 +3,99 @@ import { seeded } from "../../cinematic/vfx";
 import "./style.css";
 
 /**
- * False Footing's space: the snowfield in the blue hour.
+ * False Footing's space: the hound run, at dusk.
  *
- * Fresh snow, just after it stopped falling, under a slate sky with no sun
- * and no moon: a long white field, low drifts, a far line of bare hills, and
- * the dry heads of last year's grass standing up through the crust. Nothing
- * in it but ground. It is drawn from the tracker's two heights:
+ * The Ember Foundry keeps hunting packs, and they are run on a strip of
+ * waste ground behind the works: dark peat mud churned by a hundred paws,
+ * the old posts of a run fence leaning out of it, a few tussocks of dead
+ * grass, and beyond it the spoil heaps and cold chimneys of the foundry
+ * under a sky the colour of old smoke. Nothing burns here. The ground is
+ * nothing but prints, most of them old — which is the point: anyone can see
+ * that hounds were here, and only a tracker can find the one trail that
+ * matters in them.
  *
- *   ff-field  at eye level with the snow — the horizon high, the field
+ * Drawn from the tracker's two heights:
+ *
+ *   ff-field  at eye level with the mud — the horizon high, the ground
  *             running away from the lens;
- *   ff-high   from above — almost all ground, the far edge of the field and
- *             the hills a thin band at the top of the frame.
+ *   ff-high   from above — almost all ground, the heaps and the chimneys a
+ *             thin band at the top of the frame.
  *
  * Both are the 3200×1800 box of the other backgrounds (world units: the stage
- * is 0…1600 × 0…900). Nothing here moves: the snow that falls, the prints and
- * the snares are the film's effects, so the background rasterises once.
+ * is 0…1600 × 0…900). Nothing here moves, so it rasterises once. The mud is
+ * never wet enough to shine: it gleams only on the lips squeezed up round a
+ * print, so it never reads as water.
  */
 
-/** Where the snow meets the hills, world y, in each view. */
+/** Where the ground meets the heaps, world y, in each view. */
 export const HORIZON = 372;
 export const HIGH_HORIZON = 64;
 
-export const SNOW = {
-  far: "#7d90bd",
-  mid: "#b4c3e1",
-  lit: "#e3ebf7",
-  shadow: "#6f86b8",
-  deep: "#4b5f91",
-  ink: "#0e1426",
+export const MUD = {
+  far: "#5b4d3b",
+  mid: "#45372a",
+  near: "#2d231a",
+  clod: "#6f5d47",
+  lip: "#8a775b",
+  hollow: "#1d150f",
+  ink: "#0f0c09",
+  straw: "#7a6d45",
 } as const;
 
-/** A soft drift: a lit crest over a shadowed lee, as one closed shape. */
-function drift(x: number, y: number, w: number, h: number) {
-  return `M${x - w / 2} ${y} C${x - w * 0.25} ${y - h} ${x + w * 0.2} ${y - h * 1.1} ${x + w / 2} ${y} C${x + w * 0.15} ${y + h * 0.35} ${x - w * 0.2} ${y + h * 0.3} ${x - w / 2} ${y} Z`;
-}
-
-/** Dry grass through the snow: a tuft of bent stalks, some with a seed head. */
-function Tuft({ x, y, s, seed, flat = false }: { x: number; y: number; s: number; seed: number; flat?: boolean }) {
+/** Dead grass through the mud: a tuft of bent stalks, some with a seed head. */
+function Tuft({ x, y, s, seed }: { x: number; y: number; s: number; seed: number }) {
   const rand = seeded(seed);
-  const stalks = Array.from({ length: 7 }, () => {
-    const a = flat ? rand() * Math.PI * 2 : -Math.PI / 2 + (rand() - 0.5) * 0.9;
-    const len = (flat ? 26 + rand() * 30 : 50 + rand() * 70) * s;
-    const bend = (rand() - 0.5) * 30 * s;
+  const stalks = Array.from({ length: 8 }, () => {
+    const a = -Math.PI / 2 + (rand() - 0.5) * 1.1;
+    const len = (46 + rand() * 70) * s;
+    const bend = (rand() - 0.5) * 34 * s;
     const ex = Math.cos(a) * len;
-    const ey = Math.sin(a) * len * (flat ? 0.7 : 1);
-    return { d: `M0 0 Q${ex * 0.5 + bend} ${ey * 0.55} ${ex} ${ey}`, ex, ey, head: rand() < 0.45 };
+    const ey = Math.sin(a) * len;
+    return { d: `M0 0 Q${ex * 0.5 + bend} ${ey * 0.55} ${ex} ${ey}`, ex, ey, head: rand() < 0.4 };
   });
   return (
-    <g transform={`translate(${x} ${y})`} className="ff-tuft">
-      {flat && <ellipse rx={30 * s} ry={12 * s} fill={SNOW.shadow} opacity="0.45" />}
+    <g transform={`translate(${x} ${y})`}>
+      <ellipse cx="0" cy="3" rx={26 * s} ry={7 * s} fill={MUD.hollow} opacity="0.7" />
       {stalks.map((st, i) => (
         <g key={i}>
-          <path d={st.d} stroke="#2a2733" strokeWidth={2.6 * s} fill="none" strokeLinecap="round" />
-          {st.head && <ellipse cx={st.ex} cy={st.ey} rx={3.2 * s} ry={7 * s} fill="#5b4c3d" transform={`rotate(${(Math.atan2(st.ey, st.ex) * 180) / Math.PI + 90} ${st.ex} ${st.ey})`} />}
+          <path d={st.d} stroke={i % 3 ? MUD.straw : "#4d4630"} strokeWidth={3 * s} fill="none" strokeLinecap="round" />
+          {st.head && <ellipse cx={st.ex} cy={st.ey} rx={3 * s} ry={7 * s} fill="#8d7c4e" transform={`rotate(${(Math.atan2(st.ey, st.ex) * 180) / Math.PI + 90} ${st.ex} ${st.ey})`} />}
         </g>
       ))}
-      {!flat && <ellipse cx="0" cy="2" rx={22 * s} ry={5 * s} fill={SNOW.lit} opacity="0.9" />}
+    </g>
+  );
+}
+
+/** An old, unread print: a dark pad and three toe dents, squeezed rims catching the sky. */
+function OldPrint({ x, y, s, squash, turn }: { x: number; y: number; s: number; squash: number; turn: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s} ${s * squash}) rotate(${turn})`}>
+      <ellipse cx="14" cy="-2" rx="22" ry="18" fill={MUD.lip} opacity="0.35" />
+      <ellipse cx="14" cy="0" rx="20" ry="17" fill={MUD.hollow} opacity="0.75" />
+      {[
+        [-12, -24],
+        [-20, 0],
+        [-12, 24],
+      ].map(([cx, cy], i) => (
+        <ellipse key={i} cx={cx} cy={cy} rx="8" ry="7" fill={MUD.hollow} opacity="0.75" />
+      ))}
     </g>
   );
 }
 
 const fieldRand = seeded(7331);
 
-/** Eye level: drifts receding to the horizon, thinner as they go. */
-const FIELD_DRIFTS = Array.from({ length: 26 }, () => {
-  const d = Math.pow(fieldRand(), 1.7);
-  const y = HORIZON + 8 + d * 980;
-  const k = 0.15 + d * 1.6;
-  return { x: -800 + fieldRand() * 3200, y, w: (380 + fieldRand() * 700) * k, h: (8 + fieldRand() * 10) * k };
+/** Eye level: clods and ridges of churned mud receding to the heaps. */
+const FIELD_CLODS = Array.from({ length: 70 }, () => {
+  const d = Math.pow(fieldRand(), 1.6);
+  const y = HORIZON + 10 + d * 980;
+  const k = 0.15 + d * 1.7;
+  return { x: -800 + fieldRand() * 3200, y, w: (40 + fieldRand() * 90) * k, h: (8 + fieldRand() * 10) * k };
 });
-const FIELD_RIPPLES = Array.from({ length: 110 }, () => {
-  const d = Math.pow(fieldRand(), 1.5);
-  const y = HORIZON + 6 + d * 1000;
-  const k = 0.15 + d * 1.5;
-  return { x: -800 + fieldRand() * 3200, y, w: (24 + fieldRand() * 60) * k, lit: fieldRand() < 0.5 };
+const FIELD_PRINTS = Array.from({ length: 60 }, () => {
+  const d = Math.pow(fieldRand(), 1.4);
+  const y = HORIZON + 16 + d * 960;
+  return { x: -800 + fieldRand() * 3200, y, s: 0.2 + d * 1.6, turn: (fieldRand() - 0.5) * 120 };
 });
 const FIELD_TUFTS = [
   { x: -260, y: 980, s: 2.2 },
@@ -89,16 +108,23 @@ const FIELD_TUFTS = [
   { x: 2300, y: 470, s: 0.4 },
   { x: 980, y: 430, s: 0.3 },
 ];
-const SPARKS = Array.from({ length: 70 }, () => {
-  const d = fieldRand();
-  return { x: -800 + fieldRand() * 3200, y: HORIZON + 20 + d * 960, r: 0.8 + d * 2.2, o: 0.35 + fieldRand() * 0.5 };
-});
-const HILLS = (base: number, seed: number, amp: number, n: number) => {
+/** The run's old fence: leaning posts, nearer ones bigger, one still with a rail. */
+const FIELD_POSTS = [
+  { x: -560, y: 760, h: 380, lean: -6 },
+  { x: -120, y: 520, h: 150, lean: 4 },
+  { x: 260, y: 430, h: 62, lean: -3 },
+  { x: 1320, y: 440, h: 70, lean: 5 },
+  { x: 1780, y: 560, h: 170, lean: -7 },
+  { x: 2240, y: 820, h: 420, lean: 8 },
+];
+
+/** The skyline: spoil heaps, and the foundry's cold stacks. */
+const heaps = (base: number, seed: number, amp: number, n: number) => {
   const rand = seeded(seed);
   let d = `M-800 ${base}`;
   for (let i = 0; i <= n; i++) {
     const x = -800 + (i / n) * 3200;
-    d += ` Q${x - 1600 / n} ${base - amp * (0.4 + rand())} ${x} ${base - amp * rand() * 0.5}`;
+    d += ` Q${x - 1600 / n} ${base - amp * (0.5 + rand())} ${x} ${base - amp * rand() * 0.3}`;
   }
   return `${d} L2400 ${base + 40} L-800 ${base + 40} Z`;
 };
@@ -107,9 +133,17 @@ function Sky({ horizon }: { horizon: number }) {
   return (
     <>
       <rect x="-800" y="-450" width="3200" height={horizon + 450} fill="url(#ff-sky)" />
-      <ellipse cx="800" cy={horizon} rx="1900" ry="120" fill="url(#ff-glow)" />
-      <path d={HILLS(horizon + 2, 41, 90, 7)} fill="#3b4872" />
-      <path d={HILLS(horizon + 6, 77, 46, 11)} fill="#2c375d" />
+      <ellipse cx="800" cy={horizon} rx="1900" ry="140" fill="url(#ff-haze)" />
+      {/* The foundry's stacks, cold, and the works' roofline, far off. */}
+      <g fill="#1f1d18">
+        <rect x={-180} y={horizon - 260} width="34" height="260" />
+        <rect x={-120} y={horizon - 200} width="26" height="200" />
+        <rect x={1900} y={horizon - 300} width="40" height="300" />
+        <path d={`M-420 ${horizon} V${horizon - 70} L-300 ${horizon - 110} L-180 ${horizon - 70} V${horizon} Z`} />
+        <path d={`M1700 ${horizon} V${horizon - 90} H2080 V${horizon} Z`} />
+      </g>
+      <path d={heaps(horizon + 4, 41, 80, 6)} fill="#2e2a22" />
+      <path d={heaps(horizon + 8, 77, 40, 10)} fill="#3a3329" />
     </>
   );
 }
@@ -118,27 +152,36 @@ function Defs() {
   return (
     <defs>
       <linearGradient id="ff-sky" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#0b1024" />
-        <stop offset="0.55" stopColor="#1f2a4b" />
-        <stop offset="1" stopColor="#4d5d88" />
+        <stop offset="0" stopColor="#141310" />
+        <stop offset="0.55" stopColor="#35332a" />
+        <stop offset="1" stopColor="#6a644c" />
       </linearGradient>
-      <radialGradient id="ff-glow" cx="0.5" cy="0.5" r="0.5">
-        <stop offset="0" stopColor="#8b9ac2" stopOpacity="0.45" />
-        <stop offset="1" stopColor="#8b9ac2" stopOpacity="0" />
+      <radialGradient id="ff-haze" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stopColor="#8a8160" stopOpacity="0.4" />
+        <stop offset="1" stopColor="#8a8160" stopOpacity="0" />
       </radialGradient>
-      <linearGradient id="ff-snow" gradientUnits="userSpaceOnUse" x1="0" y1={HORIZON} x2="0" y2="1350">
-        <stop offset="0" stopColor={SNOW.far} />
-        <stop offset="0.35" stopColor={SNOW.mid} />
-        <stop offset="0.75" stopColor="#a9b9da" />
-        <stop offset="1" stopColor="#7f93bf" />
+      <linearGradient id="ff-ground-eye" gradientUnits="userSpaceOnUse" x1="0" y1={HORIZON} x2="0" y2="1350">
+        <stop offset="0" stopColor={MUD.far} />
+        <stop offset="0.3" stopColor={MUD.mid} />
+        <stop offset="1" stopColor={MUD.near} />
       </linearGradient>
-      <linearGradient id="ff-ground" gradientUnits="userSpaceOnUse" x1="0" y1={HIGH_HORIZON} x2="0" y2="1350">
-        <stop offset="0" stopColor={SNOW.far} />
-        <stop offset="0.25" stopColor="#a5b5d8" />
-        <stop offset="0.7" stopColor={SNOW.mid} />
-        <stop offset="1" stopColor="#98abd1" />
+      <linearGradient id="ff-ground-high" gradientUnits="userSpaceOnUse" x1="0" y1={HIGH_HORIZON} x2="0" y2="1350">
+        <stop offset="0" stopColor={MUD.far} />
+        <stop offset="0.35" stopColor="#4e4031" />
+        <stop offset="1" stopColor="#3a2e22" />
       </linearGradient>
     </defs>
+  );
+}
+
+function Post({ x, y, h, lean }: { x: number; y: number; h: number; lean: number }) {
+  const w = h * 0.09;
+  return (
+    <g transform={`translate(${x} ${y}) rotate(${lean})`}>
+      <ellipse cx="0" cy="2" rx={w * 1.6} ry={w * 0.4} fill={MUD.hollow} opacity="0.8" />
+      <path d={`M${-w / 2} 0 L${-w * 0.45} ${-h} L${w * 0.1} ${-h - w * 0.5} L${w / 2} ${-h * 0.96} L${w / 2} 0 Z`} fill="#3b3024" stroke={MUD.ink} strokeWidth={Math.max(2, w * 0.18)} />
+      <path d={`M${-w * 0.2} ${-h * 0.9} V${-h * 0.2}`} stroke="#5b4b38" strokeWidth={w * 0.16} />
+    </g>
   );
 }
 
@@ -147,27 +190,19 @@ function Field() {
     <svg className="cine-bg-svg ff-bg" viewBox="-800 -450 3200 1800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <Defs />
       <Sky horizon={HORIZON} />
-      <rect x="-800" y={HORIZON} width="3200" height={1350 - HORIZON} fill="url(#ff-snow)" />
-      <path d={`M-800 ${HORIZON} H2400`} stroke="#c9d5ec" strokeWidth="2" opacity="0.5" />
-      {FIELD_DRIFTS.map((f, i) => (
+      <rect x="-800" y={HORIZON} width="3200" height={1350 - HORIZON} fill="url(#ff-ground-eye)" />
+      {FIELD_PRINTS.map((p, i) => (
+        <OldPrint key={i} x={p.x} y={p.y} s={p.s} squash={0.32} turn={p.turn} />
+      ))}
+      {FIELD_CLODS.map((c, i) => (
         <g key={i}>
-          <path d={drift(f.x, f.y + f.h * 0.4, f.w, f.h)} fill={SNOW.shadow} opacity="0.32" />
-          <path d={drift(f.x, f.y, f.w, f.h)} fill={SNOW.lit} opacity="0.55" />
+          <ellipse cx={c.x} cy={c.y + c.h * 0.5} rx={c.w * 0.55} ry={c.h * 0.6} fill={MUD.hollow} opacity="0.55" />
+          <ellipse cx={c.x} cy={c.y} rx={c.w * 0.5} ry={c.h * 0.55} fill={MUD.mid} />
+          <path d={`M${c.x - c.w * 0.4} ${c.y - c.h * 0.2} Q${c.x} ${c.y - c.h * 0.75} ${c.x + c.w * 0.35} ${c.y - c.h * 0.25}`} stroke={MUD.clod} strokeWidth={1 + (c.y - HORIZON) / 300} fill="none" strokeLinecap="round" />
         </g>
       ))}
-      {FIELD_RIPPLES.map((r, i) => (
-        <path
-          key={i}
-          d={`M${r.x} ${r.y} q${r.w / 2} ${-r.w * 0.06} ${r.w} 0`}
-          stroke={r.lit ? SNOW.lit : SNOW.shadow}
-          strokeWidth={1 + (r.y - HORIZON) / 260}
-          fill="none"
-          strokeLinecap="round"
-          opacity={r.lit ? 0.7 : 0.45}
-        />
-      ))}
-      {SPARKS.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={p.r} fill="#f4f8ff" opacity={p.o} />
+      {FIELD_POSTS.map((p, i) => (
+        <Post key={i} {...p} />
       ))}
       {FIELD_TUFTS.map((t, i) => (
         <Tuft key={i} x={t.x} y={t.y} s={t.s} seed={90 + i} />
@@ -177,25 +212,24 @@ function Field() {
 }
 
 const highRand = seeded(5519);
-/** From above, the drifts are long diagonal swells with a shadowed lee. */
-const HIGH_SWELLS = Array.from({ length: 16 }, (_, i) => {
-  const y = HIGH_HORIZON + 40 + i * 82 + highRand() * 40;
-  const k = 0.5 + (y - HIGH_HORIZON) / 900;
-  return { x: -900 + highRand() * 3000, y, w: (900 + highRand() * 900) * k, h: (26 + highRand() * 22) * k, tilt: -8 + highRand() * 6 };
+const HIGH_PRINTS = Array.from({ length: 90 }, () => {
+  const y = HIGH_HORIZON + 30 + highRand() * 1260;
+  const k = 0.5 + (y - HIGH_HORIZON) / 1100;
+  return { x: -800 + highRand() * 3200, y, s: 0.9 * k, turn: 150 + (highRand() - 0.5) * 110 };
 });
-const HIGH_RIPPLES = Array.from({ length: 90 }, () => {
-  const y = HIGH_HORIZON + 20 + highRand() * 1250;
-  const k = 0.4 + (y - HIGH_HORIZON) / 1000;
-  return { x: -800 + highRand() * 3200, y, w: (30 + highRand() * 50) * k, lit: highRand() < 0.5 };
+const HIGH_CLODS = Array.from({ length: 50 }, () => {
+  const y = HIGH_HORIZON + 30 + highRand() * 1260;
+  const k = 0.5 + (y - HIGH_HORIZON) / 1100;
+  return { x: -800 + highRand() * 3200, y, r: (8 + highRand() * 18) * k };
 });
-const HIGH_TUFTS = Array.from({ length: 14 }, (_, i) => {
+const HIGH_TUFTS = Array.from({ length: 12 }, (_, i) => {
   const y = HIGH_HORIZON + 80 + highRand() * 1150;
   const x = -760 + highRand() * 3120;
-  return { x, y, s: 0.6 + (y - HIGH_HORIZON) / 900, seed: 300 + i };
+  return { x, y, s: (0.6 + (y - HIGH_HORIZON) / 900) * 0.5, seed: 300 + i };
 });
-const STONES = Array.from({ length: 6 }, () => {
-  const y = HIGH_HORIZON + 120 + highRand() * 1100;
-  return { x: -700 + highRand() * 3000, y, r: (14 + highRand() * 22) * (0.5 + (y - HIGH_HORIZON) / 900) };
+const HIGH_POSTS = Array.from({ length: 5 }, (_, i) => {
+  const y = HIGH_HORIZON + 160 + i * 250 + highRand() * 60;
+  return { x: -700 + (i % 2) * 2900 + highRand() * 200, y, h: 60 + (y - HIGH_HORIZON) * 0.14, lean: (highRand() - 0.5) * 16 };
 });
 
 function High() {
@@ -203,33 +237,21 @@ function High() {
     <svg className="cine-bg-svg ff-bg" viewBox="-800 -450 3200 1800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <Defs />
       <Sky horizon={HIGH_HORIZON} />
-      <rect x="-800" y={HIGH_HORIZON} width="3200" height={1350 - HIGH_HORIZON} fill="url(#ff-ground)" />
-      {HIGH_SWELLS.map((f, i) => (
-        <g key={i} transform={`rotate(${f.tilt} ${f.x} ${f.y})`}>
-          <path d={drift(f.x, f.y + f.h * 0.5, f.w, f.h)} fill={SNOW.shadow} opacity="0.3" />
-          <path d={drift(f.x, f.y, f.w, f.h * 0.8)} fill={SNOW.lit} opacity="0.5" />
-        </g>
+      <rect x="-800" y={HIGH_HORIZON} width="3200" height={1350 - HIGH_HORIZON} fill="url(#ff-ground-high)" />
+      {HIGH_PRINTS.map((p, i) => (
+        <OldPrint key={i} x={p.x} y={p.y} s={p.s} squash={0.72} turn={p.turn} />
       ))}
-      {HIGH_RIPPLES.map((r, i) => (
-        <path
-          key={i}
-          d={`M${r.x} ${r.y} q${r.w / 2} ${-r.w * 0.16} ${r.w} 0`}
-          stroke={r.lit ? SNOW.lit : SNOW.shadow}
-          strokeWidth={1.2 + (r.y - HIGH_HORIZON) / 500}
-          fill="none"
-          strokeLinecap="round"
-          opacity={r.lit ? 0.65 : 0.4}
-        />
-      ))}
-      {STONES.map((s, i) => (
+      {HIGH_CLODS.map((c, i) => (
         <g key={i}>
-          <ellipse cx={s.x + s.r * 0.25} cy={s.y + s.r * 0.35} rx={s.r * 1.3} ry={s.r * 0.6} fill={SNOW.shadow} opacity="0.5" />
-          <ellipse cx={s.x} cy={s.y} rx={s.r} ry={s.r * 0.62} fill="#2c2f3f" />
-          <path d={`M${s.x - s.r * 0.9} ${s.y - s.r * 0.1} Q${s.x} ${s.y - s.r * 0.9} ${s.x + s.r * 0.85} ${s.y - s.r * 0.15} Q${s.x} ${s.y - s.r * 0.35} ${s.x - s.r * 0.9} ${s.y - s.r * 0.1} Z`} fill={SNOW.lit} />
+          <ellipse cx={c.x + c.r * 0.2} cy={c.y + c.r * 0.3} rx={c.r * 1.1} ry={c.r * 0.7} fill={MUD.hollow} opacity="0.5" />
+          <ellipse cx={c.x} cy={c.y} rx={c.r} ry={c.r * 0.65} fill={MUD.clod} opacity="0.8" />
         </g>
+      ))}
+      {HIGH_POSTS.map((p, i) => (
+        <Post key={i} {...p} />
       ))}
       {HIGH_TUFTS.map((t, i) => (
-        <Tuft key={i} x={t.x} y={t.y} s={t.s * 0.45} seed={t.seed} />
+        <Tuft key={i} x={t.x} y={t.y} s={t.s} seed={t.seed} />
       ))}
     </svg>
   );

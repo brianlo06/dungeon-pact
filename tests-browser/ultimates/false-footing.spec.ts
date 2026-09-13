@@ -64,14 +64,14 @@ test("from above, every real enemy stands in the field with its own trail, next 
   await expect(page.locator(".cine-text-name")).toBeVisible();
 });
 
-test("the face acts: reading, breath held, then a grin", async ({ page }) => {
+test("the face acts: reading, the midges stop as the breath is held, then a grin", async ({ page }) => {
   await hold(page, { shot: 3, at: 0.2 }, "know");
   const eyes = caster(page).locator('[data-part="eyes"]');
   const mouth = caster(page).locator('[data-part="mouth"]');
   const narrowed = await eyes.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).d);
   const set = await mouth.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a);
   expect(narrowed).toBeLessThan(0.7);
-  await expect(page.locator(".ff-breath")).toBeAttached();
+  await expect(page.locator(".ff-midges")).toBeAttached();
   await hold(page, { shot: 3, at: 0.95 }, "know");
   const grin = await caster(page).locator('[data-part="mouth"]').evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a);
   expect(grin).toBeGreaterThan(set * 1.3);

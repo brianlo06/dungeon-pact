@@ -6,20 +6,21 @@ import "./style.css";
  * False Footing's effects.
  *
  * The idea they serve: the Pathfinder reads the enemy's own tracks in fresh
- * snow until they say where its next foot will fall, and the snare is already
+ * mud until they say where its next foot will fall, and the snare is already
  * waiting under that exact spot when it does.
  *
- *   ff-print   one print dented in the snow; its rim lights as it is read
+ *   ff-print   one print pressed into the mud; its rim lights as it is read
  *   ff-trail   from above: every enemy's trail read up to its feet, the next
  *              step foreseen, a snare under it, and the cords back to the hand
- *   ff-loop    a snare's noose lying open under the snow
+ *   ff-loop    a snare's noose lying open under a skin of mud
  *   ff-hobble  the snare sprung: the cord whipped round the enemy's legs
  *   ff-cord    the snare's cord between two points: slack, taut, ripped up
- *   ff-burst   the snow thrown up when the snare bites (boils in three drawings)
- *   ff-breath  breath clouds in the cold, which stop when the breath is held
- *   ff-flakes  the last flakes still coming down; they hang in the quiet
- *   ff-drift   a drift's lip across the bottom of the frame
- *   ff-spray   powder thrown across the lens: the cut from the print to above
+ *   ff-burst   the mud thrown up when the snare bites (boils in three drawings)
+ *   ff-glare   a pale light behind the bite, so the drawn frame reads
+ *   ff-midges  midges over the run at dusk; they stop dead when the breath is
+ *              held, and hang in the quiet
+ *   ff-bank    a bank of churned mud and dead grass across the bottom of the frame
+ *   ff-spray   mud flung across the lens: the cut from the print to above
  *   ff-board   on the real battlefield: prints behind every enemy, and after,
  *              a snare cinched at every enemy's feet
  *
@@ -30,8 +31,8 @@ import "./style.css";
  */
 
 export const AMBER = "#f2a93b";
-const LIT = "#eef3fb";
-const SHADOW = "#6f86b8";
+const MID = "#55442f";
+const SHADOW = "#2b2118";
 
 type Frame = (el: HTMLElement, p: number, age: number, ctx: VfxContext) => void;
 const v = (vars: Record<string, string | number>) => vars as CSSProperties;
@@ -80,7 +81,7 @@ function PrintArt({ ghost = false, hot = false, lite = false }: { ghost?: boolea
     );
   return (
     <g className="ff-dent" data-hot={hot || undefined}>
-      {/* The lip of snow pushed up round it, lit on the far side. */}
+      {/* The lip of mud squeezed up round it, catching the sky on the far side. */}
       {SHAPES.map((d, i) => (
         <path key={`l${i}`} d={d} className="ff-dent-lip" transform="translate(0 -3.5) scale(1.12)" />
       ))}
@@ -110,8 +111,8 @@ function PrintArt({ ghost = false, hot = false, lite = false }: { ghost?: boolea
  * One print at the size of the frame. `size` is its width in world units,
  * `squash` its height against its width (the angle it is seen at), `turn`
  * the way it points; `read` from `ra` to `rb` of the effect's life lights its
- * rim; `crumbs` tip snow into it. `ghost` draws the print not yet made:
- * the next step, as a dashed amber outline in untouched snow.
+ * rim; `crumbs` crumble mud into it. `ghost` draws the print not yet made:
+ * the next step, as a dashed amber outline in untrodden mud.
  */
 const Print = ({ cue }: VfxProps) => {
   const q = cue.params ?? {};
@@ -224,7 +225,7 @@ const trailFrame: Frame = (el, p, _age, ctx) => {
       const next = g.querySelector<SVGGElement>(".ff-next");
       setAttr(next, "transform", `translate(${f1(nx)} ${f1(ny)}) scale(${(k * 1.05).toFixed(3)} ${(k * 1.05 * squash).toFixed(3)}) rotate(${f1(heading)})`);
       setVar(next, "--d", (0.46 + 0.06 * t).toFixed(3));
-      // The cord: out of the loop's knot, sagging across the snow to the hand.
+      // The cord: out of the loop's knot, sagging across the mud to the hand.
       const kx = nx + 52 * k;
       const ky = ny;
       const mx = (kx + hx) / 2;
@@ -242,7 +243,7 @@ const trailFrame: Frame = (el, p, _age, ctx) => {
 /* ── The snare ─────────────────────────────────────────────────────────── */
 
 /**
- * The noose. `hidden`: lying open under a skin of snow with one gleam of
+ * The noose. `hidden`: lying open under a skin of mud with one gleam of
  * cord; `cinch`: it snaps shut and up round a foot, the knot running down the
  * cord; `held`: shut. `squash` is the angle it is seen at.
  */
@@ -259,7 +260,7 @@ const Loop = ({ cue }: VfxProps) => {
         <path className="ff-loop-tie" d={`M112 ${-6} l30 -8 l-6 22 Z`} />
       </g>
       {q.mode === "hidden" && (
-        <g className="ff-loop-snow">
+        <g className="ff-loop-mud">
           {Array.from({ length: 6 }, (_, i) => {
             const a = (i / 6) * Math.PI * 2 + rand() * 0.4;
             return <ellipse key={i} cx={Math.cos(a) * 120} cy={Math.sin(a) * 120 * squash} rx={26 + rand() * 20} ry={7 + rand() * 4} />;
@@ -302,7 +303,7 @@ const Hobble = () => (
  * A cord between two points in world units, drawn by its frame. Each end is a
  * point (`ax`/`ay`), or an actor's ground point plus an offset in its drawn
  * height (`a: "caster"`, `afx`, `afy`). `sag` is its slack at the start and
- * `tautAt` the moment it comes straight; with `rip`, snow sprays off it along
+ * `tautAt` the moment it comes straight; with `rip`, mud flies off it along
  * its whole length as it comes up out of the ground.
  */
 const Cord = ({ cue }: VfxProps) => {
@@ -374,7 +375,7 @@ const cordFrame: Frame = (el, p, _age, ctx) => {
 
 /* ── The bite ──────────────────────────────────────────────────────────── */
 
-/** Snow thrown up from the ground: uneven clumps, some torn loose, in three drawings. */
+/** Mud thrown up from the ground: uneven clods, some torn loose, in three drawings. */
 function crown(seed: number) {
   const rand = seeded(seed);
   const clumps: { d: string; shade: string }[] = [];
@@ -400,12 +401,12 @@ function crown(seed: number) {
     const nx = -Math.sin(a) * w;
     const ny = Math.cos(a) * w;
     const d = `M${f1(nx * 0.4)} ${f1(ny * 0.4)} C${f1(ex * 0.4 + nx)} ${f1(ey * 0.4 + ny)} ${f1(ex + nx * 0.5)} ${f1(ey + ny * 0.5)} ${f1(ex)} ${f1(ey)} C${f1(ex - nx * 1.1)} ${f1(ey - ny * 1.1)} ${f1(ex * 0.3 - nx)} ${f1(ey * 0.3 - ny)} ${f1(-nx * 0.4)} ${f1(-ny * 0.4)} Z`;
-    clumps.push({ d, shade: [LIT, "#c9d6ee", SHADOW][Math.floor(rand() * 3)] });
+    clumps.push({ d, shade: [MID, SHADOW, "#3d3024"][Math.floor(rand() * 3)] });
   }
   for (let i = 0; i < 7; i++) {
     const a = Math.PI * (1.05 + rand() * 0.9);
     const r = 110 + rand() * 130;
-    clumps.push({ d: blob(Math.cos(a) * r, Math.sin(a) * r * 0.9, 10 + rand() * 22), shade: rand() < 0.7 ? LIT : "#c9d6ee" });
+    clumps.push({ d: blob(Math.cos(a) * r, Math.sin(a) * r * 0.9, 10 + rand() * 22), shade: rand() < 0.5 ? SHADOW : MID });
   }
   return clumps;
 }
@@ -454,83 +455,89 @@ const burstFrame: Frame = (el, _p, age) => {
   if (art && art.dataset.k !== k) art.dataset.k = k;
 };
 
-/* ── The cold ──────────────────────────────────────────────────────────── */
+/**
+ * The smoke-pale glare the bite throws up behind the target: a soft light,
+ * sized from the figure, so the two-tone frame has something light for the
+ * enemy to be black against. Dark mud alone goes to black in that frame.
+ */
+const Glare = () => <div className="ff-glare" />;
+
+/* ── The dusk ──────────────────────────────────────────────────────────── */
 
 /**
- * Breath in the cold: clouds out of the mouth at `a`, `b` (fractions of the
- * effect's life), drifting forward and up and thinning; after `hold` no more
- * come.
+ * Midges over the run at dusk: specks drifting in small loops. `holdAt`
+ * (a fraction of the effect's life) is when they stop dead in the air, and
+ * `still` holds them from the start: the quiet, where nothing moves.
  */
-const Breath = ({ cue }: VfxProps) => {
-  const q = cue.params ?? {};
-  const puffs = String(q.puffs ?? "0,0.3").split(",").map(Number);
-  return (
-    <div className="ff-breath">
-      {puffs.map((at, i) => (
-        <i key={i} style={v({ "--at": at })}>
-          <b />
-          <b />
-          <b />
-        </i>
-      ))}
-    </div>
-  );
-};
-
-/** The last flakes. Drifting, or (`still`) hung in the air. */
-const Flakes = ({ cue }: VfxProps) => {
+const Midges = ({ cue }: VfxProps) => {
   const rand = seeded(cue.seed ?? 51);
   const count = Number(cue.params?.count ?? 40);
   return (
-    <div className="ff-flakes" data-still={cue.params?.still ? "" : undefined}>
+    <div className="ff-midges" data-still={cue.params?.still ? "" : undefined} data-holdat={String(cue.params?.holdAt ?? 2)}>
       {Array.from({ length: count }, (_, i) => (
         <i
           key={i}
           data-x={rand().toFixed(3)}
           data-y={rand().toFixed(3)}
-          data-speed={(0.05 + rand() * 0.1).toFixed(3)}
-          style={v({ "--s": (0.4 + rand() * 1.1).toFixed(2), "--o": (0.35 + rand() * 0.6).toFixed(2) })}
+          data-phase={(rand() * 6.28).toFixed(2)}
+          data-r={(6 + rand() * 18).toFixed(1)}
+          style={v({ "--s": (0.5 + rand() * 1).toFixed(2), "--o": (0.45 + rand() * 0.5).toFixed(2) })}
         />
       ))}
     </div>
   );
 };
 
-const flakesFrame: Frame = (el, _p, age) => {
-  const box = el.querySelector<HTMLElement>(".ff-flakes");
+const midgesFrame: Frame = (el, p, age) => {
+  const box = el.querySelector<HTMLElement>(".ff-midges");
   if (!box) return;
   const w = box.offsetWidth;
   const h = box.offsetHeight;
-  const still = box.dataset.still !== undefined;
-  const t = still ? 0 : age / 1000;
+  const hold = Number(box.dataset.holdat);
+  const life = p > 0 ? age / p : 0;
+  const t = box.dataset.still !== undefined ? 0 : Math.min(age, hold * life) / 1000;
   for (const f of box.querySelectorAll<HTMLElement>("i")) {
-    const sp = Number(f.dataset.speed);
-    const y = ((Number(f.dataset.y) + t * sp) % 1) * h;
-    const x = Number(f.dataset.x) * w + Math.sin(t * 2 + Number(f.dataset.y) * 9) * 8;
+    const ph = Number(f.dataset.phase);
+    const r = Number(f.dataset.r);
+    const x = Number(f.dataset.x) * w + Math.cos(t * 7 + ph) * r + t * 20;
+    const y = Number(f.dataset.y) * h + Math.sin(t * 9 + ph * 1.3) * r * 0.6;
     const tr = `translate3d(${f1(x)}px, ${f1(y)}px, 0)`;
     if (f.style.transform !== tr) f.style.transform = tr;
   }
 };
 
-/** A drift's lip, the snow the kid is hidden behind, across the bottom of the frame. */
-const Drift = ({ cue }: VfxProps) => {
+/** The bank of churned mud and dead grass the kid is low behind, across the bottom of the frame. */
+const Bank = ({ cue }: VfxProps) => {
   const rand = seeded(cue.seed ?? 71);
   const w = Number(cue.params?.w ?? 1600);
   const h = Number(cue.params?.h ?? 260);
   let top = `M0 ${h}`;
-  const n = 7;
+  const n = 9;
   for (let i = 0; i <= n; i++) {
     const x = (i / n) * w;
     const y = 40 + rand() * 60;
-    top += ` S${f1(x - w / n / 2)} ${f1(y - 30)} ${f1(x)} ${f1(y)}`;
+    top += ` S${f1(x - w / n / 2)} ${f1(y - 24)} ${f1(x)} ${f1(y)}`;
   }
   return (
-    <svg className="ff-drift" viewBox={`0 0 ${w} ${h}`} style={{ width: `${w}px`, height: `${h}px` }}>
-      <path d={`${top} L${w} ${h} Z`} fill={SHADOW} transform="translate(0 16)" />
-      <path d={`${top} L${w} ${h} Z`} fill="#c8d5ec" />
-      <path d={top.replace(`M0 ${h}`, "M0 80")} fill="none" stroke={LIT} strokeWidth="9" strokeLinecap="round" opacity="0.9" />
-      {Array.from({ length: 30 }, (_, i) => (
-        <circle key={i} cx={rand() * w} cy={90 + rand() * (h - 100)} r={1.5 + rand() * 3} fill="#fff" opacity={0.4 + rand() * 0.5} />
+    <svg className="ff-bank" viewBox={`0 0 ${w} ${h}`} style={{ width: `${w}px`, height: `${h}px` }}>
+      <path d={`${top} L${w} ${h} Z`} fill="#140f0b" transform="translate(0 14)" />
+      <path d={`${top} L${w} ${h} Z`} fill="#33281e" />
+      <path d={top.replace(`M0 ${h}`, "M0 80")} fill="none" stroke="#6f5d47" strokeWidth="7" strokeLinecap="round" opacity="0.8" />
+      {Array.from({ length: 16 }, (_, i) => {
+        const cx = rand() * w;
+        const cy = 70 + rand() * 50;
+        return (
+          <g key={i} transform={`translate(${f1(cx)} ${f1(cy)})`}>
+            {Array.from({ length: 5 }, (_, j) => {
+              const a = -Math.PI / 2 + (rand() - 0.5) * 1.2;
+              const len = 30 + rand() * 50;
+              return <path key={j} d={`M0 0 Q${f1(Math.cos(a) * len * 0.4 + 8)} ${f1(Math.sin(a) * len * 0.6)} ${f1(Math.cos(a) * len)} ${f1(Math.sin(a) * len)}`} stroke={j % 2 ? "#7a6d45" : "#4d4630"} strokeWidth="5" fill="none" strokeLinecap="round" />;
+            })}
+          </g>
+        );
+      })}
+      {Array.from({ length: 14 }, (_, i) => (
+        <ellipse key={i} cx={rand() * w} cy={110 + rand() * (h - 120)} rx={10 + rand() * 22} ry={5 + rand() * 8} fill="#231a13" opacity="0.8" />
       ))}
     </svg>
   );
@@ -576,7 +583,7 @@ const Spray = ({ cue }: VfxProps) => {
 /**
  * `call`: four prints dent the floor behind the enemy (it came from the
  * right) and light one after another up to its feet. `snared`: a noose
- * cinched round its feet with a puff of snow, the cord staked off along the
+ * cinched round its feet with a splash of mud, the cord staked off along the
  * floor behind it; the Ultimate's own target (the first on the board) is
  * knotted twice and carries an amber tag.
  */
@@ -628,9 +635,9 @@ export const renderers: Record<string, (p: VfxProps) => ReactNode> = {
   "ff-hobble": Hobble,
   "ff-cord": Cord,
   "ff-burst": Burst,
-  "ff-breath": Breath,
-  "ff-flakes": Flakes,
-  "ff-drift": Drift,
+  "ff-glare": Glare,
+  "ff-midges": Midges,
+  "ff-bank": Bank,
   "ff-spray": Spray,
   "ff-board": Board,
 };
@@ -639,6 +646,6 @@ export const frames: Record<string, Frame> = {
   "ff-trail": trailFrame,
   "ff-cord": cordFrame,
   "ff-burst": burstFrame,
-  "ff-flakes": flakesFrame,
+  "ff-midges": midgesFrame,
   "ff-board": boardFrame,
 };
