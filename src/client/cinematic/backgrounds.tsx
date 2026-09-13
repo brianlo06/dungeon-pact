@@ -1,4 +1,5 @@
 import type { BackgroundId } from "../../shared/cinematic";
+import { FOLDER_BACKGROUNDS } from "./registry";
 
 /**
  * The spaces an Ultimate takes place in.
@@ -212,8 +213,80 @@ function PactSigil() {
   );
 }
 
+/**
+ * The Arcanist's: the storm it borrows. A drowned floor under a low sky, and
+ * written into the clouds a promissory seal — the debt the storm is taken
+ * against. Clouds drift on `--bgt` (seconds into the film) and the sky lights
+ * from within on `--storm`, which lightning cues drive.
+ */
+function StormLedger() {
+  const clouds = [
+    [-500, 60, 1.5, 0.9],
+    [300, 10, 1.9, 1],
+    [1200, 70, 1.6, 0.85],
+    [1900, 20, 1.4, 0.9],
+    [-100, 230, 1.2, 0.7],
+    [800, 250, 1.3, 0.75],
+    [1600, 240, 1.1, 0.7],
+  ] as const;
+  return (
+    <svg className="cine-bg-svg" viewBox="-800 -450 3200 1800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="sl-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#05070f" />
+          <stop offset="0.45" stopColor="#0f1a2e" />
+          <stop offset="0.62" stopColor="#1b2a44" />
+          <stop offset="0.63" stopColor="#0a0f1a" />
+          <stop offset="1" stopColor="#04060b" />
+        </linearGradient>
+        <radialGradient id="sl-glow" cx="0.5" cy="0.2" r="0.5">
+          <stop offset="0" stopColor="#bfe8ff" stopOpacity="0.9" />
+          <stop offset="1" stopColor="#5fb2ff" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect x="-800" y="-450" width="3200" height="1800" fill="url(#sl-sky)" />
+      <rect className="sl-flash" x="-800" y="-450" width="3200" height="900" fill="url(#sl-glow)" />
+      {/* the seal the storm is written against */}
+      <g className="sl-seal" transform="translate(800 40)">
+        <circle r="420" fill="none" stroke="#6f93c9" strokeOpacity="0.16" strokeWidth="10" />
+        <circle r="360" fill="none" stroke="#6f93c9" strokeOpacity="0.12" strokeWidth="40" strokeDasharray="6 40" />
+        <path d="M0 -300 L70 -70 L300 0 L70 70 L0 300 L-70 70 L-300 0 L-70 -70 Z" fill="none" stroke="#8fb4e6" strokeOpacity="0.14" strokeWidth="8" />
+      </g>
+      {clouds.map(([x, y, k, o], i) => (
+        <g key={i} className="sl-cloud" style={{ "--drift": `${(i % 2 ? 1 : -1) * (4 + i)}px` } as React.CSSProperties}>
+          <path
+            transform={`translate(${x} ${y}) scale(${k})`}
+            d="M0 60 C-10 20 40 -10 80 10 C100 -30 180 -30 210 10 C250 -10 320 10 310 60 C340 80 320 120 280 110 L40 110 C-10 120 -30 90 0 60 Z"
+            fill={i < 4 ? "#141f33" : "#1b2a42"}
+            opacity={o}
+          />
+        </g>
+      ))}
+      {/* the flooded floor: a horizon line, and ripples running to it */}
+      <path d="M-800 682 H2400" stroke="#4d6d99" strokeWidth="3" opacity="0.45" />
+      {Array.from({ length: 9 }, (_, i) => (
+        <path
+          key={i}
+          className="sl-ripple"
+          d={`M${-800 + (i % 3) * 180} ${720 + i * i * 9} H${2400 - (i % 2) * 260}`}
+          stroke="#6f93c9"
+          strokeWidth={2 + i * 0.6}
+          opacity={0.1 + i * 0.03}
+          style={{ "--i": i } as React.CSSProperties}
+        />
+      ))}
+      {/* the seal again, drowned: its reflection in the flood */}
+      <g transform="translate(800 1320) scale(1 -0.45)" opacity="0.5">
+        <circle r="420" fill="none" stroke="#6f93c9" strokeOpacity="0.14" strokeWidth="10" />
+      </g>
+    </svg>
+  );
+}
+
 export function Background({ id }: { id: BackgroundId }) {
   switch (id) {
+    case "storm-ledger":
+      return <StormLedger />;
     case "lantern-vault":
       return <LanternVault />;
     case "breach-forge":
@@ -222,7 +295,9 @@ export function Background({ id }: { id: BackgroundId }) {
       return <PactSigil />;
     case "void":
       return <div className="cine-bg-void" />;
-    default:
-      return null;
+    default: {
+      const Own = FOLDER_BACKGROUNDS[id];
+      return Own ? <Own /> : null;
+    }
   }
 }

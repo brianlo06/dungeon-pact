@@ -101,7 +101,9 @@ document.documentElement.dataset.tempo = initial.tempo;
 
 function build(o: Options): RunState {
   const fight = FIGHTS[o.enemy];
-  const others = ["ranger", "warden", "arcanist"].filter((h) => h !== o.hero);
+  const others = ["ranger", "warden", "arcanist", "vanguard", "herald"].filter(
+    (h) => h !== o.hero,
+  );
   let s = bossFixture({
     boss: fight.boss ?? "collector",
     encounter: fight.encounter,
@@ -240,7 +242,11 @@ function UltimateLab() {
         }
         const shot = initial.shot !== null ? c.timeline.shots[initial.shot] : undefined;
         const ms = (shot ? shot.start : 0) + (initial.at ?? 0) * (shot ? shot.length : c.duration);
-        if (ms > 0) lab.loop.clock.step(ms);
+        // Seek from where the film already is: on a slow machine its first
+        // frame can land a few hundred milliseconds in, and stepping the full
+        // offset again would overshoot a short shot into the next one.
+        const ahead = ms - c.at(lab.loop.clock.time);
+        if (ahead > 0) lab.loop.clock.step(ahead);
       };
       requestAnimationFrame(wait);
     }, 250);

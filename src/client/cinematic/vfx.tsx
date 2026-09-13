@@ -376,7 +376,126 @@ const Reflection: Renderer = ({ slot }) => (
   </div>
 );
 
+/* ------------------------------------------------------------------ storm -- */
+
+const Rain: Renderer = ({ cue, color }) => {
+  const rand = seeded(cue.seed ?? 31);
+  const heavy = !!cue.params?.heavy;
+  return (
+    <div className="fx-rain" data-heavy={heavy || undefined} style={v({ "--c": color })}>
+      {Array.from({ length: heavy ? 90 : 55 }, (_, i) => (
+        <i
+          key={i}
+          data-x={rand().toFixed(3)}
+          data-speed={(1.8 + rand() * 1.4).toFixed(2)}
+          data-offset={rand().toFixed(3)}
+          style={v({ "--l": `${24 + rand() * 46}px`, "--o": 0.25 + rand() * 0.55 })}
+        />
+      ))}
+    </div>
+  );
+};
+
+/** A bolt. Its path is rewritten by `VFX_FRAME` every few frames. */
+const Lightning: Renderer = ({ color }) => (
+  <svg className="fx-bolt" viewBox="-400 -1200 800 1260" style={v({ "--c": color })}>
+    <path className="fx-bolt-glow" stroke={color} />
+    <path className="fx-bolt-branch" stroke={color} />
+    <path className="fx-bolt-core" stroke="#f4fbff" />
+    <ellipse className="fx-bolt-foot" rx="90" ry="22" fill={color} />
+  </svg>
+);
+
+/** Arcs between targets; drawn in world units by `VFX_FRAME`. */
+const Arcs: Renderer = ({ color }) => (
+  <svg className="fx-arcs" viewBox="0 0 1600 900" style={v({ "--c": color })}>
+    <path className="fx-arc-glow" stroke={color} />
+    <path className="fx-arc-core" stroke="#f4fbff" />
+  </svg>
+);
+
+const Wet: Renderer = ({ cue, color }) => {
+  const rand = seeded(cue.seed ?? 12);
+  return (
+    <div className="fx-wet" style={v({ "--c": color })}>
+      <i className="fx-wet-sheen" />
+      {Array.from({ length: 9 }, (_, i) => (
+        <b
+          key={i}
+          style={v({
+            "--x": `${(rand() - 0.5) * 100}%`,
+            "--y": `${-rand() * 80}%`,
+            "--d": rand().toFixed(2),
+          })}
+        />
+      ))}
+      <i className="fx-wet-pool" />
+    </div>
+  );
+};
+
+const Pages: Renderer = ({ cue }) => {
+  const rand = seeded(cue.seed ?? 21);
+  return (
+    <div className="fx-pages">
+      {Array.from({ length: 14 }, (_, i) => (
+        <i
+          key={i}
+          style={v({
+            "--dx": `${(rand() - 0.4) * 520}px`,
+            "--dy": `${-240 - rand() * 520}px`,
+            "--r": `${(rand() - 0.5) * 540}deg`,
+            "--s": 0.5 + rand() * 0.8,
+            "--d": (rand() * 0.35).toFixed(2),
+          })}
+        />
+      ))}
+    </div>
+  );
+};
+
+const Drops: Renderer = ({ cue, color }) => {
+  const rand = seeded(cue.seed ?? 44);
+  return (
+    <div className="fx-drops" data-still={cue.params?.still ? "" : undefined} style={v({ "--c": color })}>
+      {Array.from({ length: 9 }, (_, i) => (
+        <i
+          key={i}
+          style={v({
+            "--x": `${(i - 4) * 38 + (rand() - 0.5) * 16}px`,
+            "--hang": `${6 + rand() * 30}px`,
+            "--fall": `${160 + rand() * 260}px`,
+            "--d": rand().toFixed(2),
+            "--s": 0.6 + rand() * 0.7,
+          })}
+        />
+      ))}
+    </div>
+  );
+};
+
+const RuneCircle: Renderer = ({ color }) => (
+  <svg className="fx-rune" viewBox="-300 -300 600 600" style={v({ "--c": color })}>
+    <g className="fx-rune-outer">
+      <circle r="270" fill="none" stroke={color} strokeWidth="6" />
+      <circle r="240" fill="none" stroke={color} strokeWidth="22" strokeDasharray="3 26" />
+    </g>
+    <g className="fx-rune-inner">
+      <circle r="170" fill="none" stroke={color} strokeWidth="4" />
+      <path d="M0 -200 L48 -48 L200 0 L48 48 L0 200 L-48 48 L-200 0 L-48 -48 Z" fill="none" stroke="#e6f6ff" strokeWidth="5" />
+    </g>
+    <circle className="fx-rune-core" r="44" fill="#e6f6ff" />
+  </svg>
+);
+
 export const VFX: Partial<Record<VfxKind, Renderer>> = {
+  rain: Rain,
+  lightning: Lightning,
+  arcs: Arcs,
+  wet: Wet,
+  pages: Pages,
+  drops: Drops,
+  "rune-circle": RuneCircle,
   "floor-cracks": FloorCracks,
   dust: Dust,
   motes: Motes,
@@ -404,9 +523,82 @@ export const VFX: Partial<Record<VfxKind, Renderer>> = {
  * Per-frame work for the effects that need more than their variables. Called
  * with the effect's wrapper, its progress and its age in presentation ms.
  */
+/** What a frame function may ask of the stage: where the cast stands. */
+export interface VfxContext {
+  /** An actor's ground point and drawn height, world units, by cast id. */
+  actor: (id: string) => { x: number; y: number; h: number } | undefined;
+}
+
+/** A jagged path from a to b, fixed for one `seed`. */
+function jag(ax: number, ay: number, bx: number, by: number, seed: number, amp: number, steps = 9) {
+  const rand = seeded(seed);
+  let d = `M${ax.toFixed(1)} ${ay.toFixed(1)}`;
+  const nx = -(by - ay);
+  const ny = bx - ax;
+  const len = Math.hypot(nx, ny) || 1;
+  for (let i = 1; i < steps; i++) {
+    const k = i / steps;
+    const off = (rand() - 0.5) * amp * Math.sin(k * Math.PI);
+    d += ` L${(ax + (bx - ax) * k + (nx / len) * off).toFixed(1)} ${(ay + (by - ay) * k + (ny / len) * off).toFixed(1)}`;
+  }
+  return `${d} L${bx.toFixed(1)} ${by.toFixed(1)}`;
+}
+
+const setD = (el: Element | null, d: string) => {
+  if (el && el.getAttribute("d") !== d) el.setAttribute("d", d);
+};
+
 export const VFX_FRAME: Partial<
-  Record<VfxKind, (el: HTMLElement, p: number, age: number) => void>
+  Record<VfxKind, (el: HTMLElement, p: number, age: number, ctx: VfxContext) => void>
 > = {
+  rain: (el, _p, age) => {
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    for (const drop of el.querySelectorAll<HTMLElement>("i")) {
+      const speed = Number(drop.dataset.speed);
+      const k = (Number(drop.dataset.offset) + (age / 1000) * speed) % 1;
+      const x = Number(drop.dataset.x) * w * 1.2 - w * 0.1 - k * h * 0.22;
+      drop.style.transform = `translate3d(${x.toFixed(1)}px, ${(k * h * 1.15 - h * 0.1).toFixed(1)}px, 0) rotate(12deg)`;
+    }
+  },
+  lightning: (el, p, age) => {
+    // A new bolt shape every 45ms: it crawls rather than holds.
+    const seed = Math.floor(age / 45) + 1;
+    const svg = el.querySelector("svg");
+    if (!svg || svg.dataset.seed === String(seed)) return;
+    svg.dataset.seed = String(seed);
+    const top = -1180;
+    const main = jag(-60 + ((seed * 37) % 120), top, 0, 0, seed, 170, 14);
+    setD(svg.querySelector(".fx-bolt-core"), main);
+    setD(svg.querySelector(".fx-bolt-glow"), main);
+    const at = -300 - ((seed * 53) % 500);
+    setD(
+      svg.querySelector(".fx-bolt-branch"),
+      `${jag(0, at, 180 - ((seed * 71) % 360), at + 260, seed + 9, 70, 6)} ${jag(10, at - 200, -160, at + 40, seed + 17, 60, 5).replace("M", "M")}`,
+    );
+    svg.style.opacity = p > 0.85 ? String(((seed % 2) * 0.6 + 0.2).toFixed(2)) : "1";
+  },
+  arcs: (el, p, age, ctx) => {
+    const svg = el.querySelector("svg");
+    if (!svg) return;
+    const seed = Math.floor(age / 50) + 3;
+    if (svg.dataset.seed === String(seed)) return;
+    svg.dataset.seed = String(seed);
+    const from = ctx.actor("targets-0");
+    if (!from) return;
+    const hit = (a: { x: number; y: number; h: number }) => [a.x, a.y - a.h * 0.5] as const;
+    const [ax, ay] = hit(from);
+    let d = "";
+    // Each target is reached in turn as the arc jumps down the line.
+    for (let i = 1; i < 6; i++) {
+      const to = ctx.actor(`targets-${i}`);
+      if (!to || p < (i - 1) * 0.12) continue;
+      const [bx, by] = hit(to);
+      d += jag(ax, ay, bx, by, seed + i * 5, 90, 10) + " ";
+    }
+    setD(svg.querySelector(".fx-arc-core"), d.trim());
+    setD(svg.querySelector(".fx-arc-glow"), d.trim());
+  },
   "speed-lines": (el, _p, age) => {
     const width = el.offsetWidth;
     const lines = el.querySelectorAll<HTMLElement>("i");

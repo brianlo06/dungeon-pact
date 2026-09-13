@@ -1,4 +1,6 @@
 import type { SfxName } from "../../shared/presentation";
+import { crash, hit, hz, swell, type Voice } from "./synth";
+import { FOLDER_VOICES } from "./ultimate-voices";
 
 /**
  * Combat audio.
@@ -24,160 +26,7 @@ const DEFAULT_LEVELS: Record<Bus, number> = {
   ambience: 0.35,
 };
 
-interface Voice {
-  bus: Exclude<Bus, "master">;
-  render: (ctx: AudioContext, out: AudioNode, at: number) => void;
-}
 
-/**
- * Noise buffers, kept per length. Filling a second of noise is a few hundred
- * thousand random numbers on the main thread; doing it on the frame an
- * Ultimate lands was the one audible hitch in the whole cinematic.
- */
-const noiseBuffers = new WeakMap<BaseAudioContext, Map<number, AudioBuffer>>();
-
-/** Shaped noise: the backbone of impacts, chains and steam. */
-function noise(ctx: AudioContext, seconds: number) {
-  const frames = Math.max(1, Math.floor(ctx.sampleRate * seconds));
-  let cache = noiseBuffers.get(ctx);
-  if (!cache) noiseBuffers.set(ctx, (cache = new Map()));
-  let buffer = cache.get(frames);
-  if (!buffer) {
-    buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < frames; i++) data[i] = Math.random() * 2 - 1;
-    cache.set(frames, buffer);
-  }
-  const source = ctx.createBufferSource();
-  source.buffer = buffer;
-  return source;
-}
-
-/** One decaying envelope, the shape almost every percussive sound wants. */
-function hit(
-  ctx: AudioContext,
-  out: AudioNode,
-  at: number,
-  {
-    type = "sine" as OscillatorType,
-    from,
-    to,
-    gain = 0.5,
-    attack = 0.004,
-    decay = 0.18,
-  }: {
-    type?: OscillatorType;
-    from: number;
-    to?: number;
-    gain?: number;
-    attack?: number;
-    decay?: number;
-  },
-) {
-  const osc = ctx.createOscillator();
-  const amp = ctx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(from, at);
-  if (to !== undefined)
-    osc.frequency.exponentialRampToValueAtTime(Math.max(1, to), at + decay);
-  amp.gain.setValueAtTime(0.0001, at);
-  amp.gain.exponentialRampToValueAtTime(gain, at + attack);
-  amp.gain.exponentialRampToValueAtTime(0.0001, at + decay);
-  osc.connect(amp).connect(out);
-  osc.start(at);
-  osc.stop(at + decay + 0.02);
-}
-
-/** A filtered noise burst: metal, stone, steam, breakage. */
-function crash(
-  ctx: AudioContext,
-  out: AudioNode,
-  at: number,
-  {
-    seconds = 0.22,
-    gain = 0.4,
-    type = "bandpass" as BiquadFilterType,
-    freq = 1800,
-    q = 1.2,
-    sweepTo,
-  }: {
-    seconds?: number;
-    gain?: number;
-    type?: BiquadFilterType;
-    freq?: number;
-    q?: number;
-    sweepTo?: number;
-  },
-) {
-  const source = noise(ctx, seconds);
-  const filter = ctx.createBiquadFilter();
-  const amp = ctx.createGain();
-  filter.type = type;
-  filter.frequency.setValueAtTime(freq, at);
-  if (sweepTo)
-    filter.frequency.exponentialRampToValueAtTime(
-      Math.max(60, sweepTo),
-      at + seconds,
-    );
-  filter.Q.value = q;
-  amp.gain.setValueAtTime(gain, at);
-  amp.gain.exponentialRampToValueAtTime(0.0001, at + seconds);
-  source.connect(filter).connect(amp).connect(out);
-  source.start(at);
-  source.stop(at + seconds + 0.02);
-}
-
-/**
- * The palette. Each entry is one recognisable sound, built from the two
- * primitives above. The Collector's family is deliberately low and mechanical;
- * the Strongbox's is locks and iron; the Vanguard's is armour and impact.
- */
-
-/** A note, by MIDI pitch. */
-const hz = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
-
-/** A held, swelling tone with a soft attack: brass, or a choir of iron. */
-function swell(
-  ctx: AudioContext,
-  out: AudioNode,
-  at: number,
-  {
-    type = "sawtooth" as OscillatorType,
-    freq,
-    gain = 0.1,
-    attack = 0.12,
-    hold = 0.3,
-    release = 0.5,
-    cutoff = 1400,
-    detune = 0,
-  }: {
-    type?: OscillatorType;
-    freq: number;
-    gain?: number;
-    attack?: number;
-    hold?: number;
-    release?: number;
-    cutoff?: number;
-    detune?: number;
-  },
-) {
-  const osc = ctx.createOscillator();
-  const filter = ctx.createBiquadFilter();
-  const amp = ctx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, at);
-  osc.detune.value = detune;
-  filter.type = "lowpass";
-  filter.frequency.setValueAtTime(cutoff * 0.4, at);
-  filter.frequency.exponentialRampToValueAtTime(cutoff, at + attack + hold * 0.5);
-  amp.gain.setValueAtTime(0.0001, at);
-  amp.gain.exponentialRampToValueAtTime(gain, at + attack);
-  amp.gain.setValueAtTime(gain, at + attack + hold);
-  amp.gain.exponentialRampToValueAtTime(0.0001, at + attack + hold + release);
-  osc.connect(filter).connect(amp).connect(out);
-  osc.start(at);
-  osc.stop(at + attack + hold + release + 0.05);
-}
 
 /*
  * Ultimate voices. Longer, lower and layered where the combat palette is
@@ -363,6 +212,88 @@ const ULTIMATE_VOICES = {
           q: 2.5,
         });
       hit(c, o, t, { type: "square", from: 520, to: 180, gain: 0.16, decay: 0.5 });
+    },
+  },
+  /* The Arcanist: a storm borrowed against a page. */
+  /** Thunder a long way off: a low roll with no crack in it. */
+  "ult-thunder-far": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      crash(c, o, t, { seconds: 1.4, gain: 0.26, type: "lowpass", freq: 180, sweepTo: 70, q: 0.3 });
+      crash(c, o, t + 0.25, { seconds: 1.0, gain: 0.16, type: "lowpass", freq: 260, sweepTo: 90, q: 0.3 });
+    },
+  },
+  /** Pages tearing loose and fluttering up. */
+  "ult-pages": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      for (let i = 0; i < 9; i++)
+        crash(c, o, t + i * 0.045 + (i % 3) * 0.01, {
+          seconds: 0.05 + (i % 2) * 0.03,
+          gain: 0.09,
+          type: "highpass",
+          freq: 2200 + ((i * 523) % 2400),
+          q: 0.7,
+        });
+      crash(c, o, t, { seconds: 0.25, gain: 0.08, freq: 1200, sweepTo: 3800, q: 1.2 });
+    },
+  },
+  /** A downpour arriving all at once. */
+  "ult-rain": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      crash(c, o, t, { seconds: 1.3, gain: 0.22, type: "highpass", freq: 1400, q: 0.4 });
+      crash(c, o, t, { seconds: 1.1, gain: 0.14, freq: 700, sweepTo: 500, q: 0.5 });
+      for (let i = 0; i < 12; i++)
+        hit(c, o, t + 0.05 + ((i * 97) % 100) / 100, { type: "sine", from: 2400 + ((i * 331) % 1600), gain: 0.02, decay: 0.03 });
+    },
+  },
+  /** One drop, in silence. */
+  "ult-drip": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      hit(c, o, t, { type: "sine", from: 1400, to: 2600, gain: 0.12, attack: 0.002, decay: 0.09 });
+      hit(c, o, t + 0.03, { type: "sine", from: 900, gain: 0.03, decay: 0.3 });
+    },
+  },
+  /** The Arcanist's motif: a minor arpeggio climbing into a held, trembling note. */
+  "motif-arcanist": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      for (const [i, p] of [57, 60, 64, 69].entries())
+        swell(c, o, t + i * 0.11, { type: "triangle", freq: hz(p), gain: 0.06, attack: 0.03, hold: 0.12, release: 0.5, cutoff: 3000 });
+      swell(c, o, t + 0.44, { type: "sine", freq: hz(76), gain: 0.05, attack: 0.08, hold: 0.45, release: 0.6, detune: 12 });
+      swell(c, o, t + 0.44, { type: "sine", freq: hz(76), gain: 0.04, attack: 0.08, hold: 0.45, release: 0.6, detune: -12 });
+    },
+  },
+  /** Electricity gathering in a raised hand. */
+  "ult-charge-arc": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      hit(c, o, t, { type: "sawtooth", from: 80, to: 1800, gain: 0.07, attack: 0.3, decay: 0.45 });
+      for (let i = 0; i < 10; i++)
+        crash(c, o, t + 0.04 * i, { seconds: 0.02, gain: 0.05 + i * 0.006, freq: 3000 + i * 300, q: 8 });
+    },
+  },
+  /** The bolt: a crack with a split in it, and the sky answering. */
+  "ult-bolt": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      crash(c, o, t, { seconds: 0.04, gain: 0.8, type: "highpass", freq: 3000, q: 0.4 });
+      crash(c, o, t + 0.012, { seconds: 0.3, gain: 0.5, freq: 4200, sweepTo: 700, q: 0.7 });
+      hit(c, o, t, { type: "sawtooth", from: 1600, to: 60, gain: 0.25, decay: 0.35 });
+      hit(c, o, t, { type: "sine", from: 110, to: 30, gain: 0.8, decay: 0.9 });
+      crash(c, o, t + 0.06, { seconds: 1.4, gain: 0.3, type: "lowpass", freq: 320, sweepTo: 60, q: 0.3 });
+    },
+  },
+  /** Chain Shock running down the line: a zap for each jump. */
+  "ult-chain": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      for (let i = 0; i < 4; i++) {
+        hit(c, o, t + i * 0.08, { type: "square", from: 1900 - i * 180, to: 300, gain: 0.08, decay: 0.09 });
+        crash(c, o, t + i * 0.08, { seconds: 0.07, gain: 0.14, type: "highpass", freq: 2600, q: 0.8 });
+      }
     },
   },
 } satisfies Record<string, Voice>;
@@ -923,7 +854,8 @@ class Mixer {
     const ctx = this.ensure();
     const voice =
       (VOICES as Record<string, Voice>)[name] ??
-      (ULTIMATE_VOICES as Record<string, Voice>)[name];
+      (ULTIMATE_VOICES as Record<string, Voice>)[name] ??
+      FOLDER_VOICES[name];
     if (!ctx || !voice || ctx.state !== "running") return;
     const now = ctx.currentTime + delay;
     // Identical sounds inside 40ms are one event, not eight.
@@ -976,7 +908,8 @@ class Mixer {
     for (const name of names) {
       const voice =
         (VOICES as Record<string, Voice>)[name] ??
-        (ULTIMATE_VOICES as Record<string, Voice>)[name];
+        (ULTIMATE_VOICES as Record<string, Voice>)[name] ??
+      FOLDER_VOICES[name];
       try {
         voice?.render(ctx, silent, ctx.currentTime);
       } catch {
@@ -988,5 +921,9 @@ class Mixer {
 
 export const mixer = new Mixer();
 export const SFX_NAMES = Object.keys(VOICES) as SfxName[];
-export type UltimateSfx = keyof typeof ULTIMATE_VOICES;
-export const ULTIMATE_SFX = Object.keys(ULTIMATE_VOICES) as UltimateSfx[];
+export type UltimateSfx = string;
+/** Every Ultimate sound: the shared ones here, and each Ultimate's own. */
+export const ULTIMATE_SFX = [
+  ...Object.keys(ULTIMATE_VOICES),
+  ...Object.keys(FOLDER_VOICES),
+];

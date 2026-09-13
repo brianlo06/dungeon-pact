@@ -36,7 +36,7 @@ import {
   shotAt,
   type TimedShot,
 } from "./timeline";
-import { VFX, VFX_FRAME } from "./vfx";
+import { FRAMES, RENDERERS } from "./registry";
 import "./cinematic.css";
 
 /**
@@ -355,12 +355,21 @@ export function UltimateCinematic({
               ? 1
               : 0;
           set(f, "--lit", litNow.toFixed(3));
+          // Weather: clouds drift on film time, and a sky with a bolt in it
+          // flickers with the bolt.
+          set(f, "--bgt", (t / 1000).toFixed(2));
+          const bolt = (cur.vfx ?? []).find(
+            (v) => v.kind === "lightning" && u >= v.at && u <= (v.until ?? 1),
+          );
+          const flicker = bolt ? [1, 0.35, 0.8, 0.15][Math.floor((u * cur.length) / 45) % 4] : 0;
+          set(f, "--storm", (debug.lighting ? flicker : 0).toFixed(2));
           // Figures are lit by the rim as much as by the room.
           const figure = lit ? Math.min(1.05, 0.42 + 0.58 * Math.max(light.exposure, (rim?.[1] ?? 0) * 0.75)) : 1;
           set(f, "--figure", figure.toFixed(2));
         }
 
-        // Actors.
+        // Actors. Where each one lands is kept for the effects that ride them.
+        const placed = new Map<string, { x: number; y: number; h: number }>();
         for (const c of cast) {
           const node = actors.current.get(c.id);
           if (!node) continue;
@@ -381,6 +390,7 @@ export function UltimateCinematic({
           const native = isPlayer(c.unit) ? 1 : -1;
           const face = cue.face ?? native;
           const mirror = face === native ? 1 : -1;
+          placed.set(c.id, { x, y, h: 84 * scale });
           node.style.display = "";
           node.style.zIndex = String((cue.z ?? 1) * 10 + slot);
           node.style.transform =
@@ -410,14 +420,14 @@ export function UltimateCinematic({
           node.style.setProperty("--f", String(Math.floor(age / 40) % 4));
           const follow = node.dataset.follow;
           if (follow) {
-            const who = cast.find((c) => (follow === "caster" ? c.role === "caster" : c.role === "targets" && c.index === 0));
-            const { cue, slot } = who ? cueFor(who, cur.actors) : { cue: undefined, slot: 0 };
-            if (cue) {
-              const p = actorAt(cue, u);
-              const spread = cue.spread ?? [0, 0];
-              node.style.left = `${(p.x + spread[0] * slot + Number(node.dataset.dx)).toFixed(1)}px`;
-              node.style.top = `${(p.y + spread[1] * slot + Number(node.dataset.dy)).toFixed(1)}px`;
-            }
+            const id =
+              follow === "caster" ? "caster" : `targets-${node.dataset.followIndex ?? 0}`;
+            const at = placed.get(id);
+            if (at) {
+              node.style.left = `${(at.x + Number(node.dataset.dx)).toFixed(1)}px`;
+              node.style.top = `${(at.y + Number(node.dataset.dy)).toFixed(1)}px`;
+              node.style.setProperty("--ah", `${at.h.toFixed(1)}px`);
+            } else if (node.style.visibility !== "hidden") node.style.visibility = "hidden";
           }
           const unit = node.dataset.anchor;
           if (unit) {
@@ -431,10 +441,11 @@ export function UltimateCinematic({
               node.style.top = `${(box.bottom - origin.top).toFixed(1)}px`;
               node.style.setProperty("--unit-w", `${box.width.toFixed(1)}px`);
               node.style.setProperty("--unit-h", `${box.height.toFixed(1)}px`);
+              node.style.setProperty("--ah", `${(box.height * 0.84).toFixed(1)}px`);
             }
           }
-          const kind = node.dataset.vfx as keyof typeof VFX_FRAME | undefined;
-          if (kind && VFX_FRAME[kind]) VFX_FRAME[kind]!(node, pk, age);
+          const kind = node.dataset.vfx;
+          if (kind && FRAMES[kind]) FRAMES[kind](node, pk, age, { actor: (id) => placed.get(id) });
         }
 
         // Screen accents, timed in milliseconds from their start.
@@ -524,10 +535,31 @@ export function UltimateCinematic({
   const renderVfx = (cue: VfxCue, i: number, layer: "back" | "front" | "screen") => {
     if (cue.mode && cue.mode !== run.mode) return null;
     if ((cue.layer ?? "front") !== layer || cue.anchor) return null;
-    const Renderer = VFX[cue.kind];
+    const Renderer = RENDERERS[cue.kind];
     if (!Renderer) return null;
     const slot =
       cue.kind === "reflection" && target ? figure(target, true) : undefined;
+    // One copy per target, each riding its own figure.
+    if (cue.each === "targets")
+      return cast
+        .filter((c) => c.role === "targets")
+        .map((c) => (
+          <div
+            key={`${shot?.id}-${i}-${c.index}`}
+            className={`cine-vfx fx-${cue.kind}-wrap`}
+            data-vfx={cue.kind}
+            data-window={`${cue.at + c.index * 0.04},${cue.until ?? 1}`}
+            data-follow="targets"
+            data-follow-index={c.index}
+            data-dx={cue.x ?? 0}
+            data-dy={cue.y ?? 0}
+            style={
+              { "--s": cue.scale ?? 1, "--rot": `${cue.rotate ?? 0}deg`, "--c": color(cue), visibility: "hidden" } as CSSProperties
+            }
+          >
+            <Renderer cue={{ ...cue, seed: (cue.seed ?? 1) + c.index * 7 }} color={color(cue)} />
+          </div>
+        ));
     return (
       <div
         key={`${shot?.id}-${i}`}
@@ -566,7 +598,7 @@ export function UltimateCinematic({
   const anchored = (shot?.vfx ?? []).flatMap((cue, i) =>
     cue.anchor && (!cue.mode || cue.mode === run.mode)
       ? anchorIds(cue.anchor).map((unit, n) => {
-          const Renderer = VFX[cue.kind];
+          const Renderer = RENDERERS[cue.kind];
           if (!Renderer) return null;
           const delay = ((cue.stagger ?? 0) * n) / (shot?.length ?? 1);
           return (

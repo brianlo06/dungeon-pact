@@ -187,7 +187,11 @@ export type BackgroundId =
   /** The Breaker's: a forge wall and a vault gate. */
   | "breach-forge"
   /** Any Ultimate without its own: a field of its accent colour. */
-  | "pact-sigil";
+  | "pact-sigil"
+  /** The Arcanist's: a drowned hall under a storm with a promissory seal in it. */
+  | "storm-ledger"
+  /** An Ultimate's own, from its folder's `background.tsx`. */
+  | (string & {});
 
 export type VfxKind =
   /** Light running through cracks in the floor from a point. */
@@ -229,7 +233,23 @@ export type VfxKind =
   /** The visor lighting from within. */
   | "visor"
   /** A foreground object crossing the lens, for an occlusion. */
-  | "occluder";
+  | "occluder"
+  /** Rain across the frame, driven sideways by wind. */
+  | "rain"
+  /** A bolt from the sky to a point; it redraws itself as it lives. */
+  | "lightning"
+  /** Arcs jumping from the first target to every other. */
+  | "arcs"
+  /** Water running off a figure: a Wet target. */
+  | "wet"
+  /** Pages tearing out of a book and climbing. */
+  | "pages"
+  /** Drops hanging off an edge, or falling from it. */
+  | "drops"
+  /** A seal written in the sky: rings, ticks, a star. */
+  | "rune-circle"
+  /** An Ultimate's own, from its folder's `vfx.tsx`. */
+  | (string & {});
 
 export interface VfxCue {
   kind: VfxKind;
@@ -244,6 +264,8 @@ export interface VfxCue {
   y?: number;
   /** Ride an actor as it moves: a trail behind a charging shield. */
   follow?: "caster" | "target";
+  /** One copy on every target the Ultimate reached, each riding its own. */
+  each?: "targets";
   scale?: number;
   rotate?: number;
   color?: string;

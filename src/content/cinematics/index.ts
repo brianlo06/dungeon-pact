@@ -1,20 +1,26 @@
 import type { Cinematic } from "../../shared/cinematic";
 import type { UltimateDef } from "../ultimates";
-import { lanternWall } from "./lantern-wall";
-import { gatebreaker } from "./gatebreaker";
 
 /**
  * Every authored cinematic, by the name an Ultimate's presentation gives it.
  *
- * Only two are authored — the Vanguard's and the Breaker's — deliberately:
- * they are the benchmark the rest will be judged against. Every other
- * Ultimate plays the generic cinematic below, built from its own name, accent
- * and target, so it is never missing and never pretends to be finished.
+ * One file per film in this folder, collected here. An Ultimate whose film
+ * has not been authored plays the generic cinematic below, built from its own
+ * name, accent and target, so it is never missing and never pretends to be
+ * finished.
  */
-export const cinematics: Record<string, Cinematic> = {
-  [lanternWall.id]: lanternWall,
-  [gatebreaker.id]: gatebreaker,
-};
+const films = import.meta.glob<Record<string, unknown>>("./*.ts", { eager: true });
+export const cinematics: Record<string, Cinematic> = {};
+for (const [path, mod] of Object.entries(films)) {
+  if (path === "./index.ts") continue;
+  // One film per file; whatever it is exported as.
+  for (const value of Object.values(mod)) {
+    const film = value as Cinematic;
+    if (!film || typeof film !== "object" || !Array.isArray(film.shots)) continue;
+    if (cinematics[film.id]) throw Error(`Cinematic ${film.id} is defined twice (${path})`);
+    cinematics[film.id] = film;
+  }
+}
 
 export function cinematicFor(u: UltimateDef): Cinematic {
   const named = u.presentation.cinematic;

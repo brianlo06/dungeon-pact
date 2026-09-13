@@ -353,7 +353,180 @@ const open: Clip = {
   },
 };
 
+/* ── The Arcanist ────────────────────────────────────────────────────────── */
+/*
+ * Parts: `book` (the back arm, from its shoulder), `tome` (the book in that
+ * hand, from its centre), `pages` (tucked behind the cover), `hand` (the
+ * casting arm, from its shoulder), `head` and the hat's crown, `hat`, which
+ * lags. The book arm rotates positive to lift behind the hero; the casting
+ * arm rotates negative to rise.
+ */
+
+/** The book comes up behind, opens, and its pages start to lift out. */
+const arcOpen: Clip = {
+  duration: 620,
+  poses: [
+    { at: 0, x: 0, y: 0, rotate: 0 },
+    { at: 0.5, x: -0.02, y: -0.01, rotate: -2.5, scale: 1.01 },
+    { at: 1, x: -0.025, y: -0.012, rotate: -3, scale: 1.02, flash: 0.1 },
+  ],
+  parts: {
+    book: turn([0, 0], [0.45, 62], [0.75, 74], [1, 70]),
+    tome: turn([0, 0], [0.45, -48], [1, -58]),
+    pages: [
+      { at: 0, y: 0, rotate: 0, scale: 1 },
+      { at: 0.5, y: -0.02, rotate: -6, scale: 1.1 },
+      { at: 1, y: -0.07, x: 0.01, rotate: -14, scale: 1.25 },
+    ],
+    hand: turn([0, 0], [0.6, -16], [1, -22]),
+    head: turn([0, 0], [0.5, 4], [1, 7]),
+    hat: turn([0, 0], [0.3, -3], [0.7, 6], [1, 4]),
+  },
+};
+
+/** Both arms up: the book held to the sky, the hand calling the rain. */
+const arcCall: Clip = {
+  duration: 820,
+  poses: [
+    { at: 0, x: -0.025, y: -0.012, rotate: -3, scale: 1.02 },
+    { at: 0.4, x: -0.01, y: -0.035, rotate: -1, scale: 1.04, flash: 0.25 },
+    { at: 1, x: -0.005, y: -0.04, rotate: 0, scale: 1.05, flash: 0.15 },
+  ],
+  parts: {
+    book: turn([0, 70], [0.45, 112], [1, 118]),
+    tome: turn([0, -58], [0.45, -92], [1, -100]),
+    pages: [
+      { at: 0, y: -0.07, x: 0.01, rotate: -14, scale: 1.25 },
+      { at: 0.5, y: -0.13, x: 0.02, rotate: -28, scale: 1.35 },
+      { at: 1, y: -0.16, x: 0.03, rotate: -36, scale: 1.4 },
+    ],
+    hand: turn([0, -22], [0.45, -62], [0.8, -70], [1, -68]),
+    head: turn([0, 7], [0.4, -6], [1, -9]),
+    hat: turn([0, 4], [0.35, 10], [0.65, -6], [1, 2]),
+    body: [
+      { at: 0, squash: 1 },
+      { at: 0.4, squash: 0.97 },
+      { at: 1, squash: 0.96 },
+    ],
+  },
+};
+
+/** Arms down a little, head up under the brim: the eyes come out of shadow. */
+const arcGaze: Clip = {
+  duration: 560,
+  poses: [
+    { at: 0, y: -0.02, rotate: 0, scale: 1.03 },
+    { at: 1, y: -0.01, rotate: -1.5, scale: 1.03 },
+  ],
+  parts: {
+    book: turn([0, 118], [1, 96]),
+    tome: turn([0, -100], [1, -86]),
+    pages: [
+      { at: 0, y: -0.16, x: 0.03, rotate: -36, scale: 1.4 },
+      { at: 1, y: -0.1, x: 0.02, rotate: -22, scale: 1.3 },
+    ],
+    hand: turn([0, -68], [1, -34]),
+    head: [
+      { at: 0, rotate: 5, y: 0.004 },
+      { at: 0.55, rotate: -8, y: -0.004 },
+      { at: 1, rotate: -11, y: -0.006 },
+    ],
+    // The crown arrives late, and settles back when the head does.
+    hat: turn([0, 0], [0.5, 7], [0.8, 11], [1, 9]),
+  },
+};
+
+/** The hand thrown straight up at the seal in the clouds. */
+const arcCommand: Clip = {
+  duration: 480,
+  poses: [
+    { at: 0, y: -0.01, rotate: -1.5, scale: 1.03 },
+    { at: 0.35, y: 0.012, rotate: 1, squash: 1.05, scale: 1.02 },
+    { at: 0.7, y: -0.045, rotate: -3, squash: 0.95, scale: 1.06, flash: 0.35 },
+    { at: 1, y: -0.05, rotate: -3.5, squash: 0.95, scale: 1.06, flash: 0.45 },
+  ],
+  parts: {
+    hand: [
+      { at: 0, rotate: -34, scale: 1 },
+      { at: 0.35, rotate: -20, scale: 1 },
+      { at: 0.7, rotate: -92, scale: 1.12 },
+      { at: 1, rotate: -96, scale: 1.14 },
+    ],
+    book: turn([0, 96], [0.35, 80], [1, 62]),
+    tome: turn([0, -86], [1, -60]),
+    pages: [
+      { at: 0, y: -0.1, x: 0.02, rotate: -22, scale: 1.3 },
+      { at: 1, y: -0.05, rotate: -12, scale: 1.2 },
+    ],
+    head: turn([0, -11], [0.35, -4], [1, -16]),
+    hat: turn([0, 9], [0.4, 2], [0.75, 16], [1, 12]),
+    legs: [
+      { at: 0, squash: 1 },
+      { at: 0.35, squash: 1.08 },
+      { at: 0.7, squash: 0.95 },
+      { at: 1, squash: 0.96 },
+    ],
+  },
+};
+
+/** The hand brought down on the target, and the storm with it. */
+const arcStrike: Clip = {
+  duration: 620,
+  markers: { contact: 0.16 },
+  poses: [
+    { at: 0, y: -0.05, rotate: -3.5, scale: 1.06, flash: 0.45 },
+    { at: 0.16, x: 0.07, y: 0.01, rotate: 6, squash: 0.9, scale: 1.08, flash: 0.95 },
+    { at: 0.4, x: 0.05, y: 0.005, rotate: 4, squash: 0.96, scale: 1.05, flash: 0.35 },
+    { at: 1, x: 0.02, y: 0, rotate: 1.5, squash: 1, scale: 1.02, flash: 0 },
+  ],
+  parts: {
+    hand: [
+      { at: 0, rotate: -96, scale: 1.14 },
+      { at: 0.16, rotate: 14, scale: 1.3 },
+      { at: 0.45, rotate: 8, scale: 1.12 },
+      { at: 1, rotate: 4, scale: 1.04 },
+    ],
+    book: turn([0, 62], [0.16, 30], [1, 20]),
+    tome: turn([0, -60], [0.3, -20], [1, -12]),
+    pages: [
+      { at: 0, y: -0.05, rotate: -12, scale: 1.2 },
+      { at: 0.4, y: 0, rotate: 0, scale: 1 },
+    ],
+    head: turn([0, -16], [0.16, 6], [0.5, 3], [1, 1]),
+    hat: turn([0, 12], [0.18, -14], [0.4, 9], [0.7, -4], [1, 0]),
+  },
+};
+
+/** The brim pulled down, the book shut: the account closed. */
+const arcSettle: Clip = {
+  duration: 640,
+  poses: [
+    { at: 0, x: 0.02, rotate: 1.5, scale: 1.02 },
+    { at: 1, x: 0, rotate: 0, scale: 1, squash: 1 },
+  ],
+  parts: {
+    hand: [
+      { at: 0, rotate: 4 },
+      { at: 0.35, rotate: -40, y: -0.02 },
+      { at: 0.6, rotate: -38, y: -0.02 },
+      { at: 1, rotate: 0, y: 0 },
+    ],
+    book: turn([0, 20], [1, 0]),
+    tome: turn([0, -12], [1, 0]),
+    head: turn([0, 1], [0.4, 8], [1, 0]),
+    hat: turn([0, 0], [0.4, 6], [0.7, -3], [1, 0]),
+  },
+};
+
 export const ULTIMATE_RIGS: Record<string, Rig> = {
+  arcanist: {
+    "ult:open": arcOpen,
+    "ult:call": arcCall,
+    "ult:gaze": arcGaze,
+    "ult:command": arcCommand,
+    "ult:strike": arcStrike,
+    "ult:settle": arcSettle,
+  },
   vanguard: {
     "ult:plant": plant,
     "ult:stand": stand,

@@ -91,6 +91,16 @@
 .bf-slit {
   opacity: 0.85;
 }
+/* The storm ledger: drifting cloud, a sky lit from inside by the bolt. */
+.sl-cloud {
+  transform: translateX(calc(var(--bgt, 0) * var(--drift) * 6));
+}
+.sl-flash {
+  opacity: calc(var(--storm, 0) * 0.9);
+}
+.sl-seal {
+  opacity: calc(0.6 + var(--storm, 0) * 1.6);
+}
 .cine-bg-void {
   position: absolute;
   inset: 0;
@@ -936,4 +946,183 @@
     rgba(255, 245, 220, 0.55) calc(var(--p) * 100%),
     transparent calc(var(--p) * 100% + 20%)
   );
+}
+
+/* rain: streaks placed by the frame function, wrapping round the frame */
+.fx-rain {
+  overflow: hidden;
+}
+.fx-rain i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: var(--l);
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--c) 70%, #fff));
+  opacity: calc(var(--o) * min(1, var(--p) * 6) * (1 - max(0, var(--p) - 0.9) * 10));
+  will-change: transform;
+}
+.fx-rain[data-heavy] i {
+  width: 3px;
+}
+
+/* the bolt: drawn from the sky down to its foot */
+.fx-bolt {
+  width: 800px;
+  height: 1260px;
+  overflow: visible;
+  transform: translate(-50%, calc(-1200px / 1260px * 100%)) scale(var(--s)) !important;
+  transform-origin: 50% 95%;
+  mix-blend-mode: screen;
+}
+.cine-vfx > .fx-bolt {
+  transform: translate(-400px, -1200px) scale(var(--s)) !important;
+  transform-origin: 400px 1200px;
+}
+.fx-bolt path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.fx-bolt-glow {
+  stroke-width: 42;
+  opacity: 0.35;
+}
+.fx-bolt-branch {
+  stroke-width: 7;
+  opacity: 0.7;
+}
+.fx-bolt-core {
+  stroke-width: 11;
+}
+.fx-bolt-foot {
+  opacity: calc(0.8 - var(--p) * 0.6);
+  transform: scale(calc(0.6 + var(--pe) * 1.4));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* arcs, drawn in world units over the whole stage */
+.cine-vfx > .fx-arcs {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  transform: none !important;
+  overflow: visible;
+  mix-blend-mode: screen;
+}
+.fx-arcs path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.fx-arc-glow {
+  stroke-width: 26;
+  opacity: 0.3;
+}
+.fx-arc-core {
+  stroke-width: 6;
+  opacity: calc(1 - max(0, var(--p) - 0.75) * 4);
+}
+
+/* wet: a sheen over the figure and water running off it */
+.fx-wet {
+  width: 0;
+  height: 0;
+}
+.fx-wet-sheen {
+  position: absolute;
+  left: calc(var(--ah) * -0.32);
+  top: calc(var(--ah) * -1.02);
+  width: calc(var(--ah) * 0.64);
+  height: calc(var(--ah) * 1.02);
+  border-radius: 45% 45% 20% 20%;
+  background: linear-gradient(
+    160deg,
+    transparent 20%,
+    color-mix(in srgb, var(--c) 40%, transparent) 45%,
+    transparent 60%,
+    color-mix(in srgb, var(--c) 25%, transparent) 75%,
+    transparent 90%
+  );
+  mix-blend-mode: screen;
+  opacity: calc(min(1, var(--p) * 4) * 0.8);
+}
+.fx-wet b {
+  position: absolute;
+  left: calc(var(--x) * 0.3);
+  top: calc(var(--ah) * -0.9);
+  width: 4px;
+  height: 14px;
+  border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+  background: color-mix(in srgb, var(--c) 80%, #fff);
+  transform: translateY(calc(var(--ah) * (0.1 + mod(var(--p) * 2.2 + var(--d), 1) * 0.8)));
+  opacity: 0.8;
+}
+.fx-wet-pool {
+  position: absolute;
+  left: calc(var(--ah) * -0.45);
+  top: -8px;
+  width: calc(var(--ah) * 0.9);
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--c) 60%, transparent);
+  transform: scale(calc(0.4 + var(--pe) * 0.8));
+  opacity: calc(0.7 - var(--p) * 0.3);
+}
+
+/* pages tearing loose and climbing */
+.fx-pages i {
+  position: absolute;
+  width: 34px;
+  height: 42px;
+  margin: -21px -17px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 7px, rgba(90, 120, 170, 0.5) 7px 8px),
+    #efe2c2;
+  outline: 2px solid #171420;
+  --k: clamp(0, calc((var(--p) - var(--d)) / (1 - var(--d))), 1);
+  transform: translate(calc(var(--dx) * var(--k)), calc(var(--dy) * var(--k) * var(--k)))
+    rotate(calc(var(--r) * var(--k))) scale(calc(var(--s) * (1 - var(--k) * 0.6)));
+  opacity: calc(min(1, var(--k) * 8) * (1 - var(--k)));
+}
+
+/* drops: hanging, or falling */
+.fx-drops i {
+  position: absolute;
+  left: var(--x);
+  top: 0;
+  width: calc(7px * var(--s));
+  height: calc(11px * var(--s));
+  border-radius: 50% 50% 50% 50% / 35% 35% 65% 65%;
+  background: radial-gradient(circle at 35% 35%, #fff, color-mix(in srgb, var(--c) 80%, #fff) 45%, color-mix(in srgb, var(--c) 60%, #000));
+  transform: translateY(calc(var(--hang) + var(--fall) * var(--pi) * var(--d)));
+}
+.fx-drops[data-still] i {
+  transform: translateY(calc(var(--hang) + 6px * var(--p)));
+}
+
+/* a seal written in the sky */
+.fx-rune {
+  width: 600px;
+  height: 600px;
+  overflow: visible;
+  mix-blend-mode: screen;
+}
+.fx-rune > * {
+  transform-box: view-box;
+  transform-origin: 300px 300px;
+}
+.fx-rune-outer {
+  transform: rotate(calc(var(--p) * 40deg)) scale(calc(0.7 + var(--pe) * 0.3));
+  opacity: calc(var(--pe) * 0.8);
+}
+.fx-rune-inner {
+  transform: rotate(calc(var(--p) * -70deg));
+  opacity: calc(var(--pi) * 0.9 + 0.1);
+}
+.fx-rune-core {
+  transform: scale(calc(0.2 + var(--pi) * 1.2));
+  opacity: var(--pi);
 }

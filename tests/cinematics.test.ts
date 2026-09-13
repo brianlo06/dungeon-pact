@@ -16,7 +16,7 @@ import {
   shotAt,
 } from "../src/client/cinematic/timeline";
 import { revealed, splitUltimates } from "../src/client/cinematic/segments";
-import { VFX } from "../src/client/cinematic/vfx";
+import { RENDERERS as VFX, FOLDER_BACKGROUNDS } from "../src/client/cinematic/registry";
 import { rigFor, GENERIC } from "../src/client/battle/rigs";
 import { contactTimes } from "../src/client/battle/animation";
 import { ULTIMATE_SFX, SFX_NAMES } from "../src/client/audio/engine";
@@ -25,7 +25,15 @@ import type { Cinematic } from "../src/shared/cinematic";
 import type { RunState } from "../src/shared/model";
 
 const SOUNDS = new Set<string>([...ULTIMATE_SFX, ...SFX_NAMES]);
-const BACKGROUNDS = new Set(["battlefield", "void", "lantern-vault", "breach-forge", "pact-sigil"]);
+const BACKGROUNDS = new Set([
+  "battlefield",
+  "void",
+  "lantern-vault",
+  "breach-forge",
+  "pact-sigil",
+  "storm-ledger",
+  ...Object.keys(FOLDER_BACKGROUNDS),
+]);
 
 /** Every cinematic the game can play: authored, generic and reduced. */
 const all: Cinematic[] = [
@@ -143,9 +151,9 @@ describe("cinematic timeline", () => {
   });
 
   it("lands the blow on the pose: the reveal falls on the strike's contact, in FULL and FAST", () => {
-    const rig = rigFor("vanguard");
     for (const mode of ["full", "fast"] as const)
       for (const c of Object.values(cinematics)) {
+        const rig = rigFor(c.heroId);
         const tl = layout(c, mode, "normal");
         const reveal = tl.instants.find((x) => x.kind === "reveal" && x.reveal === "impact")!;
         const shot = tl.shots[reveal.shot];
