@@ -59,6 +59,12 @@ export interface Animators {
   rig: (id: string) => Rig | undefined;
   /** The ids of every unit with an animator. */
   ids: () => string[];
+  /**
+   * Dispose of a unit's animator. For figures that come and go without being
+   * on the board — a cinematic's presentation copies — so nothing they leave
+   * behind is still ticked after they have gone.
+   */
+  release: (id: string) => void;
 }
 
 export interface AnimatorOptions {
@@ -177,6 +183,11 @@ export function useAnimators({ still = false, loop }: AnimatorOptions): Animator
   );
   const rig = useCallback((id: string) => rigs.current.get(id), []);
   const ids = useCallback(() => [...units.current.keys()], []);
+  const release = useCallback((id: string) => {
+    units.current.get(id)?.dispose();
+    units.current.delete(id);
+    rigs.current.delete(id);
+  }, []);
 
   return useMemo(
     () => ({
@@ -191,6 +202,7 @@ export function useAnimators({ still = false, loop }: AnimatorOptions): Animator
       current,
       rig,
       ids,
+      release,
     }),
     [
       register,
@@ -204,6 +216,7 @@ export function useAnimators({ still = false, loop }: AnimatorOptions): Animator
       current,
       rig,
       ids,
+      release,
     ],
   );
 }

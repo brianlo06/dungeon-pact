@@ -4,6 +4,13 @@ Latest expansion: see [PHASE1_EXPANSION.md](PHASE1_EXPANSION.md) for the 32-item
 
 Updated 2026-09-12 · `attack-choreography`
 
+> **Ultimates** are on their own branch, `ultimates` (off `a8fb81e`), waiting
+> for the user's judgement of the two benchmark films before anything is
+> propagated. Everything about them — design, measurements, placeholders, the
+> estimate for the other 30 — is in [ULTIMATES.md](ULTIMATES.md). They change
+> boss numbers in new rooms (`BOSS_PRICING`); read that section before
+> measuring anything boss-related on a branch that includes them.
+
 ## Read this first: the playtest answers
 
 The game has been played by the user and their friends, and the last round of

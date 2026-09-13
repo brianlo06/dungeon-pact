@@ -3,6 +3,7 @@ import { GENERIC } from "./animation";
 import { FORGE_RIGS } from "./rigs-forge";
 import { DEBT_RIGS } from "./rigs-debt";
 import { PARTY_RIGS } from "./rigs-party";
+import { ULTIMATE_RIGS } from "./rigs-ultimate";
 
 /**
  * Character rigs.
@@ -617,6 +618,12 @@ const strongbox: Rig = {
     ],
   },
 };
+
+// A hero's Ultimate performances join its rig under `ult:` names. Merged into
+// the one rig object rather than copied, so the rig a combatant animates with
+// is still the party rig itself.
+for (const [id, clips] of Object.entries(ULTIMATE_RIGS))
+  if (PARTY_RIGS[id]) Object.assign(PARTY_RIGS[id], clips);
 
 const RIGS: Record<string, Rig> = {
   ...PARTY_RIGS,

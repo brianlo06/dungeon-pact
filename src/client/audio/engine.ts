@@ -29,12 +29,25 @@ interface Voice {
   render: (ctx: AudioContext, out: AudioNode, at: number) => void;
 }
 
+/**
+ * Noise buffers, kept per length. Filling a second of noise is a few hundred
+ * thousand random numbers on the main thread; doing it on the frame an
+ * Ultimate lands was the one audible hitch in the whole cinematic.
+ */
+const noiseBuffers = new WeakMap<BaseAudioContext, Map<number, AudioBuffer>>();
+
 /** Shaped noise: the backbone of impacts, chains and steam. */
 function noise(ctx: AudioContext, seconds: number) {
   const frames = Math.max(1, Math.floor(ctx.sampleRate * seconds));
-  const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < frames; i++) data[i] = Math.random() * 2 - 1;
+  let cache = noiseBuffers.get(ctx);
+  if (!cache) noiseBuffers.set(ctx, (cache = new Map()));
+  let buffer = cache.get(frames);
+  if (!buffer) {
+    buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < frames; i++) data[i] = Math.random() * 2 - 1;
+    cache.set(frames, buffer);
+  }
   const source = ctx.createBufferSource();
   source.buffer = buffer;
   return source;
@@ -119,6 +132,241 @@ function crash(
  * primitives above. The Collector's family is deliberately low and mechanical;
  * the Strongbox's is locks and iron; the Vanguard's is armour and impact.
  */
+
+/** A note, by MIDI pitch. */
+const hz = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
+
+/** A held, swelling tone with a soft attack: brass, or a choir of iron. */
+function swell(
+  ctx: AudioContext,
+  out: AudioNode,
+  at: number,
+  {
+    type = "sawtooth" as OscillatorType,
+    freq,
+    gain = 0.1,
+    attack = 0.12,
+    hold = 0.3,
+    release = 0.5,
+    cutoff = 1400,
+    detune = 0,
+  }: {
+    type?: OscillatorType;
+    freq: number;
+    gain?: number;
+    attack?: number;
+    hold?: number;
+    release?: number;
+    cutoff?: number;
+    detune?: number;
+  },
+) {
+  const osc = ctx.createOscillator();
+  const filter = ctx.createBiquadFilter();
+  const amp = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, at);
+  osc.detune.value = detune;
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(cutoff * 0.4, at);
+  filter.frequency.exponentialRampToValueAtTime(cutoff, at + attack + hold * 0.5);
+  amp.gain.setValueAtTime(0.0001, at);
+  amp.gain.exponentialRampToValueAtTime(gain, at + attack);
+  amp.gain.setValueAtTime(gain, at + attack + hold);
+  amp.gain.exponentialRampToValueAtTime(0.0001, at + attack + hold + release);
+  osc.connect(filter).connect(amp).connect(out);
+  osc.start(at);
+  osc.stop(at + attack + hold + release + 0.05);
+}
+
+/*
+ * Ultimate voices. Longer, lower and layered where the combat palette is
+ * short: an Ultimate's impact is a transient, a sub drop, a metal body and a
+ * tail, each doing one job, so the moment is felt as well as heard. The
+ * motifs are three or four notes each, the character's signature rather than
+ * a score, and they are original.
+ */
+const ULTIMATE_VOICES = {
+  /** The call: a guild bell struck once, deep, with a breath drawn under it. */
+  "ult-call": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      hit(c, o, t, { type: "sine", from: 74, to: 52, gain: 0.5, decay: 1.4 });
+      for (const [i, f] of [311, 523, 741, 1047].entries())
+        hit(c, o, t + i * 0.004, {
+          type: "sine",
+          from: f,
+          gain: 0.08 / (i + 1),
+          attack: 0.004,
+          decay: 1.1 - i * 0.18,
+        });
+      crash(c, o, t, { seconds: 0.5, gain: 0.08, freq: 500, sweepTo: 2400, q: 0.7 });
+    },
+  },
+  /** The shield bites the floor: clank, sub, and a ring that will not stop. */
+  "ult-plant": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      hit(c, o, t, { type: "sine", from: 96, to: 34, gain: 0.7, decay: 0.55 });
+      hit(c, o, t, { type: "square", from: 1180, to: 620, gain: 0.16, decay: 0.3 });
+      hit(c, o, t + 0.003, { type: "square", from: 1710, to: 900, gain: 0.1, decay: 0.24 });
+      crash(c, o, t, { seconds: 0.36, gain: 0.42, freq: 2600, sweepTo: 500, q: 0.8 });
+      crash(c, o, t + 0.02, { seconds: 0.5, gain: 0.14, type: "lowpass", freq: 700, sweepTo: 120 });
+      hit(c, o, t + 0.01, { type: "sine", from: 1180, gain: 0.05, attack: 0.01, decay: 1.6 });
+      hit(c, o, t + 0.01, { type: "sine", from: 1772, gain: 0.03, attack: 0.01, decay: 1.2 });
+    },
+  },
+  /** Power coming up through the floor. */
+  "ult-rise": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      const osc = c.createOscillator();
+      const f = c.createBiquadFilter();
+      const g = c.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(55, t);
+      osc.frequency.exponentialRampToValueAtTime(110, t + 0.9);
+      f.type = "lowpass";
+      f.frequency.setValueAtTime(180, t);
+      f.frequency.exponentialRampToValueAtTime(2400, t + 0.9);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.16, t + 0.7);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
+      osc.connect(f).connect(g).connect(o);
+      osc.start(t);
+      osc.stop(t + 1.15);
+      crash(c, o, t, { seconds: 0.95, gain: 0.07, freq: 300, sweepTo: 4200, q: 0.9 });
+    },
+  },
+  /** The Vanguard's motif: a fifth and an octave, like a held horn. */
+  "motif-vanguard": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      const notes: [number, number, number][] = [
+        [50, 0, 0.34],
+        [57, 0.2, 0.34],
+        [62, 0.4, 0.7],
+      ];
+      for (const [pitch, at, hold] of notes) {
+        swell(c, o, t + at, { freq: hz(pitch), gain: 0.07, attack: 0.08, hold, release: 0.5, cutoff: 1600 });
+        swell(c, o, t + at, { freq: hz(pitch), gain: 0.05, attack: 0.08, hold, release: 0.5, cutoff: 1200, detune: 9 });
+        swell(c, o, t + at, { type: "triangle", freq: hz(pitch - 12), gain: 0.06, attack: 0.06, hold, release: 0.4 });
+      }
+    },
+  },
+  /** The quiet: one note held in the shield. */
+  "ult-hum": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      swell(c, o, t, { type: "sine", freq: 220, gain: 0.05, attack: 0.18, hold: 0.2, release: 0.3 });
+      swell(c, o, t, { type: "sine", freq: 331, gain: 0.025, attack: 0.22, hold: 0.16, release: 0.3 });
+    },
+  },
+  /** A glint: light catching a visor. */
+  "ult-tick": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      hit(c, o, t, { type: "sine", from: 3400, gain: 0.08, decay: 0.12 });
+      hit(c, o, t + 0.02, { type: "sine", from: 5100, gain: 0.04, decay: 0.1 });
+    },
+  },
+  "ult-whoosh": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      crash(c, o, t, { seconds: 0.5, gain: 0.3, freq: 380, sweepTo: 3200, q: 0.9 });
+      crash(c, o, t + 0.2, { seconds: 0.35, gain: 0.16, type: "lowpass", freq: 900, sweepTo: 200 });
+    },
+  },
+  /**
+   * The impact, in layers: a click so it has an edge, a sub that drops out
+   * from under it, a metal body, and a crack of noise.
+   */
+  "ult-impact": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      crash(c, o, t, { seconds: 0.035, gain: 0.7, type: "highpass", freq: 2400, q: 0.5 });
+      hit(c, o, t, { type: "sine", from: 130, to: 26, gain: 0.95, attack: 0.002, decay: 0.8 });
+      hit(c, o, t, { type: "triangle", from: 260, to: 60, gain: 0.35, decay: 0.4 });
+      hit(c, o, t + 0.004, { type: "square", from: 760, to: 300, gain: 0.18, decay: 0.45 });
+      crash(c, o, t, { seconds: 0.7, gain: 0.55, freq: 1800, sweepTo: 180, q: 0.6 });
+    },
+  },
+  /** What the room does after: a low roll that takes a second to die. */
+  "ult-boom": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      crash(c, o, t, { seconds: 1.3, gain: 0.34, type: "lowpass", freq: 260, sweepTo: 60, q: 0.4 });
+      hit(c, o, t, { type: "sine", from: 48, to: 30, gain: 0.4, attack: 0.03, decay: 1.2 });
+    },
+  },
+  /** A ward rising: a warm chord, opening. */
+  "ult-ward": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      for (const [i, p] of [62, 66, 69, 74].entries())
+        swell(c, o, t + i * 0.05, { type: "sine", freq: hz(p), gain: 0.06, attack: 0.1, hold: 0.25, release: 0.9 });
+      crash(c, o, t, { seconds: 0.8, gain: 0.05, freq: 3000, sweepTo: 7000, q: 0.5 });
+    },
+  },
+  "ult-tail": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      hit(c, o, t, { type: "sine", from: 880, gain: 0.04, attack: 0.02, decay: 1.8 });
+      hit(c, o, t, { type: "sine", from: 1318, gain: 0.025, attack: 0.02, decay: 1.4 });
+    },
+  },
+  /** The meter filling: a lantern lighting, for the hero whose it is. */
+  "ult-ready": {
+    bus: "ui",
+    render: (c, o, t) => {
+      for (const [i, p] of [69, 76, 81].entries())
+        hit(c, o, t + i * 0.07, { type: "sine", from: hz(p), gain: 0.1, attack: 0.01, decay: 0.5 });
+      crash(c, o, t, { seconds: 0.4, gain: 0.04, freq: 4000, sweepTo: 8000, q: 0.6 });
+    },
+  },
+  /* The Breaker: a forge, not a hall. */
+  "ult-forge": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      crash(c, o, t, { seconds: 1.0, gain: 0.26, type: "lowpass", freq: 700, sweepTo: 300, q: 0.5 });
+      swell(c, o, t, { freq: 41, gain: 0.14, attack: 0.1, hold: 0.4, release: 0.5, cutoff: 400 });
+      for (let i = 0; i < 10; i++)
+        crash(c, o, t + 0.05 + i * 0.07, { seconds: 0.03, gain: 0.05, freq: 3000 + ((i * 977) % 3000), q: 6 });
+    },
+  },
+  "ult-grind": {
+    bus: "sfx",
+    render: (c, o, t) =>
+      crash(c, o, t, { seconds: 0.45, gain: 0.16, freq: 900, sweepTo: 3600, q: 7 }),
+  },
+  /** The Breaker's motif: three hammer blows, each closer than the last. */
+  "motif-breaker": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      for (const [i, at] of [0, 0.3, 0.48, 0.58].entries()) {
+        hit(c, o, t + at, { type: "square", from: 1240 - i * 60, to: 700, gain: 0.12, decay: 0.22 });
+        hit(c, o, t + at, { type: "sine", from: 110, to: 45, gain: 0.3, decay: 0.28 });
+        crash(c, o, t + at, { seconds: 0.12, gain: 0.2, freq: 2800, sweepTo: 900 });
+      }
+      swell(c, o, t + 0.58, { freq: hz(38), gain: 0.1, attack: 0.05, hold: 0.25, release: 0.5, cutoff: 900 });
+      swell(c, o, t + 0.58, { freq: hz(45), gain: 0.07, attack: 0.05, hold: 0.25, release: 0.5, cutoff: 900 });
+    },
+  },
+  "ult-shatter": {
+    bus: "sfx",
+    render: (c, o, t) => {
+      for (let i = 0; i < 12; i++)
+        crash(c, o, t + 0.01 + i * 0.03, {
+          seconds: 0.08 + (i % 3) * 0.04,
+          gain: 0.14,
+          freq: 1400 + ((i * 1733) % 4200),
+          q: 2.5,
+        });
+      hit(c, o, t, { type: "square", from: 520, to: 180, gain: 0.16, decay: 0.5 });
+    },
+  },
+} satisfies Record<string, Voice>;
+
 const VOICES: Record<SfxName, Voice> = {
   "swing-light": {
     bus: "sfx",
@@ -627,7 +875,7 @@ class Mixer {
   private levels: Record<Bus, number> = { ...DEFAULT_LEVELS };
   private muted = false;
   /** Rate limit: a row attack must not fire eight identical hits at once. */
-  private lastAt = new Map<SfxName, number>();
+  private lastAt = new Map<string, number>();
 
   private ensure() {
     if (this.ctx) return this.ctx;
@@ -671,16 +919,18 @@ class Mixer {
     if (master) master.gain.value = value ? 0 : this.levels.master;
   }
 
-  play(name: SfxName, delay = 0) {
+  play(name: SfxName | UltimateSfx, delay = 0, into?: AudioNode) {
     const ctx = this.ensure();
-    const voice = VOICES[name];
+    const voice =
+      (VOICES as Record<string, Voice>)[name] ??
+      (ULTIMATE_VOICES as Record<string, Voice>)[name];
     if (!ctx || !voice || ctx.state !== "running") return;
     const now = ctx.currentTime + delay;
     // Identical sounds inside 40ms are one event, not eight.
     const last = this.lastAt.get(name) ?? -1;
     if (now - last < 0.04) return;
     this.lastAt.set(name, now);
-    const bus = this.buses.get(voice.bus);
+    const bus = into ?? this.buses.get(voice.bus);
     if (!bus) return;
     try {
       voice.render(ctx, bus, now);
@@ -688,7 +938,55 @@ class Mixer {
       // A sound must never be able to take the fight down.
     }
   }
+
+  /**
+   * A group of sounds that can be silenced together: an Ultimate's, so a skip
+   * does not leave its tail ringing over the board it skipped to. Sounds
+   * already scheduled keep their timing; the channel fades them out.
+   */
+  channel(): { play: (name: string) => void; stop: () => void } {
+    const ctx = this.ensure();
+    const sfx = this.buses.get("sfx");
+    if (!ctx || !sfx) return { play: () => {}, stop: () => {} };
+    const gain = ctx.createGain();
+    gain.connect(sfx);
+    let open = true;
+    return {
+      play: (name) => {
+        if (open) this.play(name as SfxName, 0, gain);
+      },
+      stop: () => {
+        if (!open) return;
+        open = false;
+        gain.gain.setTargetAtTime(0, ctx.currentTime, 0.03);
+        setTimeout(() => gain.disconnect(), 400);
+      },
+    };
+  }
+
+  /**
+   * Build every buffer the named voices will need, into a muted graph, so the
+   * first Ultimate a player sees does not stop to fill them.
+   */
+  prewarm(names: readonly string[]) {
+    const ctx = this.ensure();
+    if (!ctx) return;
+    const silent = ctx.createGain();
+    silent.gain.value = 0;
+    for (const name of names) {
+      const voice =
+        (VOICES as Record<string, Voice>)[name] ??
+        (ULTIMATE_VOICES as Record<string, Voice>)[name];
+      try {
+        voice?.render(ctx, silent, ctx.currentTime);
+      } catch {
+        // Warming is best effort.
+      }
+    }
+  }
 }
 
 export const mixer = new Mixer();
 export const SFX_NAMES = Object.keys(VOICES) as SfxName[];
+export type UltimateSfx = keyof typeof ULTIMATE_VOICES;
+export const ULTIMATE_SFX = Object.keys(ULTIMATE_VOICES) as UltimateSfx[];

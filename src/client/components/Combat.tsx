@@ -23,6 +23,32 @@ import { useStagehand, type Stagehand } from "../battle/stagehand";
 import { stageGeometry } from "../battle/stage-geometry";
 import type { PlanOptions } from "../battle/round-plan";
 import type { RoundTimeline } from "../battle/choreography";
+import { ultimateFor, ULTIMATE_MAX, chargeShare } from "../../content/ultimates";
+import { UltimateCinematic } from "../cinematic/UltimateCinematic";
+import type { CinematicRun, CinematicDebug } from "../cinematic/run";
+import type { Framing } from "../../shared/cinematic";
+import { audio } from "../audio";
+import { ULTIMATE_SFX } from "../audio/engine";
+import "../cinematic/ultimate-ui.css";
+
+/** Which cinematics this browser has already played in full. */
+const SEEN = "pact.ultimates.seen";
+function seenBefore(id: string) {
+  try {
+    return (JSON.parse(localStorage.getItem(SEEN) ?? "[]") as string[]).includes(id);
+  } catch {
+    return false;
+  }
+}
+function markSeen(id: string) {
+  try {
+    const seen = new Set(JSON.parse(localStorage.getItem(SEEN) ?? "[]") as string[]);
+    seen.add(id);
+    localStorage.setItem(SEEN, JSON.stringify([...seen]));
+  } catch {
+    // A player who cannot store this simply sees full films.
+  }
+}
 
 /** What the Battle Lab reaches into. Development only. */
 export interface LabApi {
@@ -34,10 +60,17 @@ export interface LabApi {
   frameStep: () => void;
   setPaused: (v: boolean) => void;
   setSpeed: (n: number) => void;
+  /** The Ultimate cinematic playing, if any. */
+  cinematic: () => CinematicRun | null;
+  skipCinematic: () => void;
 }
 export interface LabHooks {
   plan?: PlanOptions;
   attach?: (api: LabApi | null) => void;
+  /** Force a cinematic's target framing. */
+  framing?: Framing;
+  /** The Ultimate lab's switches. */
+  debug?: CinematicDebug;
 }
 
 /**
@@ -52,6 +85,7 @@ export function Combat({
   send,
   disabled,
   reducedMotion = false,
+  cinematics = "full",
   lab,
   onSettled,
 }: {
@@ -59,6 +93,8 @@ export function Combat({
   send: (i: Intent) => void;
   disabled: boolean;
   reducedMotion?: boolean;
+  /** How Ultimates play; see `Settings.cinematics`. */
+  cinematics?: "full" | "fast" | "first";
   onSettled?: () => void;
   /** The Battle Lab's hooks into the stage. Never set in the game. */
   lab?: LabHooks;
@@ -101,6 +137,19 @@ export function Combat({
         );
       },
       plan: choreoPlan,
+      framing: lab?.framing,
+      cinematicMode: (u) =>
+        cinematics === "fast" ||
+        (cinematics === "first" && seenBefore(u.presentation.cinematic ?? u.id))
+          ? "fast"
+          : "full",
+      onCinematicSeen: (u) => markSeen(u.presentation.cinematic ?? u.id),
+      openChannel: () => mixer.channel(),
+      onDuck: (level, ms) => audio.duck(level, ms / 1000),
+      onCinematicFocus: (unit) => {
+        const at = unit ? geometry.current.places.get(unit) : null;
+        camera.look(at ? { preset: "action", at } : { preset: "neutral" });
+      },
     },
     { loop, stagehand },
   );
@@ -123,6 +172,8 @@ export function Combat({
       frameStep: () => replayRef.current.frameStep(),
       setPaused: (v) => replayRef.current.setPaused(v),
       setSpeed: (n) => replayRef.current.setSpeed(n),
+      cinematic: () => replayRef.current.cinematicRun(),
+      skipCinematic: () => replayRef.current.skipCinematic(),
     });
     return () => lab?.attach?.(null);
   }, [lab, stagehand, loop, animators]);
@@ -137,10 +188,19 @@ export function Combat({
   );
   const [ability, setAbility] = useState(list[0].id);
   const [target, setTarget] = useState("");
-  /** Choosing what to do, or choosing who to do it to. */
-  const [mode, setMode] = useState<"ability" | "target">("ability");
+  /**
+   * Choosing what to do, choosing who to do it to, or choosing who the
+   * Ultimate lands on — the extra action, chosen beside the plan.
+   */
+  const [mode, setMode] = useState<"ability" | "target" | "ultimate">("ability");
   const chosen = list.find((a) => a.id === ability) ?? list[0];
   const locked = s.locked.includes(me.id);
+  const ult = s.ultimateVersion === 1 ? ultimateFor(me) : undefined;
+  const charge = me.ultimateCharge ?? 0;
+  const ultReady = !!ult && charge >= ult.cost && me.hp > 0 && !me.fallen;
+  const ultQueued = s.myUltimate;
+  const aiming = mode === "ultimate" && ultReady && !ultQueued;
+  const rule = aiming ? ult!.target : chosen.target;
 
   /*
    * Every round starts where the first one did: choosing an ability, with
@@ -160,11 +220,20 @@ export function Combat({
     setTarget("");
     setMode("ability");
   }
-  const selectedTarget = chosen.target === "self" ? me.id : target;
+  if (mode === "ultimate" && (!ultReady || ultQueued)) setMode("ability");
+  const selectedTarget = rule === "self" ? me.id : target;
 
   /** Every unit the chosen ability may legally be aimed at. */
   const targetable = useMemo(() => {
     const ids = new Set<string>();
+    if (aiming) {
+      // An Ultimate reaches wherever it is aimed: no screen, no windup rule.
+      if (rule === "self") ids.add(me.id);
+      else if (rule === "ally" || rule === "allyRow") {
+        for (const p of s.players) if (!p.fallen && p.hp > 0) ids.add(p.id);
+      } else for (const e of s.enemies) if (e.hp > 0) ids.add(e.id);
+      return ids;
+    }
     if (chosen.target === "self") {
       ids.add(me.id);
     } else if (chosen.target === "ally" || chosen.target === "allyRow") {
@@ -189,7 +258,7 @@ export function Combat({
       }
     }
     return ids;
-  }, [chosen, s.players, s.enemies, s.reachVersion, me]);
+  }, [chosen, s.players, s.enemies, s.reachVersion, me, aiming, rule]);
   const targetValid = targetable.has(selectedTarget);
 
   // A target that stops being legal should not silently stay selected.
@@ -206,7 +275,7 @@ export function Combat({
       camera.look({ preset: "neutral" });
       return;
     }
-    if (mode === "target" && selectedTarget)
+    if (mode !== "ability" && selectedTarget)
       camera.look({
         preset: "target",
         at: places.get(selectedTarget) ?? null,
@@ -223,6 +292,28 @@ export function Combat({
     me.hp,
     camera,
   ]);
+
+  // The meter filling is announced once, when it fills, not every round.
+  const wasReady = useRef(ultReady);
+  const [justReady, setJustReady] = useState(false);
+  useEffect(() => {
+    if (ultReady && !wasReady.current && !replay.playing) {
+      mixer.play("ult-ready");
+      setJustReady(true);
+      const t = setTimeout(() => setJustReady(false), 1600);
+      wasReady.current = true;
+      return () => clearTimeout(t);
+    }
+    if (!ultReady) wasReady.current = false;
+  }, [ultReady, replay.playing]);
+  // Build the Ultimate's sounds before they are needed, once a meter is close.
+  const warmed = useRef(false);
+  useEffect(() => {
+    if (warmed.current || !s.players.some((p) => (p.ultimateCharge ?? 0) >= ULTIMATE_MAX * 0.7))
+      return;
+    warmed.current = true;
+    mixer.prewarm(ULTIMATE_SFX);
+  }, [s.players]);
 
   const named = (id?: string) =>
     [...s.players, ...s.enemies].find((u) => u.id === id)?.name ?? "";
@@ -267,15 +358,26 @@ export function Combat({
     if (next.target === "self") setTarget("");
   };
   const cancel = () => {
-    if (mode === "target") {
+    if (mode !== "ability") {
       setMode("ability");
       setTarget("");
     }
+  };
+  const aimUltimate = () => {
+    setTarget("");
+    setMode("ultimate");
+  };
+  const queueUltimate = () => {
+    if (!ult) return;
+    send({ type: "ultimate", target: selectedTarget });
+    setTarget("");
+    setMode("ability");
   };
   const pickTarget = (id: string) => {
     setTarget(id);
     if (mode === "ability") setMode("target");
   };
+  const queuedName = ultQueued ? named(ultQueued.target) : "";
 
   const cost = (a: (typeof list)[number]) => {
     if (a.id === "revive")
@@ -379,7 +481,12 @@ export function Combat({
         target={selectedTarget}
         onTarget={pickTarget}
         targetable={targetable}
-        targeting={mode === "target" && !locked && !replay.playing && me.hp > 0}
+        targeting={
+          (mode === "target" || aiming) &&
+          (!locked || aiming) &&
+          !replay.playing &&
+          me.hp > 0
+        }
         beat={{
           beatFor,
           playing: replay.playing,
@@ -406,7 +513,7 @@ export function Combat({
                   </div>
                 )}
               </div>
-              {replay.playing && (
+              {replay.playing && !replay.cinematic && (
                 <button className="skip-replay" onClick={replay.skip}>
                   Skip ▸▸
                 </button>
@@ -415,17 +522,65 @@ export function Combat({
           ),
         }}
       >
-        {me.hp > 0 && !locked && places.get(me.id) && (
+        {me.hp > 0 &&
+          !replay.cinematic &&
+          (!locked || aiming || (ultReady && !ultQueued)) &&
+          places.get(me.id) && (
           <ActionFan
             me={me}
             place={places.get(me.id)!}
-            options={fanOptions}
+            options={locked || aiming ? [] : fanOptions}
             chosen={chosen}
             onChoose={choose}
             onCancel={cancel}
             occupied={[...places.values()].filter((pl) => pl.id !== me.id)}
-            mode={mode}
+            mode={mode === "ability" && !locked ? "ability" : "target"}
             disabled={disabled || replay.playing}
+            seal={
+              ult && (
+                <span
+                  className="ult-meter"
+                  data-ready={ultReady ? "" : undefined}
+                  data-near={!ultReady && charge >= ult.cost * 0.75 ? "" : undefined}
+                  data-fresh={justReady ? "" : undefined}
+                  title={`Pact Charge ${Math.floor(charge)}/${ult.cost}`}
+                  style={{ "--charge": chargeShare(me) } as React.CSSProperties}
+                >
+                  <i />
+                </span>
+              )
+            }
+            top={
+              ult &&
+              (ultQueued ? (
+                <div className="ult-slip" data-queued="">
+                  <strong>✦ {ult.name}</strong>
+                  <small>
+                    Queued{queuedName ? ` → ${queuedName}` : ""} · resolves first
+                  </small>
+                  <button
+                    type="button"
+                    disabled={disabled || replay.playing}
+                    onClick={() => send({ type: "cancelUltimate" })}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : ultReady ? (
+                <button
+                  type="button"
+                  className="ult-slip"
+                  data-aiming={aiming ? "" : undefined}
+                  disabled={disabled || replay.playing}
+                  onClick={aiming ? cancel : aimUltimate}
+                  title={ult.description}
+                >
+                  <b>ULTIMATE</b>
+                  <strong>✦ {ult.name}</strong>
+                  <small>{aiming ? "Choose its target on the field" : "Extra action · your plan still happens"}</small>
+                </button>
+              ) : null)
+            }
           />
         )}
       </BattleStage>
@@ -467,6 +622,32 @@ export function Combat({
                   </button>
                 </span>
               ))}
+          </div>
+        ) : aiming && ult ? (
+          <div className="commit-bar" data-mode="ultimate">
+            <p className="commit-what">
+              <strong>✦ {ult.name}</strong>
+              <small>{ult.description}</small>
+              <small>
+                {selectedTarget
+                  ? `→ ${named(selectedTarget)}`
+                  : ult.target === "enemyRow"
+                    ? "Choose an enemy to hit its whole row."
+                    : "Choose a target on the field."}{" "}
+                · Extra action: it resolves before the round, and your planned
+                action still happens.
+              </small>
+            </p>
+            <button className="commit-back" onClick={cancel}>
+              ← Back
+            </button>
+            <button
+              className="primary lock-action ult-lock"
+              disabled={disabled || !targetValid}
+              onClick={queueUltimate}
+            >
+              Queue Ultimate ✦
+            </button>
           </div>
         ) : (
           <div className="commit-bar" data-mode={mode}>
@@ -537,6 +718,18 @@ export function Combat({
         />
       )}
       <HistoryDrawer s={s} open={history} onClose={() => setHistory(false)} />
+      {replay.cinematic && (
+        <UltimateCinematic
+          key={replay.cinematic.key}
+          run={replay.cinematic}
+          s={s}
+          loop={loop}
+          animators={animators}
+          equipment={replay.equipment}
+          onSkip={replay.skipCinematic}
+          debug={lab?.debug}
+        />
+      )}
     </div>
   );
 }

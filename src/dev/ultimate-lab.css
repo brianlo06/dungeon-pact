@@ -1,0 +1,82 @@
+.ult-lab .preview-toolbar {
+  padding-block: 10px;
+}
+.ult-lab-transport {
+  margin-top: 8px;
+}
+.ult-lab-transport button[data-on] {
+  outline: 2px solid var(--gold);
+}
+.ult-lab-body {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 12px 2%;
+}
+.ult-lab .preview-viewport {
+  flex: none;
+  position: relative;
+  overflow: hidden;
+}
+.ult-lab-panel {
+  flex: 1;
+  min-width: 260px;
+  font-size: 12px;
+}
+.ult-lab-panel h2 {
+  font-family: var(--pixel);
+  font-size: 14px;
+  margin: 0 0 4px;
+}
+.ult-lab-time {
+  font-family: monospace;
+}
+.ult-lab-timeline {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  height: 26px;
+  margin: 8px 0 14px;
+}
+.ult-lab-timeline button {
+  flex-basis: 0;
+  min-width: 0;
+  padding: 0;
+  font-size: 10px;
+}
+.ult-lab-timeline button[data-on] {
+  background: var(--gold);
+  color: var(--ink);
+}
+.ult-lab-timeline i {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: #3cf;
+  pointer-events: none;
+}
+.ult-lab-timeline b {
+  position: absolute;
+  bottom: -8px;
+  width: 2px;
+  height: 6px;
+  background: #fff;
+  pointer-events: none;
+}
+.ult-lab-timeline b[data-kind="reveal"] {
+  background: #f55;
+}
+.ult-lab-shots {
+  padding-left: 18px;
+}
+.ult-lab-shots li {
+  margin: 6px 0;
+}
+.ult-lab-shots li[data-on] button {
+  color: var(--gold);
+}
+.ult-lab-shots small {
+  display: block;
+  opacity: 0.75;
+}

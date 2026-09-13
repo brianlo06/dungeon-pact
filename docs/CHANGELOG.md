@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.14 Ultimates — 2026-09-12
+
+The benchmark for a new system; see `ULTIMATES.md` for all of it.
+
+- **Pact Charge and Ultimates.** Every hero has a charged Ultimate, queued as an
+  extra action beside the round's plan and resolved before anyone else acts.
+  Charge is earned by doing a class's job — damage, being hit and intercepting,
+  healing, reactions, control — carries between chambers, survives training
+  and being downed, and is checked by the server on queue and on resolution.
+- **Evolutions change the Ultimate.** The Breaker's Gatebreaker replaces the
+  Vanguard's Lantern Wall with different gameplay and a different film; the
+  other paths keep their class's until authored.
+- **Cinematics.** A shot-based film per Ultimate on the combat's own clock and
+  rigs: isolated stage, camera cuts and transitions, lighting, backgrounds,
+  real target and real equipment, effects, two-tone impact frame, hit-stop,
+  synthesised motif and impact, and a return over the real battlefield. FULL,
+  FAST and first-view settings, a still-card cut for reduced motion, skip.
+  Two are authored (Lantern Wall, Gatebreaker); the rest play a generic film.
+- **Bosses are priced for Ultimates** (HP ×1.2, +2 damage per hero) in rooms
+  that have them: without it Ultimates took the matrix from 89% to 98%. With
+  it: 90% → 91% (Unbroken), 90% → 90% (Gilded), duos +6.
+- **Ultimate lab** at `/dev/ultimates.html`.
+
 ## 0.13 playtest feedback — 2026-09-12
 
 Everything here answers one friend playtest: five complaints and a follow-up

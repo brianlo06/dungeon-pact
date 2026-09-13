@@ -17,6 +17,17 @@ import {
   type RoundTimeline,
 } from "./choreography";
 import { hitAnchor, planRound, type PlanOptions } from "./round-plan";
+import type { CinematicMode, Framing } from "../../shared/cinematic";
+import { cinematicFor, reducedCinematic } from "../../content/cinematics";
+import type { UltimateDef } from "../../content/ultimates";
+import { CinematicRun } from "../cinematic/run";
+import {
+  revealed,
+  splitUltimates,
+  type UltimateSegment,
+} from "../cinematic/segments";
+import { framingFor, instantsBetween, type Instant } from "../cinematic/timeline";
+import { unitPresentation } from "./layout";
 import type { StageGeom } from "./stage-geometry";
 import type { Stagehand } from "./stagehand";
 import type { Vec } from "./trajectory";
@@ -90,6 +101,8 @@ export interface DirectorCues {
   playing: boolean;
   /** True during a hit-stop, so the stage can hold still for a beat. */
   frozen: boolean;
+  /** The Ultimate being played as a cinematic, before the round, if any. */
+  cinematic?: CinematicRun | null;
 }
 
 export interface DirectorControls {
@@ -102,6 +115,13 @@ export interface DirectorControls {
   /** Advance one frame of presentation time while paused. */
   frameStep: () => void;
   skip: () => void;
+  /**
+   * End the Ultimate cinematic on screen now: its results are shown at once,
+   * its sound is silenced, and the round carries on from there.
+   */
+  skipCinematic: () => void;
+  /** The cinematic playing, for the Battle Lab. */
+  cinematicRun: () => CinematicRun | null;
   /** The round being played, for the Battle Lab and the debug overlay. */
   timeline: () => RoundTimeline | null;
   /** How far into the round's timeline the clock is, or null. */
@@ -135,6 +155,21 @@ export interface DirectorHooks {
   geometry?: (alive: (id: string) => boolean) => StageGeom | null;
   /** Lab only: override how moves are choreographed. */
   plan?: PlanOptions;
+  /** FULL or FAST, for this Ultimate; the player's setting decides. */
+  cinematicMode?: (u: UltimateDef) => CinematicMode;
+  /** A cinematic finished or was skipped: the player has now seen it. */
+  onCinematicSeen?: (u: UltimateDef) => void;
+  /** A group of sounds a skip can silence. */
+  openChannel?: () => { play: (name: string) => void; stop: () => void };
+  /** Dip the music under a moment. */
+  onDuck?: (level: number, ms: number) => void;
+  /**
+   * Where the battle camera should look while a cinematic is on the
+   * battlefield: at its caster as it is called, and back to neutral after.
+   */
+  onCinematicFocus?: (unit: string | null) => void;
+  /** Lab only: force the target framing. */
+  framing?: Framing;
 }
 
 export interface DirectorOptions {
@@ -172,6 +207,7 @@ export function useDirector(
     vfx: [],
     playing: false,
     frozen: false,
+    cinematic: null,
   });
   const [speed, setSpeedState] = useState(1);
   const [paused, setPausedState] = useState(false);
@@ -197,10 +233,16 @@ export function useDirector(
   const snap = useRef(s);
   snap.current = s;
   const clock = loop.clock;
+  /** The Ultimate on screen, those still to play, and the round after them. */
+  const cine = useRef<CinematicRun | null>(null);
+  const queue = useRef<UltimateSegment[]>([]);
+  const after = useRef<Beat[] | null>(null);
+  const channel = useRef<{ play: (n: string) => void; stop: () => void } | null>(null);
+  const reducedRun = useRef(false);
 
   /** Replay speed reaches the clock only while a round is replaying. */
   const applyRate = useCallback(() => {
-    const playing = !!plan.current;
+    const playing = !!plan.current || !!cine.current;
     clock.speed = playing ? speedRef.current : 1;
     clock.paused = playing && pausedRef.current;
   }, [clock]);
@@ -212,7 +254,16 @@ export function useDirector(
 
   const finish = useCallback(
     (snapshot: Snapshot) => {
-      const wasPlaying = !!plan.current;
+      const wasPlaying = !!plan.current || !!cine.current;
+      if (cine.current) {
+        cine.current.done = true;
+        hooksRef.current.onCinematicFocus?.(null);
+      }
+      cine.current = null;
+      queue.current = [];
+      after.current = null;
+      channel.current?.stop();
+      channel.current = null;
       plan.current = null;
       cursor.current = 0;
       settled.current = healthOf(snapshot);
@@ -230,6 +281,7 @@ export function useDirector(
         vfx: [],
         playing: false,
         frozen: false,
+        cinematic: null,
       });
     },
     [applyRate, publish],
@@ -401,6 +453,192 @@ export function useDirector(
     [perform],
   );
 
+  /** Start the choreographed round: the beats that follow any Ultimates. */
+  const beginRound = useCallback(
+    (beats: Beat[]) => {
+      const current = snap.current;
+      if (!current) return;
+      const g = geom.current;
+      const hasMove = beats.some((b) => b.kind === "cast");
+      if (!g || !beats.length || !hasMove) {
+        // Nothing left to choreograph: show what is left and settle.
+        for (const b of beats)
+          if (b.target && b.hp !== undefined) board.current[b.target] = b.hp;
+        finish(current);
+        return;
+      }
+      plan.current = planRound(current, beats, g, hooksRef.current.plan);
+      cursor.current = 0;
+      startAt.current = clock.time;
+      applyRate();
+      handRef.current?.begin(plan.current, g, startAt.current);
+      publish({
+        ...live.current,
+        hp: { ...board.current },
+        cinematic: null,
+        playing: true,
+      });
+    },
+    [applyRate, clock, finish, publish],
+  );
+
+  /** Show a segment's results: health, numbers over the board, falls. */
+  const reveal = useCallback(
+    (run: CinematicRun, which: "impact" | "ward" | "all") => {
+      const seg = run.segment;
+      const show = revealed(seg.beats, which);
+      const next: DirectorCues = { ...live.current };
+      let changed = false;
+      const at = clock.time;
+      for (const b of show) {
+        const index = seg.beats.indexOf(b);
+        if (run.revealed.has(index)) continue;
+        run.revealed.add(index);
+        changed = true;
+        if (run.reduced) continue;
+        if (b.target && b.hp !== undefined) board.current[b.target] = b.hp;
+        if (next.equipment && b.equipment)
+          next.equipment = equipmentStep(next.equipment, b.equipment);
+        const amount = b.amount ?? 0;
+        if ((b.kind === "ward" || b.kind === "heal") && b.target && amount)
+          next.pops = [
+            ...next.pops,
+            {
+              key: ++keys.current,
+              unit: b.target,
+              text: b.kind === "ward" ? `⬡${amount}` : `+${amount}`,
+              tone: b.kind === "ward" ? "block" : "heal",
+              born: at,
+            },
+          ];
+        if (b.kind === "defeat" && b.target)
+          hooksRef.current.onClip?.(b.target, "defeat", "defeat", { at, force: true });
+        if (b.kind === "combo" && b.label === "INTERRUPTED" && b.target)
+          hooksRef.current.onRest?.(b.target, "idle");
+      }
+      if (changed && !run.reduced) publish({ ...next, hp: { ...board.current } });
+    },
+    [clock, publish],
+  );
+
+  /** Play the next queued Ultimate, or the round once none are left. */
+  const nextCinematic = useCallback(() => {
+    const seg = queue.current.shift();
+    if (!seg) {
+      cine.current = null;
+      applyRate();
+      const rest = after.current;
+      after.current = null;
+      if (reducedRun.current || !rest) {
+        if (snap.current) finish(snap.current);
+        return;
+      }
+      beginRound(rest);
+      return;
+    }
+    const current = snap.current;
+    const primary = current?.enemies.find((e) => e.id === seg.targets[0]);
+    const framing =
+      hooksRef.current.framing ??
+      framingFor(unitPresentation(primary?.definition).footprint);
+    const reduced = reducedRun.current;
+    const film = reduced ? reducedCinematic(seg.def) : cinematicFor(seg.def);
+    const mode = reduced ? "full" : (hooksRef.current.cinematicMode?.(seg.def) ?? "full");
+    const run = new CinematicRun(seg, film, mode, framing, clock.time, reduced);
+    cine.current = run;
+    channel.current?.stop();
+    channel.current = hooksRef.current.openChannel?.() ?? null;
+    applyRate();
+    publish({ ...live.current, cinematic: run, playing: true });
+  }, [applyRate, beginRound, clock, finish, publish]);
+
+  /** End the cinematic on screen, showing everything it had left to show. */
+  const endCinematic = useCallback(
+    (skipped: boolean) => {
+      const run = cine.current;
+      if (!run) return;
+      reveal(run, "all");
+      run.done = true;
+      if (skipped) {
+        channel.current?.stop();
+        channel.current = null;
+        // Nothing the film asked for may linger on the board it hands back.
+        for (const id of run.segment.targets) hooksRef.current.onSettle?.(id);
+        if (run.segment.cast.actor) hooksRef.current.onSettle?.(run.segment.cast.actor);
+      }
+      hooksRef.current.onCinematicFocus?.(null);
+      hooksRef.current.onCinematicSeen?.(run.segment.def);
+      nextCinematic();
+    },
+    [nextCinematic, reveal],
+  );
+
+  /** One of a cinematic's instantaneous cues, now due. */
+  const cue = useCallback(
+    (run: CinematicRun, x: Instant, at: number) => {
+      const h = hooksRef.current;
+      const seg = run.segment;
+      const shot = run.timeline.shots[x.shot];
+      switch (x.kind) {
+        case "shot":
+          run.shot = x.shot;
+          if (shot.space === "battlefield")
+            h.onCinematicFocus?.(x.shot === 0 ? (seg.cast.actor ?? null) : null);
+          break;
+        case "sound":
+          channel.current?.play(x.sfx);
+          break;
+        case "shake":
+          run.shake = Math.min(0.06, run.shake + x.amount);
+          if (shot.space === "battlefield") h.onShake?.(x.amount);
+          break;
+        case "stop":
+          if (!run.reduced) clock.hold(x.ms);
+          break;
+        case "duck":
+          h.onDuck?.(x.level, x.ms);
+          break;
+        case "reveal":
+          reveal(run, x.reveal);
+          break;
+        case "marker":
+          run.marker = x.label;
+          break;
+        case "clip": {
+          const opts = { at, force: true } as const;
+          const clip = x.clip as ClipName;
+          const then = x.then as ClipName | undefined;
+          if (run.reduced) break;
+          if (shot.space === "battlefield") {
+            const ids =
+              x.role === "caster"
+                ? [seg.cast.actor ?? ""]
+                : x.role === "allies"
+                  ? []
+                  : x.role === "target"
+                    ? seg.targets.slice(0, 1)
+                    : seg.targets;
+            for (const id of ids) if (id) h.onClip?.(id, clip, then, opts);
+            break;
+          }
+          const ids =
+            x.role === "caster"
+              ? ["caster"]
+              : x.role === "target"
+                ? ["targets-0"]
+                : x.role === "targets"
+                  ? seg.targets.map((_, i) => `targets-${i}`)
+                  : (snap.current?.players ?? [])
+                      .filter((p) => p.id !== seg.cast.actor && !p.fallen)
+                      .map((_, i) => `allies-${i}`);
+          for (const id of ids) h.onClip?.(`cine:${run.key}:${id}`, clip, then, opts);
+          break;
+        }
+      }
+    },
+    [clock, reveal],
+  );
+
   // Plan the timeline whenever the server sends a round we have not played.
   useEffect(() => {
     if (!s) return;
@@ -417,6 +655,18 @@ export function useDirector(
       finish(s);
       return;
     }
+    const { segments, rest } = splitUltimates(beats);
+    if (reduced && segments.length) {
+      // Reduced motion: the board settles at once, and each Ultimate is still
+      // announced — a still card, not a film — before play resumes.
+      finish(s);
+      reducedRun.current = true;
+      queue.current = segments;
+      after.current = null;
+      nextCinematic();
+      return;
+    }
+    reducedRun.current = false;
     if (reduced) {
       // Reduced motion: the board settles at once, and each move is pointed
       // out in place — who acted, on whom — without anything moving.
@@ -446,6 +696,18 @@ export function useDirector(
       finish(s);
       return;
     }
+    if (segments.length) {
+      // Ultimates first, each as its own film; the round follows them.
+      queue.current = segments;
+      after.current = rest;
+      publish({
+        ...live.current,
+        hp: { ...board.current },
+        equipment: equipmentBefore(s, beats),
+      });
+      nextCinematic();
+      return;
+    }
     plan.current = planRound(s, beats, g, hooksRef.current.plan);
     cursor.current = 0;
     startAt.current = clock.time;
@@ -457,12 +719,25 @@ export function useDirector(
       equipment: equipmentBefore(s, beats),
       playing: true,
     });
-  }, [s, reduced, finish, applyRate, publish, clock]);
+  }, [s, reduced, finish, applyRate, publish, clock, nextCinematic]);
 
   // Each frame: play every cue that is due, expire what has lived its life.
   useEffect(
     () =>
       loop.add(ORDER.director, ({ time }) => {
+        const run = cine.current;
+        if (run) {
+          const t = run.at(time);
+          for (const x of instantsBetween(run.timeline, run.fired, t)) {
+            cue(run, x, run.start + x.t);
+            if (cine.current !== run) return;
+          }
+          run.fired = t;
+          if (t >= run.duration) {
+            endCinematic(false);
+            return;
+          }
+        }
         const p = plan.current;
         if (p) {
           const t = time - startAt.current;
@@ -487,7 +762,7 @@ export function useDirector(
         )
           publish({ ...cur, vfx, pops, frozen });
       }),
-    [loop, play, finish, publish, clock],
+    [loop, play, finish, publish, clock, cue, endCinematic],
   );
 
   // Leaving the stage puts everyone home.
@@ -521,6 +796,15 @@ export function useDirector(
     },
     step: () => {
       // Jump the clock to the next beat, however long it is until then.
+      const run = cine.current;
+      if (run) {
+        const t = clock.time - run.start;
+        const next = run.timeline.instants.find(
+          (x) => (x.kind === "shot" || x.kind === "reveal") && x.t > t,
+        );
+        clock.step(Math.max(0, (next ? next.t : run.duration) - t) + 0.5);
+        return;
+      }
       const p = plan.current;
       if (!p) return;
       const t = clock.time - startAt.current;
@@ -533,7 +817,14 @@ export function useDirector(
     skip: () => {
       if (s) finish(s);
     },
+    skipCinematic: () => endCinematic(true),
+    cinematicRun: () => cine.current,
     timeline: () => plan.current,
-    elapsed: () => (plan.current ? clock.time - startAt.current : null),
+    elapsed: () =>
+      cine.current
+        ? cine.current.at(clock.time)
+        : plan.current
+          ? clock.time - startAt.current
+          : null,
   };
 }

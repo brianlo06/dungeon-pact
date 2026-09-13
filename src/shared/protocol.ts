@@ -7,6 +7,8 @@ export const intentSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("vote"), choice: id }),
   z.object({ type: z.literal("plan"), ability: id, target: id }),
   z.object({ type: z.literal("unlock") }),
+  z.object({ type: z.literal("ultimate"), target: id }),
+  z.object({ type: z.literal("cancelUltimate") }),
   z.object({
     type: z.literal("spirit"),
     aid: z.enum(["ward", "inspire"]),

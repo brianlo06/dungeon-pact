@@ -3,7 +3,14 @@ import { heroes } from "../src/content/heroes";
 import { items } from "../src/content/items";
 import type { RunState } from "../src/shared/model";
 import type { Intent } from "../src/shared/protocol";
-import { policies, type Policy, setPact } from "./policy";
+import {
+  policies,
+  type Policy,
+  setPact,
+  setUltimates,
+  ultimatesOn,
+} from "./policy";
+import { ultimate as ultimateDef } from "../src/content/ultimates";
 
 export type Party = string[];
 export type PolicyName = keyof typeof policies;
@@ -26,6 +33,14 @@ export interface RunResult {
    * capped at 100 entries and cannot be asked what happened in a long run. */
   suppliesBought: number;
   suppliesUsed: number;
+  /** Ultimates resolved this run, by class; and in the boss fight alone. */
+  ultimates: Record<string, number>;
+  bossUltimates: number;
+  /** Pact Charge earned this run, by class, summed over that class's heroes. */
+  charge: Record<string, number>;
+  /** Health an Ultimate removed from enemies, and restored or warded on heroes. */
+  ultimateDamage: number;
+  ultimateSupport: number;
 }
 
 const compositions = (
@@ -53,6 +68,9 @@ export function run(
       : [...party];
   const policy: Policy = policies[policyName];
   let s = createRun("SIMULATE", seed);
+  // With Ultimates off the room is one made before they existed — no charge
+  // and the boss's old price — so "off" measures the build before them.
+  if (!ultimatesOn) delete s.ultimateVersion;
   let steps = 0;
   let invalid = 0;
   const invalidReasons: string[] = [];
@@ -69,12 +87,45 @@ export function run(
       (n, p) => n + p.items.filter((id) => supplyIds.has(id)).length,
       0,
     );
+  const ultimates: Record<string, number> = {};
+  const charge: Record<string, number> = {};
+  let bossUltimates = 0;
+  let ultimateDamage = 0;
+  let ultimateSupport = 0;
   const send = (id: string, intent: Intent) => {
     const before = packed();
+    const meters = new Map(s.players.map((p) => [p.id, p.ultimateCharge ?? 0]));
+    const seen = s.eventSeq;
     s = reduce(s, id, intent, steps * 1000);
     const change = packed() - before;
     if (change > 0) suppliesBought += change;
     else suppliesUsed -= change;
+    // Charge earned, counted as it rises, so a spent meter is not a loss.
+    for (const p of s.players) {
+      const gained = (p.ultimateCharge ?? 0) - (meters.get(p.id) ?? 0);
+      if (gained > 0) charge[p.heroId] = (charge[p.heroId] ?? 0) + gained;
+    }
+    // Ultimates, read from this command's own beats — never from the capped
+    // chronicle as a whole, which cannot say what happened earlier in a run.
+    let caster: string | null = null;
+    for (const l of s.logs.filter((l) => l.seq > seen && l.beat)) {
+      const b = l.beat!;
+      if (b.kind === "cast") {
+        caster = b.ultimate ? (b.actor ?? null) : null;
+        if (b.ultimate) {
+          const hero = ultimateDef(b.ultimate)!.heroId;
+          ultimates[hero] = (ultimates[hero] ?? 0) + 1;
+          if (s.map.find((n) => n.id === s.currentNode)?.type === "boss")
+            bossUltimates++;
+        }
+        continue;
+      }
+      if (!caster || b.actor !== caster) continue;
+      if (b.kind === "damage" && b.target !== caster)
+        ultimateDamage += b.amount ?? 0;
+      if (b.kind === "heal" || b.kind === "ward")
+        ultimateSupport += b.amount ?? 0;
+    }
   };
   roster.forEach((_, i) => addPlayer(s, `p${i}`, `Hero ${i}`));
   roster.forEach((heroId, i) => {
@@ -97,6 +148,16 @@ export function run(
       if (wasCamp && s.gold < before) campSpend += before - s.gold;
     } else if (s.phase === "COMBAT") {
       const p = s.players.find((p) => p.hp > 0 && !p.fallen && !s.plans[p.id])!;
+      const aim = policy.ultimate?.(s, p);
+      if (aim)
+        try {
+          send(p.id, { type: "ultimate", target: aim });
+        } catch (error) {
+          invalid++;
+          invalidReasons.push(
+            `${p.heroId} ultimate→${aim}: ${(error as Error).message}`,
+          );
+        }
       const choice = policy.plan(s, p);
       try {
         send(p.id, { type: "plan", ...choice });
@@ -173,6 +234,11 @@ export function run(
     auctionSpend,
     suppliesBought,
     suppliesUsed,
+    ultimates,
+    bossUltimates,
+    charge,
+    ultimateDamage,
+    ultimateSupport,
   };
 }
 
@@ -303,6 +369,9 @@ if (process.argv[1]?.endsWith("simulate.ts")) {
   const only = flag("party")
     ?.split(",")
     .map((n) => byShort[n.toLowerCase()] ?? n);
+  const ult = flag("ultimates");
+  if (ult === "off") setUltimates(false);
+  else if (ult && ult !== "on") throw Error(`Unknown --ultimates=${ult}`);
   const pact = flag("pact");
   if (pact === "wealth" || pact === "vitality") setPact(pact);
   else if (pact) throw Error(`Unknown pact ${pact}`);

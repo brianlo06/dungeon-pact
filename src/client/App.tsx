@@ -254,6 +254,7 @@ export default function App() {
                 key={s.currentNode}
                 {...props!}
                 reducedMotion={settings.reducedMotion}
+                cinematics={settings.cinematics}
                 onSettled={combatExit.ending ? combatExit.finish : undefined}
               />
             )}{" "}
@@ -403,6 +404,22 @@ export default function App() {
                   setSettings({ ...settings, reducedMotion: e.target.checked })
                 }
               />
+            </label>
+            <label className="setting">
+              Ultimate cinematics
+              <select
+                value={settings.cinematics}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    cinematics: e.target.value as typeof settings.cinematics,
+                  })
+                }
+              >
+                <option value="full">Full</option>
+                <option value="first">Full the first time, then fast</option>
+                <option value="fast">Fast</option>
+              </select>
             </label>
             <p className="muted">
               Original synthesized feedback and quiet chamber ambience. Ambient

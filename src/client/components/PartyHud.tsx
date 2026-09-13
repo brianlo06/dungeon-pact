@@ -1,5 +1,6 @@
 import type { Snapshot } from "../../shared/model";
 import { hero } from "../../content/heroes";
+import { chargeShare, ULTIMATE_MAX } from "../../content/ultimates";
 import { Sprite } from "./Sprite";
 
 /**
@@ -47,6 +48,16 @@ export function PartyHud({ s }: { s: Snapshot }) {
                   }}
                 />
               </span>
+              {p.ultimateCharge !== undefined && (
+                <span
+                  className="hud-bar hud-charge"
+                  data-ready={p.ultimateCharge >= ULTIMATE_MAX ? "" : undefined}
+                  data-queued={s.ultimateQueued?.includes(p.id) ? "" : undefined}
+                  title={`Pact Charge ${Math.floor(p.ultimateCharge)}/${ULTIMATE_MAX}`}
+                >
+                  <i style={{ transform: `scaleX(${chargeShare(p)})` }} />
+                </span>
+              )}
             </span>
             <span className="hud-state">
               {state === "locked"

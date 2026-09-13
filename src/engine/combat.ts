@@ -10,6 +10,13 @@ import {
 import { abilities, supplyFor } from "../content/heroes";
 import { resourceCap } from "../content/evolutions";
 import { upgradeOffer } from "../content/upgrades";
+import {
+  BOSS_PRICING,
+  ultimateFor,
+  flattenEffects,
+  type UltimateDef,
+} from "../content/ultimates";
+import { charge, withUltimate } from "./charge";
 import { pick } from "./rng";
 import {
   effects,
@@ -73,6 +80,13 @@ export function prepareIntents(s: RunState) {
     if (impatience)
       for (const effect of ability.effects)
         if (effect.kind === "damage") effect.amount += impatience;
+    // A boss is priced for the Ultimates a party brings to it. See
+    // `BOSS_PRICING`: without this, Ultimates took the boss's win rate from
+    // 89% to 98%.
+    if (def.boss && s.ultimateVersion === 1)
+      for (const effect of ability.effects)
+        if (effect.kind === "damage")
+          effect.amount += BOSS_PRICING.damagePerHero * s.players.length;
     // Hoarding is meant to be dangerous, not merely wasteful.
     if (e.definition === "miser")
       for (const effect of ability.effects)
@@ -113,6 +127,7 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
   s.round = 1;
   for (const p of s.players) delete p.spiritRound;
   s.plans = {};
+  if (s.ultimateVersion === 1) s.ultimates = {};
   s.enemies = [];
   const count = boss ? 1 : Math.min(4, s.players.length);
   const pool = definitions.filter((d) => !!d.boss === boss && !d.object);
@@ -130,7 +145,8 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
     const scale = boss
       ? 0.45 + s.players.length * 0.4
       : 0.75 + s.players.length * 0.14;
-    const hp = Math.round(d.hp * scale * (elite ? 1.3 : 1));
+    const priced = boss && s.ultimateVersion === 1 ? BOSS_PRICING.hp : 1;
+    const hp = Math.round(d.hp * scale * (elite ? 1.3 : 1) * priced);
     const e: Enemy = {
       id: `enemy-${i}`,
       definition: d.id,
@@ -241,17 +257,7 @@ export function validatePlan(
     const blocked = reachError(s, p, a, target);
     if (blocked) throw Error(blocked);
   }
-  if (a.target === "self" && target.id !== p.id) throw Error("Choose yourself");
-  if (
-    (a.target === "ally" || a.target === "allyRow") &&
-    (!isPlayer(target) || target.fallen)
-  )
-    throw Error("Choose an ally");
-  if (
-    (a.target === "enemy" || a.target === "enemyRow") &&
-    (isPlayer(target) || target.hp <= 0)
-  )
-    throw Error("Choose a living enemy");
+  aim(s, p, a.target, targetId);
   if (a.id === "revive" && (target.hp > 0 || s.gold < reviveCost(s)))
     throw Error(`Revival requires a downed ally and ${reviveCost(s)} gold`);
   // An ability billed to the treasury must actually be affordable, or it would
@@ -276,6 +282,115 @@ export function validatePlan(
     throw Error("Choose another standing ally to protect");
   return a;
 }
+
+/** The unit a target rule allows, or an error naming what it wants instead. */
+function aim(
+  s: RunState,
+  p: Player,
+  rule: Ability["target"],
+  targetId: string,
+): Unit {
+  const target = [...s.players, ...s.enemies].find((u) => u.id === targetId);
+  if (!target) throw Error("Unknown target");
+  if (rule === "self" && target.id !== p.id) throw Error("Choose yourself");
+  if (
+    (rule === "ally" || rule === "allyRow") &&
+    (!isPlayer(target) || target.fallen)
+  )
+    throw Error("Choose an ally");
+  if (
+    (rule === "enemy" || rule === "enemyRow") &&
+    (isPlayer(target) || target.hp <= 0)
+  )
+    throw Error("Choose a living enemy");
+  return target;
+}
+
+/**
+ * Whether this hero may queue their Ultimate at this target, and which
+ * Ultimate it is. The server never takes a client's word that a meter is
+ * full: the charge is checked here, when the Ultimate is queued, and again
+ * when it resolves.
+ *
+ * An Ultimate ignores the front line's screen — it is the one action that
+ * reaches wherever it is aimed — and its interrupt is opportunistic: it
+ * breaks a WINDUP if there is one and does not ask for one.
+ */
+export function validateUltimate(
+  s: RunState,
+  p: Player,
+  targetId: string,
+): UltimateDef {
+  if (s.ultimateVersion !== 1 || s.combatVersion !== 2)
+    throw Error("Ultimates are not part of this run");
+  if (p.hp <= 0 || p.fallen)
+    throw Error("A downed hero cannot call an Ultimate");
+  const u = ultimateFor(p);
+  if (!u) throw Error("This hero has no Ultimate");
+  if ((p.ultimateCharge ?? 0) < u.cost)
+    throw Error("Pact Charge is not full");
+  const target = aim(s, p, u.target, targetId);
+  if (
+    flattenEffects(u.effects).some((e) => e.kind === "protect") &&
+    u.target === "ally" &&
+    target.id === p.id
+  )
+    throw Error("Choose another standing ally to protect");
+  return u;
+}
+
+/**
+ * Queued Ultimates, resolved before any other action this round, fastest
+ * first. Each is spent as it resolves; one whose target has gone, or whose
+ * hero has dropped, fizzles and keeps its charge.
+ */
+function resolveUltimates(s: RunState) {
+  const queued = Object.entries(s.ultimates ?? {});
+  s.ultimates = {};
+  const order = queued
+    .map(([id, plan]) => ({
+      p: s.players.find((x) => x.id === id)!,
+      plan,
+    }))
+    .filter((x) => x.p)
+    .map((x) => ({ ...x, u: ultimateFor(x.p) }))
+    .filter((x): x is typeof x & { u: UltimateDef } => !!x.u)
+    .sort(
+      (a, b) =>
+        b.p.speed + b.u.speed - (a.p.speed + a.u.speed) ||
+        a.p.id.localeCompare(b.p.id),
+    );
+  for (const { p, plan } of order) {
+    let u: UltimateDef;
+    try {
+      u = validateUltimate(s, p, plan.target);
+    } catch {
+      log(s, `${p.name}'s Ultimate fizzles: its target or charge changed.`);
+      continue;
+    }
+    const target = [...s.players, ...s.enemies].find(
+      (x) => x.id === plan.target,
+    )!;
+    p.ultimateCharge = Math.max(0, (p.ultimateCharge ?? 0) - u.cost);
+    log(s, `${p.name} calls ${u.name}!`, "combo", {
+      kind: "cast",
+      actor: p.id,
+      target: plan.target,
+      label: u.name,
+      ultimate: u.id,
+    });
+    withUltimate(p.id, () => {
+      effects(s, p, target, u.effects);
+      if (
+        target.id !== p.id &&
+        !isPlayer(target) &&
+        flattenEffects(u.effects).some((e) => e.kind === "damage" && !e.self)
+      )
+        trigger(s, p, target, "afterAttack");
+    });
+  }
+}
+
 /**
  * A cleared chamber deepens each hero's build. Heroes whose tree is spent are
  * recorded immediately so one finished build cannot stall the room, and legacy
@@ -310,6 +425,7 @@ export function resolveRound(s: RunState) {
     triggers: 0,
     downs: [],
   };
+  if (s.ultimateVersion === 1) resolveUltimates(s);
   const queue = standing(s)
     .map((p) => ({
       p,
@@ -379,6 +495,7 @@ export function resolveRound(s: RunState) {
       if (a.effects.some((e) => e.kind === "heal"))
         trigger(s, p, t, "afterHeal");
     }
+    charge(s, p, "action");
   }
   for (const e of s.enemies
     .filter((e) => e.hp > 0)
@@ -410,6 +527,11 @@ export function resolveRound(s: RunState) {
         continue;
       }
       t = side[0];
+      charge(
+        s,
+        s.players.find((x) => x.id === turned.sourceId),
+        "control",
+      );
       log(s, `${e.name} turns its ${a.name} on its own side!`, "combo", {
         kind: "combo",
         label: "BEGUILED",

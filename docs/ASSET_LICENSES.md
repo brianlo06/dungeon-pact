@@ -29,7 +29,21 @@ the mixer, the bus structure and every call site stay as they are. Any such
 asset must be listed here with source, author, licence, URL and whether it was
 modified, before it is committed.
 
+### Ultimates
+
+The Ultimate voices and motifs (`ULTIMATE_VOICES` in `audio/engine.ts`) are
+the same runtime synthesis: oscillators and shaped noise, no recordings. The
+two motifs are original note sequences written for this project. Nothing is
+taken from any other game.
+
 ## Vector art
+
+The Ultimate cinematic backgrounds and effects (`src/client/cinematic/
+backgrounds.tsx`, `vfx.tsx`) and the Ultimate rig poses
+(`battle/rigs-ultimate.ts`) are original SVG and pose data authored in this
+repository. No assets, animation, camera work or effects were taken from
+Honkai: Star Rail or any other game; it was a reference for principles only.
+
 
 `Strongbox.tsx`, `Foundry.tsx` and `BossIntro.tsx` are original SVG authored
 directly in this repository. No third-party vector assets are used.

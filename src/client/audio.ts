@@ -6,6 +6,11 @@ export interface Settings {
   ambient: number;
   muted: boolean;
   reducedMotion: boolean;
+  /**
+   * How Ultimates play: the whole film, the condensed cut, or the whole film
+   * the first time a player sees each one and the condensed cut after.
+   */
+  cinematics: "full" | "fast" | "first";
 }
 export const defaultSettings: Settings = {
   master: 0.5,
@@ -15,6 +20,7 @@ export const defaultSettings: Settings = {
   ambient: 0.2,
   muted: false,
   reducedMotion: false,
+  cinematics: "full",
 };
 class AudioManager {
   private ctx: AudioContext | null = null;
@@ -77,6 +83,10 @@ class AudioManager {
         ? 0
         : this.settings.master * this.settings.ambient * 0.035;
     this.ambience.gain.gain.setTargetAtTime(volume, ctx.currentTime, 0.15);
+  }
+  /** Dip the music under a moment that needs the room, then bring it back. */
+  duck(level: number, seconds: number) {
+    this.score?.duck(level, seconds);
   }
   /** Short filtered noise burst: gives impacts a body a pure tone cannot. */
   private noise(level: number, duration: number, freq: number) {

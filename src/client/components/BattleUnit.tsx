@@ -11,6 +11,7 @@ import { CREATURES } from "./creatures";
 import { StatusReadout } from "./StatusReadout";
 import { items } from "../../content/items";
 import { holdsWindup } from "../battle/hero-clips";
+import { ULTIMATE_MAX } from "../../content/ultimates";
 
 export type Impact = "damage" | "heal" | "block" | "combo" | "defeat" | null;
 
@@ -139,6 +140,11 @@ export function BattleUnit({
       data-down={down ? "" : undefined}
       data-phase={enemy?.phase === 2 ? "2" : undefined}
       data-you={you ? "" : undefined}
+      data-ult-ready={
+        player && !down && (player.ultimateCharge ?? 0) >= ULTIMATE_MAX
+          ? ""
+          : undefined
+      }
       data-marked={marked ? "" : undefined}
       style={
         {

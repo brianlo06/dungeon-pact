@@ -17,6 +17,12 @@ import { EXPLOIT, WEAK, status } from "../src/engine/effects";
 import { reviveCost, standing } from "../src/engine/combat";
 import { availableNodes } from "../src/engine/map";
 import { reachError } from "../src/shared/reach";
+import {
+  flattenEffects,
+  ultimateFor,
+  type UltimateDef,
+} from "../src/content/ultimates";
+import { validateUltimate } from "../src/engine/combat";
 
 /**
  * Simulation policies. These are evaluation instruments, not game rules: the
@@ -27,6 +33,11 @@ export interface Policy {
   name: string;
   vote(s: RunState, p: Player): string;
   plan(s: RunState, p: Player): { ability: string; target: string };
+  /**
+   * Whether to call this hero's Ultimate this round, and at whom. Asked
+   * before the plan, only while the meter is full; null to hold it.
+   */
+  ultimate?(s: RunState, p: Player): string | null;
   upgrade(s: RunState, p: Player): string;
   train(s: RunState, p: Player): boolean;
   /**
@@ -51,6 +62,18 @@ export interface Policy {
  * rather than argued about.
  */
 export let pactChoice: "vitality" | "wealth" = "vitality";
+/**
+ * Whether the bots call Ultimates at all. Off, charge still fills and is never
+ * spent, which is the build before Ultimates as far as any result can tell:
+ * the before half of a before/after comparison, measured by the same bot.
+ */
+export let ultimatesOn = true;
+/** Limit Ultimates to these classes, to measure one class's at a time. */
+let ultimateClasses: Set<string> | null = null;
+export const setUltimates = (on: boolean, only?: string[]) => {
+  ultimatesOn = on;
+  ultimateClasses = only?.length ? new Set(only) : null;
+};
 export const setPact = (choice: "vitality" | "wealth") => {
   pactChoice = choice;
 };
@@ -249,9 +272,98 @@ const reserve = (s: RunState) => {
 /** What a hero will pay for a lot before letting a rival have it. */
 const valuation = (fit: number) => fit * 70;
 
+/** Whether a hero may call their Ultimate right now, and what it is. */
+function readyUltimate(s: RunState, p: Player): UltimateDef | null {
+  if (!ultimatesOn || s.ultimateVersion !== 1) return null;
+  if (ultimateClasses && !ultimateClasses.has(p.heroId)) return null;
+  if (s.ultimates?.[p.id]) return null;
+  const u = ultimateFor(p);
+  if (!u || (p.ultimateCharge ?? 0) < u.cost || p.hp <= 0 || p.fallen)
+    return null;
+  return u;
+}
+
+/** A legal target for an Ultimate, preferring `wanted` when it is legal. */
+function ultimateTarget(
+  s: RunState,
+  p: Player,
+  u: UltimateDef,
+  wanted: Unit | undefined,
+): string | null {
+  const candidates =
+    u.target === "self"
+      ? [p]
+      : u.target === "ally" || u.target === "allyRow"
+        ? standing(s)
+        : living(s).filter((e) => !isObject(e.definition));
+  const pool = wanted ? [wanted, ...candidates] : candidates;
+  for (const c of pool) {
+    try {
+      validateUltimate(s, p, c.id);
+      return c.id;
+    } catch {
+      // Try the next candidate.
+    }
+  }
+  return null;
+}
+
+/**
+ * When the tactical bot spends an Ultimate. Read from what the Ultimate does,
+ * never from its name, so a new one is used sensibly without teaching the
+ * bot about it:
+ *
+ *  - one that heals is for a party in trouble;
+ *  - one that shields or guards the party is for a dangerous round;
+ *  - anything else is force, and force is wasted on a chamber already won.
+ *
+ * A boss or an elite is worth spending on as soon as the meter is full;
+ * charge carries between chambers, so holding it through an easy fight is
+ * the decision the carry-over exists to create.
+ */
+function tacticalUltimate(s: RunState, p: Player): string | null {
+  const u = readyUltimate(s, p);
+  if (!u) return null;
+  const all = flattenEffects(u.effects);
+  const node = s.map.find((n) => n.id === s.currentNode);
+  const big = node?.type === "boss" || node?.type === "elite";
+  const t = threats(s);
+  const foes = living(s).filter((e) => !isObject(e.definition));
+  const foeHp = foes.reduce((n, e) => n + effectiveHp(e), 0);
+  const partyHp = standing(s).reduce((n, x) => n + effectiveHp(x), 0);
+  const incoming = [...t.perHero.values()].reduce((n, x) => n + x, 0);
+  const heals = all.some((e) => e.kind === "heal" && !e.self);
+  const guards = all.some(
+    (e) =>
+      e.kind === "protect" ||
+      (e.kind === "status" && e.status === "barrier" && !e.self),
+  );
+  const downed = s.players.some((x) => x.hp <= 0 && !x.fallen);
+  // Nothing left worth the charge: the next round's actions end this anyway.
+  if (foeHp <= 40 && !downed) return null;
+  let use = big;
+  if (heals) use = downed || wounded(s) > 0.3;
+  else if (guards) use ||= incoming >= partyHp * 0.25;
+  else use ||= foeHp >= 90;
+  if (!use) return null;
+  // Aim at the enemy doing the most this round, or the one the party is
+  // already focusing when nothing is threatening.
+  const threat = [...foes].sort(
+    (a, b) =>
+      (t.perEnemy.get(b.id) ?? 0) - (t.perEnemy.get(a.id) ?? 0) ||
+      effectiveHp(b) - effectiveHp(a) ||
+      a.id.localeCompare(b.id),
+  )[0];
+  return ultimateTarget(s, p, u, threat);
+}
+
 /** The original attack-focused bot, preserved so old baselines stay comparable. */
 export const attackPolicy: Policy = {
   name: "attack",
+  ultimate(s, p) {
+    const u = readyUltimate(s, p);
+    return u ? ultimateTarget(s, p, u, living(s)[0]) : null;
+  },
   vote(s, _p) {
     if (s.phase === "PACT") return pactChoice;
     if (s.phase === "MAP")
@@ -311,6 +423,7 @@ export const attackPolicy: Policy = {
  */
 export const tacticalPolicy: Policy = {
   name: "tactical",
+  ultimate: tacticalUltimate,
   vote(s, _p) {
     if (s.phase === "PACT") return pactChoice;
     if (s.phase === "MAP") {

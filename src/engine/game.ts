@@ -11,6 +11,7 @@ import {
   enterCombat,
   enterUpgrade,
   validatePlan,
+  validateUltimate,
   resolveRound,
   standing,
 } from "./combat";
@@ -30,6 +31,7 @@ export function createRun(room: string, seed: string): RunState {
     reachVersion: 1,
     encounterVersion: 2,
     combatVersion: 2,
+    ultimateVersion: 1,
     revivals: 0,
     schemaVersion: 1,
     contentVersion: 1,
@@ -80,6 +82,7 @@ export function addPlayer(s: RunState, id: string, name: string) {
     row: "front",
     statuses: [],
     resource: h.maxResource,
+    ...(s.ultimateVersion === 1 ? { ultimateCharge: 0 } : {}),
     items: [],
     cooldowns: {},
     downedRounds: 0,
@@ -298,6 +301,19 @@ export function reduce(
     case "unlock":
       requirePhase("COMBAT");
       delete s.plans[p.id];
+      break;
+    case "ultimate": {
+      // An extra action, queued beside the plan. It may be queued before or
+      // after the plan is locked, for as long as the round is still open.
+      requirePhase("COMBAT");
+      validateUltimate(s, p, intent.target);
+      s.ultimates = { ...s.ultimates, [p.id]: { target: intent.target } };
+      break;
+    }
+    case "cancelUltimate":
+      requirePhase("COMBAT");
+      if (!s.ultimates?.[p.id]) throw Error("No Ultimate is queued");
+      delete s.ultimates[p.id];
       break;
     case "spirit": {
       requirePhase("COMBAT");
@@ -610,6 +626,7 @@ export function snapshot(
     seed,
     auction,
     plans,
+    ultimates,
     ...publicState
   } = structuredClone(s);
   return {
@@ -618,6 +635,14 @@ export function snapshot(
     connected,
     locked: Object.keys(plans),
     myPlan: plans[you],
+    // Whether a hero has an Ultimate queued is shared — the party plans
+    // around it — but, like a plan, where it is aimed is not.
+    ...(ultimates
+      ? {
+          ultimateQueued: Object.keys(ultimates),
+          ...(ultimates[you] ? { myUltimate: ultimates[you] } : {}),
+        }
+      : {}),
     ...(s.phase === "COMPLETE" ? { seed } : {}),
     auction: auction
       ? (() => {
