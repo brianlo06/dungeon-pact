@@ -172,7 +172,11 @@ There is no pixel offset. For an attacker striking a target:
   width.
 - The struck surface: the target outline's near edge, moved in by
   `strikeInset × target drawing scale + 6% of the target's width`.
-- `x = surface − face × reach`, then limited so its centre never passes the
+- `x = surface − face × reach`, then stood back if its own painted front at
+  contact (outline × `k` + the clip's lunge) would bite into the target's
+  outline by more than 6% of the target's width — a heavy figure whose ram
+  reaches past its authored reach stops body-beside, not body-through —
+  then limited so its centre never passes the
   near 35% of the target, clamped so its whole figure stays 2% inside the stage
   (`clamped` reports it), and snapped back to home if it would retreat by less
   than a quarter body width.
