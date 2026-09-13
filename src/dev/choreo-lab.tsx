@@ -3,7 +3,10 @@ import type { Beat, GameLog, RunState, Snapshot } from "../shared/model";
 import type { Archetype } from "../shared/presentation";
 import { abilities } from "../content/heroes";
 import { enemies, enemyAbilities } from "../content/enemies";
+import { reduce } from "../engine/game";
 import type { LabApi, LabHooks } from "../client/components/Combat";
+import type { TraceEvent } from "../client/battle/trace";
+import { finishPreviewRound } from "./boss-fixture";
 
 /**
  * The Battle Lab's choreography panel. Development only.
@@ -86,13 +89,25 @@ export function synthesise(
       ? (names.find((n) => /break|stillness|flash/i.test(n)) ?? "Break focus")
       : (req.ability ?? names[0] ?? "Strike");
   const amount = req.amount ?? 14;
-  const hit = (to: typeof target, n = amount): Beat => ({
-    kind: "damage",
-    actor: actor.id,
-    target: to.id,
-    amount: n,
-    hp: Math.max(0, to.hp - n),
-  });
+  // A blow that empties a health bar is followed by the fall, as the engine
+  // logs it; a second blow on a fallen target is never synthesised.
+  const hp = new Map(units.map((u) => [u.id, u.hp]));
+  const hit = (to: typeof target, n = amount): Beat[] => {
+    const left = hp.get(to.id) ?? 0;
+    if (left <= 0) return [];
+    const dealt = Math.min(left, n);
+    hp.set(to.id, left - dealt);
+    const beat: Beat = {
+      kind: "damage",
+      actor: actor.id,
+      target: to.id,
+      amount: dealt,
+      hp: left - dealt,
+    };
+    return left - dealt > 0
+      ? [beat]
+      : [beat, { kind: "defeat", target: to.id, hp: 0 }];
+  };
   const cast: Beat = { kind: "cast", actor: actor.id, target: target.id, label };
   if (move === "interrupt")
     return {
@@ -105,15 +120,22 @@ export function synthesise(
   if (move === "area") {
     const side = s.enemies.some((e) => e.id === target.id) ? s.enemies : s.players;
     const row = side.filter((u) => u.row === target.row && u.hp > 0);
-    return { beats: [cast, ...row.map((u) => hit(u))], archetype: "area" };
+    return { beats: [cast, ...row.flatMap((u) => hit(u))], archetype: "area" };
   }
   if (move === "multi")
-    return { beats: [cast, hit(target, 7), hit(target, 7)], archetype: "melee" };
+    return {
+      beats: [
+        cast,
+        ...hit(target, Math.ceil(amount / 2)),
+        ...hit(target, Math.ceil(amount / 2)),
+      ],
+      archetype: "melee",
+    };
   if (target.id === actor.id)
     return {
       beats: [cast, { kind: "heal", actor: actor.id, target: actor.id, amount: 8, hp: actor.hp }],
     };
-  return { beats: [cast, hit(target)], archetype: ARCHETYPE[move] };
+  return { beats: [cast, ...hit(target)], archetype: ARCHETYPE[move] };
 }
 
 /** Append beats to the lab's run as chronicle entries. */
@@ -128,11 +150,41 @@ export function withBeats(run: RunState, beats: Beat[]): RunState {
   return { ...run, logs: [...run.logs, ...logs].slice(-100), eventSeq: seq };
 }
 
+/** One hero's plan for a real round: names or ids. */
+export interface LabPlan {
+  actor: string;
+  ability: string;
+  target?: string;
+}
+
+/** A trace record: a replay event, or what the page itself showed. */
+export type LabTrace =
+  | (TraceEvent & { at: number })
+  | {
+      /** A damage number appeared, a health bar changed, a rig changed clip. */
+      kind: "pop" | "hp" | "clip";
+      t: number;
+      at: number;
+      unit: string;
+      name: string;
+    };
+
 interface LabWindow {
   __lab?: {
     play: (req: LabRequest) => void;
+    /** Several synthesised moves as one round, in order. */
+    playRound: (reqs: LabRequest[]) => void;
+    /** A real round: these plans, everyone else braces, the engine resolves. */
+    round: (plans: LabPlan[]) => void;
     api: () => LabApi | null;
     setDebug: (on: boolean) => void;
+    /**
+     * Everything recorded since the last `clearTrace`. `at` is presentation
+     * milliseconds since the round it belongs to began.
+     */
+    trace: () => LabTrace[];
+    /** Start tracing, or start again from nothing. */
+    clearTrace: () => void;
   };
 }
 
@@ -153,63 +205,171 @@ export function useChoreoLab(
    * the snapshot clones every beat, so identity cannot be used. Cleared
    * when a real round is played.
    */
-  const pending = useRef<{
-    key: string;
-    archetype?: Archetype;
-    strikes?: number;
-  } | null>(null);
+  const pending = useRef<
+    {
+      key: string;
+      archetype?: Archetype;
+      strikes?: number;
+    }[]
+  >([]);
   const keyOf = (b: Beat) => `${b.actor}|${b.target}|${b.label}`;
+  const forced = (cast: Beat) =>
+    pending.current.find((p) => p.key === keyOf(cast));
+  /** The trace, and when the round each record belongs to began. */
+  const records = useRef<LabTrace[]>([]);
+  const roundAt = useRef(0);
+  const record = (e: TraceEvent) => {
+    if (e.kind === "round") roundAt.current = e.t;
+    records.current.push({ ...e, at: e.t - roundAt.current });
+  };
   const [debug, setDebug] = useState(debugAtStart);
   const runRef = useRef(run);
   runRef.current = run;
   const snapRef = useRef(s);
   snapRef.current = s;
 
-  const hooks = useRef<LabHooks>({
+  // Tracing costs a mutation observer over the whole stage and a marker
+  // check on every rig every frame, so it is off until something asks for it
+  // — the frame-rate checks run in this lab too.
+  const [tracing, setTracing] = useState(false);
+  const base = useRef<LabHooks>({
     attach: (a) => {
       api.current = a;
       if (a) a.stagehand.debug = debugRef.current;
     },
     plan: {
-      archetype: (cast) =>
-        pending.current?.key === keyOf(cast)
-          ? pending.current.archetype
-          : undefined,
-      strikes: (cast) =>
-        pending.current?.key === keyOf(cast)
-          ? pending.current.strikes
-          : undefined,
+      archetype: (cast) => forced(cast)?.archetype,
+      strikes: (cast) => forced(cast)?.strikes,
     },
   });
+  const traced = useRef<LabHooks>({ ...base.current, trace: (e) => record(e) });
+  const hooks = tracing ? traced.current : base.current;
   const debugRef = useRef(debug);
   debugRef.current = debug;
   useEffect(() => {
     if (api.current) api.current.stagehand.debug = debug;
   }, [debug]);
 
-  const play = (req: LabRequest) => {
-    const { beats, archetype } = synthesise(snapRef.current, req);
-    if (!beats.length) return;
-    pending.current = {
-      key: keyOf(beats[0]),
-      archetype,
-      strikes: req.move === "multi" ? 2 : undefined,
-    };
-    setRun(withBeats(runRef.current, beats));
+  const playRound = (reqs: LabRequest[]) => {
+    const all: Beat[] = [];
+    pending.current = [];
+    for (const req of reqs) {
+      const { beats, archetype } = synthesise(snapRef.current, req);
+      if (!beats.length) continue;
+      pending.current.push({
+        key: keyOf(beats[0]),
+        archetype,
+        strikes: req.move === "multi" ? 2 : undefined,
+      });
+      all.push(...beats);
+    }
+    if (all.length) setRun(withBeats(runRef.current, all));
   };
+  const play = (req: LabRequest) => playRound([req]);
+
+  /** A real round, resolved by the engine from these plans. */
+  const round = (plans: LabPlan[]) => {
+    const snap = snapRef.current;
+    const units = [...snap.players, ...snap.enemies];
+    const find = (key?: string) =>
+      units.find((u) => u.id === key || u.name === key);
+    let r = runRef.current;
+    const before = r.round;
+    for (const plan of plans) {
+      const player = snap.players.find(
+        (p) => p.id === plan.actor || p.name === plan.actor,
+      );
+      if (!player) throw Error(`No hero ${plan.actor}`);
+      const ability = abilities(
+        player.heroId,
+        snap.combatVersion,
+        player.upgrades,
+        player.evolution,
+        player.items,
+      ).find((a) => a.id === plan.ability || a.name === plan.ability);
+      if (!ability) throw Error(`${player.name} has no ${plan.ability}`);
+      const target =
+        ability.target === "self"
+          ? player.id
+          : (find(plan.target)?.id ?? player.id);
+      r = reduce(r, player.id, { type: "plan", ability: ability.id, target }, 0);
+    }
+    pending.current = [];
+    // Everyone not planned braces — unless the plans already resolved it.
+    setRun(r.round === before && r.phase === "COMBAT" ? finishPreviewRound(r) : r);
+  };
+
+  // What the page showed, as it showed it: numbers appearing, health bars
+  // changing and rigs changing clip, stamped with the presentation clock.
+  useEffect(() => {
+    if (!tracing) return;
+    let observer: MutationObserver | null = null;
+    const find = setInterval(() => {
+      const layer = document.querySelector(".layer-units");
+      if (!layer || !api.current || observer) return;
+      const unitOf = (n: Element) =>
+        n.closest<HTMLElement>(".combatant")?.dataset.unit ?? "";
+      const push = (kind: "pop" | "hp" | "clip", unit: string, name: string) => {
+        const t = api.current?.loop.clock.time ?? 0;
+        records.current.push({ kind, t, at: t - roundAt.current, unit, name });
+      };
+      observer = new MutationObserver((list) => {
+        for (const m of list) {
+          if (m.type === "childList") {
+            for (const n of m.addedNodes)
+              if (n instanceof HTMLElement && n.classList.contains("combatant-pop"))
+                push("pop", unitOf(n), n.textContent ?? "");
+            continue;
+          }
+          const el = m.target as HTMLElement;
+          if (m.attributeName === "data-clip") {
+            if (el.classList.contains("combatant-rig"))
+              push("clip", unitOf(el), el.dataset.clip ?? "");
+          } else if (
+            el.tagName === "I" &&
+            el.parentElement?.classList.contains("combatant-bar") &&
+            !(m.oldValue ?? "").includes(el.style.transform)
+          )
+            push(
+              "hp",
+              unitOf(el),
+              el.parentElement.querySelector("u")?.textContent ?? el.style.transform,
+            );
+        }
+      });
+      observer.observe(layer, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeOldValue: true,
+        attributeFilter: ["data-clip", "style"],
+      });
+    }, 50);
+    return () => {
+      clearInterval(find);
+      observer?.disconnect();
+    };
+  }, [tracing]);
 
   useEffect(() => {
     (window as LabWindow).__lab = {
       play,
+      playRound,
+      round,
       api: () => api.current,
       setDebug,
+      trace: () => records.current,
+      clearTrace: () => {
+        records.current = [];
+        setTracing(true);
+      },
     };
   });
 
   /** A real round is about to play: the lab's overrides no longer apply. */
-  const clear = () => (pending.current = null);
+  const clear = () => (pending.current = []);
 
-  return { hooks: hooks.current, play, clear, debug, setDebug, api };
+  return { hooks, play, clear, debug, setDebug, api, tracing };
 }
 
 export function ChoreoPanel({
@@ -303,6 +463,8 @@ export function ChoreoPanel({
           {paused ? "Resume" : "Pause"}
         </button>
         <button onClick={() => lab.api.current?.frameStep()}>Frame ▸</button>
+        <button onClick={() => lab.api.current?.step()}>Beat ▸</button>
+        <button onClick={() => lab.api.current?.skip()}>Skip</button>
       </div>
       <label>
         <input

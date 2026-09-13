@@ -19,6 +19,7 @@ import {
 import { hitAnchor, planRound, type PlanOptions } from "./round-plan";
 import type { StageGeom } from "./stage-geometry";
 import type { Stagehand } from "./stagehand";
+import type { Tracer } from "./trace";
 import type { Vec } from "./trajectory";
 
 /**
@@ -135,6 +136,8 @@ export interface DirectorHooks {
   geometry?: (alive: (id: string) => boolean) => StageGeom | null;
   /** Lab only: override how moves are choreographed. */
   plan?: PlanOptions;
+  /** Lab and tests only: report what the replay presented, and when. */
+  onTrace?: Tracer;
 }
 
 export interface DirectorOptions {
@@ -219,9 +222,11 @@ export function useDirector(
       applyRate();
       // Everyone home and at rest, nothing in the air, whatever was playing.
       handRef.current?.reset();
-      if (wasPlaying)
+      if (wasPlaying) {
         for (const u of [...snapshot.players, ...snapshot.enemies])
           hooksRef.current.onSettle?.(u.id);
+        hooksRef.current.onTrace?.({ kind: "end", t: clock.time });
+      }
       publish({
         hp: null,
         beat: null,
@@ -232,15 +237,26 @@ export function useDirector(
         frozen: false,
       });
     },
-    [applyRate, publish],
+    [applyRate, publish, clock],
   );
 
   /** Turn one beat into everything the screen should do about it. */
   const perform = useCallback(
-    (beat: Beat, at: number) => {
+    (beat: Beat, at: number, by?: string) => {
       const cur = live.current;
       const next: DirectorCues = { ...cur, beat };
       const key = () => ++keys.current;
+      hooksRef.current.onTrace?.({
+        kind: "beat",
+        t: clock.time,
+        due: at,
+        name: beat.kind,
+        unit: beat.actor,
+        to: beat.target,
+        amount: beat.amount,
+        hp: beat.hp,
+        detail: by,
+      });
       const rate = Math.max(0.05, clock.speed * clock.tempo);
 
       if (cur.equipment && beat.equipment)
@@ -295,9 +311,8 @@ export function useDirector(
       switch (beat.kind) {
         case "cast":
           next.title = { text: beat.label ?? "", actor: beat.actor };
-          // Whatever it was holding, it has now spent: the strike hands back
-          // to idle, not to the pose it has just released.
-          if (beat.actor) hooksRef.current.onRest?.(beat.actor, "idle");
+          // Whatever it was holding is spent when the move is delivered, not
+          // when it is named: the choreography's `spend` cue, on the strike.
           add({ kind: "cast", from: beat.actor });
           break;
         case "damage": {
@@ -378,7 +393,7 @@ export function useDirector(
     (cue: Cue, at: number) => {
       switch (cue.kind) {
         case "beat":
-          perform(cue.beat, at);
+          perform(cue.beat, at, cue.by);
           break;
         case "clip":
           hooksRef.current.onClip?.(cue.unit, cue.clip, cue.then, {
@@ -391,6 +406,21 @@ export function useDirector(
         case "settle":
           hooksRef.current.onSettle?.(cue.unit);
           break;
+        case "phase":
+          hooksRef.current.onTrace?.({
+            kind: "phase",
+            t: clock.time,
+            due: at,
+            unit: cue.unit,
+            name: cue.phase,
+          });
+          handRef.current?.cue(cue, at);
+          break;
+        case "spend":
+          // Whatever it was holding, it has now spent: the strike hands back
+          // to idle, not to the pose it has just released.
+          hooksRef.current.onRest?.(cue.unit, "idle");
+          break;
         case "sound":
           hooksRef.current.onSound?.(cue.name);
           break;
@@ -398,7 +428,7 @@ export function useDirector(
           handRef.current?.cue(cue, at);
       }
     },
-    [perform],
+    [perform, clock],
   );
 
   // Plan the timeline whenever the server sends a round we have not played.
@@ -451,6 +481,11 @@ export function useDirector(
     startAt.current = clock.time;
     applyRate();
     handRef.current?.begin(plan.current, g, startAt.current);
+    hooksRef.current.onTrace?.({
+      kind: "round",
+      t: clock.time,
+      detail: String(plan.current.duration),
+    });
     publish({
       ...live.current,
       hp: { ...board.current },
@@ -531,6 +566,7 @@ export function useDirector(
     },
     frameStep: () => clock.step(1000 / 60),
     skip: () => {
+      if (plan.current) hooksRef.current.onTrace?.({ kind: "skip", t: clock.time });
       if (s) finish(s);
     },
     timeline: () => plan.current,

@@ -13,6 +13,7 @@ import {
 } from "./choreography";
 import { flightPoint, type Vec } from "./trajectory";
 import { feet, scaleAt, type StageGeom, type UnitGeom } from "./stage-geometry";
+import type { Tracer } from "./trace";
 
 /**
  * The stagehand: everything a replay moves that is not a rig.
@@ -58,6 +59,8 @@ interface Live {
   end: Vec;
   /** Arrived, and sticking or fading until then. */
   gone?: number;
+  /** Where it was last drawn, stage pixels. */
+  at?: Vec;
 }
 
 interface LiveMark {
@@ -100,6 +103,8 @@ export class Stagehand {
   debug = false;
   /** Reduced motion: nothing travels; cues are drawn in place. */
   still = false;
+  /** Development only: report projectiles leaving and landing. */
+  trace?: Tracer;
 
   constructor({ loop, camera }: StagehandOptions) {
     this.loop = loop;
@@ -299,6 +304,33 @@ export class Stagehand {
       : { x: home.x / this.geom.width, y: home.y / this.geom.height };
   }
 
+  /**
+   * The paint order for something standing with its feet on ground line
+   * `feetY` (a stage fraction): just in front of the nearest unit whose feet
+   * are at or behind that line.
+   *
+   * The layout's own z comes from each unit's ground point, and a ground
+   * point sits a different distance under the feet of each kind of figure
+   * (an enemy's plate hangs lower), so a traveller's z cannot be computed
+   * from its feet on the same scale; comparing feet with feet, and borrowing
+   * the z of the unit it has just passed in front of, keeps both orders
+   * consistent wherever the two disagree.
+   */
+  paintZ(feetY: number, self?: string): number {
+    const geom = this.geom;
+    if (!geom) return Math.round(feetY * 1000);
+    let behind = -Infinity;
+    let lowest = Infinity;
+    for (const u of geom.units.values()) {
+      if (u.id === self) continue;
+      const z = u.z;
+      lowest = Math.min(lowest, z);
+      if (feet(u).y / geom.height <= feetY + 1e-6) behind = Math.max(behind, z);
+    }
+    if (behind === -Infinity) return Math.max(1, (lowest === Infinity ? 1 : lowest) - 1);
+    return behind + 1;
+  }
+
   /** How far a unit is from home now, stage fractions. */
   private offsetNow(id: string, time: number): Vec {
     const u = this.geom?.units.get(id);
@@ -363,10 +395,10 @@ export class Stagehand {
         n.shadow.style.opacity = h ? (1 - 0.55 * h).toFixed(3) : "";
       }
       n.travel.style.opacity = pose.opacity < 1 ? pose.opacity.toFixed(3) : "";
-      // Paint order follows the ground it is standing on now, exactly as the
-      // layout orders units by where they stand: in front of what it passes
-      // in front of, behind what it passes behind.
-      n.root.style.zIndex = String(Math.round(pose.y * 1000) + 5);
+      // Paint order follows the ground it is standing on now: in front of
+      // everyone whose feet are behind its own, behind everyone whose feet
+      // are in front. Standing at home it keeps the layout's own order.
+      n.root.style.zIndex = Math.abs(pose.y - hy) < 1e-4 ? n.z : String(this.paintZ(pose.y, id));
     }
     if (this.follow)
       this.frameCamera(
@@ -424,6 +456,17 @@ export class Stagehand {
     const live: Live = { plan, el, start, end: plan.end };
     this.live.push(live);
     this.place(live, at);
+    this.trace?.({
+      kind: "spawn",
+      t: this.loop.clock.time,
+      due: at,
+      unit: plan.from,
+      to: plan.to,
+      name: look.visual ?? "bolt",
+      x: live.at?.x,
+      y: live.at?.y,
+      detail: plan.startAnchor && start !== plan.start ? "measured" : "estimated",
+    });
   }
 
   private place(p: Live, time: number) {
@@ -439,6 +482,7 @@ export class Stagehand {
     const trajectory = plan.look.trajectory ?? "linear";
     const f = flightPoint({ trajectory, start: p.start, end, arc: plan.look.arc, aspect: W / H }, u);
     const el = p.el;
+    p.at = { x: f.x * W, y: f.y * H };
     if (trajectory === "beam") {
       const len = Math.hypot((end.x - p.start.x) * W, (end.y - p.start.y) * H);
       const ang = Math.atan2((end.y - p.start.y) * H, (end.x - p.start.x) * W);
@@ -456,7 +500,7 @@ export class Stagehand {
     // target's, in front of each at its own end.
     const g0 = this.feetNow(plan.from, time)?.y ?? p.start.y;
     const g1 = this.feetNow(plan.to, time)?.y ?? end.y;
-    el.style.zIndex = String(Math.round((g0 + (g1 - g0) * u) * 1000) + 8);
+    el.style.zIndex = String(this.paintZ(g0 + (g1 - g0) * u) + 1);
   }
 
   private frameEffects(time: number) {
@@ -469,6 +513,16 @@ export class Stagehand {
           const how = p.plan.look.onArrival ?? "vanish";
           p.gone = time + (how === "stick" ? 420 : how === "burst" ? 180 : 0);
           p.el.dataset.arrived = how;
+          this.trace?.({
+            kind: "arrive",
+            t: time,
+            due: this.startAt + p.plan.arrive,
+            unit: p.plan.from,
+            to: p.plan.to,
+            name: p.plan.look.visual ?? "bolt",
+            x: p.at?.x,
+            y: p.at?.y,
+          });
         }
       } else if (time >= p.gone) {
         p.el.remove();
@@ -556,9 +610,9 @@ export class Stagehand {
           : "chest";
     const p = this.anchorOf(u, where, time);
     m.el.style.transform = `translate3d(${px(p.x * W)}, ${px(p.y * H)}, 0)`;
-    const ground = this.feetNow(u.id, time)?.y ?? p.y;
-    m.el.style.zIndex =
-      where === "feet" ? String(Math.round(ground * 1000) - 1) : "4400";
+    // A mark on the ground paints just under the unit standing on it.
+    const own = Number(this.nodeFor(u.id)?.root.style.zIndex || u.z);
+    m.el.style.zIndex = where === "feet" ? String(Math.max(0, own - 1)) : "4400";
   }
 
   /* ------------------------------------------------------------ camera -- */

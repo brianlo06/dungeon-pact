@@ -1,4 +1,4 @@
-import type { Rig } from "./animation";
+import type { Pose, Rig } from "./animation";
 
 /**
  * Rigs for the foundry's rank and file: the Cinder Stoker, the Ash Acolyte,
@@ -562,6 +562,10 @@ const bellows: Rig = {
   },
 };
 
+/** A part track that only rotates, for the Hound's travel clips. */
+const turn = (...keys: [number, number][]): Pose[] =>
+  keys.map(([at, rotate]) => ({ at, rotate }));
+
 /** The Hound: never still. Quick, twitchy, and it commits its whole body to a bite. */
 const hound: Rig = {
   idle: {
@@ -639,6 +643,62 @@ const hound: Rig = {
         { at: 0, rotate: -1 },
         { at: 0.45, rotate: 1.5 },
         { at: 1, rotate: -1 },
+      ],
+    },
+  },
+  /**
+   * The crouch before the sprint: it drops onto its haunches, head low, the
+   * mane up, and holds there coiled. Heroes are to its left, so back is +x.
+   */
+  anticipate: {
+    duration: 240,
+    poses: [
+      { at: 0, x: 0, y: 0, rotate: 0, squash: 1 },
+      { at: 1, x: 0.06, y: 0.045, rotate: -3, squash: 1.14 },
+    ],
+    parts: {
+      head: turn([0, 0], [1, -8]),
+      jaw: turn([0, 0], [1, -6]),
+      hindLegs: [
+        { at: 0, squash: 1, rotate: 0 },
+        { at: 1, squash: 1.14, rotate: 6 },
+      ],
+      foreLegs: turn([0, 0], [1, 10]),
+      tail: turn([0, 0], [1, -14]),
+      mane: [
+        { at: 0, scale: 1 },
+        { at: 1, scale: 1.12 },
+      ],
+    },
+  },
+  /**
+   * The sprint: long, low and flat, legs reaching and gathering, jaw open,
+   * tail streaming. Far quicker than anything else's stride.
+   */
+  approach: {
+    duration: 230,
+    loop: true,
+    poses: [
+      { at: 0, y: 0.035, rotate: -2, squash: 1.14 },
+      { at: 0.25, y: 0.012, rotate: 1, squash: 1.2 },
+      { at: 0.5, y: 0.035, rotate: -2, squash: 1.1 },
+      { at: 0.75, y: 0.012, rotate: 1, squash: 1.2 },
+      { at: 1, y: 0.035, rotate: -2, squash: 1.14 },
+    ],
+    parts: {
+      head: turn([0, -5], [0.5, -3], [1, -5]),
+      jaw: turn([0, -10], [0.5, -14], [1, -10]),
+      foreLegs: turn([0, 26], [0.5, -22], [1, 26]),
+      hindLegs: [
+        { at: 0, rotate: -22, squash: 1 },
+        { at: 0.5, rotate: 20, squash: 1.06 },
+        { at: 1, rotate: -22, squash: 1 },
+      ],
+      tail: turn([0, 16], [0.5, 10], [1, 16]),
+      mane: [
+        { at: 0, rotate: 6, scale: 1.06 },
+        { at: 0.5, rotate: 3, scale: 1.04 },
+        { at: 1, rotate: 6, scale: 1.06 },
       ],
     },
   },

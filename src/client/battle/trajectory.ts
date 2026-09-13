@@ -114,7 +114,7 @@ export function flightPoint(f: Flight, u: number): FlightPoint {
 export function flightTime(
   f: Pick<Flight, "trajectory" | "start" | "end" | "aspect">,
   speed: number,
-  bounds = { min: 160, max: 900 },
+  bounds = { min: 220, max: 900 },
 ) {
   if (f.trajectory === "beam") return bounds.min;
   const start = f.trajectory === "fromAbove" ? skyAbove(f.end) : f.start;

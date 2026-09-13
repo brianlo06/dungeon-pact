@@ -82,7 +82,8 @@ export function GearArt({
           stroke="var(--gear-accent)"
           strokeWidth={2.5}
         />
-        <path d="M-8 -34 V34" stroke="#ecddc2" strokeWidth={0.9} />
+        {/* No string: the Ranger draws its own, hinged at the nocks, so a
+            draw bends it and a release snaps it whatever bow is worn. */}
         <g transform="translate(0 8) scale(.45)">
           <Art />
         </g>

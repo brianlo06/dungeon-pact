@@ -146,6 +146,78 @@ const vanguard: Rig = withFall({
       ],
     },
   },
+  /**
+   * The charge: shield first. It leans into the run behind the shield, which
+   * is pushed out ahead of it, the sword held up and back where the
+   * anticipation raised it, the cape streaming. A heavy two-beat stride.
+   */
+  approach: {
+    duration: 380,
+    loop: true,
+    poses: [
+      { at: 0, x: 0.03, y: 0, rotate: 7, squash: 1 },
+      { at: 0.25, x: 0.035, y: -0.028, rotate: 8, squash: 0.97 },
+      { at: 0.5, x: 0.03, y: 0, rotate: 7, squash: 1.03 },
+      { at: 0.75, x: 0.035, y: -0.028, rotate: 8, squash: 0.97 },
+      { at: 1, x: 0.03, y: 0, rotate: 7, squash: 1 },
+    ],
+    parts: {
+      shield: [
+        { at: 0, x: 0.05, y: -0.01, rotate: -6, scale: 1.04 },
+        { at: 0.5, x: 0.055, y: -0.014, rotate: -7, scale: 1.04 },
+        { at: 1, x: 0.05, y: -0.01, rotate: -6, scale: 1.04 },
+      ],
+      sword: turn([0, 40], [0.5, 44], [1, 40]),
+      blade: turn([0, -24], [1, -24]),
+      head: [
+        { at: 0, rotate: 4, y: 0.01 },
+        { at: 0.5, rotate: 5, y: 0.012 },
+        { at: 1, rotate: 4, y: 0.01 },
+      ],
+      cape: turn([0, -12], [0.25, -18], [0.5, -10], [0.75, -18], [1, -12]),
+      legs: [
+        { at: 0, squash: 1.05, y: 0 },
+        { at: 0.25, squash: 0.95, y: -0.01 },
+        { at: 0.5, squash: 1.05, y: 0 },
+        { at: 0.75, squash: 0.95, y: -0.01 },
+        { at: 1, squash: 1.05, y: 0 },
+      ],
+    },
+  },
+  /**
+   * Backing off on guard: it never turns its back on what it hit. The
+   * shield stays up in front, the sword ready, and it steps back in short
+   * braced steps.
+   */
+  retreat: {
+    duration: 460,
+    loop: true,
+    poses: [
+      { at: 0, x: 0, y: 0, rotate: -3, squash: 1.02 },
+      { at: 0.25, x: -0.01, y: -0.015, rotate: -2, squash: 1 },
+      { at: 0.5, x: 0, y: 0, rotate: -3, squash: 1.02 },
+      { at: 0.75, x: -0.01, y: -0.015, rotate: -2, squash: 1 },
+      { at: 1, x: 0, y: 0, rotate: -3, squash: 1.02 },
+    ],
+    parts: {
+      shield: [
+        { at: 0, x: 0.03, y: -0.035, rotate: -6, scale: 1.05 },
+        { at: 0.5, x: 0.03, y: -0.03, rotate: -5, scale: 1.05 },
+        { at: 1, x: 0.03, y: -0.035, rotate: -6, scale: 1.05 },
+      ],
+      sword: turn([0, 18], [0.5, 22], [1, 18]),
+      blade: turn([0, -10], [1, -10]),
+      head: turn([0, 4], [0.5, 3], [1, 4]),
+      cape: turn([0, 4], [0.5, 1], [1, 4]),
+      legs: [
+        { at: 0, squash: 1.04 },
+        { at: 0.25, squash: 0.98 },
+        { at: 0.5, squash: 1.04 },
+        { at: 0.75, squash: 0.98 },
+        { at: 1, squash: 1.04 },
+      ],
+    },
+  },
   /** Basic strike: coil, bring the sword over, follow through, recover. */
   attack: {
     duration: 620,
@@ -601,6 +673,125 @@ const ranger: Rig = withFall({
       head: turn([0, 0], [0.2, 3], [0.56, 3], [0.62, -4], [1, 0]),
       cloak: turn([0, 0], [0.62, -6], [0.82, 3], [1, 0]),
       quiver: turn([0, 0], [0.62, -4], [1, 0]),
+    },
+  },
+  /**
+   * The choreographed draw, which ends holding at full draw: the bow comes
+   * up, the drawing hand takes an arrow to the string, and pulls. The string
+   * is two halves hinged at the nocks; their angles and stretch put the
+   * middle exactly on the arrow's nock at each keyed pose (worked out from
+   * the arm's shoulder, the arrow's pivot and the bow's), so the V follows
+   * the hand back. The arrow is turned to point along the bow's grip.
+   */
+  aim: {
+    duration: 520,
+    poses: [
+      { at: 0, x: 0, rotate: 0, squash: 1 },
+      { at: 0.3, x: 0.02, rotate: 1, squash: 1.02, y: 0.004 },
+      { at: 1, x: 0.035, rotate: -2, squash: 1.04, y: 0.008 },
+    ],
+    parts: {
+      bow: [
+        { at: 0, rotate: 0, x: 0, y: 0 },
+        { at: 0.3, rotate: -8, x: 0.02, y: -0.012 },
+        { at: 1, rotate: -4, x: 0.025, y: -0.01 },
+      ],
+      draw: [
+        { at: 0, rotate: 0, x: 0 },
+        { at: 0.22, rotate: -70, x: 0.03 },
+        { at: 0.36, rotate: -92, x: 0.02 },
+        { at: 1, rotate: -68, x: 0 },
+      ],
+      arrow: [
+        { at: 0, rotate: 0, scale: 1 },
+        { at: 0.22, rotate: 60 },
+        { at: 0.36, rotate: 81.4 },
+        { at: 1, rotate: 50.1 },
+      ],
+      stringTop: [
+        { at: 0, rotate: 0, scale: 1, squash: 1 },
+        { at: 0.28, rotate: 0, scale: 1, squash: 1 },
+        { at: 0.36, rotate: 38.2, scale: 0.984, squash: 1.016 },
+        { at: 1, rotate: 34.6, scale: 1.081, squash: 0.925 },
+      ],
+      stringBottom: [
+        { at: 0, rotate: 0, scale: 1, squash: 1 },
+        { at: 0.28, rotate: 0, scale: 1, squash: 1 },
+        { at: 0.36, rotate: -25.8, scale: 1.173, squash: 0.853 },
+        { at: 1, rotate: -32.6, scale: 1.11, squash: 0.901 },
+      ],
+      head: turn([0, 0], [0.3, 3], [1, 5]),
+      cloak: turn([0, 0], [1, -3]),
+      legs: [
+        { at: 0, squash: 1 },
+        { at: 1, squash: 1.04 },
+      ],
+    },
+  },
+  /**
+   * The loose, from full draw. The shot leaves at the marker, while the
+   * drawn arrow is still on the string — the projectile layer measures the
+   * arrow part there — and in the next instant the drawn arrow is gone, the
+   * string snaps straight past its rest and back, the hand flies open behind
+   * the head, the body rocks back from the shot, and then the bow comes down.
+   * A fresh arrow is in the hand by the end.
+   */
+  release: {
+    duration: 460,
+    markers: { release: 0.08 },
+    poses: [
+      { at: 0, x: 0.035, rotate: -2, squash: 1.04, y: 0.008 },
+      { at: 0.08, x: 0.035, rotate: -2, squash: 1.04, y: 0.008 },
+      { at: 0.2, x: -0.03, rotate: -4, squash: 0.97, y: 0 },
+      { at: 0.45, x: 0.005, rotate: 0.5, squash: 1 },
+      { at: 1, x: 0, rotate: 0, squash: 1, y: 0 },
+    ],
+    parts: {
+      bow: [
+        { at: 0, rotate: -4, x: 0.025, y: -0.01 },
+        { at: 0.08, rotate: -4, x: 0.025, y: -0.01 },
+        { at: 0.18, rotate: 1, x: 0.035, y: -0.01 },
+        { at: 0.4, rotate: -2, x: 0.02, y: -0.006 },
+        { at: 1, rotate: 0, x: 0, y: 0 },
+      ],
+      draw: [
+        { at: 0, rotate: -68, x: 0 },
+        { at: 0.08, rotate: -68, x: 0 },
+        { at: 0.22, rotate: -128, x: -0.02 },
+        { at: 0.5, rotate: -100, x: -0.01 },
+        { at: 1, rotate: 0, x: 0 },
+      ],
+      arrow: [
+        { at: 0, rotate: 50.1, scale: 1 },
+        { at: 0.08, rotate: 50.1, scale: 1 },
+        { at: 0.1, rotate: 50.1, scale: 0 },
+        { at: 0.82, rotate: 0, scale: 0 },
+        { at: 1, rotate: 0, scale: 1 },
+      ],
+      stringTop: [
+        { at: 0, rotate: 34.6, scale: 1.081, squash: 0.925 },
+        { at: 0.08, rotate: 34.6, scale: 1.081, squash: 0.925 },
+        { at: 0.14, rotate: -6, scale: 1, squash: 1 },
+        { at: 0.2, rotate: 3, scale: 1, squash: 1 },
+        { at: 0.28, rotate: 0, scale: 1, squash: 1 },
+        { at: 1, rotate: 0, scale: 1, squash: 1 },
+      ],
+      stringBottom: [
+        { at: 0, rotate: -32.6, scale: 1.11, squash: 0.901 },
+        { at: 0.08, rotate: -32.6, scale: 1.11, squash: 0.901 },
+        { at: 0.14, rotate: 6, scale: 1, squash: 1 },
+        { at: 0.2, rotate: -3, scale: 1, squash: 1 },
+        { at: 0.28, rotate: 0, scale: 1, squash: 1 },
+        { at: 1, rotate: 0, scale: 1, squash: 1 },
+      ],
+      head: turn([0, 5], [0.08, 5], [0.2, -3], [0.5, 1], [1, 0]),
+      cloak: turn([0, -3], [0.2, -8], [0.5, 3], [1, 0]),
+      quiver: turn([0, 0], [0.2, -4], [0.6, 1], [1, 0]),
+      legs: [
+        { at: 0, squash: 1.04 },
+        { at: 0.2, squash: 0.98 },
+        { at: 1, squash: 1 },
+      ],
     },
   },
   /** Split the sky: the bow tips up and the shot goes high over the line. */

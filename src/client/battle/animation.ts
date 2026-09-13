@@ -169,6 +169,15 @@ export function poseToTransform(p: Required<Omit<Pose, "at">>) {
   );
 }
 
+/**
+ * The clips that deliver a move, whose markers a trace reports. A flinch or a
+ * crouch has a derived "contact" too — its middle — that is not a blow.
+ */
+const DELIVERS = new Set<ClipName>(["attack", "signature", "cast", "block", "release"]);
+
+/** Contact times per clip and facing, for tracing. */
+const CONTACTS = new WeakMap<Clip, { left?: number[]; right?: number[] }>();
+
 type Sampled = Required<Omit<Pose, "at">>;
 const REST: Sampled = { x: 0, y: 0, scale: 1, rotate: 0, squash: 1, flash: 0 };
 
@@ -326,6 +335,15 @@ export class Animator {
 
   private clock: () => number;
 
+  /**
+   * Development only: told the moment the clip on screen passes one of its
+   * markers — a strike's contact, a shot's release — in the frame that draws
+   * it. `facing` is needed to find a clip's derived contact.
+   */
+  trace?: (marker: "contact" | "release", clip: ClipName, at: number) => void;
+  facing: 1 | -1 = 1;
+  private passed: { state: Playing; t: number } | null = null;
+
   constructor(
     rig: Rig,
     phase = Math.random(),
@@ -482,6 +500,18 @@ export class Animator {
   play(name: ClipName, then?: ClipName, opts: PlayOptions = {}) {
     const { name: resolved, clip } = this.resolve(name);
     const current = this.playing;
+    // A flinch never cuts a unit's own blow short. Hit back mid-strike — by
+    // thorns, by a counter — it finishes the strike it is drawing, so the
+    // blow that the choreography timed its hit to is still seen to land; the
+    // hit on it still shows its number, its effect and its sound.
+    if (
+      resolved === "hurt" &&
+      current &&
+      !current.clip.loop &&
+      DELIVERS.has(current.name) &&
+      this.clock() - current.start < this.length(current)
+    )
+      return;
     // A clip that ends by holding its last pose — a fall — is not restarted
     // by being asked for again; the fallen do not get up to fall twice.
     if (
@@ -610,6 +640,8 @@ export class Animator {
     if (!state) return sample(GENERIC.idle!, 0);
     const length = this.length(state);
     let t = (now - state.start) / length;
+    if (this.trace && !state.clip.loop && DELIVERS.has(state.name))
+      this.markers(state, t, now);
     if (state.clip.loop) t = (((t + this.phase) % 1) + 1) % 1;
     else if (t >= 1) {
       t = 1;
@@ -695,6 +727,25 @@ export class Animator {
       }
     }
     return pose;
+  }
+
+  /** Report the markers this frame has carried the clip past. */
+  private markers(state: Playing, t: number, now: number) {
+    const from = this.passed?.state === state ? this.passed.t : -1e-9;
+    this.passed = { state, t };
+    if (t <= from) return;
+    const crossed = (m: number) => from < m && m <= t;
+    // Deriving a contact samples the clip 200 times: once per clip is plenty.
+    const key = this.facing > 0 ? "right" : "left";
+    const known = CONTACTS.get(state.clip);
+    const marks = known?.[key] ?? contactTimes(state.clip, this.facing);
+    if (!known?.[key]) CONTACTS.set(state.clip, { ...known, [key]: marks });
+    // A shot's clip is timed by its release; its arrow's arrival is its hit.
+    if (state.name !== "release")
+      for (const m of marks)
+        if (crossed(m)) this.trace?.("contact", state.name, now);
+    const r = state.clip.markers?.release;
+    if (r !== undefined && crossed(r)) this.trace?.("release", state.name, now);
   }
 
   dispose() {

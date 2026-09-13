@@ -39,6 +39,8 @@ const PARTS = [
   "bow",
   "draw",
   "arrow",
+  "stringTop",
+  "stringBottom",
 ] as const;
 
 /**
@@ -300,10 +302,31 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
       {/* ---- the bow, held out front: taller than its owner ---- */}
       <g ref={hold("bow")} data-part="bow" style={at(fx, fy)}>
         <Limb d={`M${fx} ${fy} Q68 57 75 58`} fill={RAMP.sage[1]} width={8} />
+        {/*
+          The string, clear of the body: two halves, each hinged at its
+          own nock, so a draw can pull the middle back into a V to the
+          drawing hand and a release can snap it straight again.
+        */}
+        <path
+          ref={hold("stringTop")}
+          data-part="stringTop"
+          style={at(67.5, 23.5)}
+          d="M67.5 23.5 V57.75"
+          stroke="#e9dfcf"
+          strokeWidth={1.1}
+          strokeLinecap="round"
+        />
+        <path
+          ref={hold("stringBottom")}
+          data-part="stringBottom"
+          style={at(67.5, 92)}
+          d="M67.5 92 V57.75"
+          stroke="#e9dfcf"
+          strokeWidth={1.1}
+          strokeLinecap="round"
+        />
         <BaseWeapon>
           {" "}
-          {/* the string, clear of the body */}
-          <path d="M67.5 23.5 L67.5 92" stroke="#e9dfcf" strokeWidth={1.1} />
           <path
             d="M67.5 23.5 C76 32 80 44 77 58 C80 72 76 84 67.5 92"
             fill="none"

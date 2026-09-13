@@ -23,6 +23,7 @@ import { useStagehand, type Stagehand } from "../battle/stagehand";
 import { stageGeometry } from "../battle/stage-geometry";
 import type { PlanOptions } from "../battle/round-plan";
 import type { RoundTimeline } from "../battle/choreography";
+import type { Tracer } from "../battle/trace";
 
 /** What the Battle Lab reaches into. Development only. */
 export interface LabApi {
@@ -32,12 +33,17 @@ export interface LabApi {
   timeline: () => RoundTimeline | null;
   elapsed: () => number | null;
   frameStep: () => void;
+  /** Jump to the next beat. */
+  step: () => void;
+  skip: () => void;
   setPaused: (v: boolean) => void;
   setSpeed: (n: number) => void;
 }
 export interface LabHooks {
   plan?: PlanOptions;
   attach?: (api: LabApi | null) => void;
+  /** Record what each replay presents and when: see `battle/trace.ts`. */
+  trace?: Tracer;
 }
 
 /**
@@ -101,6 +107,7 @@ export function Combat({
         );
       },
       plan: choreoPlan,
+      onTrace: lab?.trace,
     },
     { loop, stagehand },
   );
@@ -121,11 +128,34 @@ export function Combat({
       timeline: () => replayRef.current.timeline(),
       elapsed: () => replayRef.current.elapsed(),
       frameStep: () => replayRef.current.frameStep(),
+      step: () => replayRef.current.step(),
+      skip: () => replayRef.current.skip(),
       setPaused: (v) => replayRef.current.setPaused(v),
       setSpeed: (n) => replayRef.current.setSpeed(n),
     });
     return () => lab?.attach?.(null);
   }, [lab, stagehand, loop, animators]);
+  // Development only: the lab's tracer hears the rigs' markers and the
+  // projectiles as well as the director.
+  const trace = lab?.trace;
+  const unitIds = [...s.players, ...s.enemies].map((u) => u.id).join("|");
+  useEffect(() => {
+    if (!trace) return;
+    stagehand.trace = trace;
+    const ids = unitIds.split("|");
+    for (const id of ids)
+      animators.trace(
+        id,
+        s.enemies.some((e) => e.id === id) ? -1 : 1,
+        (marker, clip, at) => trace({ kind: marker, t: at, unit: id, name: clip }),
+      );
+    return () => {
+      stagehand.trace = undefined;
+      for (const id of ids) animators.trace(id, 1, null);
+    };
+    // The side of a unit never changes; the ids are what matter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trace, stagehand, animators, unitIds]);
   const b = replay.beat;
 
   const list = abilities(

@@ -59,6 +59,15 @@ export interface Animators {
   rig: (id: string) => Rig | undefined;
   /** The ids of every unit with an animator. */
   ids: () => string[];
+  /**
+   * Development only: report each unit's clip markers as its rig passes
+   * them. `facing` finds a clip's derived contact; null stops tracing.
+   */
+  trace: (
+    id: string,
+    facing: 1 | -1,
+    fn: ((marker: "contact" | "release", clip: ClipName, at: number) => void) | null,
+  ) => void;
 }
 
 export interface AnimatorOptions {
@@ -79,8 +88,11 @@ export function useAnimators({ still = false, loop }: AnimatorOptions): Animator
   stillRef.current = still;
 
   /** A new animator, on the stage's clock, at its speed and stillness. */
+  const traces = useRef(
+    new Map<string, { facing: 1 | -1; fn: NonNullable<Animator["trace"]> }>(),
+  );
   const create = useCallback(
-    (spriteSet: string | undefined) => {
+    (spriteSet: string | undefined, id?: string) => {
       const animator = new Animator(
         rigFor(spriteSet),
         Math.random(),
@@ -88,6 +100,11 @@ export function useAnimators({ still = false, loop }: AnimatorOptions): Animator
       );
       animator.setSpeed(speed.current);
       animator.setStill(stillRef.current);
+      const traced = id ? traces.current.get(id) : undefined;
+      if (traced) {
+        animator.facing = traced.facing;
+        animator.trace = traced.fn;
+      }
       return animator;
     },
     [loop],
@@ -121,7 +138,7 @@ export function useAnimators({ still = false, loop }: AnimatorOptions): Animator
         existing.setRig(rigFor(spriteSet));
         return;
       }
-      units.current.set(id, create(spriteSet));
+      units.current.set(id, create(spriteSet, id));
     },
     [create],
   );
@@ -139,7 +156,7 @@ export function useAnimators({ still = false, loop }: AnimatorOptions): Animator
       // `register` only ever swaps the rig on an existing instance.
       let animator = units.current.get(id);
       if (!animator && node) {
-        animator = create(undefined);
+        animator = create(undefined, id);
         units.current.set(id, animator);
       }
       animator?.attachPart(part, node);
@@ -177,6 +194,15 @@ export function useAnimators({ still = false, loop }: AnimatorOptions): Animator
   );
   const rig = useCallback((id: string) => rigs.current.get(id), []);
   const ids = useCallback(() => [...units.current.keys()], []);
+  const trace = useCallback<Animators["trace"]>((id, facing, fn) => {
+    if (fn) traces.current.set(id, { facing, fn });
+    else traces.current.delete(id);
+    const animator = units.current.get(id);
+    if (animator) {
+      animator.facing = facing;
+      animator.trace = fn ?? undefined;
+    }
+  }, []);
 
   return useMemo(
     () => ({
@@ -191,6 +217,7 @@ export function useAnimators({ still = false, loop }: AnimatorOptions): Animator
       current,
       rig,
       ids,
+      trace,
     }),
     [
       register,
@@ -204,6 +231,7 @@ export function useAnimators({ still = false, loop }: AnimatorOptions): Animator
       current,
       rig,
       ids,
+      trace,
     ],
   );
 }
