@@ -139,8 +139,10 @@ with iron, the enemy slack and dented).
 
 - **Boss** (`enemy=collector`): the swing pulls back so the boss stands whole
   in the foreground, its blow coming down on a smaller Reaver; the quiet puts
-  the boss's silhouette at the frame's edge; the impact frames up at the boss's
-  height with the Ironhide smaller, the dent at the boss's chest, a short shove.
+  the boss's silhouette across the aisle, twice the Ironhide's height; the
+  impact pulls back to the boss's full height, the Ironhide steps in so the
+  blade lands across its robe, and the dent, the dust and a short shove are
+  aimed at the blade (probed) rather than at the target's own chest.
 - **Large** falls between.
 
 ## FAST
@@ -264,9 +266,11 @@ leave the frame with them. Nothing is rebuilt on `.cine-look`.
 ## Where it is weakest
 
 - **The boss impact.** Against the Collector the Ironhide is a third of the
-  boss's height and the blade lands in its robe beside the key; it reads as a
-  blow, not as a beating. A wider two-shot or a lower camera looking up at the
-  boss would sell it better.
+  boss's height. The Ironhide was moved in and the boss back so the blade
+  lands across the robe rather than in the air beside the key, and the dent
+  and the dust were re-aimed onto the blade, but it still reads as a blow to
+  the hem of something enormous rather than as a beating. A camera looking up
+  from the boards would sell it better.
 - **The hides in the loft's background** read as ragged brown drapery at the
   top of the frame more than as cured hides; the foreground hides (the wipe,
   the quiet's pair) read as hides.

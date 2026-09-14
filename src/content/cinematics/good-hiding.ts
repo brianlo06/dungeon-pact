@@ -306,19 +306,19 @@ export const goodHiding: Cinematic = {
       framing: {
         boss: {
           camera: {
-            from: { x: 850, y: 540, zoom: 1.14, rotate: -3 },
-            to: { x: 866, y: 540, zoom: 1.06, rotate: -1 },
+            from: { x: 940, y: 560, zoom: 1.12, rotate: -3 },
+            to: { x: 956, y: 556, zoom: 1.04, rotate: -1 },
             ease: "out",
           },
           actors: [
-            { role: "target", at: [1060, 840], size: 400, face: -1, z: 1, react: [{ at: 0.04, clip: "hurt" }], shove: { at: 0.04, by: [22, 0] }, toTilt: 3 },
-            { role: "caster", at: [640, 850], to: [656, 850], ease: "out", size: 460, clip: "ult:hiding-strike", then: "ult:hiding-strike", look: "lit", z: 2 },
+            { role: "target", at: [1190, 845], size: 400, face: -1, z: 1, react: [{ at: 0.04, clip: "hurt" }], shove: { at: 0.04, by: [30, 0] }, toTilt: 4 },
+            { role: "caster", at: [800, 856], to: [816, 856], ease: "out", size: 470, clip: "ult:hiding-strike", then: "ult:hiding-strike", look: "lit", z: 2 },
           ],
           vfx: [
             { kind: "hiding-glare", at: 0, until: 1, layer: "back", params: { x: 900, y: 560, scale: 1.3 } },
             { kind: "hiding-hides", at: 0, until: 1, layer: "back", seed: 41, params: { mode: "jump", amp: 9, at: "160,120,0.8;420,80,0.7;1320,90,0.75;1580,130,0.85" } },
-            { kind: "hiding-dent", at: 0.04, until: 0.6, follow: "target", x: -60, y: -330, layer: "front", seed: 12, params: { mode: "drive", size: 460 } },
-            { kind: "hiding-dust", at: 0.05, until: 0.95, follow: "target", x: -40, y: -320, layer: "front", seed: 15, params: { n: 30, dir: -20, spread: 130, reach: 360, size: 18 } },
+            { kind: "hiding-dent", at: 0.04, until: 0.6, follow: "target", x: -240, y: -170, layer: "front", seed: 12, params: { mode: "drive", size: 380 } },
+            { kind: "hiding-dust", at: 0.05, until: 0.95, follow: "target", x: -220, y: -160, layer: "front", seed: 15, params: { n: 30, dir: -20, spread: 130, reach: 320, size: 16 } },
           ],
         },
       },
