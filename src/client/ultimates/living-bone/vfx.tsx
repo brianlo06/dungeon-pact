@@ -202,11 +202,11 @@ const BREAK = { x: 70.2, y: 14.5 };
 /** Splinters of bone off the break, each with a direction and a spin. */
 const SPLINTERS = (() => {
   const rand = seeded(17);
-  return Array.from({ length: 7 }, (_, i) => ({
-    a: -150 + i * 32 + (rand() - 0.5) * 20,
-    d: 7 + rand() * 9,
+  return Array.from({ length: 9 }, (_, i) => ({
+    a: -160 + i * 26 + (rand() - 0.5) * 20,
+    d: 5 + rand() * 8,
     r: (rand() - 0.5) * 300,
-    s: 0.5 + rand() * 0.7,
+    s: 0.22 + rand() * 0.3,
   }));
 })();
 
@@ -431,7 +431,7 @@ const thread: Frame = (el, p, _age, ctx) => {
   setStyle(svg.querySelector<SVGElement>(".lb-take-velvet"), "opacity", f2(0.5 + 0.5 * Math.sin(tk * Math.PI * 3)));
   const bud = svg.querySelector<SVGGElement>(".lb-bud");
   const grow = ease("back", span(p, press + 0.05, press + 0.4));
-  const size = (target.h / 84) * 1.35 * grow;
+  const size = (target.h / 84) * 1.0 * grow;
   setAttr(bud, "transform", `scale(${f2(size)}) rotate(-70) translate(-70.2 -14.5)`);
   setStyle(svg.querySelector<SVGElement>(".lb-bud-leaf"), "opacity", f2(span(p, press + 0.4, press + 0.5)));
 
@@ -508,20 +508,20 @@ const board: Frame = (el, p) => {
   const body = unit ? document.querySelector<HTMLElement>(`.stage [data-unit="${CSS.escape(unit)}"] .combatant-body`) : null;
   const r = body?.getBoundingClientRect();
   if (graft && r) {
-    const size = r.height * 0.5;
+    const size = r.height * 0.9;
     setStyle(graft, "width", `${f1(size)}px`);
     setStyle(graft, "height", `${f1(size)}px`);
-    setStyle(graft, "left", `${f1(r.left + r.width * 0.5 - origin.left - size / 2)}px`);
-    setStyle(graft, "top", `${f1(r.top + r.height * 0.44 - origin.top - size / 2)}px`);
+    setStyle(graft, "left", `${f1(r.left + r.width * 0.52 - origin.left - size / 2)}px`);
+    setStyle(graft, "top", `${f1(r.top + r.height * 0.5 - origin.top - size / 2)}px`);
     const grow = ease("back", span(p, 0.05, 0.4));
     setStyle(graft, "opacity", f2(span(p, 0.02, 0.1)));
     setStyle(graft, "--g", f2(grow));
-    setStyle(graft.querySelector<SVGElement>(".lb-board-velvet"), "opacity", f2(0.55 + 0.45 * Math.sin(p * Math.PI * 2.5)));
+    setStyle(graft.querySelector<SVGElement>(".lb-board-velvet"), "opacity", f2(0.7 + 0.3 * Math.sin(p * Math.PI * 2.5)));
     graft.querySelectorAll<SVGCircleElement>(".lb-board-motes circle").forEach((c) => {
       const i = Number(c.dataset.i);
       const t = (p * 1.6 + i * 0.17) % 1;
-      setAttr(c, "cx", f1(Math.sin(i * 2.1 + t * 4) * 14));
-      setAttr(c, "cy", f1(20 - t * 70));
+      setAttr(c, "cx", f1(Math.sin(i * 2.1 + t * 4) * 16));
+      setAttr(c, "cy", f1(24 - t * 84));
       setStyle(c, "opacity", f2(Math.sin(t * Math.PI) * 0.9 * span(p, 0.1, 0.3)));
     });
   } else setStyle(graft, "opacity", "0");

@@ -32,7 +32,7 @@ import { face } from "../../battle/face";
 const turn = (...keys: [number, number][]): Pose[] => keys.map(([at, rotate]) => ({ at, rotate }));
 
 /** The hand where it holds the tine: up at the crown, forward of the face. */
-const AT_CROWN: Omit<Pose, "at"> = { rotate: -92, x: 0.05, y: -0.17, scale: 1.05 };
+const AT_CROWN: Omit<Pose, "at"> = { rotate: -92, x: 0.01, y: -0.09, scale: 1.05 };
 
 /**
  * On the battlefield, as the round stops: the head lifts, the open hand
@@ -50,8 +50,8 @@ const turnUp: Clip = {
     head: turn([0, 0], [0.5, -6], [1, -5]),
     hand: [
       { at: 0, rotate: 0, x: 0, y: 0, scale: 1 },
-      { at: 0.5, rotate: -58, x: 0.03, y: -0.08 },
-      { at: 1, rotate: -78, x: 0.05, y: -0.12 },
+      { at: 0.5, rotate: -58, x: 0.02, y: -0.04 },
+      { at: 1, rotate: -78, x: 0.02, y: -0.06 },
     ],
     staff: turn([0, 0], [0.4, -3], [1, -2]),
     lantern: turn([0, 0], [0.25, -10], [0.5, 8], [0.75, -4], [1, 0]),
@@ -68,7 +68,7 @@ const grip: Clip = {
   poses: [{ at: 0 }, { at: 1 }],
   parts: {
     hand: [
-      { at: 0, rotate: -78, x: 0.05, y: -0.12, scale: 1 },
+      { at: 0, rotate: -78, x: 0.02, y: -0.06, scale: 1 },
       { at: 0.4, ...AT_CROWN, scale: 1.03 },
       { at: 0.55, ...AT_CROWN, scale: 1.06 },
       { at: 1, ...AT_CROWN },
@@ -135,10 +135,10 @@ const snap: Clip = {
   parts: {
     hand: [
       { at: 0, ...AT_CROWN, scale: 1.1 },
-      { at: 0.06, rotate: -38, x: 0.1, y: -0.02, scale: 1.1 },
-      { at: 0.18, rotate: -28, x: 0.11, y: 0, scale: 1.08 },
-      { at: 0.5, rotate: -34, x: 0.1, y: -0.01, scale: 1.06 },
-      { at: 1, rotate: -32, x: 0.1, y: -0.01, scale: 1.06 },
+      { at: 0.06, rotate: -62, x: 0.09, y: -0.07, scale: 1.1 },
+      { at: 0.18, rotate: -50, x: 0.11, y: -0.05, scale: 1.08 },
+      { at: 0.5, rotate: -44, x: 0.1, y: -0.04, scale: 1.06 },
+      { at: 1, rotate: -40, x: 0.1, y: -0.03, scale: 1.06 },
     ],
     head: [
       { at: 0, rotate: 6.5, x: 0 },
@@ -186,7 +186,7 @@ const give: Clip = {
   ],
   parts: {
     hand: [
-      { at: 0, rotate: -32, x: 0.1, y: -0.01, scale: 1.06 },
+      { at: 0, rotate: -40, x: 0.1, y: -0.03, scale: 1.06 },
       { at: 0.4, rotate: -26, x: 0.12, y: -0.02, scale: 1.08 },
       { at: 0.5, rotate: -20, x: 0.15, y: -0.03, scale: 1.12 },
       { at: 0.62, rotate: -18, x: 0.155, y: -0.03, scale: 1.12 },

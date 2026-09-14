@@ -195,7 +195,16 @@
   transform-origin: 0 0;
 }
 .lb-board-graft .lb-board-bud {
-  transform: scale(calc(var(--g, 0) * 1.1)) rotate(-70deg) translate(-70.2px, -14.5px);
+  transform: scale(calc(var(--g, 0) * 2.6)) rotate(-70deg) translate(-78px, -16px);
+}
+.lb-board-graft .lb-bud-ink {
+  stroke-width: 4.2;
+}
+.lb-board-graft .lb-bud-bone {
+  stroke-width: 2;
+}
+.lb-board-motes circle {
+  r: 2.2;
 }
 .lb-board-graft .lb-bud-leaf {
   opacity: calc(clamp(0, (var(--g, 0) - 0.8) * 5, 1));

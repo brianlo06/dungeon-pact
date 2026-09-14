@@ -52,10 +52,10 @@ export const voices: Record<string, Voice> = {
   "bone-motif": {
     bus: "sfx",
     render: (c, o, t) => {
-      whistle(c, o, t, 57, 0.16, 0.09);
-      whistle(c, o, t + 0.24, 62, 0.14, 0.085);
-      whistle(c, o, t + 0.46, 60, 0.12, 0.08);
-      whistle(c, o, t + 0.7, 64, 0.5, 0.1);
+      whistle(c, o, t, 57, 0.16, 0.11);
+      whistle(c, o, t + 0.24, 62, 0.14, 0.1);
+      whistle(c, o, t + 0.46, 60, 0.12, 0.095);
+      whistle(c, o, t + 0.7, 64, 0.5, 0.12);
       swell(c, o, t, { type: "sine", freq: hz(33), gain: 0.05, attack: 0.3, hold: 0.5, release: 0.6 });
     },
   },
@@ -77,10 +77,10 @@ export const voices: Record<string, Voice> = {
   "bone-snap": {
     bus: "sfx",
     render: (c, o, t) => {
-      crash(c, o, t, { seconds: 0.03, gain: 0.9, type: "highpass", freq: 2600, q: 0.6 });
+      crash(c, o, t, { seconds: 0.03, gain: 0.78, type: "highpass", freq: 2600, q: 0.6 });
       for (let i = 0; i < 4; i++)
         crash(c, o, t + 0.005 + i * 0.011, { seconds: 0.025, gain: 0.35, freq: 1500 + i * 500, q: 8 });
-      hit(c, o, t, { type: "sine", from: 110, to: 28, gain: 0.95, attack: 0.002, decay: 0.7 });
+      hit(c, o, t, { type: "sine", from: 110, to: 28, gain: 0.88, attack: 0.002, decay: 0.7 });
       hit(c, o, t + 0.003, { type: "triangle", from: 420, to: 130, gain: 0.3, attack: 0.002, decay: 0.16 });
       crash(c, o, t + 0.006, { seconds: 0.35, gain: 0.4, type: "lowpass", freq: 700, sweepTo: 90, q: 0.6 });
       hit(c, o, t + 0.02, { type: "sine", from: hz(86), to: hz(85), gain: 0.08, attack: 0.004, decay: 0.9 });

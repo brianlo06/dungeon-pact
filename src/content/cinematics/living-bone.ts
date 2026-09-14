@@ -84,8 +84,8 @@ export const livingBone: Cinematic = {
       fastMs: 400,
       transition: { kind: "black", ms: 50 },
       camera: {
-        from: { x: 905, y: 395, zoom: 2.3, rotate: -8 },
-        to: { x: 915, y: 385, zoom: 2.55, rotate: -6 },
+        from: { x: 860, y: 480, zoom: 2.3, rotate: -8 },
+        to: { x: 872, y: 472, zoom: 2.55, rotate: -6 },
         ease: "out",
       },
       background: "bone-shedding",
@@ -105,8 +105,8 @@ export const livingBone: Cinematic = {
       ],
       vfx: [
         { kind: "bone-crown", at: 0, until: 1, params: { graspFrom: 0, graspTo: 1, graspA: 0.36, graspB: 0.6, tine: 0, bead: 0 } },
-        { kind: "glint", at: 0.62, until: 0.8, x: 1048, y: 410, scale: 0.5, color: BONE, layer: "front" },
-        { kind: "motes", at: 0, until: 1, x: 900, y: 420, scale: 0.7, color: JUNIPER, layer: "front", seed: 21, params: { still: true } },
+        { kind: "glint", at: 0.62, until: 0.8, x: 930, y: 468, scale: 0.5, color: BONE, layer: "front" },
+        { kind: "motes", at: 0, until: 1, x: 880, y: 470, scale: 0.7, color: JUNIPER, layer: "front", seed: 21, params: { still: true } },
       ],
       sound: [
         { at: 0.36, sfx: "bone-creak" },
@@ -206,8 +206,8 @@ export const livingBone: Cinematic = {
       fastMs: 440,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 930, y: 400, zoom: 2.2, rotate: 6 },
-        to: { x: 918, y: 418, zoom: 2.02, rotate: 2 },
+        from: { x: 930, y: 500, zoom: 1.95, rotate: 6 },
+        to: { x: 950, y: 530, zoom: 1.85, rotate: 2 },
         ease: "out",
       },
       background: "bone-shedding",
@@ -226,11 +226,11 @@ export const livingBone: Cinematic = {
       ],
       vfx: [
         { kind: "bone-crown", at: 0, until: 1, params: { graspFrom: 1, graspTo: 1, tineAt: 0.06, beadAt: 0.14, bead: 0 } },
-        { kind: "motes", at: 0.08, until: 1, x: 930, y: 400, scale: 1.4, color: JUNIPER, layer: "front", seed: 13 },
+        { kind: "motes", at: 0.08, until: 1, x: 900, y: 460, scale: 1.4, color: JUNIPER, layer: "front", seed: 13 },
       ],
       screen: [
         { kind: "two-tone", at: 0.05, ms: 70 },
-        { kind: "flash", at: 0.15, ms: 90, amount: 0.45, color: BONE },
+        { kind: "flash", at: 0.3, ms: 70, amount: 0.22, color: BONE },
       ],
       stop: [{ at: 0.06, ms: 150 }],
       shake: [
@@ -253,8 +253,8 @@ export const livingBone: Cinematic = {
       fastMs: 480,
       transition: { kind: "whip", ms: 120, dir: 1 },
       camera: {
-        from: { x: 770, y: 520, zoom: 1.42 },
-        to: { x: 812, y: 512, zoom: 1.5 },
+        from: { x: 790, y: 520, zoom: 1.42 },
+        to: { x: 846, y: 512, zoom: 1.52 },
         ease: "out",
       },
       background: "bone-shedding",
@@ -264,8 +264,8 @@ export const livingBone: Cinematic = {
         { role: "allies", at: [1010, 736], spread: [160, -8], size: 310, clip: "idle", look: "ghost", z: 2 },
         {
           role: "caster",
-          at: [560, 760],
-          to: [700, 752],
+          at: [600, 760],
+          to: [822, 752],
           ease: "out",
           size: 340,
           clip: "ult:bone-give",
