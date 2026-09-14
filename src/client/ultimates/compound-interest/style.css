@@ -114,6 +114,8 @@
 /* The walls answering. */
 .usury-stir-band {
   fill: #ffd9a0;
+  stroke: #160d08;
+  stroke-width: 2;
   opacity: 0;
 }
 

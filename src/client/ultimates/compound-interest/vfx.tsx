@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { seeded, type VfxContext, type VfxProps } from "../../cinematic/vfx";
 import { ease } from "../../cinematic/timeline";
+import { edge, FLOOR } from "./background";
 import "./style.css";
 
 /**
@@ -406,19 +407,27 @@ const brood: Frame = (el, p, age) => {
 
 /* ── The sink answering, and the ways in and out ───────────────────────── */
 
-/** Where the crust hangs on the walls: bands from the middle outwards. */
+/**
+ * Where the crust hangs on the walls of the sink, in twelve bands running
+ * round the rim of the hole from the Usurer's side to the target's: over the
+ * roof and along the floor at once.
+ */
 const STIR_BANDS = (() => {
   const rand = seeded(808);
   const bands: string[] = [];
   for (let b = 0; b < 12; b++) {
     let d = "";
-    for (let i = 0; i < 26; i++) {
-      // Left wall and right wall, mirrored, thickening towards the floor.
-      const side = i % 2 ? 1 : -1;
-      const t = rand();
-      const x = 800 + side * (250 + b * 62 + rand() * 40);
-      const y = 90 + t * 720 + Math.abs(x - 800) * 0.12;
-      const r = 5 + rand() * 9;
+    for (let i = 0; i < 30; i++) {
+      // The band's place round the rim, over the top and under, with a spread.
+      const k = (b + rand()) / 12;
+      const a = i % 2 ? Math.PI - k * Math.PI : Math.PI + k * Math.PI;
+      const [ex, ey] = edge(a);
+      const inward = Math.atan2(520 - ey, 800 - ex);
+      const reach = 30 + rand() * 120;
+      const x = ex + Math.cos(inward) * reach;
+      const y = ey + Math.sin(inward) * reach;
+      if (y > FLOOR + 30) continue;
+      const r = 7 + rand() * 12;
       d += ell(x, y, r, r * 0.84);
     }
     bands.push(d);
@@ -430,12 +439,14 @@ const STIR_BANDS = (() => {
 const stir: Frame = (el, p) => {
   const svg = el.querySelector("svg");
   if (!svg) return;
-  const front = p * 1.35 - 0.15;
+  const front = p * 1.4 - 0.2;
   for (const band of svg.querySelectorAll<SVGPathElement>(".usury-stir-band")) {
     const i = Number(band.dataset.band);
     if (!band.getAttribute("d")) setD(band, STIR_BANDS[i]);
-    const k = Math.max(0, 1 - Math.abs(front - i / 12) * 7);
-    setStyle(band, "opacity", (k * 0.85).toFixed(3));
+    // Lit as the ripple passes, and left a little brighter behind it.
+    const d = front - i / 12;
+    const k = d < 0 ? Math.max(0, 1 + d * 6) : Math.max(0.3, 1 - d * 3);
+    setStyle(band, "opacity", (k * 0.9).toFixed(3));
   }
 };
 

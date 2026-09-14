@@ -371,7 +371,7 @@ export const compoundInterest: Cinematic = {
       ],
       vfx: [
         { kind: "usury-glow", at: 0, until: 1, follow: "target", layer: "back" },
-        { kind: "usury-rush", at: 0.04, until: 0.42, layer: "back", params: { over: 0.1, hx: 0.16, hy: 0.02 } },
+        { kind: "usury-rush", at: 0.04, until: 0.42, layer: "front", params: { over: 0.1, hx: 0.16, hy: 0.02 } },
         {
           kind: "usury-brood",
           at: 0.02,
@@ -434,7 +434,7 @@ export const compoundInterest: Cinematic = {
           ],
           vfx: [
             { kind: "usury-glow", at: 0, until: 1, follow: "target", layer: "back", scale: 1.5 },
-            { kind: "usury-rush", at: 0.04, until: 0.42, layer: "back", params: { over: 0.1, hx: 0.16, hy: 0.02 } },
+            { kind: "usury-rush", at: 0.04, until: 0.42, layer: "front", params: { over: 0.1, hx: 0.16, hy: 0.02 } },
             {
               kind: "usury-brood",
               at: 0.02,

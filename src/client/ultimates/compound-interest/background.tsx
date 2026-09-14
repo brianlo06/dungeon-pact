@@ -36,7 +36,7 @@ const CX = 800;
 const CY = 520;
 const RX = 660;
 const RY = 410;
-const FLOOR = 820;
+export const FLOOR = 820;
 
 const wobble = seeded(1717);
 const BUMPS = Array.from({ length: 5 }, () => ({
@@ -46,7 +46,7 @@ const BUMPS = Array.from({ length: 5 }, () => ({
 }));
 
 /** The radius of the hole at an angle, in x and y, with the rock's lumps. */
-function edge(a: number) {
+export function edge(a: number) {
   let k = 1;
   for (const b of BUMPS) k += Math.sin(a * b.n + b.phase) * b.amp;
   return [CX + Math.cos(a) * RX * k, CY + Math.sin(a) * RY * k] as const;
