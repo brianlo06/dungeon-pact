@@ -107,6 +107,11 @@
   fill: #0d0b12 !important;
   stroke: #0d0b12 !important;
 }
+/* A shadow has no glow: the creatures' drawn glows are filters, and a copy is flat. */
+.elegy-shade-art *,
+.elegy-board-art * {
+  filter: none !important;
+}
 /* The shadow's edge: the same copy a shade larger, in half-mourning lilac. */
 .elegy-shade-halo {
   opacity: 0.55;
