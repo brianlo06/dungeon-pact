@@ -1,0 +1,288 @@
+/*
+ * Hallowed Ground — effects and space.
+ *
+ * Soot black-brown, cold iron, arc-white and the pale stone under the soot.
+ * No filters and no keyframes: the line and the soot are paths moved by
+ * attributes from the frame functions; the board's marks read --p.
+ */
+
+/* ---- the cold casting floor ---- */
+.hallow-joint {
+  stroke: #1f1e1d;
+  stroke-width: 3;
+  fill: none;
+}
+.hallow-joint-ray {
+  stroke: #1a1918;
+  stroke-width: 2.4;
+}
+.hallow-smear {
+  fill: #090807;
+  opacity: 0.7;
+}
+.hallow-trench {
+  fill: #050505;
+  stroke: #201f1e;
+  stroke-width: 4;
+}
+.hallow-trench-lip {
+  stroke: #2d2c2a;
+  stroke-width: 3;
+  fill: none;
+}
+.hallow-slag {
+  fill: #0d0e11;
+  stroke: #1d2026;
+  stroke-width: 3;
+}
+.hallow-column {
+  fill: #1b1e25;
+  stroke: #0a0b0e;
+  stroke-width: 3;
+}
+.hallow-column-lit {
+  fill: #2c313a;
+  opacity: 0.8;
+}
+.hallow-column-cap {
+  fill: #23262d;
+  stroke: #0a0b0e;
+  stroke-width: 2.5;
+}
+.hallow-chain {
+  fill: none;
+  stroke: #2a2d34;
+  stroke-width: 3;
+}
+.hallow-iron {
+  stroke: #2a2d34;
+}
+.hallow-iron-fill {
+  fill: #15171c;
+  stroke: #262930;
+  stroke-width: 3;
+}
+.hallow-iron-rim {
+  stroke: #363a43;
+  fill: none;
+}
+
+/* ---- world-sized drawings ---- */
+.cine-vfx > .hallow-score,
+.cine-vfx > .hallow-soot {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none !important;
+}
+.hallow-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+}
+
+/* the line */
+.hallow-groove-edge {
+  fill: none;
+  stroke: #2e2a27;
+  stroke-width: 11;
+  stroke-linecap: round;
+}
+.hallow-groove {
+  fill: none;
+  stroke: #040404;
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+.hallow-core {
+  fill: none;
+  stroke: #f4fbff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0;
+}
+.hallow-hot {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+.hallow-halo {
+  fill: url(#hallow-halo-g);
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+.hallow-throw {
+  fill: url(#hallow-throw-g);
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+.hallow-ember {
+  fill: #ffe9c8;
+  opacity: 0;
+}
+.hallow-spark {
+  fill: none;
+  stroke: #fff6e6;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  opacity: 0;
+}
+.hallow-flare {
+  opacity: 0;
+}
+.hallow-flare-spike {
+  fill: #f4fbff;
+}
+
+/* the soot */
+.hallow-stone {
+  fill: #c9c4b6;
+  stroke: #8f8a7d;
+  stroke-width: 2;
+  opacity: 0;
+}
+.hallow-stone-joints {
+  fill: none;
+  stroke: #8f8a7d;
+  stroke-width: 2.4;
+}
+.hallow-flake {
+  opacity: 0;
+  stroke-width: 1.4;
+}
+.hallow-soot-0 {
+  fill: #0e0c0b;
+  stroke: #000;
+}
+.hallow-soot-1 {
+  fill: #1d1916;
+  stroke: #000;
+}
+.hallow-soot-2 {
+  fill: #2a2523;
+  stroke: #0a0908;
+}
+.hallow-ash {
+  fill: #8a8f96;
+  stroke: #4a4d52;
+}
+
+/* ---- on the real battlefield ---- */
+.hallow-board {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: none !important;
+}
+/* the call: a scratch of light under the Sanctifier's feet */
+.hallow-board-knock {
+  position: absolute;
+  left: calc(var(--unit-w) * -0.55);
+  top: calc(var(--unit-w) * -0.12);
+  width: calc(var(--unit-w) * 1.1);
+  height: calc(var(--unit-w) * 0.36);
+  overflow: visible;
+}
+.hallow-board-scratch {
+  fill: none;
+  stroke: #0a0908;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  stroke-dasharray: 90;
+  stroke-dashoffset: calc(90 - var(--pe) * 90);
+}
+.hallow-board-scratch-hot {
+  fill: none;
+  stroke: #f4fbff;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 90;
+  stroke-dashoffset: calc(90 - var(--pe) * 90);
+  opacity: calc(0.9 - var(--p) * 0.6);
+}
+.hallow-board-spark {
+  fill: none;
+  stroke: #fff6e6;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  opacity: calc(clamp(0, (var(--p) - var(--d) * 0.5) * 4, 1) * clamp(0, 1 - (var(--p) - var(--d) * 0.5) * 2.5, 1));
+  transform: translateY(calc((var(--p) - var(--d) * 0.5) * -14px));
+}
+/* the return: the seam along the party's front (placed by the frame function) */
+.hallow-board-line {
+  position: absolute;
+  height: 20px;
+  overflow: visible;
+}
+.hallow-board-seam-halo {
+  stroke: #cdf5ff;
+  stroke-width: 14;
+  stroke-linecap: round;
+  opacity: calc(var(--seam, 0) * 0.35 * var(--breathe, 1));
+  vector-effect: non-scaling-stroke;
+}
+.hallow-board-seam {
+  stroke: #cdf5ff;
+  stroke-width: 5;
+  stroke-linecap: round;
+  opacity: calc(var(--seam, 0) * 0.85);
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 100;
+  stroke-dashoffset: calc(100 - var(--seam, 0) * 100);
+}
+.hallow-board-seam-core {
+  stroke: #ffffff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: calc(var(--seam, 0) * var(--breathe, 1));
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 100;
+  stroke-dashoffset: calc(100 - var(--seam, 0) * 100);
+}
+/* the return: a clean flagstone under each of the party */
+.hallow-board-stone {
+  position: absolute;
+  left: calc(var(--unit-w) * -0.7);
+  top: calc(var(--unit-w) * -0.16);
+  width: calc(var(--unit-w) * 1.4);
+  height: calc(var(--unit-w) * 0.36);
+  overflow: visible;
+  opacity: var(--pe);
+  transform: scale(calc(0.7 + var(--pe) * 0.3));
+}
+.hallow-board-flag {
+  fill: #c9c4b6;
+  stroke: #cdf5ff;
+  stroke-width: 1.6;
+}
+.hallow-board-flag-joint {
+  fill: none;
+  stroke: #8f8a7d;
+  stroke-width: 1.2;
+}
+.hallow-board-lift {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.hallow-board-lift i {
+  position: absolute;
+  width: calc(var(--unit-w) * 0.06 * var(--fs));
+  height: calc(var(--unit-w) * 0.04 * var(--fs));
+  background: #1d1916;
+  border-radius: 40% 60% 50% 30%;
+  left: calc(var(--unit-w) * var(--fx));
+  top: calc(var(--unit-w) * -0.05);
+  opacity: calc(clamp(0, (var(--p) - var(--fd)) * 6, 1) * clamp(0, 1 - (var(--p) - var(--fd)) * 1.6, 1));
+  transform: translateY(calc((var(--p) - var(--fd)) * var(--unit-h) * -0.5)) rotate(calc(var(--fr) * 1deg + var(--p) * 200deg));
+}
