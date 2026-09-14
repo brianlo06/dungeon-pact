@@ -105,7 +105,7 @@ const Edge = ({ cue }: VfxProps): ReactNode => {
   const id = fid(useIdSafe());
   const rand = seeded(cue.seed ?? 7);
   return (
-    <svg className="tide-world tide-edge-svg" viewBox="0 0 1600 900" data-reach={String(cue.params?.reach ?? 1000)}>
+    <svg className="tide-world tide-edge-svg" viewBox="0 0 1600 900" data-reach={String(cue.params?.reach ?? 500)}>
       <linearGradient id={`${id}-shallow`} x1="0" y1="0" x2="1" y2="0">
         <stop offset="0" stopColor={COBALT} stopOpacity="0.5" />
         <stop offset="1" stopColor={COBALT} stopOpacity="0" />
@@ -153,10 +153,10 @@ const edge: Frame = (el, p, age) => {
   const tips = fingertips(el);
   if (!tips) return;
   const t = age / 1000;
-  const far = num(svg.dataset.reach, 1000);
-  // It backs off fast at first and keeps going.
-  const k = ease("out", p);
-  const reach = 18 + k * far;
+  const far = num(svg.dataset.reach, 500);
+  // Under the fingers to begin with; then it backs off, and keeps going.
+  const k = ease("inOut", p);
+  const reach = -160 + k * far;
   const ys: number[] = [];
   for (let y = -450; y <= 1350; y += 30) ys.push(y);
   const line = (r: number) => ys.map((y) => `${f1(edgeAt(y, tips.x, tips.y, r, t))} ${y}`);
@@ -165,7 +165,7 @@ const edge: Frame = (el, p, age) => {
   setPath(svg.querySelector(".tide-edge-foam"), `M${line(reach - 3).join(" L")}`);
   // The shine: the sand between where the water was and where it is, dulling behind.
   const shine = svg.querySelector(".tide-edge-shine");
-  setPath(shine, `M${line(14).join(" L")} L${line(reach).reverse().join(" L")} Z`);
+  setPath(shine, `M${line(-160).join(" L")} L${line(reach).reverse().join(" L")} Z`);
   fade(shine, 0.32 * clamp(k * 3) * (1 - k * 0.5));
   // Threads: their heads at the edge, their tails on the sand behind it.
   for (const th of svg.querySelectorAll<SVGPathElement>(".tide-thread")) {
@@ -182,7 +182,7 @@ const edge: Frame = (el, p, age) => {
   for (const c of svg.querySelectorAll<SVGCircleElement>(".tide-clot")) {
     const at = num(c.dataset.at, 0.5);
     const y = num(c.dataset.y, 400);
-    const x = edgeAt(y, tips.x, tips.y, 18 + at * far * 0.85, 0) + 6;
+    const x = edgeAt(y, tips.x, tips.y, -160 + at * far * 0.85, 0) + 6;
     const since = k - at;
     if (since < 0) {
       fade(c, 0);
@@ -267,7 +267,7 @@ const sea: Frame = (el, p, age) => {
   // The bank on the horizon: the sea standing up where it has gone to.
   const bank = lerp(num(d.bank, 0), num(d.bankTo, 0), p);
   const H = 6 + bank * 96;
-  const x0 = Math.max(-800, edgeX(HORIZON, k) - 60);
+  const x0 = Math.min(2300, Math.max(-800, edgeX(HORIZON, k) - 60));
   const top: string[] = [];
   for (let x = x0; x <= 2400; x += 50) top.push(`${x} ${f1(HORIZON - H * (0.85 + 0.15 * Math.sin(x * 0.006 + t * 0.9)) - 3 * Math.sin(x * 0.03 + t * 2))}`);
   setPath(svg.querySelector(".tide-sea-bank"), `M${f1(x0)} ${HORIZON + 2} L${top.join(" L")} L2400 ${HORIZON + 2} Z`);
@@ -308,7 +308,7 @@ const drag: Frame = (el, _p, age) => {
 };
 
 const Fish = ({ cue }: VfxProps): ReactNode => (
-  <svg className="tide-world" viewBox="0 0 1600 900" data-x={String(cue.params?.x ?? 760)} data-y={String(cue.params?.y ?? 1010)}>
+  <svg className="tide-world" viewBox="0 0 1600 900" data-x={String(cue.params?.x ?? 820)} data-y={String(cue.params?.y ?? 880)}>
     <g className="tide-fish" stroke="#3b3a44" strokeWidth="3" strokeLinejoin="round">
       <path d="M-34 0 C-20 -16 16 -18 36 0 C16 18 -20 16 -34 0 Z" fill="#7d8798" />
       <path d="M36 0 L54 -14 L52 14 Z" fill="#5a6273" />
@@ -384,18 +384,20 @@ const Return = ({ cue }: VfxProps): ReactNode => {
       viewBox="0 0 1600 900"
       data-band={band}
       data-level={String(cue.params?.level ?? 0.55)}
-      data-heap={String(cue.params?.heap ?? 0.5)}
+      data-heap={String(cue.params?.heap ?? 0)}
       data-hit={String(cue.params?.hit ?? 0.12)}
     >
       <linearGradient id={`${id}-deep`} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor={COBALT} stopOpacity="0.4" />
-        <stop offset="0.3" stopColor="#1a3a8a" stopOpacity="0.62" />
-        <stop offset="1" stopColor={INK} stopOpacity="0.92" />
+        <stop offset="0" stopColor={COBALT} stopOpacity="0.34" />
+        <stop offset="0.35" stopColor="#2a4fa8" stopOpacity="0.46" />
+        <stop offset="1" stopColor={INK} stopOpacity="0.9" />
       </linearGradient>
       {band === "back" ? (
         <>
           {/* the sea back over the whole flat, to the horizon */}
           <path className="tide-back-body" fill={INK} fillOpacity="0.96" />
+          {/* the whole flat white with foam for the first frames it is back */}
+          <path className="tide-back-flash" fill="#dbe7f7" opacity="0" />
           <g className="tide-back-glints" stroke={COBALT} strokeWidth="3" strokeLinecap="round" strokeOpacity="0.7" fill="none">
             {Array.from({ length: 18 }, (_, i) => (
               <path key={i} className="tide-glint" data-x={(-600 + rand() * 3000).toFixed(0)} data-y={(HORIZON + 20 + rand() * 300).toFixed(0)} data-len={(30 + rand() * 120).toFixed(0)} data-off={rand().toFixed(3)} />
@@ -406,6 +408,14 @@ const Return = ({ cue }: VfxProps): ReactNode => {
         <>
           {/* the near surface over the figures, and the deep under it */}
           <path className="tide-front-body" fill={`url(#${id}-deep)`} />
+          <path className="tide-front-flash" fill="#e4eefb" opacity="0" />
+          {/* from under: the surface seen from below, a bright ceiling, and light coming down through it */}
+          <path className="tide-front-sky" fill="#3f63a8" opacity="0" />
+          <g className="tide-front-rays" stroke={FOAM} strokeLinecap="round" fill="none" opacity="0">
+            {Array.from({ length: 9 }, (_, i) => (
+              <path key={i} className="tide-ray" data-x={(-600 + i * 380 + rand() * 200).toFixed(0)} data-w={(6 + rand() * 14).toFixed(1)} data-off={rand().toFixed(3)} strokeOpacity={(0.1 + rand() * 0.14).toFixed(2)} />
+            ))}
+          </g>
           <path className="tide-front-under" fill="none" stroke={COBALT} strokeWidth="34" strokeOpacity="0.28" strokeLinecap="round" />
           <path className="tide-front-surface" fill="none" stroke={FOAM} strokeWidth="9" strokeLinecap="round" strokeOpacity="0.9" />
           {/* the undertow: everything under the surface dragged seaward */}
@@ -470,12 +480,16 @@ const returnFrame: Frame = (el, p, age, ctx) => {
   // The level: rises from below the frame to the target's chest by the hit, whipping up at the end.
   const rise = ease("in", clamp((p - 0.005) / (hit - 0.01)));
   const top = target ? target.y - target.h * num(d.level, 0.55) : 640;
-  const heap = num(d.heap, 0.5) * ease("out", clamp((p - hit) / 0.22));
+  const heap = num(d.heap, 0) * ease("out", clamp((p - hit) / 0.22));
   if (d.band === "back") {
     // The sea sweeps back across the whole flat from the right, ahead of the level.
     const k = lerp(1.05, -0.7, ease("in", clamp(p / (hit - 0.005))));
     const wob = (y: number) => 8 * Math.sin(y * 0.02 + t * 2.6);
     setPath(svg.querySelector(".tide-back-body"), seaPath(k, wob));
+    // Foam: the first frames it is back the whole sea is white, so the row reads black against it.
+    const flash = svg.querySelector(".tide-back-flash");
+    setPath(flash, seaPath(k, wob));
+    fade(flash, p < hit - 0.01 ? 0 : 0.9 * (1 - clamp((p - hit) / 0.1)));
     for (const g of svg.querySelectorAll<SVGPathElement>(".tide-glint")) {
       const x = num(g.dataset.x, 0);
       const y = num(g.dataset.y, HORIZON + 100);
@@ -501,6 +515,22 @@ const returnFrame: Frame = (el, p, age, ctx) => {
   };
   const line = xs.map((x) => `${x} ${f1(yAt(x))}`);
   setPath(svg.querySelector(".tide-front-body"), `M-800 ${NEAR + 80} L${line.join(" L")} L2400 ${NEAR + 80} Z`);
+  const frontFlash = svg.querySelector(".tide-front-flash");
+  setPath(frontFlash, `M-800 ${NEAR + 80} L${line.join(" L")} L2400 ${NEAR + 80} Z`);
+  fade(frontFlash, p < hit - 0.01 ? 0 : 0.92 * (1 - clamp((p - hit) / 0.1)));
+  // Under: the surface from below is a bright ceiling; whatever is above it is gone.
+  const sky = svg.querySelector(".tide-front-sky");
+  const deep = clamp((p - 0.4) / 0.2);
+  setPath(sky, `M-800 -450 L${line.join(" L")} L2400 -450 Z`);
+  fade(sky, deep * 0.97);
+  const rays = svg.querySelector(".tide-front-rays");
+  fade(rays, deep);
+  for (const r of svg.querySelectorAll<SVGPathElement>(".tide-ray")) {
+    const x = num(r.dataset.x, 0) + Math.sin(t * 0.8 + num(r.dataset.off, 0) * 6) * 30;
+    const y0 = yAt(x);
+    r.setAttribute("stroke-width", r.dataset.w ?? "8");
+    setPath(r, `M${f1(x)} ${f1(y0 + 4)} L${f1(x + 60)} ${f1(y0 + 520)}`);
+  }
   setPath(svg.querySelector(".tide-front-surface"), `M${line.join(" L")}`);
   setPath(svg.querySelector(".tide-front-under"), `M${xs.map((x) => `${x} ${f1(yAt(x) + 22)}`).join(" L")}`);
   const under = p > hit;
@@ -584,8 +614,8 @@ const Drain = ({ cue }: VfxProps): ReactNode => {
       <svg viewBox="-120 -100 240 120">
         <ellipse className="tide-drain-wet" cx="0" cy="2" rx="46" ry="9" fill="#0b1524" opacity="0" />
         <g className="tide-drain-sheet" opacity="0">
-          <path d="M-44 2 C-40 -8 40 -8 44 2 C40 12 -40 12 -44 2 Z" fill={COBALT} fillOpacity="0.45" />
-          <path d="M-46 0 C-42 -9 38 -9 42 -1" fill="none" stroke={FOAM} strokeWidth="2.5" strokeLinecap="round" strokeDasharray="6 4" />
+          <path d="M-70 2 C-64 -14 64 -14 70 2 C64 18 -64 18 -70 2 Z" fill={COBALT} fillOpacity="0.5" />
+          <path d="M-72 0 C-66 -15 60 -15 66 -2" fill="none" stroke={FOAM} strokeWidth="3.5" strokeLinecap="round" strokeDasharray="8 5" />
         </g>
         <g className="tide-drain-threads" stroke={COBALT} strokeWidth="1.8" strokeLinecap="round" fill="none">
           {Array.from({ length: 5 }, (_, i) => (
@@ -602,14 +632,14 @@ const drain: Frame = (el, p) => {
   if (!svg) return;
   const k = ease("out", p);
   const sheet = svg.querySelector(".tide-drain-sheet");
-  place(sheet, `translate(${f1(k * 150)} 0) scale(${f1(1 + k * 0.4)} ${f1(1 - k * 0.6)})`);
+  place(sheet, `translate(${f1(k * 210)} 0) scale(${f1(1 + k * 0.4)} ${f1(1 - k * 0.6)})`);
   fade(sheet, clamp(p * 6) * (1 - clamp((p - 0.5) / 0.5)));
   fade(svg.querySelector(".tide-drain-wet"), clamp(p * 4) * 0.7);
   for (const th of svg.querySelectorAll<SVGPathElement>(".tide-drain-thread")) {
     const y = num(th.dataset.y, 0);
     const off = num(th.dataset.off, 0);
-    const head = 10 + k * 150 - off * 30;
-    setPath(th, `M${f1(head - 30 - off * 20)} ${f1(y)} L${f1(head)} ${f1(y)}`);
+    const head = 10 + k * 220 - off * 40;
+    setPath(th, `M${f1(head - 40 - off * 30)} ${f1(y)} L${f1(head)} ${f1(y)}`);
     fade(th, p > 0.15 ? 0.6 * (1 - clamp((p - 0.6) / 0.4)) : 0);
   }
 };
@@ -619,18 +649,18 @@ const Standing = ({ cue }: VfxProps): ReactNode => {
   const rand = seeded(cue.seed ?? 3);
   return (
     <div className="tide-standing">
-      <svg viewBox="-120 -100 240 120">
-        <path className="tide-stand-body" fill={COBALT} fillOpacity="0.42" />
-        <path className="tide-stand-deep" fill={INK} fillOpacity="0.5" />
+      <svg viewBox="-80 -67 160 80">
+        <path className="tide-stand-body" fill={COBALT} fillOpacity="0.36" />
+        <path className="tide-stand-deep" fill={INK} fillOpacity="0.42" />
         <path className="tide-stand-line" fill="none" stroke={FOAM} strokeWidth="2.2" strokeLinecap="round" strokeOpacity="0.85" />
         <g className="tide-stand-streaks" stroke={COBALT} strokeWidth="1.6" strokeLinecap="round" fill="none">
           {Array.from({ length: 7 }, (_, i) => (
-            <path key={i} className="tide-stand-streak" data-y={(rand() * 14).toFixed(1)} data-off={rand().toFixed(3)} opacity="0" />
+            <path key={i} className="tide-stand-streak" data-y={(rand() * 18).toFixed(1)} data-off={rand().toFixed(3)} opacity="0" />
           ))}
         </g>
         <g className="tide-stand-foam" fill={FOAM}>
           {Array.from({ length: 8 }, (_, i) => (
-            <circle key={i} className="tide-stand-fleck" data-x={((rand() - 0.5) * 90).toFixed(1)} data-off={rand().toFixed(3)} r={(1.2 + rand() * 2).toFixed(1)} opacity="0" />
+            <circle key={i} className="tide-stand-fleck" data-x={((rand() - 0.5) * 90).toFixed(1)} data-off={rand().toFixed(3)} r={(1.6 + rand() * 2.6).toFixed(1)} opacity="0" />
           ))}
         </g>
       </svg>
@@ -643,24 +673,27 @@ const standing: Frame = (el, p, age) => {
   if (!svg) return;
   const t = age / 1000;
   const up = ease("out", clamp(p / 0.25));
-  // The water across its shins, its top edge swaying, deeper at the bottom.
-  const top = -18 * up;
-  const xs = [-60, -45, -30, -15, 0, 15, 30, 45, 60];
-  const line = xs.map((x) => `${x} ${f1(top + 2.5 * Math.sin(x * 0.12 + t * 3) + 1.5 * Math.sin(x * 0.3 - t * 4.5))}`);
-  setPath(svg.querySelector(".tide-stand-body"), `M-60 8 L${line.join(" L")} L60 8 Z`);
-  setPath(svg.querySelector(".tide-stand-deep"), `M-60 8 L-60 ${f1(top * 0.4)} L60 ${f1(top * 0.4)} L60 8 Z`);
-  setPath(svg.querySelector(".tide-stand-line"), `M${line.join(" L")}`);
+  const top = -26 * up;
+  // The water round its legs: a mound whose top sways, tapering to a pool at either side, so it sits on the ground.
+  const sway = (x: number) => 2.2 * Math.sin(x * 0.12 + t * 3) + 1.2 * Math.sin(x * 0.3 - t * 4.5);
+  const topAt = (x: number) => 4 + (top - 4) * Math.max(0, 1 - (x / 66) ** 2) + sway(x) * up;
+  const xs = [-70, -56, -42, -28, -14, 0, 14, 28, 42, 56, 70];
+  const line = xs.map((x) => `${x} ${f1(topAt(x))}`);
+  setPath(svg.querySelector(".tide-stand-body"), `M${line.join(" L")} C62 16 36 20 0 20 C-36 20 -62 16 -70 4 Z`);
+  setPath(svg.querySelector(".tide-stand-deep"), `M-70 4 C-62 14 -36 18 0 18 C36 18 62 14 70 4 C56 10 30 12 0 12 C-30 12 -56 10 -70 4 Z`);
+  setPath(svg.querySelector(".tide-stand-line"), `M${line.slice(1, -1).join(" L")}`);
   for (const s of svg.querySelectorAll<SVGPathElement>(".tide-stand-streak")) {
-    const y = top + 4 + num(s.dataset.y, 0) * up;
     const k = (num(s.dataset.off, 0) + t * 0.7) % 1;
-    const x0 = lerp(-70, 50, k);
+    const x0 = lerp(-50, 28, k);
+    const y = topAt(x0 + 11) + 4 + num(s.dataset.y, 0) * 0.6 * up;
     setPath(s, `M${f1(x0)} ${f1(y)} L${f1(x0 + 22)} ${f1(y)}`);
     fade(s, up * Math.sin(k * Math.PI) * 0.7);
   }
   for (const c of svg.querySelectorAll<SVGCircleElement>(".tide-stand-fleck")) {
     const off = num(c.dataset.off, 0);
-    c.setAttribute("cx", f1(num(c.dataset.x, 0) + Math.sin(t * 2 + off * 8) * 6 + ((t * 20 + off * 50) % 40)));
-    c.setAttribute("cy", f1(top - 1 + Math.sin(t * 4 + off * 5) * 1.5));
+    const cx = Math.max(-54, Math.min(54, num(c.dataset.x, 0) * 0.8 + Math.sin(t * 2 + off * 8) * 6 + ((t * 20 + off * 50) % 30)));
+    c.setAttribute("cx", f1(cx));
+    c.setAttribute("cy", f1(topAt(cx) - 1));
     fade(c, up * (0.5 + 0.4 * Math.sin(t * 5 + off * 9)));
   }
 };

@@ -49,8 +49,19 @@
   left: calc(var(--unit-w, 100px) * -1.2);
   top: calc(var(--unit-w, 100px) * -1);
 }
+.tide-standing svg {
+  width: calc(var(--unit-w, 100px) * 1.6);
+  height: calc(var(--unit-w, 100px) * 0.8);
+  left: calc(var(--unit-w, 100px) * -0.8);
+  top: calc(var(--unit-w, 100px) * -0.67);
+}
 
 /* In this film's silhouettes the drawing's own eye-lights stay lit, cold. */
 .ult-cinematic[data-cinematic="undertow"] .cine-actor[data-role="caster"] .ph-glow-eyes ellipse {
   fill: #cfe4ff !important;
+}
+
+/* A silhouette has no glow: the creatures' drawn glows are filters, and a shadow is flat. */
+.ult-cinematic[data-cinematic="undertow"] .cine-actor[data-look="silhouette"] .cine-look * {
+  filter: none !important;
 }

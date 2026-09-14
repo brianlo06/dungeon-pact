@@ -23,9 +23,9 @@ import "./style.css";
  * every shot.
  */
 
-const SKY = ["#0b0f18", "#131a28", "#1a2130", "#232c3e", "#34405a"];
-const SAND = "#8a7550";
-const RIB = "#6b5a3e";
+const SKY = ["#0b0f18", "#111724", "#171e2c", "#1e2636", "#27314a"];
+const SAND = "#7d6b4d";
+const RIB = "#5d4d34";
 const CREST = "#a08c62";
 const SHINE = "#b8a882";
 const SHINGLE = "#4a4644";
@@ -47,7 +47,11 @@ function Svg({ children, className = "" }: { children: ReactNode; className?: st
   );
 }
 
-/** The ripples the last water left in the sand: rows that crowd towards the horizon. */
+/**
+ * The ripples the last water left in the sand: rows of short crescents,
+ * staggered, broken, crowding towards the horizon. Never a line across the
+ * whole width: that reads as planking.
+ */
 function ribs(x0: number, x1: number, y0: number, y1: number, seed: number, near = 40, far = 7, width = 1) {
   const rand = seeded(seed);
   const dark: string[] = [];
@@ -57,20 +61,23 @@ function ribs(x0: number, x1: number, y0: number, y1: number, seed: number, near
   while (y > y0) {
     const depth = (y1 - y) / (y1 - y0);
     const gap = near + (far - near) * depth;
-    const amp = gap * 0.28;
-    const period = 90 + rand() * 90;
-    const phase = rand() * 6.3;
-    const pts: string[] = [];
-    for (let x = x0; x <= x1; x += 40) pts.push(`${x} ${(y + Math.sin(x / period + phase) * amp + Math.sin(x / 31 + j) * amp * 0.3).toFixed(1)}`);
-    dark.push(`M${pts.join(" L")}`);
-    light.push(`M${pts.map((p) => { const [px, py] = p.split(" "); return `${px} ${(Number(py) - gap * 0.32).toFixed(1)}`; }).join(" L")}`);
+    const bow = gap * 0.45;
+    let x = x0 + rand() * gap * 3;
+    while (x < x1) {
+      const len = (1.6 + rand() * 3.4) * gap;
+      const yy = y + (rand() - 0.5) * gap * 0.5;
+      const mid = x + len / 2;
+      dark.push(`M${x.toFixed(0)} ${yy.toFixed(1)} Q${mid.toFixed(0)} ${(yy - bow).toFixed(1)} ${(x + len).toFixed(0)} ${yy.toFixed(1)}`);
+      if (rand() < 0.7) light.push(`M${(x + len * 0.2).toFixed(0)} ${(yy - bow * 0.35).toFixed(1)} Q${mid.toFixed(0)} ${(yy - bow * 1.1).toFixed(1)} ${(x + len * 0.8).toFixed(0)} ${(yy - bow * 0.35).toFixed(1)}`);
+      x += len + gap * (0.6 + rand() * 2.2);
+    }
     y -= gap;
     j++;
   }
   return (
     <g fill="none" strokeLinecap="round">
-      <path d={light.join(" ")} stroke={CREST} strokeOpacity="0.5" strokeWidth={2.2 * width} />
-      <path d={dark.join(" ")} stroke={RIB} strokeOpacity="0.85" strokeWidth={3 * width} />
+      <path d={light.join(" ")} stroke={CREST} strokeOpacity="0.55" strokeWidth={2 * width} />
+      <path d={dark.join(" ")} stroke={RIB} strokeOpacity="0.8" strokeWidth={2.6 * width} />
     </g>
   );
 }
