@@ -168,7 +168,7 @@ function Loft() {
       {[...RANKS.keys()].reverse().map((r) => {
         const k = RANKS[r];
         const s = 1 - k;
-        const [, beamY] = toward(VX, roofY + 560, k);
+        const [, beamY] = toward(VX, roofY + 760, k);
         const aisle = 260 * s;
         const span = 1500 * s;
         const dim = 0.25 + 0.75 * s;
@@ -176,13 +176,15 @@ function Loft() {
           <g key={r}>
             <path d={`M${(VX - aisle - span).toFixed(0)} ${beamY.toFixed(0)} H${(VX + aisle + span).toFixed(0)}`} stroke="#0b0705" strokeWidth={(26 * s + 4).toFixed(1)} />
             {HIDES[r].map((h, i) => {
-              const x = VX + h.side * (aisle + span * h.off + 150 * s);
-              const scale = 3.6 * s * h.w;
+              const x = VX + h.side * (aisle + span * h.off * 0.9 + 200 * s);
+              const scale = 2.7 * s * h.w;
               const light = Math.round(60 + 110 * h.tone * dim);
               const fill = `rgb(${light + 40}, ${Math.round(light * 0.72 + 20)}, ${Math.round(light * 0.45 + 10)})`;
               return (
                 <g key={i} transform={`translate(${x.toFixed(0)} ${beamY.toFixed(0)}) rotate(${h.lean.toFixed(1)}) scale(${scale.toFixed(3)} ${(scale * h.len).toFixed(3)})`}>
                   <path d={HIDE} fill={fill} stroke="#0b0705" strokeWidth={3 / scale} strokeLinejoin="round" opacity={dim.toFixed(2)} />
+                  {/* The edge the louvres light, on the left of every hide. */}
+                  <path d="M-54 26 C-60 30 -70 34 -74 44 M-55 58 L-52 118" stroke="#e6d2b0" strokeWidth={2.4 / scale} fill="none" opacity={(0.55 * dim).toFixed(2)} strokeLinecap="round" />
                   <path d="M-40 18 C-20 26 20 26 40 18" stroke="#0b0705" strokeWidth={2 / scale} fill="none" opacity={0.5 * dim} />
                 </g>
               );

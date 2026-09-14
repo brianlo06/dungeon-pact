@@ -22,6 +22,7 @@ import "./style.css";
  *                  settling, or all jumping at once
  *   hiding-slats   bars of louvre shadow laid across the picture
  *   hiding-wipe    a hanging hide swung across the lens, to hide a cut
+ *   hiding-glare   the slat light blown out behind a blow, for the drawn frame
  *   hiding-board   on the board after: the iron hatch set over the Ironhide
  *                  (`kept`), a slack, sagging dent over the enemy (`spent`)
  *
@@ -94,7 +95,7 @@ const Dust = ({ cue }: VfxProps) => {
 
 /* ── The dent ──────────────────────────────────────────────────────────── */
 
-const RINGS = 4;
+const RINGS = 3;
 
 const Dent = ({ cue }: VfxProps) => {
   const p = cue.params ?? {};
@@ -106,16 +107,16 @@ const Dent = ({ cue }: VfxProps) => {
       {mode === "in" && (
         <>
           <clipPath id={id}>
-            <path d={lump(seed + 40, 0.62, 0.3, 7)} />
+            <path d={lump(seed + 40, 0.95, 0.3, 7)} />
           </clipPath>
           {/* The iron the skin sets into where the blow went in. */}
           <g className="hiding-set">
             <g clipPath={`url(#${id})`}>
-              <rect x={-1} y={-1} width={2} height={2} fill={IRON} opacity={0.34} />
+              <rect x={-1} y={-1} width={2} height={2} fill={IRON} opacity={0.3} />
               <path
-                d={Array.from({ length: 13 }, (_, i) => `M${(-1 + i * 0.16).toFixed(2)} -1 l-0.6 2`).join(" ")}
-                stroke="#3a4650"
-                strokeWidth={0.035}
+                d={Array.from({ length: 16 }, (_, i) => `M${(-1 + i * 0.14).toFixed(2)} -1 l-0.6 2`).join(" ")}
+                stroke="#dfe7ec"
+                strokeWidth={0.04}
               />
               <path
                 d={Array.from({ length: 13 }, (_, i) => `M${(-1.4 + i * 0.16).toFixed(2)} -1 l0.5 2`).join(" ")}
@@ -124,14 +125,15 @@ const Dent = ({ cue }: VfxProps) => {
                 opacity={0.7}
               />
             </g>
-            <path d={lump(seed + 40, 0.62, 0.3, 7)} fill="none" stroke={INK} strokeWidth={0.05} />
-            <path className="hiding-glint" d="M-0.34 -0.3 Q0 -0.44 0.3 -0.28" stroke="#f1f5f7" strokeWidth={0.06} strokeLinecap="round" fill="none" />
+            <path d={lump(seed + 40, 0.95, 0.3, 7)} fill="none" stroke={INK} strokeWidth={0.05} opacity={0.6} />
+            <path className="hiding-glint" d="M-0.5 -0.46 Q0 -0.66 0.46 -0.44" stroke="#f1f5f7" strokeWidth={0.06} strokeLinecap="round" fill="none" />
           </g>
         </>
       )}
       {Array.from({ length: RINGS }, (_, i) => (
         <g key={i} className="hiding-ring" style={v({ "--i": i })}>
-          <path d={lump(seed + i * 7, 1, 0.2)} fill="none" stroke={INK} strokeWidth={0.11} vectorEffect="non-scaling-stroke" />
+          <path d={lump(seed + i * 7, 1, 0.2)} fill="none" stroke={LIME} strokeWidth={0.1} opacity={0.7} />
+          <path d={lump(seed + i * 7, 1, 0.2)} fill="none" stroke={INK} strokeWidth={0.045} />
         </g>
       ))}
       {mode === "drive" && (
@@ -203,6 +205,46 @@ const Wipe = ({ cue }: VfxProps) => (
   </div>
 );
 
+/* ── The glare ─────────────────────────────────────────────────────────── */
+
+/**
+ * The slat light blown out behind the blow: a field of pale bars laid behind
+ * the figures. On the two-tone frame it is what turns iron while the figures
+ * go to ink; after it, it sinks back to the loft's own light.
+ */
+const Glare = ({ cue }: VfxProps) => {
+  const p = cue.params ?? {};
+  const k = Number(p.scale ?? 1);
+  const hold = p.hold !== undefined;
+  const seed = cue.seed ?? 51;
+  return (
+    <svg
+      className="hiding-glare"
+      data-hold={hold ? "" : undefined}
+      viewBox="-900 -600 1800 1200"
+      aria-hidden="true"
+      style={v({ left: `${Number(p.x ?? 800)}px`, top: `${Number(p.y ?? 500)}px`, "--gk": k, "--go": Number(p.hold ?? 1) })}
+    >
+      <defs>
+        <radialGradient id={`hiding-glare-fade-${seed}`} cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor={LIME} stopOpacity="0.95" />
+          <stop offset="0.6" stopColor={LIME} stopOpacity="0.55" />
+          <stop offset="1" stopColor={LIME} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse rx={880} ry={580} fill={`url(#hiding-glare-fade-${seed})`} />
+      {!hold && (
+        /* The dent at the size of the room: lumpy rings round the blow, pressed in. */
+        <g className="hiding-glare-rings">
+          {[0, 1].map((i) => (
+            <path key={i} d={lump(seed + i * 3, 1, 0.16)} transform={`scale(${300 + i * 260})`} fill="none" stroke={INK} strokeWidth={(0.03 - i * 0.008).toFixed(3)} opacity={0.8 - i * 0.2} />
+          ))}
+        </g>
+      )}
+    </svg>
+  );
+};
+
 /* ── On the board ──────────────────────────────────────────────────────── */
 
 const Board = ({ cue }: VfxProps) => {
@@ -218,8 +260,8 @@ const Board = ({ cue }: VfxProps) => {
           </clipPath>
           <g className="hiding-board-set">
             <g clipPath={`url(#${id})`}>
-              <rect x={-1.2} y={-1.2} width={2.4} height={2.4} fill={IRON} opacity={0.24} />
-              <path d={Array.from({ length: 16 }, (_, i) => `M${(-1.4 + i * 0.17).toFixed(2)} -1.2 l-0.7 2.4`).join(" ")} stroke={IRON} strokeWidth={0.04} opacity={0.9} />
+              <rect x={-1.2} y={-1.2} width={2.4} height={2.4} fill={IRON} opacity={0.16} />
+              <path d={Array.from({ length: 12 }, (_, i) => `M${(-1.4 + i * 0.24).toFixed(2)} -1.2 l-0.7 2.4`).join(" ")} stroke={IRON} strokeWidth={0.035} opacity={0.6} />
             </g>
             <path d={lump(seed, 0.8, 0.22, 8)} fill="none" stroke={IRON} strokeWidth={0.06} />
             <path className="hiding-board-glint" d="M-0.46 -0.46 Q0 -0.64 0.44 -0.44" stroke="#f4f7f9" strokeWidth={0.07} strokeLinecap="round" fill="none" />
@@ -253,6 +295,7 @@ export const renderers: Record<string, (p: VfxProps) => ReactNode> = {
   "hiding-slats": Slats,
   "hiding-wipe": Wipe,
   "hiding-board": Board,
+  "hiding-glare": Glare,
 };
 
 /* ── Frames ────────────────────────────────────────────────────────────── */

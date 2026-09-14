@@ -31,13 +31,14 @@
   width: var(--sz);
   height: var(--sz);
   margin: calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2);
-  border-radius: 42% 58% 50% 46%;
+  border-radius: 20% 60% 30% 50%;
   background: #e6e0cf;
+  box-shadow: inset -1px -1px 0 rgba(90, 70, 50, 0.5);
   --k: clamp(0, calc((var(--p) - var(--d)) / (1 - var(--d))), 1);
   --ke: calc(1 - (1 - var(--k)) * (1 - var(--k)) * (1 - var(--k)));
   transform: translate(calc(var(--dx) * var(--ke)), calc(var(--dy) * var(--ke) + var(--fall) * var(--k) * var(--k)))
-    scale(calc(0.6 + var(--ke) * 0.9));
-  opacity: calc(clamp(0, (var(--p) - var(--d)) * 14, 1) * (0.85 - var(--k) * 0.85));
+    rotate(calc(var(--k) * 140deg)) scale(calc(1 - var(--ke) * 0.45), calc(0.55 - var(--ke) * 0.2));
+  opacity: calc(clamp(0, (var(--p) - var(--d)) * 14, 1) * (0.8 - var(--k) * 0.8));
 }
 
 /* ---- the dent ---- */
@@ -113,9 +114,9 @@
 
 /* ---- on the board ---- */
 .cine-anchored > .hiding-board {
-  width: calc(var(--unit-w) * 0.9);
-  height: calc(var(--unit-w) * 0.9);
-  top: calc(var(--unit-h) * -0.5);
+  width: calc(var(--unit-w) * 0.6);
+  height: calc(var(--unit-w) * 0.6);
+  top: calc(var(--unit-h) * -0.52);
   left: 0;
 }
 .hiding-board svg {
@@ -150,4 +151,23 @@
   left: 50%;
   top: 68%;
   transform: none;
+}
+
+/* ---- the glare behind the blow ---- */
+.cine-vfx > .hiding-glare {
+  position: absolute;
+  width: calc(1800px * var(--gk));
+  height: calc(1200px * var(--gk));
+  transform: translate(-50%, -50%) !important;
+  overflow: visible;
+  opacity: calc(1 - clamp(0, (var(--p) - 0.05) / 0.2, 1) * 0.82);
+}
+.cine-vfx > .hiding-glare[data-hold] {
+  opacity: var(--go);
+}
+.hiding-glare-rings {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  transform: scale(calc(1.2 - clamp(0, var(--p) / 0.12, 1) * 0.55));
+  opacity: calc(1 - clamp(0, (var(--p) - 0.05) / 0.08, 1));
 }

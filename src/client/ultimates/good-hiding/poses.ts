@@ -24,13 +24,13 @@ import { face } from "../../battle/face";
 const turn = (...keys: [number, number][]): Pose[] => keys.map(([at, rotate]) => ({ at, rotate }));
 
 /** The fist drawn in onto the chest, where it beats: pulled in across the body and turned down. */
-const ON_CHEST = { x: -0.13, y: 0.01, rotate: 34, scale: 0.94 };
+const ON_CHEST = { x: -0.14, y: -0.05, rotate: -8, scale: 0.94 };
 /** The fist drawn back off the chest for the next blow. */
-const OFF_CHEST = { x: -0.05, y: -0.01, rotate: -38, scale: 1.02 };
+const OFF_CHEST = { x: -0.02, y: -0.07, rotate: -62, scale: 1.04 };
 
 /** Arms wide: the fist thrown out and up, the cleaver arm swung back and down. */
-const WIDE_FIST = { x: 0.02, y: -0.01, rotate: -58, scale: 1.06 };
-const WIDE_CLEAVER = -24;
+const WIDE_FIST = { x: -0.02, y: 0.01, rotate: 64, scale: 1.02 };
+const WIDE_CLEAVER = 34;
 
 /**
  * The call, on the board: the point of the cleaver set on the floor, the fist
@@ -86,10 +86,9 @@ const dare: Clip = {
       { at: 0, rotate: 8, x: -0.08, y: 0.005, scale: 0.98 },
       { at: 0.14, ...OFF_CHEST },
       { at: 0.26, ...ON_CHEST },
-      { at: 0.36, rotate: 26, x: -0.12, y: 0.01, scale: 0.95 },
-      { at: 0.62, ...WIDE_FIST },
-      { at: 0.8, rotate: -62, x: 0.02, y: -0.012, scale: 1.07 },
-      { at: 1, rotate: -60, x: 0.02, y: -0.012, scale: 1.06 },
+      { at: 0.36, rotate: -2, x: -0.13, y: -0.04, scale: 0.95 },
+      { at: 0.62, ...WIDE_FIST, rotate: WIDE_FIST.rotate - 6 },
+      { at: 1, ...WIDE_FIST },
     ],
     cleaver: turn([0, -6], [0.3, -4], [0.62, WIDE_CLEAVER - 4], [1, WIDE_CLEAVER]),
     head: turn([0, -4], [0.26, 5], [0.4, 3], [0.7, -10], [1, -9]),
@@ -124,8 +123,8 @@ const open: Clip = {
   ],
   parts: {
     fist: [
-      { at: 0, rotate: -60, x: 0.02, y: -0.012, scale: 1.06 },
-      { at: 1, rotate: -54, x: 0.02, y: -0.01, scale: 1.05 },
+      { at: 0, ...WIDE_FIST },
+      { at: 1, ...WIDE_FIST, rotate: WIDE_FIST.rotate + 6 },
     ],
     cleaver: turn([0, WIDE_CLEAVER], [1, WIDE_CLEAVER + 2]),
     head: turn([0, -9], [0.6, -7], [1, -5]),
@@ -158,8 +157,8 @@ const take: Clip = {
   ],
   parts: {
     fist: [
-      { at: 0, rotate: -54, x: 0.02, y: -0.01, scale: 1.05 },
-      { at: 0.06, rotate: -40, x: 0.0, y: 0, scale: 1.02 },
+      { at: 0, ...WIDE_FIST, rotate: WIDE_FIST.rotate + 6 },
+      { at: 0.06, rotate: -80, x: -0.02, y: -0.02, scale: 1.04 },
       { at: 0.4, rotate: -30, x: 0.01, y: 0, scale: 1.02 },
       { at: 1, rotate: -26, x: 0.01, y: 0, scale: 1.02 },
     ],
@@ -225,7 +224,7 @@ const strike: Clip = {
     { at: 1, x: 0.07, y: 0.008, rotate: 7, squash: 0.97, scale: 1.01 },
   ],
   parts: {
-    cleaver: turn([0, 178], [0.04, 256], [0.22, 266], [0.55, 262], [1, 258]),
+    cleaver: turn([0, 170], [0.04, 222], [0.22, 232], [0.55, 230], [1, 228]),
     fist: [
       { at: 0, rotate: -34, x: 0, y: 0, scale: 1 },
       { at: 0.04, rotate: 40, x: -0.06, y: 0, scale: 0.96 },

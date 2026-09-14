@@ -80,8 +80,8 @@ export const goodHiding: Cinematic = {
       fastMs: 400,
       transition: { kind: "black", ms: 60 },
       camera: {
-        from: { x: 820, y: 800, zoom: 1.78, rotate: 7 },
-        to: { x: 812, y: 790, zoom: 1.9, rotate: 4 },
+        from: { x: 830, y: 770, zoom: 1.5, rotate: 7 },
+        to: { x: 822, y: 764, zoom: 1.6, rotate: 4 },
         ease: "out",
       },
       background: "hiding-loft",
@@ -91,7 +91,7 @@ export const goodHiding: Cinematic = {
         { role: "caster", at: [800, 1300], size: 1000, clip: "ult:hiding-dare", then: "ult:hiding-open", look: "lit", root: false },
       ],
       vfx: [
-        { kind: "hiding-dust", at: 0.26, until: 0.9, follow: "caster", x: -40, y: -560, layer: "front", seed: 8, params: { n: 18, dir: -120, spread: 150, reach: 150, size: 12 } },
+        { kind: "hiding-dust", at: 0.26, until: 0.9, follow: "caster", x: -20, y: -470, layer: "front", seed: 8, params: { n: 18, dir: -120, spread: 150, reach: 150, size: 12 } },
         { kind: "hiding-slats", at: 0, until: 1, layer: "screen", params: { angle: 104, gap: 34, bar: 18, dark: 0.55, shift: 6 } },
         { kind: "hiding-wipe", at: 0.84, until: 1, layer: "screen", params: { phase: "out" } },
       ],
@@ -122,7 +122,7 @@ export const goodHiding: Cinematic = {
       lighting: { exposure: 0.78, rim: [LIME, 0.4, -1], vignette: 0.48, letterbox: BARS },
       toLighting: { exposure: 0.84, rim: [LIME, 0.45, -1], vignette: 0.44, letterbox: BARS },
       actors: [
-        { role: "caster", at: [1080, 770], to: [1066, 772], size: 330, face: -1, clip: "ult:hiding-open", look: "lit", z: 1 },
+        { role: "caster", at: [1100, 800], to: [1086, 802], size: 400, face: -1, clip: "ult:hiding-open", look: "lit", z: 1 },
         {
           role: "target",
           at: [520, 1010],
@@ -159,7 +159,7 @@ export const goodHiding: Cinematic = {
             ease: "inOut",
           },
           actors: [
-            { role: "caster", at: [1160, 780], to: [1150, 782], size: 300, face: -1, clip: "ult:hiding-open", look: "lit", z: 1 },
+            { role: "caster", at: [1110, 800], to: [1100, 802], size: 360, face: -1, clip: "ult:hiding-open", look: "lit", z: 1 },
             { role: "target", at: [460, 1000], to: [490, 996], size: 440, face: 1, look: "lit", z: 3, react: [{ at: 0.5, clip: "attack" }] },
           ],
         },
@@ -177,8 +177,8 @@ export const goodHiding: Cinematic = {
       fastMs: 420,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 870, y: 740, zoom: 1.62 },
-        to: { x: 872, y: 742, zoom: 1.66 },
+        from: { x: 850, y: 800, zoom: 1.56 },
+        to: { x: 852, y: 802, zoom: 1.6 },
         ease: "linear",
       },
       background: "hiding-loft",
@@ -188,8 +188,8 @@ export const goodHiding: Cinematic = {
         { role: "caster", at: [800, 1500], size: 1200, clip: "ult:hiding-take", then: "ult:hiding-take", look: "lit", root: false },
       ],
       vfx: [
-        { kind: "hiding-dent", at: 0.02, until: 1, follow: "caster", x: 60, y: -700, layer: "front", seed: 6, params: { mode: "in", size: 260 } },
-        { kind: "hiding-dust", at: 0.03, until: 0.8, follow: "caster", x: 60, y: -700, layer: "front", seed: 13, params: { n: 20, dir: 180, spread: 170, reach: 220, size: 14 } },
+        { kind: "hiding-dent", at: 0.02, until: 1, follow: "caster", x: 30, y: -560, layer: "front", seed: 6, params: { mode: "in", size: 330 } },
+        { kind: "hiding-dust", at: 0.03, until: 0.8, follow: "caster", x: 30, y: -560, layer: "front", seed: 13, params: { n: 20, dir: 180, spread: 170, reach: 220, size: 14 } },
         { kind: "hiding-slats", at: 0, until: 1, layer: "screen", params: { angle: 100, gap: 40, bar: 22, dark: 0.5, shift: 12 } },
       ],
       screen: [{ kind: "flash", at: 0.02, ms: 40, color: LIME, amount: 0.35 }],
@@ -219,13 +219,14 @@ export const goodHiding: Cinematic = {
         ease: "linear",
       },
       background: "hiding-loft",
-      lighting: { exposure: 0.16, back: [LIME, 0.3], vignette: 0.86, letterbox: 0.15 },
-      toLighting: { exposure: 0.13, back: [LIME, 0.3], vignette: 0.9, letterbox: 0.15 },
+      lighting: { exposure: 0.16, back: [LIME, 0], vignette: 0.86, letterbox: 0.15 },
+      toLighting: { exposure: 0.13, back: [LIME, 0], vignette: 0.9, letterbox: 0.15 },
       actors: [
         { role: "caster", at: [590, 800], size: 360, clip: "ult:hiding-raise", then: "ult:hiding-raise", look: "silhouette", z: 2 },
         { role: "target", at: [1020, 800], size: 340, face: -1, look: "silhouette", z: 2, tilt: -7, toTilt: -6, react: [{ at: 0, clip: "idle" }] },
       ],
       vfx: [
+        { kind: "hiding-glare", at: 0, until: 1, layer: "back", seed: 52, params: { x: 800, y: 640, scale: 0.8, hold: 0.42 } },
         { kind: "hiding-hides", at: 0, until: 1, layer: "front", seed: 31, params: { mode: "settle", amp: 7, at: "300,250,0.85;1300,240,0.8" } },
         { kind: "motes", at: 0, until: 1, x: 800, y: 520, scale: 1.8, color: LIME, layer: "back", seed: 9, params: { still: true } },
       ],
@@ -268,7 +269,7 @@ export const goodHiding: Cinematic = {
       actors: [
         {
           role: "target",
-          at: [1000, 830],
+          at: [960, 830],
           size: 380,
           face: -1,
           z: 1,
@@ -276,11 +277,12 @@ export const goodHiding: Cinematic = {
           shove: { at: 0.04, by: [70, -4] },
           toTilt: 9,
         },
-        { role: "caster", at: [680, 834], to: [700, 834], ease: "out", size: 450, clip: "ult:hiding-strike", then: "ult:hiding-strike", look: "lit", z: 2 },
+        { role: "caster", at: [720, 834], to: [736, 834], ease: "out", size: 450, clip: "ult:hiding-strike", then: "ult:hiding-strike", look: "lit", z: 2 },
       ],
       vfx: [
+        { kind: "hiding-glare", at: 0, until: 1, layer: "back", params: { x: 890, y: 640 } },
         { kind: "hiding-hides", at: 0, until: 1, layer: "back", seed: 41, params: { mode: "jump", amp: 9, at: "260,190,0.7;520,160,0.6;1200,170,0.65;1460,200,0.75" } },
-        { kind: "hiding-dent", at: 0.04, until: 0.6, follow: "target", x: -20, y: -190, layer: "front", seed: 12, params: { mode: "drive", size: 300 } },
+        { kind: "hiding-dent", at: 0.04, until: 0.6, follow: "target", x: 40, y: -170, layer: "front", seed: 12, params: { mode: "drive", size: 220 } },
         { kind: "hiding-dust", at: 0.05, until: 0.95, follow: "target", x: 10, y: -180, layer: "front", seed: 15, params: { n: 26, dir: -20, spread: 120, reach: 260, size: 14 } },
       ],
       screen: [
@@ -295,7 +297,7 @@ export const goodHiding: Cinematic = {
       sound: [{ at: 0.03, sfx: "hiding-impact" }, { at: 0.05, sfx: "ult-boom" }],
       reveal: [{ at: 0.04, reveal: "impact" }],
       text: [
-        { kind: "impact", at: 0.05, until: 0.9, text: "$damage", x: 0.66, y: 0.2, rotate: 4 },
+        { kind: "impact", at: 0.05, until: 0.9, text: "$damage", x: 0.3, y: 0.22, rotate: -4 },
         { kind: "voice", at: 0.4, until: 1, text: "$voice.impact" },
       ],
       markers: [
@@ -305,15 +307,16 @@ export const goodHiding: Cinematic = {
       framing: {
         boss: {
           camera: {
-            from: { x: 860, y: 500, zoom: 1.06, rotate: -3 },
-            to: { x: 880, y: 500, zoom: 0.98, rotate: -1 },
+            from: { x: 850, y: 540, zoom: 1.14, rotate: -3 },
+            to: { x: 866, y: 540, zoom: 1.06, rotate: -1 },
             ease: "out",
           },
           actors: [
             { role: "target", at: [1060, 840], size: 400, face: -1, z: 1, react: [{ at: 0.04, clip: "hurt" }], shove: { at: 0.04, by: [22, 0] }, toTilt: 3 },
-            { role: "caster", at: [600, 840], to: [616, 840], ease: "out", size: 400, clip: "ult:hiding-strike", then: "ult:hiding-strike", look: "lit", z: 2 },
+            { role: "caster", at: [640, 850], to: [656, 850], ease: "out", size: 460, clip: "ult:hiding-strike", then: "ult:hiding-strike", look: "lit", z: 2 },
           ],
           vfx: [
+            { kind: "hiding-glare", at: 0, until: 1, layer: "back", params: { x: 900, y: 560, scale: 1.3 } },
             { kind: "hiding-hides", at: 0, until: 1, layer: "back", seed: 41, params: { mode: "jump", amp: 9, at: "160,120,0.8;420,80,0.7;1320,90,0.75;1580,130,0.85" } },
             { kind: "hiding-dent", at: 0.04, until: 0.6, follow: "target", x: -60, y: -330, layer: "front", seed: 12, params: { mode: "drive", size: 460 } },
             { kind: "hiding-dust", at: 0.05, until: 0.95, follow: "target", x: -40, y: -320, layer: "front", seed: 15, params: { n: 30, dir: -20, spread: 130, reach: 360, size: 18 } },
@@ -335,7 +338,10 @@ export const goodHiding: Cinematic = {
       background: "battlefield",
       lighting: { tint: [TIMBER, 0.44], letterbox: BARS },
       toLighting: { tint: [TIMBER, 0], letterbox: 0 },
-      actors: [{ role: "caster", at: [0, 0], size: 0, clip: "ult:hiding-settle" }],
+      actors: [
+        { role: "caster", at: [0, 0], size: 0, clip: "ult:hiding-settle" },
+        { role: "target", at: [0, 0], size: 0, clip: "hurt", clipAt: 0.1, then: "idle" },
+      ],
       vfx: [
         { kind: "hiding-board", at: 0.02, until: 1, anchor: "caster", seed: 9, params: { mode: "kept" } },
         { kind: "hiding-board", at: 0.1, until: 1, anchor: "targets", seed: 19, params: { mode: "spent" } },
