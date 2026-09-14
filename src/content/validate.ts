@@ -223,22 +223,67 @@ export function validateContent() {
     ])
       abilitySchema.parse(a);
   }
+  const supplyIds = items.filter((i) => i.slot === "supply").map((i) => i.id);
+  const outcomeSchema = z
+    .object({
+      id: z.string().min(1),
+      label: z.string().min(1),
+      text: z.string().min(1),
+      weight: z.number().positive(),
+      tone: z.enum(["good", "bad"]),
+      gold: z.number().int().optional(),
+      heal: z.number().int().optional(),
+      healShare: z.number().min(-1).max(1).optional(),
+      maxHp: z.number().int().optional(),
+      power: z.number().int().optional(),
+      supply: z.enum(supplyIds as [string, ...string[]]).optional(),
+      cleanse: z.boolean().optional(),
+      relic: z.boolean().optional(),
+      fight: z.enum(["combat", "elite"]).optional(),
+    })
+    .strict();
+  const percents = z.array(z.number().int().min(1).max(100)).min(1);
   for (const event of events) {
     unique(event.choices, "event choice");
     for (const c of event.choices) {
       z.object({
         cost: nonnegative,
-        heal: z.number().int(),
-        gold: nonnegative,
-        supply: z.string().optional(),
+        heal: z.number().int().optional(),
+        gold: nonnegative.optional(),
+        supply: z.enum(supplyIds as [string, ...string[]]).optional(),
         cleanse: z.boolean().optional(),
+        roll: z.array(outcomeSchema).min(2).optional(),
+        each: z.array(outcomeSchema).min(2).optional(),
+        press: z.literal(true).optional(),
       }).parse(c);
-      if (
-        c.supply &&
-        !items.some((i) => i.id === c.supply && i.slot === "supply")
-      )
-        throw Error(`Unknown event supply ${c.supply}`);
+      for (const list of [c.roll, c.each]) if (list) unique(list, "outcome");
+      if ([c.roll, c.each, c.press].filter(Boolean).length > 1)
+        throw Error(`${event.id}.${c.id} rolls more than one way`);
+      if (c.press && !event.press)
+        throw Error(`${event.id}.${c.id} presses an event with no rules`);
     }
+    if (event.press) {
+      const press = event.press;
+      percents.parse(press.chances);
+      if (press.kind === "search") {
+        z.array(outcomeSchema).min(1).parse(press.loot);
+        outcomeSchema.parse(press.bust);
+        unique(press.loot!, "loot");
+      } else {
+        outcomeSchema.parse(press.prize);
+        z.array(z.number().int().min(0)).min(1).parse(press.hurt);
+        // A dig must end: the odds have to reach a sure thing.
+        if (press.chances.at(-1) !== 100)
+          throw Error(`${event.id} can be dug forever`);
+      }
+    }
+    // The promise every chance event makes: you can always walk away, free.
+    const last = event.choices.at(-1)!;
+    if (
+      event.luck &&
+      (last.cost || last.roll || last.each || last.press || last.heal)
+    )
+      throw Error(`${event.id} has no free way out`);
   }
   for (const id of statusId.options)
     if (!statuses[id]?.description) throw Error(`Missing status ${id}`);

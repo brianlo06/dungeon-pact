@@ -49,6 +49,7 @@ export interface Decision {
   round: number;
   currentNode: string | null;
   eventId?: string | null;
+  luck?: { step: number; done?: boolean };
   serviceVote?: { id: string };
   shop?: { sequence: number };
   mentorId?: string | null;
@@ -76,6 +77,7 @@ export function epoch(s: Decision): string {
       ? `${s.auction.lot ?? 1}.${s.auction.stage}.${s.auction.round}`
       : "",
     s.eventId ?? "",
+    s.luck ? `${s.luck.step}${s.luck.done ? "." : ""}` : "",
     s.mentorId ?? "",
     s.serviceVote?.id ?? "",
     s.shop?.sequence ?? "",
