@@ -105,6 +105,38 @@ The party is the real cast at one size, so a boss fight looks the same as a
 hound fight — which is right: the film is between the Warden and one of its
 own.
 
+## Notes from the lab
+
+- **Probed, not guessed.** The fist first sat 80 world units above the tine
+  (`AT_CROWN` y −0.17); the probe put it on the tine at y −0.09, x 0.01.
+  The snap's first camera cut the fist and the loose tine off the bottom of
+  the frame; the hand now stays higher at the break (rotate −62, y −0.07)
+  and the camera sits lower (930, 500 → 950, 530 at zoom 1.95 → 1.85), so
+  the two-tone frame holds the crown, the stump, the splinters and the fist
+  with the tine free between them.
+- **Root keys.** `ult:bone-turn` (a small rise, −1.5°) and `ult:bone-rest`
+  (a settle) play on the real unit. `ult:bone-snap` jolts the whole figure
+  (x ±0.02, rotate 2.5° → −3°, squash 1.03) under a tight camera, kept small
+  on purpose. `ult:bone-give` carries the walk (a 0.012 bob, a 2.5° lean at
+  the press). `ult:bone-grip` and `ult:bone-brace` have still roots and are
+  cued `root: false` in the crown and the face close-ups. Nothing is rebuilt
+  on `.cine-look` except the bound ally's kneel and step.
+- **Sound levels**, rendered offline (peak / RMS): `bone-snap` 1.25 / 0.08
+  against `green-impact` 1.21 / 0.10 and `mourn-impact` 1.30 / 0.10;
+  `bone-motif` 0.19 / 0.05 against `green-motif` 0.18 and `mourn-motif`
+  0.19; the quiet's `bone-hush` 0.03 and `bone-creak` 0.05, on purpose.
+- The graft on the real board was first 8×12 px on a 141 px figure; it is now
+  drawn at 0.9 of the figure's height with the bud at 2.6×, a hook of bone
+  on the chest with a juniper glow.
+- **Profile** (`GPU=1 profile-ultimate.ts`, 1920×1080, warm server): film
+  p50 16.7 / p95 33.4 ms, 9 frames over 34 ms (the mount stall and the
+  cuts); the round after it p50 16.7 / p95 33.4, 10 over 34 ms. Peak 813
+  nodes (745 SVG), 3 live effects, no filtered elements.
+- `--wdn-tine` splits the front antler's beam into a kept piece and the
+  forward tine (`ANTLER_KEPT`, `ANTLER_SHED` in `Warden.tsx`, the beam's
+  curve split on itself at 0.65), so at rest the two strokes are the one
+  stroke they were; the stump and the bead are drawn only in a close-up.
+
 ## What the engine could not do, and what was built instead
 
 - **The chosen ally is not in the cast.** `splitUltimates` collects only

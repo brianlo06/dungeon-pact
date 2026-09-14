@@ -96,6 +96,17 @@ function casterId(root: HTMLElement): string {
 function allyIndexOf(el: HTMLElement, unit: string): number {
   const root = rootOf(el);
   if (!root) return -1;
+  // Found once: the cast and the board do not change under a film.
+  if (root.dataset.boneIndexFor === unit && root.dataset.boneIndex) return Number(root.dataset.boneIndex);
+  const index = findAllyIndex(el, root, unit);
+  if (index >= 0) {
+    root.dataset.boneIndexFor = unit;
+    root.dataset.boneIndex = String(index);
+  }
+  return index;
+}
+
+function findAllyIndex(el: HTMLElement, root: HTMLElement, unit: string): number {
   const caster = casterId(root);
   const heroes = boardHeroes().filter((u) => u.dataset.unit !== caster);
   const k = heroes.findIndex((u) => u.dataset.unit === unit);
