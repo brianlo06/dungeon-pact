@@ -47,17 +47,17 @@ test("the target is mourned ahead of time and the party's griefs are buried with
   const lines = await page.locator(".history-drawer li").allTextContents();
   const vulnerable = lines.findIndex((l) => /: Vulnerable \+1$/.test(l));
   const blow = lines.findIndex((l) => /damage/.test(l));
-  // Mourned first, so the first note lands on the open grave; then Weak.
+  // Mourned first, so the first note lands on the open grave.
   expect(vulnerable).toBeGreaterThanOrEqual(0);
   expect(vulnerable).toBeLessThan(blow);
-  expect(lines.some((l) => /: Weak \+1$/.test(l))).toBe(true);
-  // Nothing is given to the party to swing with.
+  // Nothing is given to the party to swing with, and the enemy is not weakened, only mourned.
   expect(lines.some((l) => /Empowered/.test(l))).toBe(false);
+  expect(lines.some((l) => /: Weak \+1$/.test(l))).toBe(false);
   await page.keyboard.press("Escape");
-  // The readout sums a unit's statuses as the first and a count: Vulnerable, and one more (Weak).
+  // Three rounds of it: two are still to come after this round.
   const readout = page.locator('.combatant[data-side="enemy"] .status-readout').filter({ hasText: "Vulnerable" });
   await expect(readout).toHaveCount(1);
-  await expect(readout).toContainText("+1");
+  await expect(readout).toContainText("2r");
 });
 
 test("the close-up acts with the face, and a leaf of the laurel falls", async ({ page }) => {

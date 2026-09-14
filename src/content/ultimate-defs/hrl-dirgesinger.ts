@@ -15,10 +15,9 @@ import type { UltimateDef } from "../ultimates";
  *  - the enemy it is sung for is mourned ahead of time: **Vulnerable for three
  *    rounds** (the whole length of the song, a round longer than any other
  *    Vulnerable), so every ally's blow on it lands a quarter harder until it
- *    goes; and **Weak for two**, because it fights like something already
- *    buried;
+ *    goes;
  *  - the first note costs it **12 through armour** (the Herald's rallying note
- *    always drew blood), sung onto a mind already opened, so ×1.25;
+ *    always drew blood), sung onto a grave already open, so ×1.25;
  *  - the party lays its own griefs down in the same grave: **every ally, the
  *    Dirgesinger and the downed included, sheds Burn, Poison, Weak and
  *    Vulnerable** — Dirge, for everyone at once;
@@ -29,15 +28,21 @@ import type { UltimateDef } from "../ultimates";
  * What it does, not only its numbers: it is the first Herald Ultimate aimed at
  * an enemy that gives the party nothing to swing with. No Empowered, no
  * Barrier, no courage for a round. It makes the *target* the thing the party
- * is better against, for three rounds, and makes it hit the party softer for
- * two. Anthem of the Unpaid touches no enemy; Into the Din opens its enemy
- * for two rounds and lends the party Empowered for one.
+ * is better against, for three rounds. Anthem of the Unpaid touches no enemy;
+ * Into the Din opens its enemy for two rounds and lends the party Empowered
+ * for one.
  *
  * Team play: sung early, so an ally's Ultimate the same round lands on
  * Vulnerable (Red Ledger's 40, Gatebreaker, Debt of Thunder's bolt and its
  * Chain Shock); a Ranger's Exploit on the mourned is a quarter heavier for
- * three rounds; and Weak on the target takes a boss's windup down by a third
- * the same round the Vanguard or the Aegis Knight has to take it.
+ * three rounds; and the cleanse takes the Burn, Poison and Weak off a party
+ * that has just walked through a hazard chamber or a Pyromancer's fire.
+ *
+ * It was first written with Weak on the target as well (two rounds: "it
+ * fights like something already buried"). Measured head to head with every
+ * Herald playing it, Weak on a boss for even one round put it at 97–99%
+ * against Into the Din's 96% and the Anthem's 93%; without it, at 96%, it is
+ * level with the Warcaller's. The weakness stays in the film, not the rules.
  */
 export const ultimate: UltimateDef = {
   id: "elegy-for-the-standing",
@@ -46,7 +51,7 @@ export const ultimate: UltimateDef = {
   name: "Elegy for the Standing",
   epithet: "Mourned while it's still on its feet.",
   description:
-    "Sing an enemy's funeral before it falls: it takes 12 through armour, is left Vulnerable for three rounds and Weak for two. The whole party lays its griefs down with it, the downed too: Burn, Poison, Weak and Vulnerable cleared. +2 Verse. Sung early: it resolves before other Ultimates.",
+    "Sing an enemy's funeral before it falls: it takes 12 through armour and is left Vulnerable for three rounds. The whole party lays its griefs down with it, the downed too: Burn, Poison, Weak and Vulnerable cleared. +2 Verse. Sung early: it resolves before other Ultimates.",
   target: "enemy",
   effects: [
     // Mourned first, so the first note already lands on an open grave.
@@ -60,12 +65,6 @@ export const ultimate: UltimateDef = {
       kind: "damage",
       amount: 12,
       pierce: true,
-    },
-    {
-      kind: "status",
-      status: "weak",
-      stacks: 1,
-      duration: 2,
     },
     {
       kind: "allies",

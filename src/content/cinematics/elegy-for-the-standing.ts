@@ -15,9 +15,9 @@ import type { Cinematic } from "../../shared/cinematic";
  * half-mourning, and its laurel is what is laid on a grave. The song is never
  * drawn: it is seen in what it does to the one it is for.
  *
- * Gameplay it shows: the enemy mourned (Vulnerable for three rounds, Weak for
- * two, 12 through armour, revealed as the earth goes in) and the party's
- * griefs laid down with it (a laurel leaf settling on every real ally).
+ * Gameplay it shows: the enemy mourned (Vulnerable for three rounds, 12
+ * through armour, revealed as the earth goes in) and the party's griefs laid
+ * down with it (a laurel leaf settling on every real ally).
  *
  * Rhythm: identity (the open face closing over the song; a laurel leaf comes
  * loose) → stakes (the graveside: the Herald and the real party mourning the
@@ -245,7 +245,7 @@ export const elegyForTheStanding: Cinematic = {
       id: "buried",
       kind: "impact",
       purpose:
-        "Impact. The negative: one frame of black with every figure in bone, the shadow and its enemy one shape joined at the feet. Then colour, held: the Herald sings the last note at the sky with its banner driven point first into the ground at the shadow's head, the earth on both sides thrown in over the whole length of the shadow, and the enemy dragged down by its feet. Damage, Vulnerable and Weak land here.",
+        "Impact. The negative: one frame of black with every figure in bone, the shadow and its enemy one shape joined at the feet. Then colour, held: the Herald sings the last note at the sky with its banner driven point first into the ground at the shadow's head, the earth on both sides thrown in over the whole length of the shadow, and the enemy dragged down by its feet. The damage and the Vulnerable land here.",
       space: "cinematic",
       ms: 780,
       fastMs: 560,

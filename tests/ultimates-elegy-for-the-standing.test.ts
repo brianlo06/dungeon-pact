@@ -48,14 +48,15 @@ describe("Elegy for the Standing", () => {
     for (const other of ultimates) if (other.id !== u.id) expect(u.speed, other.id).toBeGreaterThan(other.speed);
   });
 
-  it("mourns the target ahead of time: Vulnerable for three rounds and Weak for two, and the first note lands on the open grave", () => {
+  it("mourns the target ahead of time: Vulnerable for three rounds, and the first note lands on the open grave", () => {
     const s = fight();
     const singer = s.players[0];
     singer.resource = 0;
     const [target, ...others] = s.enemies.filter((e) => e.hp > 0);
     effects(s, singer, target, ultimateFor(singer)!.effects);
     expect(status(target, "vulnerable")?.duration).toBe(3);
-    expect(status(target, "weak")?.duration).toBe(2);
+    // Measured too strong with Weak on the target as well: the mourning is Vulnerable alone.
+    expect(status(target, "weak")).toBeUndefined();
     // Through armour, and a quarter more for the Vulnerable it laid first.
     expect(500 - target.hp).toBe(Math.round((12 + singer.power) * 1.25));
     // Nobody else is touched.
