@@ -117,9 +117,9 @@ const dare: Clip = {
 const open: Clip = {
   duration: 900,
   poses: [
-    { at: 0, y: -0.004, rotate: -1.5, squash: 0.99 },
-    { at: 0.5, y: 0.004, rotate: -3, squash: 1.02 },
-    { at: 1, y: 0.01, rotate: -4, squash: 1.04 },
+    { at: 0, y: -0.004, rotate: -5, squash: 0.99 },
+    { at: 0.5, y: 0.006, rotate: -7, squash: 1.02 },
+    { at: 1, y: 0.012, rotate: -8, squash: 1.04 },
   ],
   parts: {
     fist: [
@@ -127,7 +127,7 @@ const open: Clip = {
       { at: 1, ...WIDE_FIST, rotate: WIDE_FIST.rotate + 6 },
     ],
     cleaver: turn([0, WIDE_CLEAVER], [1, WIDE_CLEAVER + 2]),
-    head: turn([0, -9], [0.6, -7], [1, -5]),
+    head: turn([0, -12], [0.6, -14], [1, -12]),
     hair: turn([0, 0], [0.5, -3], [1, 2]),
     body: [
       { at: 0, squash: 1.03, y: -0.004 },

@@ -297,7 +297,7 @@ export const goodHiding: Cinematic = {
       sound: [{ at: 0.03, sfx: "hiding-impact" }, { at: 0.05, sfx: "ult-boom" }],
       reveal: [{ at: 0.04, reveal: "impact" }],
       text: [
-        { kind: "impact", at: 0.05, until: 0.9, text: "$damage", x: 0.3, y: 0.22, rotate: -4 },
+        { kind: "impact", at: 0.04, until: 0.9, text: "$damage", x: 0.3, y: 0.22, rotate: -4 },
         { kind: "voice", at: 0.4, until: 1, text: "$voice.impact" },
       ],
       markers: [

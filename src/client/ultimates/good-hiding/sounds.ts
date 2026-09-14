@@ -53,10 +53,10 @@ export const voices: Record<string, Voice> = {
   "hiding-motif": {
     bus: "sfx",
     render: (c, o, t) => {
-      knock(c, o, t, 43, 0.16, 0.3);
-      knock(c, o, t + 0.22, 46, 0.16, 0.3);
-      knock(c, o, t + 0.44, 43, 0.17, 0.3);
-      knock(c, o, t + 0.7, 39, 0.2, 0.7);
+      knock(c, o, t, 43, 0.21, 0.3);
+      knock(c, o, t + 0.22, 46, 0.21, 0.3);
+      knock(c, o, t + 0.44, 43, 0.22, 0.3);
+      knock(c, o, t + 0.7, 39, 0.26, 0.7);
       swell(c, o, t + 0.7, { type: "sawtooth", freq: hz(39), gain: 0.03, attack: 0.05, hold: 0.2, release: 0.4, cutoff: 380 });
     },
   },
@@ -64,7 +64,7 @@ export const voices: Record<string, Voice> = {
   "hiding-whoosh": {
     bus: "sfx",
     render: (c, o, t) => {
-      crash(c, o, t, { seconds: 0.26, gain: 0.2, freq: 500, sweepTo: 1600, q: 1.4 });
+      crash(c, o, t, { seconds: 0.26, gain: 0.5, freq: 500, sweepTo: 1600, q: 1.1 });
     },
   },
   /**
@@ -75,7 +75,7 @@ export const voices: Record<string, Voice> = {
   "hiding-swallow": {
     bus: "sfx",
     render: (c, o, t) => {
-      hit(c, o, t, { type: "sine", from: 130, to: 38, gain: 0.72, attack: 0.002, decay: 0.2 });
+      hit(c, o, t, { type: "sine", from: 130, to: 38, gain: 0.58, attack: 0.002, decay: 0.2 });
       crash(c, o, t, { seconds: 0.07, gain: 0.5, type: "lowpass", freq: 900, q: 0.7 });
       crash(c, o, t + 0.002, { seconds: 0.03, gain: 0.3, freq: 1400, q: 1.2 });
       // Reversed: the body swells back up into the point and is cut.
@@ -87,8 +87,8 @@ export const voices: Record<string, Voice> = {
   "hiding-hush": {
     bus: "sfx",
     render: (c, o, t) => {
-      creak(c, o, t + 0.02, 0.035, 0.34);
-      crash(c, o, t + 0.12, { seconds: 0.44, gain: 0.05, type: "bandpass", freq: 700, sweepTo: 420, q: 0.7 });
+      creak(c, o, t + 0.02, 0.06, 0.34);
+      crash(c, o, t + 0.12, { seconds: 0.44, gain: 0.09, type: "bandpass", freq: 700, sweepTo: 420, q: 0.7 });
     },
   },
   /**
