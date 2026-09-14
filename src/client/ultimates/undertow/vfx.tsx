@@ -373,6 +373,46 @@ const wipe: Frame = (el, p) => {
 const RETURN_BUBBLES = 34;
 const RETURN_STREAKS = 26;
 const FOAM_BURST = 14;
+/** Flecks on the line flicker in this many phases, one path each. */
+const FOAM_PHASES = 3;
+
+/** A circle as path data, so a body of foam or bubbles is one path rebuilt per frame, not a hundred elements. */
+const ring = (cx: number, cy: number, r: number) =>
+  r <= 0.05 ? "" : `M${f1(cx - r)} ${f1(cy)}a${f1(r)} ${f1(r)} 0 1 0 ${f1(r * 2)} 0a${f1(r)} ${f1(r)} 0 1 0 ${f1(-r * 2)} 0`;
+
+/** Rebuild a folded body: its outline, and how many of its members are showing, for the spec to read. */
+function setBody(el: Element | null | undefined, parts: string[]) {
+  if (!el) return;
+  setPath(el, parts.join("") || "M0 0");
+  const n = String(parts.length);
+  if (el.getAttribute("data-count") !== n) el.setAttribute("data-count", n);
+}
+
+/** Where every ray, streak, fleck and bubble of the sea back starts, the same for the markup and the frame. */
+interface ReturnParts {
+  rays: { x: number; w: number; off: number; alpha: number }[];
+  streaks: { depth: number; off: number; speed: number; thick: boolean }[];
+  bursts: { f: number; a: number; v: number; r: number }[];
+  flecks: { x: number; off: number; r: number }[];
+  bubbles: { f: number; off: number; dx: number; r: number }[];
+}
+const returnCache = new Map<number, ReturnParts>();
+function returnParts(seed: number): ReturnParts {
+  const cached = returnCache.get(seed);
+  if (cached) return cached;
+  const rand = seeded(seed);
+  const parts: ReturnParts = {
+    rays: Array.from({ length: 9 }, (_, i) => ({ x: -600 + i * 380 + rand() * 200, w: 6 + rand() * 14, off: rand(), alpha: 0.1 + rand() * 0.14 })),
+    streaks: Array.from({ length: RETURN_STREAKS }, () => ({ depth: rand(), off: rand(), speed: 0.8 + rand() * 0.8, thick: 2 + rand() * 3 > 3.5 })),
+    bursts: Array.from({ length: 6 }, (_, f) =>
+      Array.from({ length: FOAM_BURST }, (_, i) => ({ f, a: (i / FOAM_BURST) * 6.28 + rand() * 0.5, v: 0.5 + rand(), r: 6 + rand() * 16 })),
+    ).flat(),
+    flecks: Array.from({ length: 60 }, () => ({ x: -800 + rand() * 3200, off: rand(), r: 3 + rand() * 9 })),
+    bubbles: Array.from({ length: RETURN_BUBBLES }, (_, i) => ({ f: i % 6, off: rand(), dx: (rand() - 0.5) * 60, r: 3 + rand() * 7 })),
+  };
+  returnCache.set(seed, parts);
+  return parts;
+}
 
 const Return = ({ cue }: VfxProps): ReactNode => {
   const id = fid(useIdSafe());
@@ -384,7 +424,7 @@ const Return = ({ cue }: VfxProps): ReactNode => {
       viewBox="0 0 1600 900"
       data-band={band}
       data-level={String(cue.params?.level ?? 0.55)}
-      data-heap={String(cue.params?.heap ?? 0)}
+      data-seed={String(cue.seed ?? 21)}
       data-hit={String(cue.params?.hit ?? 0.12)}
       data-shore={String(cue.params?.shore ?? 600)}
     >
@@ -413,35 +453,25 @@ const Return = ({ cue }: VfxProps): ReactNode => {
           {/* from under: the surface seen from below, a bright ceiling, and light coming down through it */}
           <path className="tide-front-sky" fill="#3f63a8" opacity="0" />
           <g className="tide-front-rays" stroke={FOAM} strokeLinecap="round" fill="none" opacity="0">
-            {Array.from({ length: 9 }, (_, i) => (
-              <path key={i} className="tide-ray" data-x={(-600 + i * 380 + rand() * 200).toFixed(0)} data-w={(6 + rand() * 14).toFixed(1)} data-off={rand().toFixed(3)} strokeOpacity={(0.1 + rand() * 0.14).toFixed(2)} />
+            {returnParts(cue.seed ?? 21).rays.map((r, i) => (
+              <path key={i} className="tide-ray" strokeWidth={f1(r.w)} strokeOpacity={r.alpha.toFixed(2)} />
             ))}
           </g>
           <path className="tide-front-under" fill="none" stroke={COBALT} strokeWidth="34" strokeOpacity="0.28" strokeLinecap="round" />
           <path className="tide-front-surface" fill="none" stroke={FOAM} strokeWidth="9" strokeLinecap="round" strokeOpacity="0.9" />
-          {/* the undertow: everything under the surface dragged seaward */}
-          <g className="tide-front-streaks" stroke={COBALT} strokeLinecap="round" fill="none">
-            {Array.from({ length: RETURN_STREAKS }, (_, i) => (
-              <path key={i} className="tide-streak" data-depth={rand().toFixed(3)} data-off={rand().toFixed(3)} data-speed={(0.8 + rand() * 0.8).toFixed(2)} strokeWidth={(2 + rand() * 3).toFixed(1)} opacity="0" />
-            ))}
-          </g>
+          {/*
+            The undertow, the foam and the bubbles are each a few paths rebuilt per frame: as a hundred
+            elements moved one attribute at a time they cost the shot more in style than everything else.
+          */}
+          <path className="tide-streaks tide-streaks-thin" stroke={COBALT} strokeWidth="2.6" strokeLinecap="round" fill="none" strokeOpacity="0.42" />
+          <path className="tide-streaks tide-streaks-thick" stroke={COBALT} strokeWidth="4.2" strokeLinecap="round" fill="none" strokeOpacity="0.42" />
           {/* foam riding the line, bursting where it hits each figure */}
-          <g className="tide-front-foam" fill={FOAM}>
-            {Array.from({ length: 6 }, (_, f) =>
-              Array.from({ length: FOAM_BURST }, (_, i) => (
-                <circle key={`${f}-${i}`} className="tide-burst" data-f={f} data-a={((i / FOAM_BURST) * 6.28 + rand() * 0.5).toFixed(3)} data-v={(0.5 + rand()).toFixed(3)} data-r={(6 + rand() * 16).toFixed(1)} r="0" opacity="0" />
-              )),
-            )}
-            {Array.from({ length: 60 }, (_, i) => (
-              <circle key={`l${i}`} className="tide-line-foam" data-x={(-800 + rand() * 3200).toFixed(0)} data-off={rand().toFixed(3)} data-r={(3 + rand() * 9).toFixed(1)} r="0" opacity="0" />
-            ))}
-          </g>
+          <path className="tide-bursts" fill={FOAM} opacity="0" />
+          {Array.from({ length: FOAM_PHASES }, (_, i) => (
+            <path key={i} className="tide-line-foam" fill={FOAM} opacity="0" />
+          ))}
           {/* bubbles going up from whoever is under */}
-          <g className="tide-front-bubbles" fill="none" stroke={FOAM} strokeWidth="2.5">
-            {Array.from({ length: RETURN_BUBBLES }, (_, i) => (
-              <circle key={i} className="tide-bubble" data-f={i % 6} data-off={rand().toFixed(3)} data-dx={((rand() - 0.5) * 60).toFixed(0)} data-r={(3 + rand() * 7).toFixed(1)} r="0" opacity="0" />
-            ))}
-          </g>
+          <path className="tide-bubbles" fill="none" stroke={FOAM} strokeWidth="2.5" strokeOpacity="0.75" />
         </>
       )}
     </svg>
@@ -454,16 +484,9 @@ interface Figure {
   h: number;
 }
 
-/** The surface's height at `x`: the level, a swell, and a heap over the target. */
-function surfaceY(x: number, top: number, t: number, target: Figure | undefined, heap: number) {
-  const swell = 9 * Math.sin(x * 0.011 + t * 2.2) + 5 * Math.sin(x * 0.029 - t * 3.6) + 3 * Math.sin(x * 0.07 + t * 5);
-  let y = top + swell;
-  if (target && heap > 0) {
-    // The water heaped up over the one it takes under: highest right over it, its head gone.
-    const u = (x - target.x) / Math.max(90, target.h * 0.42);
-    y -= Math.max(0, target.h * 0.62 * heap * (1 - u * u));
-  }
-  return y;
+/** The surface's height at `x`: the level and a swell. It never heaps over the target (Mourning Water's). */
+function surfaceY(x: number, top: number, t: number) {
+  return top + 9 * Math.sin(x * 0.011 + t * 2.2) + 5 * Math.sin(x * 0.029 - t * 3.6) + 3 * Math.sin(x * 0.07 + t * 5);
 }
 
 const returnFrame: Frame = (el, p, age, ctx) => {
@@ -481,7 +504,6 @@ const returnFrame: Frame = (el, p, age, ctx) => {
   // The level: rises from below the frame to the target's chest by the hit, whipping up at the end.
   const rise = ease("in", clamp((p - 0.005) / (hit - 0.01)));
   const top = target ? target.y - target.h * num(d.level, 0.55) : 640;
-  const heap = num(d.heap, 0) * ease("out", clamp((p - hit) / 0.22));
   if (d.band === "back") {
     // The sea sweeps back across the whole flat from the right, ahead of the level, up to the shore.
     const k = lerp(1.05, -0.02, ease("in", clamp(p / (hit - 0.005))));
@@ -516,7 +538,7 @@ const returnFrame: Frame = (el, p, age, ctx) => {
     const k = ease("in", clamp((rise - lag) / (1 - lag)));
     // Up the beach the level runs out: the surface comes down to the sand at the shore and goes under it.
     const beach = clamp((x - shore) / 340);
-    const level = lerp(ground + 40, surfaceY(x, top, t, target, heap), ease("out", beach));
+    const level = lerp(ground + 40, surfaceY(x, top, t), ease("out", beach));
     return lerp(NEAR + 60, level, k);
   };
   const line = xs.map((x) => `${x} ${f1(yAt(x))}`);
@@ -531,83 +553,72 @@ const returnFrame: Frame = (el, p, age, ctx) => {
   fade(sky, deep * 0.97);
   const rays = svg.querySelector(".tide-front-rays");
   fade(rays, deep);
-  for (const r of svg.querySelectorAll<SVGPathElement>(".tide-ray")) {
-    const x = num(r.dataset.x, 0) + Math.sin(t * 0.8 + num(r.dataset.off, 0) * 6) * 30;
+  const parts = returnParts(num(d.seed, 21));
+  svg.querySelectorAll<SVGPathElement>(".tide-ray").forEach((r, i) => {
+    const ray = parts.rays[i];
+    if (!ray) return;
+    const x = ray.x + Math.sin(t * 0.8 + ray.off * 6) * 30;
     const y0 = yAt(x);
-    r.setAttribute("stroke-width", r.dataset.w ?? "8");
     setPath(r, `M${f1(x)} ${f1(y0 + 4)} L${f1(x + 60)} ${f1(y0 + 520)}`);
-  }
+  });
   setPath(svg.querySelector(".tide-front-surface"), `M${line.join(" L")}`);
   setPath(svg.querySelector(".tide-front-under"), `M${xs.map((x) => `${x} ${f1(yAt(x) + 22)}`).join(" L")}`);
   const under = p > hit;
-  // The undertow: streaks under the surface, all going seaward.
-  for (const s of svg.querySelectorAll<SVGPathElement>(".tide-streak")) {
-    if (!under) {
-      fade(s, 0);
-      continue;
+  // The undertow: streaks under the surface, all going seaward, each drawn out and in again as it passes.
+  const thin: string[] = [];
+  const thick: string[] = [];
+  if (under)
+    for (const s of parts.streaks) {
+      const k = (s.off + (t - hit) * s.speed * 0.6) % 1;
+      const show = Math.sin(k * Math.PI);
+      if (show < 0.2) continue;
+      const x0 = lerp(-400, 2000, k);
+      const y = top + 40 + s.depth * 620;
+      const len = (60 + 140 * (1 - s.depth) * (0.5 + 0.5 * Math.sin(k * 6.28))) * show;
+      (s.thick ? thick : thin).push(`M${f1(x0)} ${f1(y)}L${f1(x0 + len)} ${f1(y + 3)}`);
     }
-    const depth = num(s.dataset.depth, 0.5);
-    const k = (num(s.dataset.off, 0) + (t - hit) * num(s.dataset.speed, 1) * 0.6) % 1;
-    const x0 = lerp(-400, 2000, k);
-    const y = top + 40 + depth * 620;
-    const len = 60 + 140 * (1 - depth) * (0.5 + 0.5 * Math.sin(k * 6.28));
-    setPath(s, `M${f1(x0)} ${f1(y)} L${f1(x0 + len)} ${f1(y + 3)}`);
-    fade(s, Math.sin(k * Math.PI) * 0.5);
-  }
+  setBody(svg.querySelector(".tide-streaks-thin"), thin);
+  setBody(svg.querySelector(".tide-streaks-thick"), thick);
   // Foam: a burst at each figure as the line reaches it, and flecks riding the line.
-  for (const c of svg.querySelectorAll<SVGCircleElement>(".tide-burst")) {
-    const f = figures[num(c.dataset.f, 0)];
-    const since = p - hit;
-    if (!f || since < 0) {
-      fade(c, 0);
-      continue;
+  const since = p - hit;
+  const burst = clamp(since / 0.45);
+  const bursts: string[] = [];
+  if (since >= 0 && burst < 1)
+    for (const b of parts.bursts) {
+      const f = figures[b.f];
+      if (!f) continue;
+      const spread = f.h * 0.55 * b.v * ease("out", burst);
+      const cx = f.x + Math.cos(b.a) * spread * 1.2 + since * 200;
+      const cy = surfaceY(f.x, top, t) - Math.abs(Math.sin(b.a)) * spread * 0.7 + burst * burst * f.h * 0.3;
+      bursts.push(ring(cx, cy, b.r * (1 - burst * 0.5)));
     }
-    const a = num(c.dataset.a, 0);
-    const v = num(c.dataset.v, 1);
-    const k = clamp(since / 0.45);
-    const spread = f.h * 0.55 * v * ease("out", k);
-    const cx = f.x + Math.cos(a) * spread * 1.2 + since * 200;
-    const cy = surfaceY(f.x, top, t, target, heap) - Math.abs(Math.sin(a)) * spread * 0.7 + k * k * f.h * 0.3;
-    c.setAttribute("cx", f1(cx));
-    c.setAttribute("cy", f1(cy));
-    c.setAttribute("r", f1(num(c.dataset.r, 8) * (1 - k * 0.5)));
-    fade(c, 0.9 * (1 - k));
-  }
-  for (const c of svg.querySelectorAll<SVGCircleElement>(".tide-line-foam")) {
-    const x = num(c.dataset.x, 0);
-    const off = num(c.dataset.off, 0);
-    const y = yAt(x);
-    if (y > NEAR || x < num(d.shore, 600) + 60) {
-      fade(c, 0);
-      continue;
+  const burstsEl = svg.querySelector(".tide-bursts");
+  setBody(burstsEl, bursts);
+  fade(burstsEl, bursts.length ? 0.9 * (1 - burst) : 0);
+  const flecks: string[][] = Array.from({ length: FOAM_PHASES }, () => []);
+  parts.flecks.forEach((c, i) => {
+    const y = yAt(c.x);
+    if (y > NEAR || c.x < shore + 60) return;
+    const cx = c.x + Math.sin(t * 2 + c.off * 9) * 12 + (under ? (t - hit) * 60 : 0);
+    flecks[i % FOAM_PHASES].push(ring(cx, y - 2 + Math.sin(t * 3 + c.off * 5) * 3, c.r));
+  });
+  svg.querySelectorAll(".tide-line-foam").forEach((el, i) => {
+    setBody(el, flecks[i] ?? []);
+    fade(el, flecks[i]?.length ? 0.6 + 0.3 * Math.sin(t * 5 + (i / FOAM_PHASES) * 6.28) : 0);
+  });
+  // Bubbles going up from the figures under the water, the target's the most; each grows as it leaves.
+  const bubbles: string[] = [];
+  if (under)
+    for (const b of parts.bubbles) {
+      const f = figures[b.f === 0 || b.f > 2 ? 0 : b.f];
+      if (!f) continue;
+      const k = (b.off + (t - hit) * 0.9) % 1;
+      const ys = surfaceY(f.x, top, t) + 6;
+      const y = lerp(f.y - f.h * 0.15, ys, k);
+      if (y <= ys) continue;
+      bubbles.push(ring(f.x + b.dx + Math.sin(k * 9 + b.off * 6) * 8 + k * 40, y, b.r * (0.6 + k * 0.6) * clamp(k * 6)));
     }
-    c.setAttribute("cx", f1(x + Math.sin(t * 2 + off * 9) * 12 + (under ? (t - hit) * 60 : 0)));
-    c.setAttribute("cy", f1(y - 2 + Math.sin(t * 3 + off * 5) * 3));
-    c.setAttribute("r", c.dataset.r ?? "5");
-    fade(c, 0.6 + 0.3 * Math.sin(t * 5 + off * 7));
-  }
-  // Bubbles going up from the figures under the water, the target's the most.
-  for (const b of svg.querySelectorAll<SVGCircleElement>(".tide-bubble")) {
-    const fi = num(b.dataset.f, 0);
-    const f = figures[fi === 0 || fi > 2 ? 0 : fi];
-    if (!f || !under) {
-      fade(b, 0);
-      continue;
-    }
-    const off = num(b.dataset.off, 0);
-    const k = (off + (t - hit) * 0.9) % 1;
-    const y0 = f.y - f.h * 0.15;
-    const ys = surfaceY(f.x, top, t, target, heap) + 6;
-    const y = lerp(y0, ys, k);
-    if (y <= ys) {
-      fade(b, 0);
-      continue;
-    }
-    b.setAttribute("cx", f1(f.x + num(b.dataset.dx, 0) + Math.sin(k * 9 + off * 6) * 8 + k * 40));
-    b.setAttribute("cy", f1(y));
-    b.setAttribute("r", f1(num(b.dataset.r, 5) * (0.6 + k * 0.6)));
-    fade(b, 0.75 * clamp(k * 6));
-  }
+  setBody(svg.querySelector(".tide-bubbles"), bubbles.filter(Boolean));
 };
 
 /* ── On the board ─────────────────────────────────────────────────────── */
@@ -650,29 +661,34 @@ const drain: Frame = (el, p) => {
   }
 };
 
+/** Where the board water's streaks and flecks start, the same for every frame of one unit's pool. */
+const standCache = new Map<number, { streaks: { y: number; off: number }[]; flecks: { x: number; off: number; r: number }[] }>();
+function standParts(seed: number) {
+  const cached = standCache.get(seed);
+  if (cached) return cached;
+  const rand = seeded(seed);
+  const parts = {
+    streaks: Array.from({ length: 7 }, () => ({ y: rand() * 18, off: rand() })),
+    flecks: Array.from({ length: 8 }, () => ({ x: (rand() - 0.5) * 90, off: rand(), r: 1.6 + rand() * 2.6 })),
+  };
+  standCache.set(seed, parts);
+  return parts;
+}
+
 /** A real enemy standing in water that is still running out past it. */
-const Standing = ({ cue }: VfxProps): ReactNode => {
-  const rand = seeded(cue.seed ?? 3);
-  return (
-    <div className="tide-standing">
-      <svg viewBox="-80 -67 160 80">
-        <path className="tide-stand-body" fill={COBALT} fillOpacity="0.3" />
-        <path className="tide-stand-deep" fill={INK} fillOpacity="0.42" />
-        <path className="tide-stand-line" fill="none" stroke={FOAM} strokeWidth="2.2" strokeLinecap="round" strokeOpacity="0.85" />
-        <g className="tide-stand-streaks" stroke={COBALT} strokeWidth="1.6" strokeLinecap="round" fill="none">
-          {Array.from({ length: 7 }, (_, i) => (
-            <path key={i} className="tide-stand-streak" data-y={(rand() * 18).toFixed(1)} data-off={rand().toFixed(3)} opacity="0" />
-          ))}
-        </g>
-        <g className="tide-stand-foam" fill={FOAM}>
-          {Array.from({ length: 8 }, (_, i) => (
-            <circle key={i} className="tide-stand-fleck" data-x={((rand() - 0.5) * 90).toFixed(1)} data-off={rand().toFixed(3)} r={(1.6 + rand() * 2.6).toFixed(1)} opacity="0" />
-          ))}
-        </g>
-      </svg>
-    </div>
-  );
-};
+const Standing = ({ cue }: VfxProps): ReactNode => (
+  <div className="tide-standing">
+    <svg viewBox="-80 -67 160 80" data-seed={String(cue.seed ?? 3)}>
+      <path className="tide-stand-body" fill={COBALT} fillOpacity="0.3" />
+      <path className="tide-stand-deep" fill={INK} fillOpacity="0.42" />
+      <path className="tide-stand-line" fill="none" stroke={FOAM} strokeWidth="2.2" strokeLinecap="round" strokeOpacity="0.85" />
+      {/* the streaks, and the flecks in two flickers, are a path each rebuilt per frame, not fifteen elements a unit */}
+      <path className="tide-stand-streaks" stroke={COBALT} strokeWidth="1.6" strokeLinecap="round" fill="none" opacity="0" />
+      <path className="tide-stand-foam" fill={FOAM} opacity="0" />
+      <path className="tide-stand-foam" fill={FOAM} opacity="0" />
+    </svg>
+  </div>
+);
 
 const standing: Frame = (el, p, age) => {
   const svg = el.querySelector<SVGSVGElement>(".tide-standing svg");
@@ -688,20 +704,30 @@ const standing: Frame = (el, p, age) => {
   setPath(svg.querySelector(".tide-stand-body"), `M${line.join(" L")} C62 12 36 14 0 14 C-36 14 -62 12 -70 4 Z`);
   setPath(svg.querySelector(".tide-stand-deep"), `M-70 4 C-62 11 -36 13 0 13 C36 13 62 11 70 4 C56 8 30 9 0 9 C-30 9 -56 8 -70 4 Z`);
   setPath(svg.querySelector(".tide-stand-line"), `M${line.slice(1, -1).join(" L")}`);
-  for (const s of svg.querySelectorAll<SVGPathElement>(".tide-stand-streak")) {
-    const k = (num(s.dataset.off, 0) + t * 0.7) % 1;
+  const parts = standParts(num(svg.dataset.seed, 3));
+  // Streaks running seaward under the surface, each drawn out and in again as it passes.
+  const streaks: string[] = [];
+  for (const s of parts.streaks) {
+    const k = (s.off + t * 0.7) % 1;
+    const show = Math.sin(k * Math.PI);
+    if (show < 0.15) continue;
     const x0 = lerp(-50, 28, k);
-    const y = topAt(x0 + 11) + 4 + num(s.dataset.y, 0) * 0.6 * up;
-    setPath(s, `M${f1(x0)} ${f1(y)} L${f1(x0 + 22)} ${f1(y)}`);
-    fade(s, up * Math.sin(k * Math.PI) * 0.7);
+    const y = topAt(x0 + 11) + 4 + s.y * 0.6 * up;
+    streaks.push(`M${f1(x0)} ${f1(y)}L${f1(x0 + 22 * show)} ${f1(y)}`);
   }
-  for (const c of svg.querySelectorAll<SVGCircleElement>(".tide-stand-fleck")) {
-    const off = num(c.dataset.off, 0);
-    const cx = Math.max(-54, Math.min(54, num(c.dataset.x, 0) * 0.8 + Math.sin(t * 2 + off * 8) * 6 + ((t * 20 + off * 50) % 30)));
-    c.setAttribute("cx", f1(cx));
-    c.setAttribute("cy", f1(topAt(cx) - 1));
-    fade(c, up * (0.5 + 0.4 * Math.sin(t * 5 + off * 9)));
-  }
+  const streaksEl = svg.querySelector(".tide-stand-streaks");
+  setBody(streaksEl, streaks);
+  fade(streaksEl, up * 0.6);
+  // Flecks riding the line, flickering in two phases.
+  const flecks: string[][] = [[], []];
+  parts.flecks.forEach((c, i) => {
+    const cx = Math.max(-54, Math.min(54, c.x * 0.8 + Math.sin(t * 2 + c.off * 8) * 6 + ((t * 20 + c.off * 50) % 30)));
+    flecks[i % 2].push(ring(cx, topAt(cx) - 1, c.r));
+  });
+  svg.querySelectorAll(".tide-stand-foam").forEach((f, i) => {
+    setBody(f, flecks[i] ?? []);
+    fade(f, up * (0.5 + 0.4 * Math.sin(t * 5 + i * 3.14)));
+  });
 };
 
 export const renderers: Record<string, (p: VfxProps) => ReactNode> = {

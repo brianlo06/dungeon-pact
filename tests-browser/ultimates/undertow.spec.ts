@@ -127,8 +127,9 @@ test("the sea comes back on a two-tone frame, the row struck in it, and then the
     expect(t.left).toBeGreaterThan(frame.left);
   }
   // Foam bursting where it hit them.
-  const foam = await page.locator(".fx-tide-return-wrap .tide-burst").evaluateAll((all) => all.filter((c) => Number(c.getAttribute("opacity")) > 0.2).length);
-  expect(foam).toBeGreaterThan(10);
+  const bursts = page.locator(".fx-tide-return-wrap .tide-bursts");
+  expect(Number(await bursts.getAttribute("data-count"))).toBeGreaterThan(10);
+  expect(Number(await bursts.getAttribute("opacity"))).toBeGreaterThan(0.2);
   // The Tidecaller, whole in the frame, arm down.
   const caster = (await box(page, '.cine-actors > .cine-actor[data-role="caster"] .cine-sprite'))!;
   expect(caster.left).toBeGreaterThan(frame.left);
@@ -143,10 +144,11 @@ test("the sea comes back on a two-tone frame, the row struck in it, and then the
   const sx = frame.left + frame.w * 0.75;
   expect(await inside(page, ".fx-tide-return-wrap .tide-front-sky", sx, frame.top + frame.h * 0.2)).toBe(true);
   expect(await inside(page, ".fx-tide-return-wrap .tide-front-body", sx, frame.top + frame.h * 0.65)).toBe(true);
-  const bubbles = await page.locator(".fx-tide-return-wrap .tide-bubble").evaluateAll((all) => all.filter((c) => Number(c.getAttribute("opacity")) > 0.2).length);
-  expect(bubbles).toBeGreaterThan(5);
-  const streaks = await page.locator(".fx-tide-return-wrap .tide-streak").evaluateAll((all) => all.filter((s) => Number(s.getAttribute("opacity")) > 0.1).length);
-  expect(streaks).toBeGreaterThan(5);
+  // Bubbles and streaks are bodies drawn as one path each: read how many of them are showing.
+  const count = (selector: string) =>
+    page.locator(`.fx-tide-return-wrap ${selector}`).evaluateAll((all) => all.reduce((n, e) => n + Number(e.getAttribute("data-count") ?? 0), 0));
+  expect(await count(".tide-bubbles")).toBeGreaterThan(5);
+  expect(await count(".tide-streaks")).toBeGreaterThan(5);
 });
 
 test("the return leaves every enemy standing in water on the board, and the Tidecaller lowering its arm", async ({ page }) => {
