@@ -29,6 +29,7 @@ import "./style.css";
  *   usury-spill     coins thrown off the impact
  *   usury-drip      on the board: coins dripping off the crust
  *   usury-dividend  on the board: the pact's cut, a ring for each round of it
+ *   usury-glow      a pool of copper light behind the target on the impact
  *
  * No filters, no blur, no CSS keyframes: everything runs on `--p` or on a
  * frame function writing paths on the combat clock.
@@ -97,6 +98,7 @@ export function coinPaths(coins: Coin[], notchFrom = 7) {
 export function writeCoins(svg: Element, coins: Coin[], notchFrom = 7) {
   const d = coinPaths(coins, notchFrom);
   setD(svg.querySelector(".usury-coin-shadow"), d.shadow);
+  setD(svg.querySelector(".usury-coin-edge"), d.body);
   setD(svg.querySelector(".usury-coin-body"), d.body);
   setD(svg.querySelector(".usury-coin-lit"), d.lit);
   setD(svg.querySelector(".usury-coin-notch"), d.notch);
@@ -106,6 +108,7 @@ function CoinPaths({ extra }: { extra?: ReactNode }) {
   return (
     <>
       <path className="usury-coin-shadow" />
+      <path className="usury-coin-edge" />
       <path className="usury-coin-body" />
       <path className="usury-coin-lit" />
       <path className="usury-coin-notch" />
@@ -174,6 +177,7 @@ const Creep = ({ cue }: VfxProps) => (
   >
     <path className="usury-creep-mass" />
     <path className="usury-coin-shadow" />
+    <path className="usury-coin-edge" />
     <path className="usury-coin-body" />
     <path className="usury-coin-lit" />
     <path className="usury-coin-notch" />
@@ -198,6 +202,9 @@ const Drip = ({ cue }: VfxProps) => (
     <CoinPaths />
   </Box>
 );
+
+/** A pool of copper light behind the target, so the drawn frame cuts it out. */
+const Glow = () => <div className="usury-glow" />;
 
 const Dividend = ({ cue }: VfxProps) => (
   <Box cue={cue} className="usury-dividend">
@@ -253,7 +260,7 @@ const coin: Frame = (el, p) => {
     y = -h * (0.36 + 0.24 * k);
     x = h * (0.06 + 0.03 * k);
     r = size * (0.4 + 0.6 * k);
-    turn = Math.abs(Math.cos(p * 7));
+    turn = 0.5 + 0.5 * Math.abs(Math.cos(p * 7));
     bitten = false;
   } else if (mode === "served") {
     const k = ease("out", clamp((p - 0.1) / 0.6));
@@ -263,8 +270,17 @@ const coin: Frame = (el, p) => {
     ring = ell(x, y, rr, rr * 0.86);
   } else if (mode === "hold") {
     // Turned over between two fingers: the face swings away and back.
-    turn = Math.abs(Math.cos(p * Math.PI * pn(o, "spin", 1.1)));
+    turn = 0.55 + 0.45 * Math.abs(Math.cos(p * Math.PI * pn(o, "spin", 1.1)));
     y += Math.sin(p * Math.PI * 2) * size * 0.06;
+    // At the bite it goes up between the lips, edge first, and comes away.
+    const at = pn(o, "bite", -1);
+    if (at >= 0) {
+      const k = clamp(1 - Math.abs(p - at) / pn(o, "biteFor", 0.14));
+      const e = ease("inOut", k);
+      x = lerp(x, pn(o, "lipX", pn(o, "ox", 0)) * h, e);
+      y = lerp(y, pn(o, "lipY", pn(o, "oy", -0.5)) * h, e);
+      turn = lerp(turn, 0.42, e);
+    }
   } else if (mode === "press") {
     // Carried in on the hand, then seated: it stops dead and flares once.
     const k = ease("in", clamp(p / Math.max(0.01, pn(o, "hit", 0.4))));
@@ -305,13 +321,14 @@ function grow(
   r0: number,
   bounds: { cx: number; cy: number; rx: number; ry: number },
   spread: number,
+  floor: number,
 ): Bud[] {
   const rand = seeded(seed);
   const out: Bud[] = [{ x: 0, y: 0, r: r0, bite: -0.9 + rand() * 0.6, gen: 0, born: 0 }];
-  let front = out;
   for (let g = 1; g <= gens; g++) {
+    // Every coin there is splits: the generation is as big as everything before it.
     const next: Bud[] = [];
-    for (const parent of front) {
+    for (const parent of out.slice()) {
       const a = rand() * Math.PI * 2;
       const d = spread * (0.55 + rand() * 0.9) * (1 + g * 0.16);
       let x = parent.x + Math.cos(a) * d;
@@ -328,14 +345,13 @@ function grow(
       next.push({
         x,
         y,
-        r: Math.max(r0 * 0.3, parent.r * (0.86 + rand() * 0.1)),
+        r: Math.max(r0 * floor, parent.r * (0.9 + rand() * 0.08)),
         bite: rand() * Math.PI * 2,
         gen: g,
         born: g * step + rand() * step * 0.45,
       });
     }
     out.push(...next);
-    front = next;
   }
   return out;
 }
@@ -369,7 +385,7 @@ const brood: Frame = (el, p, age) => {
     };
     cached = {
       h,
-      buds: grow(pn(o, "seed", 31), gens, step, seedR, bounds, pn(o, "spread", 0.1) * h),
+      buds: grow(pn(o, "seed", 31), gens, step, seedR, bounds, pn(o, "spread", 0.1) * h, pn(o, "floor", 0.5)),
     };
     trees.set(el, cached);
   }
@@ -584,6 +600,7 @@ export const renderers: Record<string, (p: VfxProps) => ReactNode> = {
   "usury-spill": Spill,
   "usury-drip": Drip,
   "usury-dividend": Dividend,
+  "usury-glow": Glow,
 };
 
 export const frames: Record<string, Frame> = {

@@ -9,22 +9,25 @@
 
 /* ---- the sink ---- */
 .usury-sink-rock {
-  fill: #1a0f0a;
-  stroke: #2c1a11;
-  stroke-width: 6;
+  fill: #1c110b;
+  stroke: #33201a;
+  stroke-width: 8;
+  stroke-linejoin: round;
 }
 .usury-sink-crust-deep {
   fill: #3a2216;
-  opacity: 0.85;
+  stroke: #120a06;
+  stroke-width: 1.4;
+  opacity: 0.9;
 }
 .usury-sink-crust-body {
-  fill: #5a3524;
-  stroke: #180e09;
-  stroke-width: 1.2;
+  fill: #8a4e2a;
+  stroke: #120a06;
+  stroke-width: 2.2;
 }
 .usury-sink-crust-lit {
-  fill: #b46a34;
-  opacity: 0.55;
+  fill: #e8a35a;
+  opacity: 0.5;
 }
 .usury-sink-drip {
   fill: #2e1b12;
@@ -71,11 +74,14 @@
   fill: #0e0a08;
   opacity: 0.5;
 }
+.usury-coin-edge {
+  fill: none;
+  stroke: #160d08;
+  stroke-width: 3.2;
+  stroke-linejoin: round;
+}
 .usury-coin-body {
   fill: #e08a3c;
-  stroke: #160d08;
-  stroke-width: 1.6;
-  stroke-linejoin: round;
 }
 .usury-coin-lit {
   fill: #ffd9a0;
@@ -87,8 +93,8 @@
 }
 
 /* The single coin: big enough to show its edge and its bite. */
-.usury-coin .usury-coin-body {
-  stroke-width: 3;
+.usury-coin .usury-coin-edge {
+  stroke-width: 6;
 }
 .usury-coin-ring {
   fill: none;
@@ -101,8 +107,8 @@
 }
 
 /* The crust breeding on a figure: a hard ink edge, so it reads on a hide. */
-.usury-brood .usury-coin-body {
-  stroke-width: 1.8;
+.usury-brood .usury-coin-edge {
+  stroke-width: 4;
 }
 
 /* The walls answering. */
@@ -119,8 +125,8 @@
 .usury-creep-mass {
   fill: #17100b;
 }
-.usury-creep .usury-coin-body {
-  stroke-width: 2.4;
+.usury-creep .usury-coin-edge {
+  stroke-width: 5;
 }
 
 /* The shingle wave off the fist. */
@@ -139,6 +145,17 @@
   stroke-width: 5;
   opacity: 0;
 }
-.usury-dividend .usury-coin-body {
-  stroke-width: 2.4;
+.usury-dividend .usury-coin-edge {
+  stroke-width: 5;
+}
+
+/* The light behind the target on the impact: a gradient, never a blur. */
+.cine-vfx > .usury-glow {
+  left: 0;
+  top: calc(var(--ah, 160px) * -0.45);
+  width: calc(var(--ah, 160px) * 2.6);
+  height: calc(var(--ah, 160px) * 1.9);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 55%, #ffd9a0 0%, #e08a3c 34%, rgba(224, 138, 60, 0) 70%);
+  opacity: 0.92;
 }

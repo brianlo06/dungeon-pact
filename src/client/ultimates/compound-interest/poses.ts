@@ -43,8 +43,8 @@ const CALL: Expression = { brow: 2.8, knit: 14, open: 1.15, mouth: 2.5, wide: 1.
 
 /** The balance, let down out of the picture, where it stays all film. */
 const DOWN = {
-  scales: turn([0, 18], [1, 22]),
-  pans: turn([0, -18], [0.5, -22], [1, -20]),
+  scales: turn([0, 66], [1, 70]),
+  pans: turn([0, -66], [0.5, -72], [1, -70]),
 };
 
 /**
@@ -107,19 +107,20 @@ const bite: Clip = {
   ],
   parts: {
     ledger: [
-      { at: 0, rotate: -12, x: 0.028, y: -0.018 },
-      { at: 0.34, rotate: -20, x: 0.036, y: -0.05 },
-      { at: 0.42, rotate: -21, x: 0.037, y: -0.052 },
-      { at: 0.62, rotate: -18, x: 0.042, y: -0.044 },
-      { at: 1, rotate: -17, x: 0.046, y: -0.04 },
+      { at: 0, rotate: -84, x: 0.06, y: 0.0 },
+      { at: 0.3, rotate: -100, x: 0.1, y: -0.03 },
+      { at: 0.42, rotate: -102, x: 0.104, y: -0.034 },
+      { at: 0.52, rotate: -101, x: 0.104, y: -0.032 },
+      { at: 0.7, rotate: -96, x: 0.11, y: -0.016 },
+      { at: 1, rotate: -95, x: 0.112, y: -0.014 },
     ],
     head: [
-      { at: 0, rotate: 0, y: 0, x: 0 },
-      { at: 0.3, rotate: 13, y: 0.012, x: 0.004 },
-      { at: 0.42, rotate: 15, y: 0.016, x: 0.005 },
-      { at: 0.5, rotate: 12, y: 0.012, x: 0.004 },
-      { at: 0.72, rotate: -2, y: -0.002 },
-      { at: 1, rotate: -4, y: -0.004 },
+      { at: 0, rotate: 4, y: 0.004, x: 0 },
+      { at: 0.3, rotate: 16, y: 0.02, x: 0.006 },
+      { at: 0.42, rotate: 18, y: 0.024, x: 0.007 },
+      { at: 0.52, rotate: 16, y: 0.02, x: 0.006 },
+      { at: 0.72, rotate: 2, y: 0.002 },
+      { at: 1, rotate: 0, y: 0 },
     ],
     ...face(
       [0, WEIGH_IT],
@@ -154,10 +155,10 @@ const offer: Clip = {
   ],
   parts: {
     ledger: [
-      { at: 0, rotate: -17, x: 0.046, y: -0.04 },
-      { at: 0.34, rotate: -34, x: 0.075, y: -0.05 },
-      { at: 0.6, rotate: -36, x: 0.08, y: -0.052 },
-      { at: 1, rotate: -35, x: 0.078, y: -0.05 },
+      { at: 0, rotate: -96, x: 0.07, y: -0.03 },
+      { at: 0.34, rotate: -120, x: 0.12, y: -0.05 },
+      { at: 0.6, rotate: -124, x: 0.13, y: -0.054 },
+      { at: 1, rotate: -122, x: 0.128, y: -0.052 },
     ],
     head: turn([0, -4], [0.34, -8], [0.6, -6], [1, -5]),
     ...face([0, OFFER], [0.4, OFFER], [0.66, { ...OFFER, open: 0.6 }], [1, { ...OFFER, open: 0.55 }]),
@@ -187,10 +188,10 @@ const press: Clip = {
   ],
   parts: {
     ledger: [
-      { at: 0, rotate: -35, x: 0.078, y: -0.05 },
-      { at: 0.4, rotate: -46, x: 0.12, y: -0.03 },
-      { at: 0.62, rotate: -47, x: 0.125, y: -0.028 },
-      { at: 1, rotate: -46, x: 0.124, y: -0.028 },
+      { at: 0, rotate: -122, x: 0.128, y: -0.052 },
+      { at: 0.4, rotate: -104, x: 0.19, y: -0.01 },
+      { at: 0.62, rotate: -105, x: 0.196, y: -0.008 },
+      { at: 1, rotate: -104, x: 0.194, y: -0.008 },
     ],
     head: turn([0, -5], [0.4, 6], [0.7, 4], [1, 3]),
     ...face([0, COLD], [0.4, COLD], [0.7, { ...COLD, mouth: 0.9, wide: 1.3 }], [1, { ...COLD, mouth: 1, wide: 1.3 }]),
@@ -225,11 +226,11 @@ const call: Clip = {
     // Off the target and shut: the hand comes back, the fist snaps closed at
     // the chest on the contact frame, and stays there.
     ledger: [
-      { at: 0, rotate: -46, x: 0.124, y: -0.028 },
-      { at: 0.08, rotate: -38, x: 0.09, y: -0.042 },
-      { at: 0.13, rotate: -24, x: 0.05, y: -0.06 },
-      { at: 0.26, rotate: -22, x: 0.046, y: -0.058 },
-      { at: 1, rotate: -20, x: 0.044, y: -0.054 },
+      { at: 0, rotate: -104, x: 0.194, y: -0.008 },
+      { at: 0.08, rotate: -110, x: 0.15, y: -0.03 },
+      { at: 0.13, rotate: -126, x: 0.06, y: -0.07 },
+      { at: 0.26, rotate: -124, x: 0.058, y: -0.066 },
+      { at: 1, rotate: -122, x: 0.056, y: -0.062 },
     ],
     head: turn([0, 3], [0.08, 5], [0.13, -10], [0.3, -7], [1, -6]),
     ...face([0, COLD], [0.08, COLD], [0.12, CALL], [0.55, CALL], [1, { ...CALL, mouth: 1.9, open: 0.9 }]),

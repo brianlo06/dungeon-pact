@@ -85,8 +85,8 @@ export const compoundInterest: Cinematic = {
       fastMs: 380,
       transition: { kind: "black", ms: 60 },
       camera: {
-        from: { x: 770, y: 890, zoom: 2.1, rotate: 7 },
-        to: { x: 782, y: 876, zoom: 2.32, rotate: 4 },
+        from: { x: 700, y: 900, zoom: 2.2, rotate: 7 },
+        to: { x: 706, y: 908, zoom: 2.42, rotate: 4 },
         ease: "out",
       },
       background: "usury-sink",
@@ -105,7 +105,7 @@ export const compoundInterest: Cinematic = {
         },
       ],
       vfx: [
-        { kind: "usury-coin", at: 0, until: 1, follow: "caster", layer: "front", params: { mode: "hold", size: 0.055, ox: 0.1, oy: -0.44, bite: 0.42, spin: 0.6 } },
+        { kind: "usury-coin", at: 0, until: 1, follow: "caster", layer: "front", params: { mode: "hold", size: 0.05, ox: 0.09, oy: -0.585, lipX: 0.084, lipY: -0.625, bite: 0.42, spin: 0.6 } },
         { kind: "motes", at: 0, until: 1, x: 900, y: 700, scale: 1.2, color: COPPER, seed: 6, layer: "back", params: { still: true } },
       ],
       sound: [{ at: 0.42, sfx: "usury-bite" }],
@@ -137,16 +137,16 @@ export const compoundInterest: Cinematic = {
       actors: [
         {
           role: "target",
-          at: [1150, 880],
+          at: [1150, 850],
           size: 250,
           face: -1,
           z: 1,
           react: [{ at: 0.52, clip: "anticipate", then: "idle" }],
         },
-        { role: "caster", at: [330, 950], size: 600, clip: "ult:usury-offer", look: "rim", rim: COPPER, z: 3 },
+        { role: "caster", at: [330, 880], size: 600, clip: "ult:usury-offer", look: "rim", rim: COPPER, z: 3 },
       ],
       vfx: [
-        { kind: "usury-coin", at: 0, until: 1, follow: "caster", layer: "front", params: { mode: "hold", size: 0.06, ox: 0.28, oy: -0.52, bite: -1, spin: 0.5 } },
+        { kind: "usury-coin", at: 0, until: 1, follow: "caster", layer: "front", params: { mode: "hold", size: 0.06, ox: 0.3, oy: -0.6, bite: -1, spin: 0.5 } },
         { kind: "glint", at: 0.24, until: 0.5, follow: "caster", x: 168, y: -312, scale: 0.42, color: HOT, layer: "front" },
         { kind: "usury-stir", at: 0.24, until: 0.94, layer: "back" },
         { kind: "usury-creep", at: 0.88, until: 1, layer: "screen", params: { mode: "out" } },
@@ -180,13 +180,13 @@ export const compoundInterest: Cinematic = {
           actors: [
             {
               role: "target",
-              at: [1200, 900],
+              at: [1200, 870],
               size: 230,
               face: -1,
               z: 1,
               react: [{ at: 0.52, clip: "anticipate", then: "idle" }],
             },
-            { role: "caster", at: [300, 960], size: 600, clip: "ult:usury-offer", look: "rim", rim: COPPER, z: 3 },
+            { role: "caster", at: [300, 890], size: 600, clip: "ult:usury-offer", look: "rim", rim: COPPER, z: 3 },
           ],
         },
       },
@@ -214,7 +214,7 @@ export const compoundInterest: Cinematic = {
         { role: "caster", at: [790, 990], size: 560, clip: "ult:usury-press", look: "rim", rim: COPPER, z: 3 },
         {
           role: "target",
-          at: [1290, 960],
+          at: [1180, 960],
           size: 430,
           face: -1,
           z: 1,
@@ -230,7 +230,7 @@ export const compoundInterest: Cinematic = {
           until: 1,
           follow: "caster",
           layer: "front",
-          params: { mode: "press", size: 0.07, ox: 0.3, oy: -0.52, tx: 0.62, ty: -0.46, hit: 0.42, bite: 0 },
+          params: { mode: "press", size: 0.07, ox: 0.42, oy: -0.62, tx: 0.7, ty: -0.43, hit: 0.42, bite: 0 },
         },
       ],
       sound: [{ at: 0.36, sfx: "usury-press" }],
@@ -238,20 +238,31 @@ export const compoundInterest: Cinematic = {
       framing: {
         boss: {
           camera: {
-            from: { x: 1010, y: 810, zoom: 1.7, rotate: -6 },
-            to: { x: 1000, y: 820, zoom: 1.8, rotate: -3 },
+            from: { x: 1090, y: 800, zoom: 1.7, rotate: -6 },
+            to: { x: 1080, y: 810, zoom: 1.8, rotate: -3 },
             ease: "out",
           },
           actors: [
-            { role: "caster", at: [790, 1030], size: 560, clip: "ult:usury-press", look: "rim", rim: COPPER, z: 3 },
+            { role: "caster", at: [880, 1030], size: 560, clip: "ult:usury-press", look: "rim", rim: COPPER, z: 3 },
             {
               role: "target",
-              at: [1420, 1010],
+              at: [1330, 1010],
               size: 300,
               face: -1,
               z: 1,
               react: [{ at: 0.42, clip: "hurt", then: "idle" }],
               shove: { at: 0.42, by: [6, 0] },
+            },
+          ],
+          vfx: [
+            { kind: "usury-creep", at: 0, until: 0.18, layer: "screen", params: { mode: "in" } },
+            {
+              kind: "usury-coin",
+              at: 0,
+              until: 1,
+              follow: "caster",
+              layer: "front",
+              params: { mode: "press", size: 0.07, ox: 0.42, oy: -0.62, tx: 0.9, ty: -0.36, hit: 0.42, bite: 0 },
             },
           ],
         },
@@ -269,14 +280,14 @@ export const compoundInterest: Cinematic = {
       fastMs: 360,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 1128, y: 782, zoom: 4.6 },
-        to: { x: 1132, y: 786, zoom: 4.9 },
+        from: { x: 1120, y: 790, zoom: 4.6 },
+        to: { x: 1124, y: 794, zoom: 4.9 },
         ease: "linear",
       },
       background: "usury-sink",
       lighting: { exposure: 0.3, under: [COPPER, 0.45], rim: [COPPER, 0.9, 1], vignette: 0.86, letterbox: 0.13 },
       toLighting: { exposure: 0.16, under: [COPPER, 0.3], rim: [HOT, 1, 1], vignette: 0.92, letterbox: 0.14 },
-      actors: [{ role: "target", at: [1290, 960], size: 430, face: -1, z: 1 }],
+      actors: [{ role: "target", at: [1180, 960], size: 430, face: -1, z: 1 }],
       vfx: [
         {
           kind: "usury-brood",
@@ -284,9 +295,9 @@ export const compoundInterest: Cinematic = {
           until: 1,
           follow: "target",
           layer: "front",
-          params: { mode: "quiet", gens: 2, step: 0.34, pop: 0.09, size: 0.07, spread: 0.075, bx: 0, by: 0, brx: 0.3, bry: 0.24, notch: 3, seed: 19, ox: 0.18, oy: -0.46 },
-          x: 55,
-          y: -198,
+          params: { mode: "quiet", gens: 2, step: 0.34, pop: 0.09, size: 0.07, spread: 0.12, bx: 0, by: 0, brx: 0.3, bry: 0.24, notch: 3, seed: 19, floor: 0.8 },
+          x: -60,
+          y: -170,
         },
       ],
       duck: [{ at: 0, level: 0.04, ms: 640 }],
@@ -303,6 +314,28 @@ export const compoundInterest: Cinematic = {
         { at: 0.34, label: "it splits" },
         { at: 0.9, label: "and again" },
       ],
+      framing: {
+        boss: {
+          camera: {
+            from: { x: 1303, y: 860, zoom: 4.6 },
+            to: { x: 1307, y: 864, zoom: 4.9 },
+            ease: "linear",
+          },
+          actors: [{ role: "target", at: [1330, 1010], size: 300, face: -1, z: 1 }],
+          vfx: [
+            {
+              kind: "usury-brood",
+              at: 0,
+              until: 1,
+              follow: "target",
+              layer: "front",
+              params: { mode: "quiet", gens: 2, step: 0.34, pop: 0.09, size: 0.1, spread: 0.17, bx: 0, by: 0, brx: 0.4, bry: 0.3, notch: 3, seed: 19, floor: 0.8 },
+              x: -27,
+              y: -150,
+            },
+          ],
+        },
+      },
     },
 
     /* 5 · CALLED IN — the impact: the doubling runs away. */
@@ -337,14 +370,17 @@ export const compoundInterest: Cinematic = {
         },
       ],
       vfx: [
+        { kind: "usury-glow", at: 0, until: 1, follow: "target", layer: "back" },
         { kind: "usury-rush", at: 0.04, until: 0.42, layer: "back", params: { over: 0.1, hx: 0.16, hy: 0.02 } },
         {
           kind: "usury-brood",
           at: 0.02,
           until: 1,
           follow: "target",
+          x: -60,
+          y: -170,
           layer: "front",
-          params: { mode: "run", gens: 8, step: 0.0135, pop: 0.012, size: 0.065, spread: 0.085, bx: 0, by: -0.16, brx: 0.34, bry: 0.38, notch: 9, seed: 23 },
+          params: { mode: "run", gens: 9, step: 0.012, pop: 0.012, size: 0.075, spread: 0.13, bx: 0.17, by: -0.03, brx: 0.5, bry: 0.3, notch: 24, seed: 23, floor: 0.55 },
         },
         { kind: "usury-spill", at: 0.13, until: 0.75, follow: "target", layer: "front", params: { count: 26, seed: 8 } },
         { kind: "shockwave", at: 0.13, until: 0.5, follow: "target", y: -140, scale: 1.1, color: COPPER, layer: "front" },
@@ -397,6 +433,7 @@ export const compoundInterest: Cinematic = {
             },
           ],
           vfx: [
+            { kind: "usury-glow", at: 0, until: 1, follow: "target", layer: "back", scale: 1.5 },
             { kind: "usury-rush", at: 0.04, until: 0.42, layer: "back", params: { over: 0.1, hx: 0.16, hy: 0.02 } },
             {
               kind: "usury-brood",
@@ -404,7 +441,7 @@ export const compoundInterest: Cinematic = {
               until: 1,
               follow: "target",
               layer: "front",
-              params: { mode: "run", gens: 9, step: 0.012, pop: 0.012, size: 0.06, spread: 0.08, bx: 0, by: -0.2, brx: 0.3, bry: 0.42, notch: 9, seed: 23 },
+              params: { mode: "run", gens: 9, step: 0.012, pop: 0.012, size: 0.07, spread: 0.13, bx: 0, by: -0.5, brx: 0.34, bry: 0.46, notch: 24, seed: 23, floor: 0.55 },
             },
             { kind: "usury-spill", at: 0.13, until: 0.75, follow: "target", layer: "front", params: { count: 30, seed: 8 } },
             { kind: "shockwave", at: 0.13, until: 0.5, follow: "target", y: -220, scale: 1.4, color: COPPER, layer: "front" },
@@ -428,7 +465,7 @@ export const compoundInterest: Cinematic = {
       toLighting: { tint: [SOOT, 0], letterbox: 0 },
       actors: [{ role: "caster", at: [0, 0], size: 0, clip: "ult:usury-settle" }],
       vfx: [
-        { kind: "usury-brood", at: 0, until: 1, anchor: "targets", params: { mode: "board", gens: 4, step: 0.1, pop: 0.05, size: 0.05, spread: 0.075, bx: 0, by: -0.2, brx: 0.3, bry: 0.32, notch: 5, seed: 23 } },
+        { kind: "usury-brood", at: 0, until: 1, anchor: "targets", params: { mode: "board", gens: 5, step: 0.09, pop: 0.05, size: 0.1, spread: 0.12, bx: 0, by: -0.45, brx: 0.42, bry: 0.28, notch: 9, seed: 23, floor: 0.6 } },
         { kind: "usury-drip", at: 0.22, until: 1, anchor: "targets", params: { seed: 17 } },
         { kind: "usury-dividend", at: 0.3, until: 1, anchor: "party", stagger: 70 },
       ],

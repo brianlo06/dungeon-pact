@@ -33,9 +33,9 @@ const ell = (x: number, y: number, rx: number, ry: number) =>
 
 /** The hole: an ellipse with the rock's roughness worked into its edge. */
 const CX = 800;
-const CY = 470;
-const RX = 1560;
-const RY = 760;
+const CY = 520;
+const RX = 660;
+const RY = 410;
 const FLOOR = 820;
 
 const wobble = seeded(1717);
@@ -74,19 +74,19 @@ function crust() {
     // Down the sides and along the floor there is more of it, and it reaches
     // further in; overhead it is a scatter.
     const low = 0.35 + 0.65 * Math.max(0, Math.sin(a));
-    const reach = 40 + rand() * 300 * low;
-    const colony = 6 + Math.floor(rand() * 16 * low);
+    const reach = 20 + rand() * 150 * low;
+    const colony = 5 + Math.floor(rand() * 12 * low);
     const towards = Math.atan2(CY - ey, CX - ex);
     const cxp = ex + Math.cos(towards) * reach * rand();
     const cyp = ey + Math.sin(towards) * reach * rand();
     if (cyp > FLOOR + 40) continue;
     for (let i = 0; i < colony; i++) {
-      const spread = 30 + rand() * 110;
+      const spread = 20 + rand() * 70;
       const x = cxp + (rand() - 0.5) * spread * 2;
       const y = cyp + (rand() - 0.5) * spread;
       // The middle of the room, where the cast stands, stays bare.
-      if (Math.abs(x - 800) < 620 && y > 150 && y < FLOOR) continue;
-      const r = 10 + rand() * 22 * (0.5 + low * 0.5);
+      if (Math.abs(x - 800) < 420 && y > 250 && y < FLOOR) continue;
+      const r = 7 + rand() * 15 * (0.5 + low * 0.5);
       const d = ell(x, y, r, r * 0.84);
       if (rand() < 0.28) deep += d;
       else {
@@ -107,7 +107,7 @@ function shingle() {
     const t = rand() ** 0.8;
     const y = FLOOR + t * 540;
     const x = -820 + rand() * 3240;
-    const r = 9 + t * 34 + rand() * 9;
+    const r = 7 + t * 30 + rand() * 7;
     body += ell(x, y, r, r * 0.66);
     if (rand() < 0.6) lit += ell(x - r * 0.24, y - r * 0.2, r * 0.54, r * 0.38);
   }
@@ -120,20 +120,19 @@ function drips() {
   let stem = "";
   let coins = "";
   for (const [x, len, w] of [
-    [-230, 520, 86],
-    [180, 300, 52],
-    [560, 190, 38],
-    [1160, 250, 44],
-    [1460, 470, 78],
-    [1960, 620, 96],
+    [330, 250, 56],
+    [560, 130, 34],
+    [1010, 110, 30],
+    [1200, 210, 44],
+    [1370, 120, 32],
   ] as [number, number, number][]) {
     // Hung from the roof of the hole, wherever that is above this x.
     const t = Math.max(0, 1 - ((x - CX) / (RX * 0.95)) ** 2);
-    const top = CY - RY * Math.sqrt(t) + 40;
+    const top = CY - RY * Math.sqrt(t) + 30;
     stem += `M${x - w / 2} ${top} C${x - w * 0.4} ${top + len * 0.62} ${x - w * 0.14} ${top + len * 0.82} ${x} ${top + len} C${x + w * 0.16} ${top + len * 0.82} ${x + w * 0.42} ${top + len * 0.62} ${x + w / 2} ${top} Z`;
     for (let i = 0; i < 26; i++) {
       const k = rand();
-      const r = 7 + rand() * 13 * (1 - k * 0.65);
+      const r = 5 + rand() * 9 * (1 - k * 0.65);
       coins += ell(x + (rand() - 0.5) * w * (1 - k * 0.8), top + k * len, r, r * 0.84);
     }
   }
@@ -198,9 +197,9 @@ function Sink() {
       <path className="usury-sink-drip" d={DRIPS.stem} />
       <path className="usury-sink-crust-body" d={DRIPS.coins} />
       {/* Borrowers, held in the crust to either side. */}
-      {borrower(SHOULDER, -120, 700, 1.7, 71)}
-      {borrower(HORN, 1980, 760, 1.5, 33, true)}
-      {borrower(HAND, 1840, 330, 0.9, 12)}
+      {borrower(SHOULDER, 215, 760, 0.85, 71)}
+      {borrower(HORN, 1400, 780, 0.8, 33, true)}
+      {borrower(HAND, 1330, 380, 0.5, 12)}
       {/* The crust on the rock. */}
       <path className="usury-sink-crust-deep" d={CRUSTS.deep} />
       <path className="usury-sink-crust-body" d={CRUSTS.body} />
