@@ -132,7 +132,7 @@
    * frame when its left edge is a frame left of the frame's. `in`: from off
    * the left to covering; `out`: from covering to off the right.
    */
-  --x: calc(-300% + var(--pi) * 200%);
+  --x: calc(-300% + min(1, var(--pi) * 1.6) * 200%);
 }
 .sb-flare[data-mode="out"] {
   --x: calc(-100% + var(--pe) * 200%);
