@@ -1,0 +1,215 @@
+/*
+ * Living Bone. Everything moves through the film's frame functions or --p
+ * written from the combat clock; no keyframes, and no filter or blur on
+ * anything that moves or is large. Glows are gradients and wide, faint
+ * strokes. Bone, juniper, bracken, one bead of velvet-blood.
+ */
+
+/* ---- the shedding ground (background) ---- */
+.lb-twigs path {
+  fill: none;
+  stroke: #17241d;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.lb-fronds path {
+  fill: none;
+  stroke: #4a3218;
+  stroke-linecap: round;
+}
+.lb-fronds path.light {
+  stroke: #8a6236;
+}
+.lb-crowns .ink,
+.lb-ground-crown .ink {
+  fill: none;
+  stroke: #201a14;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.lb-crowns .bone,
+.lb-ground-crown .bone {
+  fill: none;
+  stroke: #ece3cf;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.lb-crowns .leaf {
+  fill: #7fc4a4;
+  stroke: #201a14;
+  stroke-width: 2;
+}
+
+/* ---- world-space containers ---- */
+.cine-vfx > .lb-ground,
+.cine-vfx > .lb-thread {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  transform: none;
+  overflow: visible;
+}
+.cine-vfx > .lb-thread {
+  pointer-events: none;
+}
+.lb-thread-svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+}
+.lb-ground-fronds path {
+  fill: none;
+  stroke: #3e2a14;
+  stroke-linecap: round;
+}
+
+/* ---- inside the Warden's copy ---- */
+.lb-held-ink,
+.lb-bud-ink {
+  fill: none;
+  stroke: #171420;
+  stroke-width: 5.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.lb-held-bone,
+.lb-bud-bone {
+  fill: none;
+  stroke: #a57c52;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.lb-held-bead {
+  fill: #c4573f;
+  stroke: #171420;
+  stroke-width: 0.5;
+}
+.lb-splinter {
+  fill: #ece3cf;
+  stroke: #171420;
+  stroke-width: 0.5;
+}
+.lb-chips {
+  opacity: 0;
+}
+/* The lantern's mote-light on the hand, gone while it is a fist. */
+.ult-cinematic[data-cinematic="living-bone"] .cine-actor[data-role="caster"] .ph-wdn-mote {
+  opacity: calc(1 - var(--wdn-grasp, 0));
+}
+
+/* ---- the graft ---- */
+.lb-thread-glow {
+  fill: none;
+  stroke: #7fc4a4;
+  stroke-width: 22;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0.35;
+}
+.lb-thread-core {
+  fill: none;
+  stroke: #e6fbef;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.lb-thread-motes circle {
+  fill: #dff5e6;
+  opacity: 0;
+}
+.lb-take {
+  opacity: 0;
+}
+.lb-take-ring {
+  fill: none;
+  stroke: #7fc4a4;
+  stroke-width: 5;
+}
+.lb-bud-bone {
+  stroke: #ece3cf;
+}
+.lb-bud-leaf {
+  fill: #7fc4a4;
+  stroke: #171420;
+  stroke-width: 1;
+  opacity: 0;
+}
+.ult-cinematic[data-cinematic="living-bone"] .cine-actor[data-role="allies"][data-bone-bound] .cine-look {
+  opacity: 1;
+}
+.ult-cinematic[data-cinematic="living-bone"] .cine-actor[data-role="allies"][data-bone-bound]::before {
+  opacity: 0.9;
+}
+.lb-chip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  transform: translate(-50%, calc(-100% + (1 - var(--k, 0)) * 18px));
+  white-space: nowrap;
+  text-align: center;
+  font: 800 22px/1.15 var(--font-display, system-ui), system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  color: #f4fbf6;
+  text-shadow:
+    0 0 2px #0b1510,
+    0 0 12px #0b1510,
+    0 2px 0 #0b1510;
+}
+.lb-chip-word {
+  display: block;
+  font-size: 30px;
+  text-transform: uppercase;
+  color: #b9ecd2;
+}
+.lb-chip-nums {
+  display: block;
+  font-size: 26px;
+  color: #ece3cf;
+}
+
+/* ---- the real battlefield ---- */
+.lb-board {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+}
+.lb-board-graft,
+.lb-board-bead {
+  position: absolute;
+  overflow: visible;
+  opacity: 0;
+}
+.lb-board-bud {
+  transform-origin: 0 0;
+}
+.lb-board-graft .lb-board-bud {
+  transform: scale(calc(var(--g, 0) * 2.6)) rotate(-70deg) translate(-78px, -16px);
+}
+.lb-board-graft .lb-bud-ink {
+  stroke-width: 4.2;
+}
+.lb-board-graft .lb-bud-bone {
+  stroke-width: 2;
+}
+.lb-board-motes circle {
+  r: 2.2;
+}
+.lb-board-graft .lb-bud-leaf {
+  opacity: calc(clamp(0, (var(--g, 0) - 0.8) * 5, 1));
+}
+.lb-board-motes circle {
+  fill: #dff5e6;
+  opacity: 0;
+}
