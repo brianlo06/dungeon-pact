@@ -152,3 +152,126 @@ shape.
 ## Voice
 
 "Go on. Hit me." · "Here. Have it back." · "Didn't even bleed."
+
+## Measurements
+
+Quick balance (`scripts/ultimate-report.ts 4 --sample=6`, 324 runs, same
+machine, back to back):
+
+| Win rate | off | on, stub `null` (the Ironhide on Red Ledger) | **on, A Good Hiding** |
+| --- | ---: | ---: | ---: |
+| 2 players | 75% | 83% | **83%** |
+| 3 players | 94% | 95% | **95%** |
+| 4 players | 92% | 93% | **93%** |
+| all | 91% | 93% | **93%** |
+
+Nothing moves, because the bot trains a Reaver into the Ironhide rarely in
+that sample (Reaver uses 2.48 per run and 266 charge earned, both runs). The
+head-to-head table above is the real comparison.
+
+**Performance** (dev build, `GPU=1 scripts/profile-ultimate.ts 5481 1920x1080
+"hero=reaver&evo=rvr-ironhide"`, shared machine at load average ~13): film p50
+16.7ms / p95 16.8ms, 2 frames over 34ms; the round after it p50 16.7 / p95
+16.8, 1 over 34ms. Red Ledger straight before it on the same page: p50 16.7 /
+p95 16.8, 2 over 34ms. Peak 915 nodes (837 SVG), 4 live effects, no filtered
+elements. An earlier run while another session's suite was at load ~17 gave
+the film p95 50ms against the round's 33.4ms; run again on a quieter machine,
+both matched.
+
+**Levels**, rendered offline in the browser (`OfflineAudioContext`, peak / RMS):
+`hiding-impact` 1.15–1.25 / 0.081 (Red Ledger's `ledger-cut` 1.15 / 0.076,
+Command Performance's impact 1.14 / 0.079); the motif 0.28 / 0.029 (perf-motif
+0.65 / 0.029); the swallow 0.60 / 0.028, kept well under the impact; the quiet
+0.03 / 0.001 (perf-hush 0.04). The first render had the swallow at 0.83, close
+enough to the impact to steal it, and the whoosh inaudible at 0.04.
+
+## Face and whole-body motion
+
+The close-ups act with `face()`: `ult:hiding-dare` (brow lowered on the blow
+of the fist, then lifted into a grin as the arms open) and `ult:hiding-take`
+(the brow shelf dropped 1.8 units on the blow with the eyes held fully open
+under it, easing up to a grin; knit never over 4°, and the browser test holds
+the brow's tilt under 5°). `ult:hiding-strike` roars on the contact.
+
+Root keys, authored for the shot each plays in: `ult:hiding-call` and
+`ult:hiding-settle` (small, battlefield size: a bob on each blow of the fist,
+a lean back); `ult:hiding-open` (a 5–8° lean back onto the heels, for the wide
+at 400 units); `ult:hiding-raise` (sinking 0.014 and leaning back 3°, for the
+quiet's two-shot); `ult:hiding-strike` (x 0.09–0.1, rotate 12–13°, squash 0.87,
+scale 1.04, for the medium impact). **`root: false`** on both close-ups, the
+dare and the take: their roots are a hair (≤ 7°, ≤ 0.03) but the face would
+leave the frame with them. Nothing is rebuilt on `.cine-look`.
+
+## Notes from the lab
+
+- **Every camera and effect was placed from probes** (`.cine-actor
+  [data-part]`, world units). The first dent sat on the jaw (the Reaver's head
+  reaches down to y 841 in the take); it is at the chest, 560 above the ground
+  point and 30 forward. The first blow landed the cleaver in the air in front
+  of the hound (contact 256° pointed the blade at the floor, and the hound's
+  near edge was at x 816 with the blade at 806); the Reaver was moved 40 in,
+  the hound 40 back, and the contact angle brought up to 222° so the blade
+  lies across the hound's neck on the frame after the accent.
+- **The drawn frame was unreadable twice.** At exposure 0.95 the loft is dark
+  umber, so the two-tone turned the whole background black and the hound
+  vanished into it. A pale field is now laid behind the figures on the back
+  layer (`hiding-glare`) so the frame is iron and every figure ink. Its first
+  version was bars of slat light, which on the frame read as a cage; it is a
+  field with two thin lumpy rings of the dent round the blow, and it sinks to
+  18% within 170ms so the colour picture returns.
+- **Arms wide** does not exist in a profile rig: the fist thrown up covered
+  the face in every version (−104°, −128°). The opened stance is both arms
+  swung *back* (fist +64°, cleaver +34°) with the chin up and the body leaning
+  back, which reads as a chest offered.
+- **Eyes open under the brow.** At brow 2.4 the shelf hides the eyes entirely
+  and the Ironhide looked as if it flinched shut, which is the opposite of the
+  point; the brow now drops 1.8 with the eyes at full opening.
+- **A flash on the blow in the take washed the face out** on its first frame;
+  it was removed. The stop, the jolt of the head and the dust carry it.
+- **The iron** was first a hatch of parallel lines, which read as a speaker
+  grille on the chest; it is now short scored strokes every which way over a
+  grey, lumpy patch.
+- **The quiet's silhouettes glowed gold**: the silhouette look's glow reads
+  `--back-c`, so the shot sets `back: [LIME, 0]`, as Red Ledger found.
+- **Films merged while this was authored:** Sunblind (the Gloomstalker's white
+  roofs, low sun, arrow shadows) and Dry Flood (the Pyromancer's dry spillway
+  and fire poured like water). Neither owns a tannery, hides, a dent, dust off
+  a body, or a chest-beating; nothing here was changed for them.
+
+## What the engine could not do, and what was built instead
+
+- **The enemy's blow is film, not a result.** The Ultimate resolves before the
+  round, and no effect lets an enemy strike during it, so the target's
+  `attack` in the swing and the blow taken in the close-up show what Weak and
+  Barrier mean rather than a beat. The Barrier's `ward` beat is revealed on the
+  take; Weak and Empowered log no beat at all, so the board's status chips
+  carry them, with `hiding-board` over each unit.
+- **The occlusion object is always a cape**, so the hanging hide swung across
+  the lens is an in-folder screen effect straddling the cut (`hiding-wipe`,
+  out at the end of the dare, in at the start of the swing), and the swing's
+  transition is left a `cut`. The engine would need an `occlusion` whose object
+  is an effect kind.
+- **A self-targeted status is never shown on the target's copy**, and Weak
+  has no presentation in combat, so the enemy's spent strength is drawn as a
+  slack, sagging dent on the board, and the real enemy plays `hurt` there
+  (battlefield clips reach targets).
+- **A clip plays at one rate in FULL and FAST**, so the dare's arms are open
+  by 372ms and the take's grin lands by 392ms, inside FAST's 400 and 420, and
+  both hold in FULL.
+- **Enemies take no `ult:` poses**, so the enemy is off balance in the quiet by
+  a tilt on its actor cue, not a pose.
+
+## Where it is weakest
+
+- **The boss impact.** Against the Collector the Ironhide is a third of the
+  boss's height and the blade lands in its robe beside the key; it reads as a
+  blow, not as a beating. A wider two-shot or a lower camera looking up at the
+  boss would sell it better.
+- **The hides in the loft's background** read as ragged brown drapery at the
+  top of the frame more than as cured hides; the foreground hides (the wipe,
+  the quiet's pair) read as hides.
+- **The opened stance** is a lean back with both arms behind, not arms flung
+  wide; the rig cannot do wider in profile.
+- **The board after** is small: the iron over the Ironhide and the sagging dent
+  over the enemy are legible in a still, and in play they sit beside the
+  Barrier and Weak chips that say the same thing louder.
