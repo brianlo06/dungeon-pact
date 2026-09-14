@@ -20,9 +20,12 @@ eight health gone for three points of power, and the Ultimate burns its own
 **sleeve**.
 
 Fire is never a forge here (no molten rims, no embers, no red forge light, no
-metal): it is drawn as tongues of flame, each with the spark's blue at its
-root, that lean the way the fire runs and lick upward even while the fire is
-pouring down.
+metal), and never a flame icon stamped in rows. The flood is drawn the way a
+flood of water is: **one body with a front**, a sheet on every step that
+curls over each nose and tumbles down the riser, a pool that spreads across
+the basin and piles up against whatever stands in it. What makes it fire is
+its surface: licks riding the current and trailing back, bright streaks
+running inside it, flame thrown up like spray where it hits.
 
 ## Gameplay
 
@@ -91,27 +94,42 @@ are setup on one row only.
 ## Space, palette, sound
 
 - **Space: the dry spillway.** The cistern's great stepped spillway, dry for
-  years. A lip of dressed stone at the top with a black culvert mouth behind
-  it; steps going down to a basin floor of cracked silt; and on the walls
-  above everything, pale tide-lines at every height the water ever stood, one
-  over another, far over the heads of the enemy row. Dead weed hangs dried
-  black from every step's edge. Nothing in it is wet. Not a hall, a forge, a
+  years, and every mark the water left on it: a pale crust at the high-water
+  line with stains run down from it, the wall dry stone above it and stained
+  dark below, fainter rings where the water sat lower; a depth gauge painted
+  on the wall with nothing to measure; the culvert behind the lip with its
+  grate still in it; poured-stone steps worn round at the nose, a dark skin
+  of dead growth on every riser and dried weed hanging off every nose; the
+  basin's silt dried and cracked into plates, the rings of the last puddles,
+  a grated drain, and the bones of a fish that was living in it when it
+  went. Nothing in it is wet. Not a hall, a forge, a
   gate, a storm, a drowned ledger, a held fall, a ridge, a meadow, a wood, a
   causeway, a snowfield, a vault, the ground under the floor, a pit, a mere, a
   labyrinth, a no-man's-land, a mirror room or a page. Three drawings of it:
   `dry-lip` (the lip at a hand's scale), `dry-weir` (the whole spillway,
   side-on) and `dry-steps` (the steps from the basin, looking up).
-- **Fire** (`fire.tsx`; `dry-flame`, `dry-pour`, `dry-fire`, `dry-flare`,
-  `dry-crest`, `dry-kindle`, `dry-burning`, `dry-singe`): tongues of flame in
-  four flat layers, deep red, orange, gold and a pale core, with the spark's
-  blue at the root; each tongue has three drawings and boils between them on
-  its own beat, and every tongue leans the way the fire runs. Smoke is drawn
-  the same way: three curling strokes going up, plum-black with a warm edge.
-  No embers, no sparks, no blur; a glow is a small flat gradient at most.
+- **The flood** (`dry-fire`): one outline traced every frame along the
+  steps' edge (`weir.ts`), from the lip to wherever its front has got to, in
+  three flat layers (deep red, orange, gold) that are the same outline at
+  three thicknesses. On a tread it is a sheet; off each nose it shoots out
+  and falls as a curtain to the next tread; on the floor it is a pool that
+  piles up round every figure's legs. Its front is a rolling head that curls
+  over and back under itself, and on a riser tumbles down the face. Its
+  surface is torn into licks, each hashed from its place in the current (its
+  own width, height and flicker; no drawing is repeated), carried along with
+  the flow and trailing back against it; bright streaks run inside the body
+  like the lines on fast water; where the front hits a figure it throws seven
+  blades of flame up over it like spray, bent upward by the heat. A back
+  band draws the whole flood behind the figures and a front band only the
+  near edge of the pool, round their feet and shins.
+- **The small fires** (`fire.tsx`; `dry-flame`, `dry-pour`, `dry-kindle`,
+  `dry-burning`, `dry-singe`): tongues in four flat layers, three drawings a
+  tongue boiling between them. Smoke: three curling strokes going up. No
+  embers, no sparks, no blur, no blue; a glow is a small flat gradient.
 - **Palette:** soot umber `#140d09`, silt bone `#cdbf9f` (the tide-lines and
   the dry stone), flame orange `#ff8a2a` (the accent), gold `#ffc63d`, deep red
-  `#b8321c`, a pale core `#fff1c8`, and the spark's blue `#5fb2ff` only at the
-  root of a flame. The Arcanist's storm blue is nowhere else.
+  `#b8321c` and a pale core `#fff1c8`. The Arcanist's storm blue is nowhere,
+  not even at the root of a flame.
 - **Motif (original):** four notes on a low reed-like voice whose every note
   *flutters* (a fast tremolo, the way a flame does): A3, E4, F4, then D4 held
   and guttering out.
@@ -138,21 +156,22 @@ out its own sleeve).
 |---|---|---|---|---|---|---|---|---|---|---|
 | 0 | Call | 420 (240) | battle camera | real Arcanist `ult:dry-catch`: the hand comes up and the spark catches | real battlefield sinks to soot, bars close | orange call aura; a drawn flame catches in the real glove (`dry-kindle`) | `dry-call`: a rasp and the catch; music ducks | on board | — | break the round |
 | 1 | Lip · detail | 640 (400) | side-on at the lip, the Arcanist from hat to lip with the drop beside it, Dutch 6°; held until the pour, then it drops down the fall after the fire (`snap`) | `ult:dry-pour`: the arm out over the drop, the spark swells, the hand tips over (221ms) and the spark is gone; the hat's tip lifts in the heat and trembles up there; the head tips to watch (`root: false`) | `dry-lip`; lit from below by the fire | the spark as a flame held in the palm (`dry-flame`, its own drawing stood down), then poured: a ribbon of fire falling from the glove down the drop, tongues licking up and out along both its edges, bursting on the step below (`dry-pour`) | `dry-catch`, then `dry-pour` at the tip | no | black 60ms | identity: fire, poured like water |
-| 2 | Basin · target | 900 (—) | on the row at the foot of the steps, slow push and rise | — | `dry-weir`; tide-lines over and behind them; the top of the steps catching | the fire's front coming down the top steps, sheets of flame over each riser (`dry-fire`) | **motif**; a far roar growing (`dry-roar`) | **the real row**, looking up (`anticipate` → `block`) | cut | stakes and target: where the water was; title |
-| 3 | Run · projectile-follow | 560 (380) | bolted to the fire's front, racing down the steps, Dutch −12° → −16° | — | `dry-weir` | the front: tall leaning tongues, a sheet of flame over every riser it crosses, smoke curling up behind it (`dry-fire`); smoke rolls across the lens at the end (`dry-smoke-wipe`) | `dry-run`: a roar with a whump at every step, faster each time | no | cut | escalation: faster than water |
-| 4 | Draw · the quiet | 520 (380) | from behind the row, level, all but locked, up the steps | the row held in silhouette | `dry-steps`; exposure down (0.34 → 0.28, against 0.5–0.8 either side); the light only at the top | the smoke clears off the lens; the air drawn up the steps past them, thin streaks and one dry leaf, towards the light (`dry-draft`); tongue tips over the top step, the noses under it catching the light one by one (`dry-crest`) | **music ducked to 5%**; the air drawn in, then nothing (`dry-draw`) | **the row**, silhouettes, holding | the smoke, in-folder | the quiet: the fire takes its breath |
-| 5 | Flood · impact | 780 (560) | the whole slant, from the Pyromancer on the lip down to the row, Dutch −5° easing out | `ult:dry-send` (contact 0.12): the arm flung down after the fire, rim-lit, small on the lip | `dry-weir`, lit from below; exposure up | **70ms orange two-tone** held by the stop: the row black against the flood; the fire over the last step and through the row, tall tongues behind them and low ones before them, then burning over the whole basin (`dry-fire`, a back and a front band); a column of flame up the struck target from just before the hit (`dry-flare`); smoke curling up | `dry-impact` layered; **150ms stop**, heavy shake, a second small shake | **row** `hurt`, shoved and tipped | cut on the two-tone | impact: the damage on the frame; "Done waiting." |
+| 2 | Basin · target | 900 (—) | wide on the whole dry channel, lip to basin, slow push | — | `dry-weir`: the high-water line, the gauge, the grate, the weed, the cracked silt, lit plainly (exposure 0.74) | for its first 306ms nothing burns: the empty channel. Then the flood's front comes over the lip and down the top steps (`dry-fire`) | **motif**; a far roar growing (`dry-roar`) | **the real row** on the silt, looking up (`anticipate` → `block`) | cut | stakes and target: where the water was; title |
+| 3 | Run · projectile-follow | 560 (380) | bolted to the flood's front, racing down the steps, Dutch −12° → −16° | — | `dry-weir` | the flood: its head curling over each nose and tumbling down the riser, the sheet behind pouring off every step, licks riding it, streaks inside it, smoke curling up (`dry-fire`); smoke rolls across the lens at the end (`dry-smoke-wipe`) | `dry-run`: a roar with a whump at every step, faster each time | no | cut | escalation: faster than water |
+| 4 | Draw · the quiet | 520 (380) | from behind the row, level, all but locked, up the steps | the row held in silhouette | `dry-steps`; exposure down (0.34 → 0.28, against 0.7–0.8 either side); the light only at the top | the smoke clears off the lens; the flood's front **cresting the top step like a wave**: a mound of fire risen behind the nose, its crest torn, the dark underside of the curl rolling towards the row, a sheet of it already spilling over the nose; it rises slowly and flickers at a third of its speed; the air drawn up past the row and one dry leaf (`dry-crest`, `dry-draft`) | **music ducked to 5%**; the air drawn in, then nothing (`dry-draw`) | **the row**, silhouettes, holding | the smoke, in-folder | the quiet: the wave before it comes down |
+| 5 | Flood · impact | 780 (560) | the whole slant, from the Pyromancer on the lip down to the row, Dutch −5° easing out | `ult:dry-send` (contact 0.12): the arm flung down after the fire, whole and rim-lit on the lip at a size of 220, **the pour still falling from its glove** into the flood (`dry-pour`, `tip: 0`) | `dry-weir`, lit from below; exposure up | **70ms orange two-tone** held by the stop: the row black against the flood; the flood off the last step and through the row, one body from the lip to the far wall, piled up their legs, flame thrown up over them like spray (`dry-fire` at 1.6, a back and a front band); smoke curling up | `dry-impact` layered; **150ms stop**, heavy shake, a second small shake | **row** `hurt`, shoved and tipped | cut on the two-tone | impact: the damage on the frame; "Done waiting." |
 | 6 | Burning · return | 700 (480) | battle camera | real Arcanist `ult:dry-swat`: it notices its sleeve is alight and beats it out | real battlefield; bars open | every real enemy in the row still burning, with a scorch under it and smoke over it (`dry-burning`); a flame on the Pyromancer's own sleeve, beaten out to a wisp (`dry-singe`) | `dry-after`: crackle, a hiss, the motif's last two notes; tail | on board | flash 80ms | release: what is still burning, and what it cost |
 
 ### Boss framing
 
-In **Basin** the camera pulls back and up to take in a Collector's height
-under the tide-lines. In **Draw** a big figure would stand in front of the
-light it is waiting for, so it stands to one side of the steps, smaller, and
-the crest stays clear. In **Flood** the camera frames the boss whole with the
-steps and the small Pyromancer beyond it, the flood's tongues and the flare
-are drawn taller for it (scale 1.35 and 2), and the shove is small. Large
-framing (the Iron Bulwark) sits between.
+In **Basin** the camera pulls back to take in a Collector's height under the
+high-water line. In **Draw** a big figure would stand in front of the wave
+it is waiting for, so it stands to one side of the steps, smaller, and the
+crest stays clear. In **Flood** the camera frames the boss whole with the
+steps and the Pyromancer on the lip beyond it, the flood is drawn at 1.7, and
+the pool's pile-up and the spray are capped (150 and 300 units) so the fire
+reaches a boss's knees and chest rather than swallowing it; the shove is
+small. Large framing (the Iron Bulwark) sits between.
 
 ### FAST
 
@@ -172,6 +191,34 @@ No part was added to `Arcanist.tsx`.
 
 ## Notes from the lab
 
+### Revision after lead review
+
+The film's signature was below the bar in two ways, and both were redrawn:
+
+- **The fire read as icons, not a flood.** It was one small flame drawing
+  (with a blue base) stamped in rows along each step: at a glance, the fire
+  emoji repeated, and rows of separate flames are the opposite of a flood.
+  `dry-fire` is now one body traced along the steps every frame (see *The
+  flood* above), with no sprites and no blue anywhere. The first cut of the
+  sheet was far too thin (a glowing crack along the steps); it is now about
+  as thick as a riser is tall, twice that at the head. Its head was first a
+  flat lobe, then a starburst; it is now a roll that curls back under itself
+  with licks only over its top, trailing back.
+- **The spillway read as a brick staircase with planks.** The ashlar courses
+  are gone, the stepped weir is poured stone with worn noses, and the space
+  carries the marks of water that has gone (see *Space*). The lip was lowered
+  (to 426, risers 64) so the basin shot holds the lip, the steps, the wall's
+  high-water line and the silt at once, and shows the empty channel for its
+  first 306ms before the flood comes over.
+- **The quiet read as flames on a shelf.** It is now the flood's front
+  cresting the top step like a wave: a mound (not a box) that runs down to
+  nothing at the step's ends, a torn crest, the curl's dark underside, and a
+  sheet already spilling over the nose.
+- **The Pyromancer was a tiny figure cropped at the top-left of the impact.**
+  With the lower lip and a wider camera it stands whole on the lip at a size
+  of 220, rim-lit, with the pour still falling from its glove into the head of
+  the flood, so it reads as the one who poured it.
+
 - **Shot list as built** (FULL / FAST ms): call 420/240, lip 640/400, basin
   900/—, run 560/380, draw 520/380, flood 780/560, burning 700/480. 4,520ms
   FULL, 2,440ms FAST (54%). The quiet (`draw`) is directly before the impact.
@@ -188,18 +235,11 @@ No part was added to `Arcanist.tsx`.
 - **The flame is placed from the drawing every frame**: between the spark's
   own circle and the glove, so it sits in the palm; with a worn weapon
   (`gear=kit`) the spark is not drawn and it sits on the glove.
-- **The quiet read as a stage's footlights** (a straight row of small flames
-  on a dark shelf) until the tongues were given very different heights, the
-  dark riser drawn in front of them was taken out, and the risers below were
-  lit so the steps read as steps.
-- **The walls read as shelving** while the tide-lines were ruled lines with a
-  stain above each and the ashlar courses were strong; the tide-lines are now
-  broken, uneven bands and the courses nearly the wall's own colour.
 - **Smoke read as cartoon clouds** as lumpy puffs; it is now three curling
   strokes going up.
-- **The impact's accent**: the flood's front is already past the struck enemy
-  on the two-tone frame, and the flare starts just before the hit, so the row
-  is black against orange on that frame, not black against black. A
+- **The impact's accent**: the flood's front is just past the first enemy on
+  the two-tone frame and reaches the second a few frames later, so the row is
+  black against orange on that frame, not black against black. A
   chromatic fringe after it read as a colour fault at the frame's edges and
   was cut.
 - **Sounds, rendered offline and measured** (peak range over five renders,

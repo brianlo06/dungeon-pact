@@ -29,11 +29,17 @@ async function hold(page: Page, params: Record<string, string | number>, shot: s
 
 const film = (page: Page) => page.locator(".ult-cinematic");
 const placed = (page: Page, role: string) => page.locator(`.cine-actors > .cine-actor[data-role="${role}"]:visible`);
-/** Tongues of fire that are showing in an effect. */
+/** Tongues of fire along the pour that are showing. */
 const burning = (page: Page, wrap: string) =>
-  page.locator(`${wrap} .dry-spot, ${wrap} .dry-pour-t, ${wrap} .dry-flare-t`).evaluateAll(
+  page.locator(`${wrap} .dry-pour-t`).evaluateAll(
     (all) => all.filter((t) => Number(t.getAttribute("opacity") ?? 1) > 0.5 && (t as SVGGraphicsElement).getBoundingClientRect().height > 2).length,
   );
+
+/** The flood's outer outline on screen, or null while nothing has come over the lip. */
+const flood = async (page: Page) => {
+  const d = await page.locator(".fx-dry-fire-wrap .dry-sheet-0").first().getAttribute("d");
+  return d ? box(page, ".fx-dry-fire-wrap .dry-sheet-0") : null;
+};
 
 const box = async (page: Page, selector: string, n = 0) => {
   const b = await page.locator(selector).nth(n).boundingBox();
@@ -64,43 +70,47 @@ test("its own film: the spark a flame in the glove, then poured, and the hat's t
   expect(Number(/rotate\(([-\d.]+)deg\)/.exec(tip)?.[1] ?? 0)).toBeGreaterThan(8);
 });
 
-test("the whole row stands in the dry basin, and the fire comes down the steps towards it", async ({ page }) => {
-  await hold(page, { enemy: "sniper", shot: 2, at: 0.4 }, "basin");
+test("the basin shows the empty channel first, then one body of fire coming down the steps towards the row", async ({ page }) => {
+  // Before the front comes over the lip: nothing burning, only the dry channel.
+  await hold(page, { enemy: "sniper", shot: 2, at: 0.2 }, "basin");
   await expect(placed(page, "targets")).toHaveCount(2);
-  const early = await burning(page, ".fx-dry-fire-wrap");
+  expect(await page.locator(".fx-dry-fire-wrap .dry-sheet-0").getAttribute("d")).toBeFalsy();
+  const early = (await flood(page))!;
+  await hold(page, { enemy: "sniper", shot: 2, at: 0.6 }, "basin");
+  const mid = (await flood(page))!;
   await hold(page, { enemy: "sniper", shot: 2, at: 0.95 }, "basin");
-  const late = await burning(page, ".fx-dry-fire-wrap");
-  expect(late).toBeGreaterThan(early);
+  const late = (await flood(page))!;
+  expect(early).toBeNull();
+  expect(late.w).toBeGreaterThan(mid.w);
+  // One body: a single outline, never a crowd of separate flames.
+  expect(await page.locator(".fx-dry-fire-wrap .dry-t, .fx-dry-fire-wrap use").count()).toBe(0);
   // Still on the steps, up and to the left of the row: it has not reached them.
   const row = await box(page, '.cine-actors > .cine-actor[data-role="targets"] .cine-sprite');
-  const spots = await page.locator(".fx-dry-fire-wrap .dry-spot").evaluateAll((all) =>
-    all
-      .filter((t) => Number(t.getAttribute("opacity")) > 0.5)
-      .map((t) => (t as SVGGraphicsElement).getBoundingClientRect())
-      .map((r) => ({ x: r.x + r.width / 2, y: r.y + r.height })),
-  );
-  for (const s of spots) expect(s.x).toBeLessThan(row!.left);
+  expect(late.right).toBeLessThan(row!.left);
 });
 
-test("the run races the front down the steps, and the quiet holds the row still under the light", async ({ page }) => {
+test("the run races the front down the steps, and the quiet holds the row still under the wave", async ({ page }) => {
   await hold(page, { shot: 3, at: 0.2 }, "run");
-  const a = await burning(page, ".fx-dry-fire-wrap");
+  const a = (await flood(page))!;
   await hold(page, { shot: 3, at: 0.7 }, "run");
-  const b = await burning(page, ".fx-dry-fire-wrap");
-  expect(b).toBeGreaterThan(a + 6);
+  const b = (await flood(page))!;
+  expect(b.w * b.h).toBeGreaterThan(a.w * a.h * 1.3);
 
   await hold(page, { enemy: "sniper", shot: 4, at: 0.6 }, "draw");
   await expect(placed(page, "targets")).toHaveCount(2);
   for (const look of await placed(page, "targets").evaluateAll((all) => all.map((a) => (a as HTMLElement).dataset.look))) expect(look).toBe("silhouette");
   await expect(placed(page, "caster")).toHaveCount(0);
-  expect(await page.locator(".cine-accent, .fx-dry-fire-wrap, .fx-dry-flare-wrap").count()).toBe(0);
-  // The fire itself is only just over the top step, above the row's heads.
-  const crest = await box(page, ".fx-dry-crest-wrap .dry-crest-glow");
+  expect(await page.locator(".cine-accent, .fx-dry-fire-wrap").count()).toBe(0);
+  // The flood's front cresting the top step, high over the row's heads, and rising.
+  const wave = await box(page, ".fx-dry-crest-wrap .dry-wave-0");
   const heads = await box(page, '.cine-actors > .cine-actor[data-role="targets"] .cine-sprite');
-  expect(crest!.y).toBeLessThan(heads!.top);
+  expect(wave!.bottom).toBeLessThan(heads!.top + heads!.h * 0.25);
+  await hold(page, { enemy: "sniper", shot: 4, at: 0.95 }, "draw");
+  const risen = await box(page, ".fx-dry-crest-wrap .dry-wave-0");
+  expect(risen!.h).toBeGreaterThan(wave!.h);
 });
 
-test("the flood lands on a two-tone frame, and after it the row reads struck in the fire, with the Pyromancer on the lip", async ({ page }) => {
+test("the flood lands on a two-tone frame, and after it the row reads struck in the fire, with the Pyromancer pouring on the lip", async ({ page }) => {
   await hold(page, { enemy: "sniper", shot: 5, at: 0.101 }, "flood");
   await expect(film(page)).toHaveAttribute("data-two-tone", "");
   await expect(page.locator(".cine-text-impact")).toBeVisible();
@@ -109,28 +119,36 @@ test("the flood lands on a two-tone frame, and after it the row reads struck in 
   await expect(film(page)).not.toHaveAttribute("data-two-tone", "");
   await expect(placed(page, "targets")).toHaveCount(2);
   await expect(page.locator(".cine-text-impact")).toBeVisible();
-  // Fire at the feet of every enemy of the row, the flare up the struck one.
   const frame = await box(page, ".ult-cinematic");
+  // The flood is round every enemy of the row: its body at their feet and shins.
   for (let i = 0; i < 2; i++) {
     const target = await box(page, '.cine-actors > .cine-actor[data-role="targets"] .cine-sprite', i);
     expect(target!.right).toBeLessThan(frame!.right + target!.w * 0.2);
-    const near = await page.locator(".fx-dry-fire-wrap .dry-spot").evaluateAll(
-      (all, t) =>
-        all.filter((s) => {
-          if (Number(s.getAttribute("opacity")) < 0.5) return false;
-          const r = (s as SVGGraphicsElement).getBoundingClientRect();
-          return r.x + r.width / 2 > t.left && r.x + r.width / 2 < t.right;
-        }).length,
+    const inFire = await page.locator(".fx-dry-fire-wrap .dry-sheet-0").evaluateAll(
+      (paths, t) =>
+        paths.some((path) => {
+          const el = path as SVGPathElement;
+          const m = el.getScreenCTM()!.inverse();
+          const at = new DOMPoint(t.x, t.bottom - t.h * 0.12).matrixTransform(m);
+          return el.isPointInFill(at);
+        }),
       target!,
     );
-    expect(near, `fire at enemy ${i}`).toBeGreaterThan(2);
+    expect(inFire, `fire round enemy ${i}`).toBe(true);
   }
-  expect(await burning(page, ".fx-dry-flare-wrap")).toBeGreaterThan(3);
-  // The Pyromancer, small, inside the frame at the top of the steps.
+  // Flame thrown up over them like spray: blades beyond the sheet's own outline.
+  const outlines = await page.locator(".fx-dry-fire-wrap .dry-sheet-0").evaluateAll((paths) => paths.map((p) => (p.getAttribute("d")?.match(/Z/g) ?? []).length));
+  expect(Math.max(...outlines)).toBeGreaterThan(8);
+  // The Pyromancer, whole and inside the frame on the lip, the pour still falling from its glove.
   const caster = await box(page, '.cine-actors > .cine-actor[data-role="caster"] .cine-sprite');
-  expect(caster!.x).toBeGreaterThan(frame!.left);
-  expect(caster!.y).toBeGreaterThan(frame!.top + frame!.h * 0.1);
-  expect(caster!.x).toBeLessThan(frame!.left + frame!.w * 0.3);
+  const bars = frame!.h * 0.11;
+  expect(caster!.left).toBeGreaterThan(frame!.left);
+  expect(caster!.top).toBeGreaterThan(frame!.top + bars * 0.8);
+  expect(caster!.h).toBeGreaterThan(frame!.h * 0.14);
+  expect(caster!.x).toBeLessThan(frame!.left + frame!.w * 0.35);
+  const pour = await box(page, ".fx-dry-pour-wrap .dry-pour-band");
+  expect(pour!.h).toBeGreaterThan(20);
+  expect(Math.abs(pour!.x - caster!.right)).toBeLessThan(caster!.w);
 });
 
 test("the return leaves every enemy of the row burning on the board, and the Pyromancer beating out its sleeve", async ({ page }) => {
@@ -163,15 +181,15 @@ test("a boss is framed whole, the worn kit is drawn, and skipping leaves nothing
   await expect(caster.locator('[data-equipment="bastion"]').first()).toBeAttached();
   await page.locator(".cine-skip").click();
   await expect(film(page)).toHaveCount(0, { timeout: 2000 });
-  expect(await page.locator(".dry-t, .dry-burning, .dry-singe, .cine-vfx, .cine-actor").count()).toBe(0);
+  expect(await page.locator(".dry-t, .dry-sheet, .dry-burning, .dry-singe, .cine-vfx, .cine-actor").count()).toBe(0);
   expect(await page.locator("[data-clip^='ult:']").count()).toBe(0);
 });
 
 test("the quiet keeps a boss clear of the light it is waiting for", async ({ page }) => {
   await hold(page, { enemy: "collector", shot: 4, at: 0.6 }, "draw");
   const boss = await box(page, '.cine-actors > .cine-actor[data-role="targets"] .cine-sprite');
-  const crest = await box(page, ".fx-dry-crest-wrap .dry-crest-glow");
-  expect(boss!.left).toBeGreaterThan(crest!.x);
+  const wave = await box(page, ".fx-dry-crest-wrap .dry-wave-0");
+  expect(boss!.left).toBeGreaterThan(wave!.x);
 });
 
 test("FAST keeps the pour, the run, the quiet and the flood, and drops the basin", async ({ page }) => {
@@ -203,6 +221,6 @@ test("FAST keeps the pour, the run, the quiet and the flood, and drops the basin
 test("reduced motion plays still cards with no flash and no fire", async ({ page }) => {
   await open(page, { auto: 1, motion: 0 });
   await expect(film(page)).toHaveAttribute("data-reduced", "", { timeout: 30_000 });
-  expect(await page.locator(".cine-accent, .dry-t, .dry-burning").count()).toBe(0);
+  expect(await page.locator(".cine-accent, .dry-t, .dry-sheet, .dry-burning").count()).toBe(0);
   await expect(film(page)).toHaveCount(0, { timeout: 20_000 });
 });
