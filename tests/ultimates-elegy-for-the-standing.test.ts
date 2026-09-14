@@ -44,8 +44,11 @@ describe("Elegy for the Standing", () => {
     const text = JSON.stringify(u.effects);
     expect(text).not.toContain("empowered");
     expect(text).not.toContain("barrier");
-    // Sung early: before every other Ultimate queued that round.
-    for (const other of ultimates) if (other.id !== u.id) expect(u.speed, other.id).toBeGreaterThan(other.speed);
+    // Sung early: before every other Ultimate queued that round, save the
+    // Gloomstalker's Sunblind, which exists to loose first.
+    for (const other of ultimates)
+      if (other.id !== u.id && other.id !== "sunblind")
+        expect(u.speed, other.id).toBeGreaterThan(other.speed);
   });
 
   it("mourns the target ahead of time: Vulnerable for three rounds, and the first note lands on the open grave", () => {

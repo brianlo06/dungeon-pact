@@ -23,7 +23,8 @@ import type { UltimateDef } from "../ultimates";
  *    Vulnerable** — Dirge, for everyone at once;
  *  - **+2 Verse**;
  *  - **speed 22**: sung early. It resolves before every other Ultimate queued
- *    that round, so the grave is already open when theirs land.
+ *    that round (only the Gloomstalker's Sunblind, at 24, looses first), so
+ *    the grave is already open when theirs land.
  *
  * What it does, not only its numbers: it is the first Herald Ultimate aimed at
  * an enemy that gives the party nothing to swing with. No Empowered, no
