@@ -173,9 +173,9 @@ const take: Clip = {
     ],
     ...face(
       [0, { brow: -0.4, knit: 1, open: 1.1, mouth: 0.85 }],
-      [0.04, { brow: 2.4, knit: 4, open: 0.62, mouth: 0.7, wide: 1.12 }],
-      [0.2, { brow: 2.2, knit: 4, open: 0.66, mouth: 0.7, wide: 1.12 }],
-      [0.46, { brow: 1.2, knit: 3, open: 0.9, mouth: 0.9, wide: 1.1 }],
+      [0.04, { brow: 1.8, knit: 4, open: 0.95, mouth: 0.7, wide: 1.12 }],
+      [0.2, { brow: 1.6, knit: 4, open: 1.0, mouth: 0.7, wide: 1.12 }],
+      [0.46, { brow: 1.0, knit: 3, open: 1.0, mouth: 0.9, wide: 1.1 }],
       [0.7, { brow: 0.2, knit: 2, open: 0.85, mouth: 1.3, wide: 1.25 }],
       [1, { brow: 0, knit: 2, open: 0.85, mouth: 1.35, wide: 1.27 }],
     ),

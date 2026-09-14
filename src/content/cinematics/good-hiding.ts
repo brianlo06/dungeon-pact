@@ -192,7 +192,6 @@ export const goodHiding: Cinematic = {
         { kind: "hiding-dust", at: 0.03, until: 0.8, follow: "caster", x: 30, y: -560, layer: "front", seed: 13, params: { n: 20, dir: 180, spread: 170, reach: 220, size: 14 } },
         { kind: "hiding-slats", at: 0, until: 1, layer: "screen", params: { angle: 100, gap: 40, bar: 22, dark: 0.5, shift: 12 } },
       ],
-      screen: [{ kind: "flash", at: 0.02, ms: 40, color: LIME, amount: 0.35 }],
       stop: [{ at: 0.04, ms: 90 }],
       shake: [{ at: 0.04, amount: 0.014 }],
       sound: [{ at: 0.02, sfx: "hiding-swallow" }],

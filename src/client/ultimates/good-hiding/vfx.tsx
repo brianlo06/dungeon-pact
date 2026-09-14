@@ -61,6 +61,20 @@ function lump(seed: number, r = 1, wobble = 0.12, points = 9) {
   return `${d} Z`;
 }
 
+/** Short strokes scattered over a patch, as leather is scored: the iron's grain. */
+function grain(seed: number, n = 26) {
+  const rand = seeded(seed);
+  let d = "";
+  for (let i = 0; i < n; i++) {
+    const x = (rand() - 0.5) * 1.8;
+    const y = (rand() - 0.5) * 1.5;
+    const a = -0.9 + rand() * 0.5;
+    const l = 0.12 + rand() * 0.2;
+    d += `M${x.toFixed(2)} ${y.toFixed(2)} l${(Math.cos(a) * l).toFixed(2)} ${(Math.sin(a) * l).toFixed(2)} `;
+  }
+  return d.trim();
+}
+
 /* ── Dust ──────────────────────────────────────────────────────────────── */
 
 const Dust = ({ cue }: VfxProps) => {
@@ -112,18 +126,10 @@ const Dent = ({ cue }: VfxProps) => {
           {/* The iron the skin sets into where the blow went in. */}
           <g className="hiding-set">
             <g clipPath={`url(#${id})`}>
-              <rect x={-1} y={-1} width={2} height={2} fill={IRON} opacity={0.3} />
-              <path
-                d={Array.from({ length: 16 }, (_, i) => `M${(-1 + i * 0.14).toFixed(2)} -1 l-0.6 2`).join(" ")}
-                stroke="#dfe7ec"
-                strokeWidth={0.04}
-              />
-              <path
-                d={Array.from({ length: 13 }, (_, i) => `M${(-1.4 + i * 0.16).toFixed(2)} -1 l0.5 2`).join(" ")}
-                stroke="#3a4650"
-                strokeWidth={0.02}
-                opacity={0.7}
-              />
+              <rect x={-1} y={-1} width={2} height={2} fill="#6f7d87" opacity={0.42} />
+              {/* Grain: short hard strokes laid every which way, as a hide is scored. */}
+              <path d={grain(seed)} stroke="#e3eaee" strokeWidth={0.035} strokeLinecap="round" opacity={0.85} />
+              <path d={grain(seed + 11)} stroke="#2c353c" strokeWidth={0.04} strokeLinecap="round" opacity={0.7} />
             </g>
             <path d={lump(seed + 40, 0.95, 0.3, 7)} fill="none" stroke={INK} strokeWidth={0.05} opacity={0.6} />
             <path className="hiding-glint" d="M-0.5 -0.46 Q0 -0.66 0.46 -0.44" stroke="#f1f5f7" strokeWidth={0.06} strokeLinecap="round" fill="none" />
