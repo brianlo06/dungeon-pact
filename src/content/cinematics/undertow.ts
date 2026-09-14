@@ -69,11 +69,11 @@ const struck = (at: [number, number], size: number, spread: [number, number], sh
 });
 
 /** The Tidecaller on the beach, letting go. */
-const letGo = (size: number): ActorCue => ({ role: "caster", at: [520, 790], size, clip: "ult:tide-release", look: "rim", rim: COBALT, z: 1 });
+const letGo = (size: number): ActorCue => ({ role: "caster", at: [500, 790], size, clip: "ult:tide-release", look: "rim", rim: COBALT, z: 1 });
 
 /** The sea back: the body behind the figures, and the near surface over them. */
-const back = (level: number): VfxCue => ({ kind: "tide-return", at: 0, until: 1, layer: "back", seed: 21, params: { band: "back", level } });
-const front = (level: number): VfxCue => ({ kind: "tide-return", at: 0, until: 1, layer: "front", seed: 22, params: { band: "front", level } });
+const back = (level: number): VfxCue => ({ kind: "tide-return", at: 0, until: 1, layer: "back", seed: 21, params: { band: "back", level, shore: 600 } });
+const front = (level: number): VfxCue => ({ kind: "tide-return", at: 0, until: 1, layer: "front", seed: 22, params: { band: "front", level, shore: 600 } });
 
 export const undertow: Cinematic = {
   id: "undertow",
@@ -151,7 +151,7 @@ export const undertow: Cinematic = {
       lighting: { exposure: 0.72, under: [COBALT, 0.08], back: ["#1a2542", 0.3], rim: [COBALT, 0.6, 1], vignette: 0.42, letterbox: BARS },
       toLighting: { exposure: 0.7, under: [COBALT, 0.06], back: ["#1a2542", 0.35], rim: [COBALT, 0.7, 1], vignette: 0.45, letterbox: BARS },
       actors: [
-        { role: "caster", at: [300, 790], size: 300, clip: "ult:tide-strain", then: "ult:tide-strain", look: "rim", rim: COBALT, z: 1 },
+        { role: "caster", at: [360, 790], size: 300, clip: "ult:tide-strain", then: "ult:tide-strain", look: "rim", rim: COBALT, z: 1 },
         stranded([1000, 800], 300, [220, -14]),
       ],
       vfx: [{ kind: "tide-sea", at: 0, until: 1, layer: "back", seed: 9, params: { from: 0.08, to: 0.62, bank: 0, bankTo: 0.25, ease: "inOut" } }],
@@ -166,16 +166,16 @@ export const undertow: Cinematic = {
       markers: [{ at: 0.34, label: "title" }],
       framing: {
         large: {
-          camera: { from: { x: 1040, y: 610, zoom: 1.0 }, to: { x: 1080, y: 605, zoom: 1.06 }, ease: "inOut" },
+          camera: { from: { x: 990, y: 610, zoom: 1.0 }, to: { x: 1010, y: 605, zoom: 1.04 }, ease: "inOut" },
           actors: [
-            { role: "caster", at: [300, 790], size: 300, clip: "ult:tide-strain", then: "ult:tide-strain", look: "rim", rim: COBALT, z: 1 },
+            { role: "caster", at: [360, 790], size: 300, clip: "ult:tide-strain", then: "ult:tide-strain", look: "rim", rim: COBALT, z: 1 },
             stranded([1040, 800], 280, [250, -14]),
           ],
         },
         boss: {
-          camera: { from: { x: 1080, y: 590, zoom: 0.94 }, to: { x: 1110, y: 585, zoom: 1.0 }, ease: "inOut" },
+          camera: { from: { x: 1010, y: 590, zoom: 0.92 }, to: { x: 1030, y: 585, zoom: 0.96 }, ease: "inOut" },
           actors: [
-            { role: "caster", at: [300, 790], size: 300, clip: "ult:tide-strain", then: "ult:tide-strain", look: "rim", rim: COBALT, z: 1 },
+            { role: "caster", at: [360, 790], size: 300, clip: "ult:tide-strain", then: "ult:tide-strain", look: "rim", rim: COBALT, z: 1 },
             stranded([1120, 810], 260, [280, -14]),
           ],
         },
@@ -203,7 +203,7 @@ export const undertow: Cinematic = {
       actors: [{ role: "caster", at: [700, 985], size: 780, clip: "ult:tide-strain", then: "ult:tide-strain", look: "rim", rim: COBALT }],
       vfx: [{ kind: "tide-sea", at: 0, until: 1, layer: "back", seed: 10, params: { from: 0.62, to: 1, bank: 0.25, bankTo: 0.6 } }],
       sound: [{ at: 0, sfx: "tide-strain" }],
-      text: [{ kind: "name", at: 0.05, until: 1, text: "$name", x: 0.07, y: 0.74, mode: "fast" }],
+      text: [{ kind: "name", at: 0.05, until: 1, text: "$name", x: 0.07, y: 0.2, mode: "fast" }],
       markers: [{ at: 0.5, label: "the weight" }],
     },
 

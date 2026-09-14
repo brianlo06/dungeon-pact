@@ -139,8 +139,10 @@ test("the sea comes back on a two-tone frame, the row struck in it, and then the
   // Under: the surface a ceiling across the top of the frame, bubbles going up, the drag seaward.
   await hold(page, { enemy: "sniper", shot: 5, at: 0.85 }, "undertow");
   expect(Number(await page.locator(".fx-tide-return-wrap .tide-front-sky").getAttribute("opacity"))).toBeGreaterThan(0.9);
-  const surface = (await box(page, ".fx-tide-return-wrap .tide-front-surface"))!;
-  expect(surface.y).toBeLessThan(frame.top + frame.h * 0.45);
+  // Seaward, the top of the frame is the underside of the surface and the rest is water.
+  const sx = frame.left + frame.w * 0.75;
+  expect(await inside(page, ".fx-tide-return-wrap .tide-front-sky", sx, frame.top + frame.h * 0.2)).toBe(true);
+  expect(await inside(page, ".fx-tide-return-wrap .tide-front-body", sx, frame.top + frame.h * 0.65)).toBe(true);
   const bubbles = await page.locator(".fx-tide-return-wrap .tide-bubble").evaluateAll((all) => all.filter((c) => Number(c.getAttribute("opacity")) > 0.2).length);
   expect(bubbles).toBeGreaterThan(5);
   const streaks = await page.locator(".fx-tide-return-wrap .tide-streak").evaluateAll((all) => all.filter((s) => Number(s.getAttribute("opacity")) > 0.1).length);

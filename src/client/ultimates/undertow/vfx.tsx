@@ -386,6 +386,7 @@ const Return = ({ cue }: VfxProps): ReactNode => {
       data-level={String(cue.params?.level ?? 0.55)}
       data-heap={String(cue.params?.heap ?? 0)}
       data-hit={String(cue.params?.hit ?? 0.12)}
+      data-shore={String(cue.params?.shore ?? 600)}
     >
       <linearGradient id={`${id}-deep`} x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stopColor={COBALT} stopOpacity="0.34" />
@@ -482,8 +483,8 @@ const returnFrame: Frame = (el, p, age, ctx) => {
   const top = target ? target.y - target.h * num(d.level, 0.55) : 640;
   const heap = num(d.heap, 0) * ease("out", clamp((p - hit) / 0.22));
   if (d.band === "back") {
-    // The sea sweeps back across the whole flat from the right, ahead of the level.
-    const k = lerp(1.05, -0.7, ease("in", clamp(p / (hit - 0.005))));
+    // The sea sweeps back across the whole flat from the right, ahead of the level, up to the shore.
+    const k = lerp(1.05, -0.02, ease("in", clamp(p / (hit - 0.005))));
     const wob = (y: number) => 8 * Math.sin(y * 0.02 + t * 2.6);
     setPath(svg.querySelector(".tide-back-body"), seaPath(k, wob));
     // Foam: the first frames it is back the whole sea is white, so the row reads black against it.
@@ -508,10 +509,15 @@ const returnFrame: Frame = (el, p, age, ctx) => {
   // The near surface: from below the frame up to the level, arriving from the right first.
   const xs: number[] = [];
   for (let x = -800; x <= 2400; x += 20) xs.push(x);
+  const shore = num(d.shore, 600);
+  const ground = target ? target.y + 24 : 824;
   const yAt = (x: number) => {
     const lag = clamp((2400 - x) / 3200) * 0.35;
     const k = ease("in", clamp((rise - lag) / (1 - lag)));
-    return lerp(NEAR + 60, surfaceY(x, top, t, target, heap), k);
+    // Up the beach the level runs out: the surface comes down to the sand at the shore and goes under it.
+    const beach = clamp((x - shore) / 340);
+    const level = lerp(ground + 40, surfaceY(x, top, t, target, heap), ease("out", beach));
+    return lerp(NEAR + 60, level, k);
   };
   const line = xs.map((x) => `${x} ${f1(yAt(x))}`);
   setPath(svg.querySelector(".tide-front-body"), `M-800 ${NEAR + 80} L${line.join(" L")} L2400 ${NEAR + 80} Z`);
@@ -571,7 +577,7 @@ const returnFrame: Frame = (el, p, age, ctx) => {
     const x = num(c.dataset.x, 0);
     const off = num(c.dataset.off, 0);
     const y = yAt(x);
-    if (y > NEAR) {
+    if (y > NEAR || x < num(d.shore, 600) + 60) {
       fade(c, 0);
       continue;
     }
@@ -650,7 +656,7 @@ const Standing = ({ cue }: VfxProps): ReactNode => {
   return (
     <div className="tide-standing">
       <svg viewBox="-80 -67 160 80">
-        <path className="tide-stand-body" fill={COBALT} fillOpacity="0.36" />
+        <path className="tide-stand-body" fill={COBALT} fillOpacity="0.3" />
         <path className="tide-stand-deep" fill={INK} fillOpacity="0.42" />
         <path className="tide-stand-line" fill="none" stroke={FOAM} strokeWidth="2.2" strokeLinecap="round" strokeOpacity="0.85" />
         <g className="tide-stand-streaks" stroke={COBALT} strokeWidth="1.6" strokeLinecap="round" fill="none">
@@ -673,14 +679,14 @@ const standing: Frame = (el, p, age) => {
   if (!svg) return;
   const t = age / 1000;
   const up = ease("out", clamp(p / 0.25));
-  const top = -26 * up;
+  const top = -13 * up;
   // The water round its legs: a mound whose top sways, tapering to a pool at either side, so it sits on the ground.
   const sway = (x: number) => 2.2 * Math.sin(x * 0.12 + t * 3) + 1.2 * Math.sin(x * 0.3 - t * 4.5);
-  const topAt = (x: number) => 4 + (top - 4) * Math.max(0, 1 - (x / 66) ** 2) + sway(x) * up;
+  const topAt = (x: number) => 4 + (top - 4) * Math.max(0, 1 - (x / 64) ** 6) + sway(x) * 0.6 * up;
   const xs = [-70, -56, -42, -28, -14, 0, 14, 28, 42, 56, 70];
   const line = xs.map((x) => `${x} ${f1(topAt(x))}`);
-  setPath(svg.querySelector(".tide-stand-body"), `M${line.join(" L")} C62 16 36 20 0 20 C-36 20 -62 16 -70 4 Z`);
-  setPath(svg.querySelector(".tide-stand-deep"), `M-70 4 C-62 14 -36 18 0 18 C36 18 62 14 70 4 C56 10 30 12 0 12 C-30 12 -56 10 -70 4 Z`);
+  setPath(svg.querySelector(".tide-stand-body"), `M${line.join(" L")} C62 12 36 14 0 14 C-36 14 -62 12 -70 4 Z`);
+  setPath(svg.querySelector(".tide-stand-deep"), `M-70 4 C-62 11 -36 13 0 13 C36 13 62 11 70 4 C56 8 30 9 0 9 C-30 9 -56 8 -70 4 Z`);
   setPath(svg.querySelector(".tide-stand-line"), `M${line.slice(1, -1).join(" L")}`);
   for (const s of svg.querySelectorAll<SVGPathElement>(".tide-stand-streak")) {
     const k = (num(s.dataset.off, 0) + t * 0.7) % 1;
