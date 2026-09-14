@@ -238,7 +238,6 @@ export const sunblind: Cinematic = {
         { at: 0, sfx: "sb-loose" },
         { at: 0.76, sfx: "sb-flare" },
       ],
-      text: [{ kind: "name", at: 0.2, until: 0.8, text: "$name", x: 0.52, y: 0.2, mode: "fast" }],
       markers: [{ at: 0.16, label: "loose" }],
     },
 
@@ -259,7 +258,11 @@ export const sunblind: Cinematic = {
       actors: quietActors([1080, 852], 400, [340, 12]),
       vfx: quietVfx(700),
       duck: [{ at: 0, level: 0.03, ms: 600 }],
-      sound: [{ at: 0.02, sfx: "sb-hush" }],
+      sound: [
+        { at: 0.02, sfx: "sb-hush" },
+        { at: 0.52, sfx: "sb-fall", mode: "full" },
+        { at: 0.3, sfx: "sb-fall", mode: "fast" },
+      ],
       markers: [{ at: 0.9, label: "at their feet" }],
       framing: {
         large: {
@@ -302,7 +305,6 @@ export const sunblind: Cinematic = {
         { at: 0.3, amount: 0.012 },
       ],
       sound: [
-        { at: 0, sfx: "sb-fall" },
         { at: 0.07, sfx: "sb-impact" },
       ],
       reveal: [{ at: 0.08, reveal: "impact" }],

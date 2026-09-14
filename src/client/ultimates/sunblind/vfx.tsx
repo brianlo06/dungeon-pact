@@ -544,15 +544,15 @@ const Board = ({ cue }: VfxProps) => {
           <ArrowArt id={id} />
         </defs>
         {[
-          [-70, 6, 52],
-          [-30, 14, 60],
-          [8, 4, 55],
-          [44, 16, 62],
-          [80, 8, 50],
+          [-78, -4, 52],
+          [-36, 2, 60],
+          [4, -6, 55],
+          [42, 4, 62],
+          [84, -2, 50],
         ].map(([x, y, ang], i) => (
           <g key={i} className="sb-board-arrow" style={v({ "--d": (i * 0.06).toFixed(2) })}>
-            <path className="sb-board-shadow" d={`M${x} ${y + 1} L${x + 60} ${y + 3} L${x + 60} ${y + 5} L${x} ${y + 3} Z`} />
-            <use href={`#${id}`} transform={arrowAt(x + Math.cos(rad(ang)) * 12, y + Math.sin(rad(ang)) * 12, ang, 64)} />
+            <path className="sb-board-shadow" d={`M${x} ${y} L${x + 70} ${y - 6} L${x + 72} ${y - 2} L${x} ${y + 3} Z`} />
+            <use href={`#${id}`} transform={arrowAt(x + Math.cos(rad(ang)) * 5, y + Math.sin(rad(ang)) * 5, ang, 58)} />
             <ellipse className="sb-board-chip" cx={x} cy={y + 2} rx="9" ry="3" />
           </g>
         ))}

@@ -62,9 +62,9 @@ export const voices: Record<string, Voice> = {
   "sb-glare": {
     bus: "sfx",
     render: (c, o, t) => {
-      shimmer(c, o, t, 0.5, 0.014);
-      crash(c, o, t, { seconds: 0.4, gain: 0.05, type: "bandpass", freq: 2000, sweepTo: 7000, q: 0.6 });
-      chime(c, o, t + 0.12, 83, 0.025, 1.4);
+      shimmer(c, o, t, 0.5, 0.026);
+      crash(c, o, t, { seconds: 0.4, gain: 0.1, type: "bandpass", freq: 2000, sweepTo: 7000, q: 0.6 });
+      chime(c, o, t + 0.12, 83, 0.05, 1.4);
     },
   },
   /**
@@ -75,10 +75,10 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       for (const [i, f] of [2350, 3120].entries())
-        swell(c, o, t + i * 0.02, { type: "sine", freq: f, gain: 0.01, attack: 0.05, hold: 0.24, release: 0.04, cutoff: 9000 });
-      crash(c, o, t, { seconds: 0.32, gain: 0.03, type: "highpass", freq: 6500, q: 0.4 });
-      for (let i = 0; i < 5; i++) crash(c, o, t + 0.12 + i * 0.035, { seconds: 0.05, gain: 0.03, type: "bandpass", freq: 1100 + i * 90, q: 2 });
-      crash(c, o, t + 0.32, { seconds: 0.35, gain: 0.05, type: "lowpass", freq: 700, sweepTo: 200, q: 0.5 });
+        swell(c, o, t + i * 0.02, { type: "sine", freq: f, gain: 0.016, attack: 0.05, hold: 0.24, release: 0.04, cutoff: 9000 });
+      crash(c, o, t, { seconds: 0.32, gain: 0.05, type: "highpass", freq: 6500, q: 0.4 });
+      for (let i = 0; i < 5; i++) crash(c, o, t + 0.12 + i * 0.035, { seconds: 0.05, gain: 0.05, type: "bandpass", freq: 1100 + i * 90, q: 2 });
+      crash(c, o, t + 0.32, { seconds: 0.35, gain: 0.08, type: "lowpass", freq: 700, sweepTo: 200, q: 0.5 });
     },
   },
   /** The motif: four struck tubes of a rooftop wind chime, B5, F♯6, E6, and a low B4 left ringing. */
@@ -86,10 +86,10 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       const notes: [number, number, number][] = [
-        [0, 83, 0.07],
-        [0.16, 90, 0.05],
-        [0.3, 88, 0.055],
-        [0.52, 71, 0.09],
+        [0, 83, 0.06],
+        [0.16, 90, 0.042],
+        [0.3, 88, 0.046],
+        [0.52, 71, 0.076],
       ];
       for (const [dt, midi, gain] of notes) chime(c, o, t + dt, midi, gain, midi < 80 ? 3 : 2);
     },
@@ -113,8 +113,8 @@ export const voices: Record<string, Voice> = {
   "sb-flare": {
     bus: "sfx",
     render: (c, o, t) => {
-      crash(c, o, t, { seconds: 0.34, gain: 0.08, type: "bandpass", freq: 1800, sweepTo: 8500, q: 0.9 });
-      swell(c, o, t, { type: "sine", freq: 4200, gain: 0.012, attack: 0.18, hold: 0.04, release: 0.12, cutoff: 9000 });
+      crash(c, o, t, { seconds: 0.34, gain: 0.16, type: "bandpass", freq: 1800, sweepTo: 8500, q: 0.9 });
+      swell(c, o, t, { type: "sine", freq: 4200, gain: 0.024, attack: 0.18, hold: 0.04, release: 0.12, cutoff: 9000 });
     },
   },
   /**
@@ -129,12 +129,17 @@ export const voices: Record<string, Voice> = {
       swell(c, o, t, { type: "sine", freq: hz(35), gain: 0.012, attack: 0.25, hold: 0.15, release: 0.25 });
     },
   },
-  /** The signature: the volley arriving out of the sun, a falling rush of fletchings that cuts at the bite. */
+  /**
+   * The signature: the volley coming down out of the sun, a rush of
+   * fletchings that thickens, drops in pitch and swells for a third of a
+   * second, and is cut dead by the bite (it starts at the end of the quiet).
+   */
   "sb-fall": {
     bus: "sfx",
     render: (c, o, t) => {
-      fletch(c, o, t, 0.06, 12, 2600, 1200, 0.09);
-      crash(c, o, t, { seconds: 0.07, gain: 0.16, type: "bandpass", freq: 4200, sweepTo: 1100, q: 1.1 });
+      fletch(c, o, t, 0.3, 40, 3800, 1100, 0.9);
+      crash(c, o, t, { seconds: 0.3, gain: 0.12, type: "bandpass", freq: 5200, sweepTo: 1300, q: 1.2 });
+      crash(c, o, t + 0.18, { seconds: 0.12, gain: 0.35, type: "bandpass", freq: 2600, sweepTo: 900, q: 1.4 });
     },
   },
   /**

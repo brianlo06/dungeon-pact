@@ -272,14 +272,14 @@
 }
 .sb-board-pool {
   position: absolute;
-  left: calc(var(--w) * -0.75);
-  top: calc(var(--h) * -0.09);
+  left: calc(var(--w) * -0.95);
+  top: calc(var(--h) * -0.12);
   width: calc(var(--w) * 1.9);
-  height: calc(var(--h) * 0.2);
+  height: calc(var(--h) * 0.24);
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(255 250 220 / 0.85) 0%, rgb(255 236 150 / 0.45) 55%, rgb(255 236 150 / 0) 100%);
+  background: radial-gradient(closest-side, rgb(255 252 228 / 0.95) 0%, rgb(255 228 92 / 0.6) 50%, rgb(255 228 92 / 0) 100%);
   transform: scale(calc(0.3 + var(--swing, 0) * 0.7));
-  opacity: calc(var(--swing, 0) * var(--pool, 1));
+  opacity: var(--swing, 0);
 }
 .sb-board-shade {
   position: absolute;
@@ -288,9 +288,9 @@
   width: 0;
   height: 0;
   /* Swings out from standing under the feet to lying long behind them. */
-  transform: scale(calc(1 + var(--swing, 0) * 0.6), calc(1 - var(--swing, 0) * 0.76)) rotate(calc(var(--swing, 0) * 90deg));
+  transform: scale(calc(1 + var(--swing, 0) * 0.35), calc(1 - var(--swing, 0) * 0.5)) rotate(calc(var(--swing, 0) * 84deg));
   transform-origin: 0 0;
-  opacity: calc(0.15 + var(--swing, 0) * 0.45);
+  opacity: calc(0.2 + var(--swing, 0) * 0.55);
 }
 .sb-board-stand {
   position: absolute;
@@ -304,8 +304,8 @@
   display: block;
 }
 .sb-board-copy :where(path, rect, circle, ellipse, polygon, line, polyline) {
-  fill: #3a4478 !important;
-  stroke: #3a4478 !important;
+  fill: #1d2350 !important;
+  stroke: #1d2350 !important;
 }
 .sb-board-struck {
   position: absolute;
