@@ -1,0 +1,173 @@
+/*
+ * A Good Hiding — effects and space.
+ *
+ * No filters, no blurs and no keyframes: dents close on `--p`, dust flies on
+ * `--pe`, and the hides swing in a frame function (see `vfx.tsx`).
+ */
+
+/* ---- world-sized drawings ---- */
+.cine-vfx > .hiding-world {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none !important;
+}
+
+/* ---- lime dust ---- */
+.cine-vfx > .hiding-dust {
+  width: 0;
+  height: 0;
+  transform: scale(var(--s));
+}
+.cine-anchored > .hiding-dust {
+  top: calc(var(--unit-h) * -0.56);
+}
+.hiding-dust i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--sz);
+  height: var(--sz);
+  margin: calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2);
+  border-radius: 20% 60% 30% 50%;
+  background: #e6e0cf;
+  box-shadow: inset -1px -1px 0 rgba(90, 70, 50, 0.5);
+  --k: clamp(0, calc((var(--p) - var(--d)) / (1 - var(--d))), 1);
+  --ke: calc(1 - (1 - var(--k)) * (1 - var(--k)) * (1 - var(--k)));
+  transform: translate(calc(var(--dx) * var(--ke)), calc(var(--dy) * var(--ke) + var(--fall) * var(--k) * var(--k)))
+    rotate(calc(var(--k) * 140deg)) scale(calc(1 - var(--ke) * 0.45), calc(0.55 - var(--ke) * 0.2));
+  opacity: calc(clamp(0, (var(--p) - var(--d)) * 14, 1) * (0.8 - var(--k) * 0.8));
+}
+
+/* ---- the dent ---- */
+.cine-vfx > .hiding-dent {
+  width: var(--size);
+  height: var(--size);
+  overflow: visible;
+}
+.hiding-dent g {
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+/* Rings close in from outside, one after another, and vanish into the point. */
+.hiding-ring {
+  --k: clamp(0, calc((var(--p) - var(--i) * 0.05) / 0.4), 1);
+  transform: scale(calc((1.15 + var(--i) * 0.34) * (1 - var(--k) * var(--k) * 0.96)));
+  opacity: calc(clamp(0, var(--p) * 40, 1) * (1 - clamp(0, (var(--k) - 0.82) * 6, 1)));
+}
+.hiding-dent[data-mode="drive"] .hiding-ring {
+  /* Driven in: arriving from well outside the figure, and fast. */
+  --k: clamp(0, calc((var(--p) - var(--i) * 0.025) / 0.2), 1);
+  transform: scale(calc((1.6 + var(--i) * 0.6) * (1 - var(--k) * 0.9)));
+  opacity: calc(clamp(0, var(--p) * 60, 1) * (1 - clamp(0, (var(--k) - 0.7) * 3.4, 1)));
+}
+.hiding-set {
+  --k: clamp(0, calc((var(--p) - 0.1) / 0.3), 1);
+  transform: scale(calc(0.3 + var(--k) * 0.7));
+  opacity: calc(var(--k) * (1 - clamp(0, (var(--p) - 0.85) * 4, 0.5)));
+}
+.hiding-glint {
+  opacity: clamp(0, calc((var(--p) - 0.36) * 8), 1);
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: calc(1 - clamp(0, (var(--p) - 0.36) * 5, 1));
+}
+.hiding-crush {
+  opacity: calc(clamp(0, var(--p) * 60, 1) * (1 - clamp(0, (var(--p) - 0.12) * 6, 1)));
+}
+
+/* ---- louvre shadow ---- */
+.cine-screen > .cine-vfx > .hiding-slats {
+  background: repeating-linear-gradient(
+    var(--angle),
+    rgba(8, 5, 3, var(--dark)) calc(var(--shift) + 0%),
+    rgba(8, 5, 3, var(--dark)) calc(var(--shift) + var(--gap) - var(--bar)),
+    rgba(8, 5, 3, 0) calc(var(--shift) + var(--gap) - var(--bar) + 1.2%),
+    rgba(8, 5, 3, 0) calc(var(--shift) + var(--gap) - 1.2%),
+    rgba(8, 5, 3, var(--dark)) calc(var(--shift) + var(--gap))
+  );
+  opacity: min(1, calc(var(--p) * 30));
+}
+
+/* ---- the wipe: a hanging hide swung across the lens ---- */
+.cine-screen > .cine-vfx > .hiding-wipe {
+  overflow: hidden;
+}
+.hiding-wipe svg {
+  position: absolute;
+  left: 50%;
+  top: -12%;
+  width: 140%;
+  height: 160%;
+  margin-left: -70%;
+  transform-origin: 50% -60%;
+  overflow: visible;
+}
+/* Out: swung in from the right until it covers the frame. In: from covering, away to the left. */
+.hiding-wipe[data-phase="out"] svg {
+  transform: rotate(calc(46deg * (1 - var(--pi))));
+}
+.hiding-wipe[data-phase="in"] svg {
+  transform: rotate(calc(-48deg * var(--pi)));
+}
+
+/* ---- on the board ---- */
+.cine-anchored > .hiding-board {
+  width: calc(var(--unit-w) * 0.6);
+  height: calc(var(--unit-w) * 0.6);
+  top: calc(var(--unit-h) * -0.52);
+  left: 0;
+}
+.hiding-board svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.hiding-board g {
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+.hiding-board-set {
+  --k: clamp(0, calc((var(--p) - 0.1) / 0.3), 1);
+  transform: scale(calc(0.4 + var(--k) * 0.6));
+  opacity: calc(var(--k) * 0.95);
+}
+.hiding-board-glint {
+  opacity: clamp(0, calc((var(--p) - 0.4) * 6), 1);
+}
+.hiding-board-ring {
+  --k: clamp(0, calc((var(--p) - var(--i) * 0.06) / 0.34), 1);
+  transform: scale(calc((1.1 + var(--i) * 0.3) * (1 - var(--k) * 0.72)));
+  opacity: calc(clamp(0, var(--p) * 30, 1) * (1 - var(--k)));
+}
+/* Spent: a dent that goes slack and sags, and stays sagging. */
+.hiding-board-sag {
+  --k: clamp(0, calc((var(--p) - var(--i) * 0.07) / 0.5), 1);
+  transform: translateY(calc(var(--k) * (0.14 + var(--i) * 0.1) * 1px)) scale(calc(1 - var(--k) * 0.06), calc(1 + var(--k) * (0.2 + var(--i) * 0.08)));
+  opacity: calc(clamp(0, var(--p) * 12, 1) * 0.9);
+}
+.hiding-board[data-mode="spent"] > .hiding-dust {
+  left: 50%;
+  top: 68%;
+  transform: none;
+}
+
+/* ---- the glare behind the blow ---- */
+.cine-vfx > .hiding-glare {
+  position: absolute;
+  width: calc(1800px * var(--gk));
+  height: calc(1200px * var(--gk));
+  transform: translate(-50%, -50%) !important;
+  overflow: visible;
+  opacity: calc(1 - clamp(0, (var(--p) - 0.05) / 0.2, 1) * 0.82);
+}
+.cine-vfx > .hiding-glare[data-hold] {
+  opacity: var(--go);
+}
+.hiding-glare-rings {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  transform: scale(calc(1.2 - clamp(0, var(--p) / 0.12, 1) * 0.55));
+  opacity: calc(1 - clamp(0, (var(--p) - 0.05) / 0.08, 1));
+}
