@@ -88,6 +88,11 @@
   fill: #3a4478 !important;
   stroke: #3a4478 !important;
 }
+/* A shadow has no glow: the creatures' drawn glows are filters, and a copy is flat. */
+.sb-cast-copy *,
+.sb-board-copy * {
+  filter: none !important;
+}
 
 /* ---- the volley, as its shadows ---- */
 .sb-shadows {
