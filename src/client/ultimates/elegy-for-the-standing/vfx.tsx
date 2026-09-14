@@ -17,12 +17,15 @@ import "./style.css";
  *   elegy-clods     the earth thrown in: clods and sods flung up along the grave and falling
  *   elegy-negative  the impact frame: black, with every figure and the shadow in bone
  *   elegy-leaf      a leaf of the Herald's laurel coming loose and falling
- *   elegy-board     on the real battlefield: the target's shadow stretching out along the
- *                   floor (`stretch`); after, the fresh grave it lies in (`grave`) and a
- *                   laurel leaf settling on every ally (`laurel`)
+ *   elegy-board     on the real battlefield: the target's shadow standing up out of the
+ *                   floor behind it (`rise`); after, the fresh grave it lies in (`grave`)
+ *                   and a laurel leaf settling on every ally (`laurel`)
  *
  * The song is never drawn. There are no lines of sound, no notes, no rings:
- * it is seen in what it does to the one it is for.
+ * it is seen in what it does to the one it is for. And the shadow is not a
+ * shadow cast by any light (nothing in the burying ground casts one): it is
+ * the enemy's own shape in mourning black, edged in half-mourning lilac, with
+ * a will of its own — it stands up, is laid down, and is buried.
  *
  * The engine gives a figure slot to one shared effect only, so the shadow is
  * the stage's own target node, copied (`cloneNode`) into this effect's box,
@@ -129,7 +132,8 @@ function shade(el: HTMLElement): Shade | null {
   const halo = shadowOf(source);
   halo.classList.add("elegy-shade-halo");
   const copy = shadowOf(source);
-  wrap.append(halo, copy);
+  wrap.appendChild(halo);
+  wrap.appendChild(copy);
   slot.appendChild(wrap);
   s = { source, wrap, copy, halo, foot: { x: 0, y: 0, h: 100 } };
   SHADES.set(el, s);
@@ -594,11 +598,14 @@ const board: Frame = (el, p, age) => {
     }
   }
   const shadeEl = box.querySelector<HTMLElement>(".elegy-board-shade");
-  if (mode === "stretch") {
-    // The shadow comes out from under the enemy and runs along the floor towards the party.
-    const k = ease("out", span(p, 0.05, 0.95));
-    setTransform(shadeEl, `scale(1, 0.2) rotate(-90deg) scale(1, ${f3(0.12 + k * 0.7)})`);
-    setOpacity(shadeEl, 0.75 * span(p, 0, 0.2));
+  if (mode === "rise") {
+    // Not a shadow cast by any light: it stands up out of the floor behind
+    // the enemy, its own height, and by the end of the call has begun to lean
+    // away from it, the way the song will lay it down.
+    const up = ease("out", span(p, 0, 0.7));
+    const lean = ease("in", span(p, 0.55, 1)) * 16;
+    setTransform(shadeEl, `translate(${f1(-6 - up * 10)}%, 0) rotate(${f1(-lean)}deg) scale(0.96, ${f3(0.04 + up * 0.96)})`);
+    setOpacity(shadeEl, 0.82 * span(p, 0, 0.15));
   } else if (mode === "grave") {
     setTransform(shadeEl, `translateY(3px) scale(1, 0.12) rotate(-90deg) scale(1, 0.78)`);
     setOpacity(shadeEl, 0.5 * span(p, 0, 0.25));

@@ -65,7 +65,7 @@ export const elegyForTheStanding: Cinematic = {
       id: "call",
       kind: "call",
       purpose:
-        "The round stops for a funeral: the real battlefield sinks to pewter grey, the Herald bows its head and dips its colours, and the real enemy's shadow comes out from under it and runs along the floor towards the party.",
+        "The round stops for a funeral: the real battlefield sinks to pewter grey, the Herald bows its head and dips its colours, and behind the real enemy its own shadow stands up out of the floor, its full height, and begins to lean.",
       space: "battlefield",
       ms: 420,
       fastMs: 240,
@@ -75,7 +75,7 @@ export const elegyForTheStanding: Cinematic = {
       actors: [{ role: "caster", at: [0, 0], size: 0, clip: "ult:elegy-dip" }],
       vfx: [
         { kind: "call-aura", at: 0, until: 1, anchor: "caster", color: LILAC },
-        { kind: "elegy-board", at: 0.12, until: 1, anchor: "targets", params: { mode: "stretch" } },
+        { kind: "elegy-board", at: 0.12, until: 1, anchor: "targets", params: { mode: "rise" } },
       ],
       sound: [{ at: 0, sfx: "elegy-hum" }],
       duck: [{ at: 0, level: 0.3, ms: 4600 }],
@@ -166,6 +166,32 @@ export const elegyForTheStanding: Cinematic = {
         { at: 0.46, label: "falls" },
         { at: 0.72, label: "laid" },
       ],
+      // A heavy thing, and a boss, is stood further off and the camera pulled
+      // back, so it is whole in the frame with its grave long enough for it.
+      framing: {
+        large: {
+          camera: { from: { x: 830, y: 540, zoom: 1.2 }, to: { x: 844, y: 546, zoom: 1.26 }, ease: "inOut" },
+          actors: [
+            { role: "target", at: [1320, 780], size: 260, face: -1, look: "lit", z: 2, react: [{ at: 0.5, clip: "anticipate", then: "idle" }] },
+            { role: "caster", at: WIDE.caster, size: 370, clip: "ult:elegy-mourn", then: "ult:elegy-mourn", look: "lit", rim: LILAC, z: 3 },
+            { role: "allies", at: [300, 730], spread: [105, -8], size: 260, look: "lit", z: 1, clip: "ult:elegy-bow", then: "ult:elegy-bow" },
+          ],
+          vfx: [
+            { kind: "elegy-shadow", at: 0, until: 1, layer: "back", params: { mode: "lay", rise: 0.14, notes: "0.04,0.42,0.7", stages: "-20,-54,-90", reach: 800 } },
+          ],
+        },
+        boss: {
+          camera: { from: { x: 880, y: 500, zoom: 1.04 }, to: { x: 894, y: 508, zoom: 1.09 }, ease: "inOut" },
+          actors: [
+            { role: "target", at: [1360, 800], size: 230, face: -1, look: "lit", z: 2, react: [{ at: 0.5, clip: "anticipate", then: "idle" }] },
+            { role: "caster", at: [430, 870], size: 350, clip: "ult:elegy-mourn", then: "ult:elegy-mourn", look: "lit", rim: LILAC, z: 3 },
+            { role: "allies", at: [280, 760], spread: [100, -8], size: 250, look: "lit", z: 1, clip: "ult:elegy-bow", then: "ult:elegy-bow" },
+          ],
+          vfx: [
+            { kind: "elegy-shadow", at: 0, until: 1, layer: "back", params: { mode: "lay", rise: 0.14, notes: "0.04,0.42,0.7", stages: "-20,-54,-90", reach: 760 } },
+          ],
+        },
+      },
     },
 
     /* 3 · LAID OUT — the quiet: the grave from its head, on the ground. */
@@ -193,6 +219,25 @@ export const elegyForTheStanding: Cinematic = {
       duck: [{ at: 0, level: 0.03, ms: 600 }],
       sound: [{ at: 0.1, sfx: "elegy-trickle" }],
       markers: [{ at: 0.5, label: "still" }],
+      // A bigger figure stands further off at the grave's far end, and its
+      // shadow is not stretched as far: the frame keeps both whole.
+      framing: {
+        large: {
+          actors: [{ role: "target", at: [800, 520], size: 110, face: -1, look: "silhouette", z: 2 }],
+          vfx: [
+            { kind: "elegy-quiet", at: 0, until: 1, layer: "back", params: { fx: 800, fy: 520, fw: 100, ny: 900, nw: 520 } },
+            { kind: "elegy-shadow", at: 0, until: 1, layer: "back", params: { mode: "quiet", leafX: 740, leafY: 860, leafScale: 2.2, persp: 620, tilt: -55, sx: 1.3, sy: 5.2 } },
+          ],
+        },
+        boss: {
+          camera: { from: { x: 800, y: 590, zoom: 1.6 }, to: { x: 800, y: 593, zoom: 1.63 }, ease: "linear" },
+          actors: [{ role: "target", at: [800, 470], size: 82, face: -1, look: "lit", z: 2 }],
+          vfx: [
+            { kind: "elegy-quiet", at: 0, until: 1, layer: "back", params: { fx: 800, fy: 472, fw: 120, ny: 900, nw: 540 } },
+            { kind: "elegy-shadow", at: 0, until: 1, layer: "back", params: { mode: "quiet", leafX: 740, leafY: 860, leafScale: 2.2, persp: 660, tilt: -55, sx: 1.2, sy: 4.2 } },
+          ],
+        },
+      },
     },
 
     /* 4 · BURIED — impact: the last note, and the earth goes in. */
@@ -246,6 +291,36 @@ export const elegyForTheStanding: Cinematic = {
         { kind: "voice", at: 0.36, until: 1, text: "$voice.impact" },
       ],
       markers: [{ at: 0.06, label: "contact" }],
+      // A boss is framed, not shrunk: the camera pulls back, the singer is
+      // smaller against it, and the grave and the earth run its whole length.
+      framing: {
+        large: {
+          camera: { from: { x: 890, y: 620, zoom: 1.4, rotate: -5 }, to: { x: 902, y: 610, zoom: 1.26, rotate: -2 }, ease: "out" },
+          actors: [
+            { role: "target", at: [1260, 820], size: 380, face: -1, z: 2, react: [{ at: 0.048, clip: "hurt" }], shove: { at: 0.05, by: [8, 26] }, toTilt: -8 },
+            { role: "caster", at: BURY.caster, size: 440, clip: "ult:elegy-close", then: "ult:elegy-planted", look: "lit", rim: LILAC, z: 3 },
+          ],
+          vfx: [
+            { kind: "elegy-shadow", at: 0, until: 1, layer: "back", params: { mode: "lay", laid: 1, reach: BURY.stake, bury: 0.06 } },
+            { kind: "elegy-clods", at: 0.06, until: 1, layer: "front", seed: 12, params: { x0: BURY.earth, y: 820, rise: 440, life: 0.62, count: 96, heap: 250 } },
+            { kind: "dust", at: 0.06, until: 0.8, x: 950, y: 845, scale: 3, color: "#3a2b22", seed: 5, layer: "back" },
+            { kind: "elegy-negative", at: 0, until: 0.2, layer: "screen", params: { ms: 44 } },
+          ],
+        },
+        boss: {
+          camera: { from: { x: 900, y: 580, zoom: 1.08, rotate: -4 }, to: { x: 914, y: 572, zoom: 1, rotate: -1.5 }, ease: "out" },
+          actors: [
+            { role: "target", at: [1330, 840], size: 260, face: -1, z: 2, react: [{ at: 0.048, clip: "hurt" }], shove: { at: 0.05, by: [6, 20] }, toTilt: -5 },
+            { role: "caster", at: [420, 880], size: 400, clip: "ult:elegy-close", then: "ult:elegy-planted", look: "lit", rim: LILAC, z: 3 },
+          ],
+          vfx: [
+            { kind: "elegy-shadow", at: 0, until: 1, layer: "back", params: { mode: "lay", laid: 1, reach: 460, bury: 0.06 } },
+            { kind: "elegy-clods", at: 0.06, until: 1, layer: "front", seed: 12, params: { x0: 560, x1: 1290, y: 840, rise: 520, life: 0.62, count: 110, heap: 300 } },
+            { kind: "dust", at: 0.06, until: 0.8, x: 980, y: 866, scale: 3.6, color: "#3a2b22", seed: 5, layer: "back" },
+            { kind: "elegy-negative", at: 0, until: 0.2, layer: "screen", params: { ms: 44 } },
+          ],
+        },
+      },
     },
 
     /* 5 · MOURNED — back on the board. */

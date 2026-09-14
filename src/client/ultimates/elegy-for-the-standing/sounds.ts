@@ -141,9 +141,9 @@ export const voices: Record<string, Voice> = {
       const rand = () => ((a = (a * 9301 + 49297) % 233280) / 233280);
       for (let i = 0; i < 16; i++) {
         const at = t + 0.05 + i * 0.028 + rand() * 0.02;
-        crash(c, o, at, { seconds: 0.012 + rand() * 0.02, gain: 0.035 * (1 - i / 20), freq: 3000 + rand() * 3500, q: 5 });
+        crash(c, o, at, { seconds: 0.012 + rand() * 0.02, gain: 0.11 * (1 - i / 20), freq: 3000 + rand() * 3500, q: 5 });
       }
-      crash(c, o, t, { seconds: 0.55, gain: 0.018, type: "lowpass", freq: 500, q: 0.4 });
+      crash(c, o, t, { seconds: 0.55, gain: 0.05, type: "lowpass", freq: 500, q: 0.4 });
     },
   },
   /**
