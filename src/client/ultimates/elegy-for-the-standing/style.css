@@ -1,0 +1,287 @@
+/*
+ * Elegy for the Standing — effects and space.
+ *
+ * Mourning's three grades — black, grey, lilac — and raw clay. No filters and
+ * no keyframes: the shadow is a copied figure filled black by class and moved
+ * by transforms from the frame functions; the earth is paths.
+ */
+
+/* ---- the burying ground ---- */
+.elegy-ground-crest {
+  fill: #8c8d86;
+}
+.elegy-ground-cypress {
+  fill: #151a17;
+}
+.elegy-ground-clods {
+  fill: #20160f;
+  opacity: 0.55;
+}
+.elegy-ground-heap {
+  fill: #6a5446;
+}
+.elegy-ground-pit {
+  fill: #0f0a08;
+}
+.elegy-ground-wall {
+  fill: #2c1f18;
+}
+.elegy-ground-string {
+  stroke: #cfc8b8;
+  opacity: 0.45;
+  fill: none;
+}
+.elegy-ground-peg {
+  stroke: #b9ad97;
+  opacity: 0.7;
+  fill: none;
+}
+.elegy-ground-haft {
+  stroke: #3a2c22;
+  fill: none;
+  stroke-linecap: round;
+}
+.elegy-ground-blade {
+  fill: #5b5e62;
+  stroke: #1c1a18;
+  stroke-width: 3;
+}
+
+/* ---- world-sized drawings ---- */
+.cine-vfx > .elegy-shadow,
+.cine-vfx > .elegy-quiet,
+.cine-vfx > .elegy-clods {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none !important;
+}
+.elegy-grave {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+}
+.elegy-shadow-slot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+}
+.elegy-shade {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  will-change: transform;
+}
+.elegy-shade-art {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100px;
+  height: 100px;
+  margin-left: -50px;
+  margin-top: -97px;
+  transform-origin: 50px 97px;
+}
+.elegy-shade-rig {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 92%;
+  filter: none !important;
+}
+.elegy-shade-look {
+  width: 100%;
+  height: 100%;
+}
+/* The shadow is the figure with every fill and line turned to mourning black. */
+.elegy-shade-look :where(path, rect, circle, ellipse, polygon, polyline, line, text, use) {
+  fill: #0d0b12 !important;
+  stroke: #0d0b12 !important;
+}
+/* The shadow's edge: the same copy a shade larger, in half-mourning lilac. */
+.elegy-shade-halo {
+  opacity: 0.55;
+}
+.elegy-shade-halo .elegy-shade-look {
+  transform: scale(1.07);
+  transform-origin: 50% 97%;
+}
+.elegy-shade-halo .elegy-shade-look :where(path, rect, circle, ellipse, polygon, polyline, line, text, use) {
+  fill: #c6b4e8 !important;
+  stroke: #c6b4e8 !important;
+}
+
+/* Effects are drawn above the film's exposure, so the earth in each shot is
+   painted at the brightness that shot is lit to. These are the graveside's
+   (exposure ~0.75); the quiet's are darker, and the burial's brighter. */
+.elegy-grave-heap {
+  fill: #4a3a2e;
+}
+/* An open grave is a hole: dark inside, with the cut edge of the clay round
+   it and the spoil heaped along its far lip. */
+.elegy-grave-pit {
+  fill: #231912;
+  stroke: #120c08;
+  stroke-width: 3;
+}
+.elegy-grave-wall {
+  fill: #3d2c21;
+}
+.elegy-grave-lip {
+  fill: #3a2c22;
+}
+.elegy-grave-mound {
+  fill: #4f3c2f;
+  stroke: #24180f;
+  stroke-width: 3;
+  opacity: 0;
+}
+
+/* the quiet: the grave from its head */
+.elegy-quiet-pit {
+  fill: #15100c;
+}
+.elegy-quiet-heap {
+  fill: #241b15;
+  stroke: #0d0906;
+  stroke-width: 3;
+}
+.elegy-quiet-grain {
+  fill: #3a2c24;
+}
+
+/* the earth thrown in */
+.elegy-clod {
+  stroke: #150e0a;
+  stroke-width: 2.5;
+}
+.elegy-clod-0 {
+  fill: #5b4436;
+}
+.elegy-clod-1 {
+  fill: #7d6353;
+}
+.elegy-clod-2 {
+  fill: #2f211a;
+}
+.elegy-clods-wall {
+  fill: #4a382c;
+  stroke: #1a110c;
+  stroke-width: 3;
+}
+.elegy-clods-heap {
+  fill: #5b4436;
+  stroke: #1a110c;
+  stroke-width: 3;
+}
+
+/* ---- the negative: black, and every figure in bone ---- */
+.ult-cinematic[data-elegy-negative] .cine-film {
+  background: #0d0b12;
+}
+.ult-cinematic[data-elegy-negative] :is(.cine-bg, .cine-exposure, .cine-light, .cine-front, .elegy-grave) {
+  visibility: hidden;
+}
+.ult-cinematic[data-elegy-negative] .cine-world::after,
+.ult-cinematic[data-elegy-negative] .cine-actor::before {
+  opacity: 0 !important;
+}
+.ult-cinematic[data-elegy-negative] :is(.cine-look, .elegy-shade-look) :where(path, rect, circle, ellipse, polygon, polyline, line, text, use) {
+  fill: #efe9dc !important;
+  stroke: #efe9dc !important;
+}
+.ult-cinematic[data-elegy-negative] .elegy-shade {
+  opacity: 1 !important;
+}
+
+/* ---- the laurel leaf ---- */
+.elegy-leaf {
+  width: 120px;
+  height: 120px;
+}
+.elegy-leaf > svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ---- on the real battlefield ---- */
+.elegy-board {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: none !important;
+}
+.elegy-board-shade {
+  position: absolute;
+  left: calc(var(--unit-w) * -0.5);
+  top: calc(var(--unit-h) * -1);
+  width: var(--unit-w);
+  height: var(--unit-h);
+  transform-origin: 50% 97%;
+  opacity: 0;
+}
+.elegy-board-art {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.elegy-board-art :where(path, rect, circle, ellipse, polygon, polyline, line, text, use) {
+  fill: #0d0b12 !important;
+  stroke: #0d0b12 !important;
+}
+/* Sunk in the grave: the earth is painted over it, and what still shows above
+   the mound is drawn in half-mourning lilac, not black. */
+.elegy-board[data-mode="grave"] .elegy-board-art :where(path, rect, circle, ellipse, polygon, polyline, line, text, use) {
+  fill: #c6b4e8 !important;
+  stroke: #c6b4e8 !important;
+}
+.elegy-board-grave {
+  position: absolute;
+  left: calc(var(--unit-h) * -0.62);
+  top: calc(var(--unit-w) * -0.24);
+  width: calc(var(--unit-h) * 1.02);
+  height: calc(var(--unit-w) * 0.24);
+  overflow: visible;
+  transform-origin: 50% 100%;
+  transform: scaleY(var(--up, 0));
+}
+.elegy-board-mound {
+  fill: #5e4738;
+  stroke: #1a110c;
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+.elegy-board-mound-lit {
+  fill: #7d6353;
+}
+.elegy-board-sprig {
+  position: absolute;
+  left: calc(var(--unit-h) * -0.52);
+  top: calc(var(--unit-w) * -0.36);
+  width: calc(var(--unit-h) * 0.56);
+  height: calc(var(--unit-h) * 0.31);
+  overflow: visible;
+  transform: scale(var(--sprig, 0));
+}
+.elegy-board-leaf {
+  position: absolute;
+  left: calc(var(--unit-w) * (var(--lx, 0) - 0.12));
+  top: calc(var(--unit-h) * var(--ly, -1));
+  width: calc(var(--unit-w) * 0.24);
+  height: calc(var(--unit-w) * 0.24);
+  overflow: visible;
+  opacity: var(--lo, 0);
+  transform: rotate(calc(var(--lr, 0) * 1deg));
+}
