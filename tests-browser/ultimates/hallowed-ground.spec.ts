@@ -55,7 +55,7 @@ test("the whole party is warded and regenerating for four rounds, nobody is Empo
   expect(lines.some((l) => /strips/.test(l))).toBe(false);
   await page.keyboard.press("Escape");
   // Lasting: three rounds of it still to come after this one, on everyone standing.
-  const readout = page.locator('.combatant[data-side="player"] .status-readout').filter({ hasText: "Regeneration" });
+  const readout = page.locator('.combatant[data-side="hero"] .status-readout').filter({ hasText: "Regeneration" });
   await expect(readout).toHaveCount(4);
   for (const r of await readout.all()) await expect(r).toContainText("3r");
 });

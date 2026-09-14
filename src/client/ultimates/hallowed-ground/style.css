@@ -126,17 +126,12 @@
 }
 .hallow-ember {
   fill: #ffe9c8;
-  opacity: 0;
 }
 .hallow-spark {
   fill: none;
   stroke: #fff6e6;
   stroke-width: 2.2;
   stroke-linecap: round;
-  opacity: 0;
-}
-.hallow-flare {
-  opacity: 0;
 }
 .hallow-flare-spike {
   fill: #f4fbff;
@@ -155,7 +150,6 @@
   stroke-width: 2.4;
 }
 .hallow-flake {
-  opacity: 0;
   stroke-width: 1.4;
 }
 .hallow-soot-0 {

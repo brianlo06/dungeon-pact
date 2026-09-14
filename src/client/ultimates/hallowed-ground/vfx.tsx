@@ -104,15 +104,15 @@ function ScoreRenderer({ cue }: VfxProps): ReactNode {
         <rect className="hallow-halo" />
         <g className="hallow-embers">
           {Array.from({ length: 9 }, (_, i) => (
-            <circle key={i} className="hallow-ember" r={2.2 + rand() * 2.4} data-u={rand()} data-ph={rand()} />
+            <circle key={i} className="hallow-ember" opacity={0} r={2.2 + rand() * 2.4} data-u={rand()} data-ph={rand()} />
           ))}
         </g>
         <g className="hallow-sparks">
           {Array.from({ length: SPARKS }, (_, i) => (
-            <path key={i} className="hallow-spark" data-ph={rand()} data-a={-150 + rand() * 120} data-l={14 + rand() * 30} />
+            <path key={i} className="hallow-spark" opacity={0} data-ph={rand()} data-a={-150 + rand() * 120} data-l={14 + rand() * 30} />
           ))}
         </g>
-        <g className="hallow-flare">
+        <g className="hallow-flare" opacity={0}>
           {Array.from({ length: FLARE }, (_, i) => {
             const a = (i / FLARE) * Math.PI * 2 + (rand() - 0.5) * 0.3;
             const len = 60 + rand() * 90 + (i % 3 === 0 ? 70 : 0);
@@ -171,7 +171,7 @@ const score: Frame = (el, p, age, ctx) => {
     const breathe = 0.86 + 0.14 * (0.5 + 0.5 * Math.sin(age / 260));
     setOpacity(core, lit > 0 ? lerp(0.25, breathe, lit) : 0.14);
     setAttr(hot, "d", groove);
-    setOpacity(hot, lit > 0 ? lit * (0.55 + 0.45 * Math.max(0, 1 - (age - ignite * 1000) / 700)) : 0);
+    setOpacity(hot, lit > 0 ? lit * (0.55 + 0.45 * Math.max(0, 1 - (age - ignite * num(d, "shotMs", 780)) / 700)) : 0);
     const h = num(d, "haloH", 64);
     setAttr(halo, "x", f1(x0 - 20));
     setAttr(halo, "width", f1(x1 - x0 + 40));
@@ -283,6 +283,7 @@ function SootRenderer({ cue }: VfxProps): ReactNode {
             <path
               key={i}
               className={f.tone < 0 ? "hallow-flake hallow-ash" : `hallow-flake hallow-soot-${f.tone}`}
+              opacity={0}
               d={chip(f.r, f.seed)}
               data-u={f.u}
               data-v={f.v}
