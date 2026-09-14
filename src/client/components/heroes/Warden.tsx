@@ -52,6 +52,17 @@ const GRASP_CURL =
   "clamp(0, min((var(--wdn-grasp, 0) - 0.34) * 1000, (0.67 - var(--wdn-grasp, 0)) * 1000), 1)";
 const GRASP_FIST = "clamp(0, (var(--wdn-grasp, 0) - 0.67) * 1000, 1)";
 
+/**
+ * The front antler's beam, in two pieces: the beam and its two tines, kept,
+ * and the forward tine with its curling tip, which the Lifebinder breaks
+ * off. The beam's curve is split on itself (de Casteljau at 0.65), so the
+ * two pieces drawn end to end are the one curve they used to be.
+ */
+const ANTLER_KEPT =
+  "M55 17.5 C58.9 15.55 64.07 14.45 70.23 14.46 M62 15.2 L64 10.4 M69.5 14.2 L73.5 10.4";
+export const ANTLER_SHED =
+  "M70.23 14.46 C73.55 14.47 77.15 14.8 81 15.5 C84 16.5 86 18.5 87 21.5";
+
 /** A pointed leaf, `r` half its length, in local space. */
 const leafD = (r: number) =>
   `M0 0 Q${r} ${-r * 0.75} ${2 * r} 0 Q${r} ${r * 0.75} 0 0 Z`;
@@ -271,8 +282,9 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
           {[
             // back antler: a long beam raking out behind, three tines up
             "M42 18.5 C36 15 27 14 15 16.5 M36.5 15.8 L33.5 10.5 M29 14.6 L24.5 10.4 M21 15 L14.5 11 M15 16.5 C12 17.5 10 19.5 9 22.5",
-            // front antler: shorter, forward, curling at the tip
-            "M55 17.5 C61 14.5 70 13.5 81 15.5 M62 15.2 L64 10.4 M69.5 14.2 L73.5 10.4 M81 15.5 C84 16.5 86 18.5 87 21.5",
+            // front antler: shorter, forward, curling at the tip — its beam
+            // is drawn in two pieces below, split where the Lifebinder breaks it
+            ANTLER_KEPT,
           ].map((d) => (
             <g key={d}>
               <path
@@ -283,6 +295,26 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
+              {/*
+               * The forward tine of the front antler. At rest it is drawn
+               * exactly as the one path it used to be part of (the beam is
+               * split on its own curve, and its ink goes under the kept
+               * beam's wood so the joint has no seam). In an Ultimate's
+               * close-up a film can take it off the crown (`--wdn-tine`,
+               * Living Bone), and a stump is drawn where it was.
+               */}
+              {d === ANTLER_KEPT && (
+                <g className="ph-wdn-tine" style={closeUp ? { opacity: "calc(1 - var(--wdn-tine, 0))" } : undefined}>
+                  <path
+                    d={ANTLER_SHED}
+                    fill="none"
+                    stroke={INK}
+                    strokeWidth={5.6}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+              )}
               <path
                 d={d}
                 fill="none"
@@ -291,6 +323,49 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
+              {d === ANTLER_KEPT && (
+                <g className="ph-wdn-tine" style={closeUp ? { opacity: "calc(1 - var(--wdn-tine, 0))" } : undefined}>
+                  <path
+                    d={ANTLER_SHED}
+                    fill="none"
+                    stroke={RAMP.wood[0]}
+                    strokeWidth={2.8}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+              )}
+              {d === ANTLER_KEPT && closeUp && (
+                <g className="ph-wdn-stump" style={{ opacity: "var(--wdn-tine, 0)" }}>
+                  {/* the break: splintered bone, marrow in the middle */}
+                  <path
+                    d="M68.7 12.2 L71.3 11.5 L72.7 12.8 L71.9 14.3 L73 15.8 L71.5 16.9 L69.6 16.6 L68.4 14.7 Z"
+                    fill={RAMP.bone[0]}
+                    stroke={INK}
+                    strokeWidth={1}
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M69.6 13 L71.2 13.7 M69.8 15.5 L71.3 15.1"
+                    stroke={RAMP.wood[1]}
+                    strokeWidth={0.7}
+                    fill="none"
+                    strokeLinecap="round"
+                  />
+                  <circle cx={70.9} cy={14.3} r={0.8} fill={RAMP.wood[0]} />
+                  {/* velvet bleeds: one bead at the break (`--wdn-bead`) */}
+                  <circle
+                    className="ph-wdn-bead"
+                    cx={72.5}
+                    cy={16.6}
+                    r={1.15}
+                    fill="#c4573f"
+                    stroke={INK}
+                    strokeWidth={0.5}
+                    style={{ opacity: "var(--wdn-bead, 0)" }}
+                  />
+                </g>
+              )}
             </g>
           ))}
           {/* a long, weathered face, the jaw running down into the beard */}
