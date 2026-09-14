@@ -148,8 +148,8 @@ export const hallowedGround: Cinematic = {
         { at: 0.34, sfx: "hallow-motif-b" },
       ],
       text: [
-        { kind: "name", at: 0.3, until: 1, text: "$name", x: 0.06, y: 0.14 },
-        { kind: "epithet", at: 0.4, until: 1, text: "$epithet", x: 0.06, y: 0.24 },
+        { kind: "name", at: 0.3, until: 1, text: "$name", x: 0.06, y: 0.58 },
+        { kind: "epithet", at: 0.4, until: 1, text: "$epithet", x: 0.06, y: 0.68 },
       ],
       markers: [
         { at: 0.3, label: "title" },
@@ -167,19 +167,19 @@ export const hallowedGround: Cinematic = {
       ms: 560,
       fastMs: 360,
       camera: {
-        from: { x: 780, y: 880, zoom: 2.4, rotate: 6 },
-        to: { x: 782, y: 882, zoom: 2.42, rotate: 6 },
+        from: { x: 700, y: 900, zoom: 2.2, rotate: 8 },
+        to: { x: 702, y: 902, zoom: 2.23, rotate: 8 },
         ease: "linear",
       },
       background: "hallow-foundry",
-      lighting: { exposure: 0.4, rim: [HALO, 0.3, 1], vignette: 0.85, letterbox: 0.13 },
-      toLighting: { exposure: 0.2, rim: [HALO, 0.2, 1], vignette: 0.92, letterbox: 0.14 },
+      lighting: { exposure: 0.55, under: [HALO, 0.3], rim: [HALO, 0.35, 1], vignette: 0.72, letterbox: 0.13 },
+      toLighting: { exposure: 0.38, under: [HALO, 0.14], rim: [HALO, 0.25, 1], vignette: 0.84, letterbox: 0.14 },
       actors: [
-        { role: "caster", at: [480, 960], size: 1400, clip: "ult:hallow-lift", then: "ult:hallow-lift", look: "lit", rim: HALO, root: false },
+        { role: "caster", at: [420, 960], size: 1100, clip: "ult:hallow-lift", then: "ult:hallow-lift", look: "lit", rim: HALO, root: false },
       ],
       vfx: [
-        { kind: "hallow-score", at: 0, until: 1, layer: "front", seed: 19, params: { mode: "quiet", x0: -400, x1: 774, head: 774, y: 960 } },
-        { kind: "hallow-soot", at: 0, until: 1, layer: "front", seed: 11, params: { mode: "hang", cx: 780, cy: 860, w: 720, h: 380, count: 22, fall: 3 } },
+        { kind: "hallow-score", at: 0, until: 1, layer: "front", seed: 19, params: { mode: "quiet", x0: -400, x1: 651, head: 651, y: 960 } },
+        { kind: "hallow-soot", at: 0, until: 1, layer: "front", seed: 11, params: { mode: "hang", cx: 700, cy: 900, w: 760, h: 420, count: 22, fall: 3 } },
       ],
       duck: [{ at: 0, level: 0.03, ms: 560 }],
       sound: [{ at: 0.06, sfx: "hallow-ember" }],
@@ -196,8 +196,8 @@ export const hallowedGround: Cinematic = {
       ms: 780,
       fastMs: 560,
       camera: {
-        from: { x: 800, y: 640, zoom: 1.35, rotate: -3 },
-        to: { x: 800, y: 626, zoom: 1.18, rotate: -1 },
+        from: { x: 830, y: 640, zoom: 1.35, rotate: -3 },
+        to: { x: 824, y: 626, zoom: 1.18, rotate: -1 },
         ease: "out",
       },
       background: "hallow-foundry",
@@ -221,11 +221,14 @@ export const hallowedGround: Cinematic = {
         { kind: "hallow-score", at: 0, until: 1, layer: "front", seed: 19, params: { mode: "burn", x0: LINE.x0, x1: LINE.end, head: LINE.end, y: LINE.y, ignite: 0.069, shotMs: 780, depth: 220, taper: 80 } },
         { kind: "dust", at: 0.07, until: 0.6, x: LINE.end, y: LINE.y, scale: 1.6, color: "#5c5a58", seed: 5, layer: "front" },
       ],
+      // The accents end before contact: the hit-stop holds presentation time,
+      // so anything on the lens at contact would be held with it. The frame
+      // the stop holds is in colour: the flare, the line lit, the soot rising.
       screen: [
-        { kind: "two-tone", at: 0, ms: 60, color: STONE, mode: "full" },
-        { kind: "invert", at: 0, ms: 50, mode: "fast" },
-        { kind: "flash", at: 0.069, ms: 80, amount: 0.75, color: WHITE },
-        { kind: "chromatic", at: 0.07, ms: 140, amount: 0.7 },
+        { kind: "two-tone", at: 0, ms: 44, color: STONE, mode: "full" },
+        { kind: "invert", at: 0, ms: 40, mode: "fast" },
+        { kind: "flash", at: 0.035, ms: 24, amount: 0.8, color: WHITE },
+        { kind: "chromatic", at: 0.28, ms: 120, amount: 0.5 },
       ],
       stop: [{ at: 0.075, ms: 150 }],
       shake: [
@@ -254,8 +257,8 @@ export const hallowedGround: Cinematic = {
       ms: 600,
       fastMs: 0,
       camera: {
-        from: { x: 760, y: 780, zoom: 2.0 },
-        to: { x: 760, y: 740, zoom: 1.84 },
+        from: { x: 760, y: 780, zoom: 2.0, rotate: 2 },
+        to: { x: 760, y: 740, zoom: 1.84, rotate: 1 },
         ease: "inOut",
       },
       background: "hallow-foundry",

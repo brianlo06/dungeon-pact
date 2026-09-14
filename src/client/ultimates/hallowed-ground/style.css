@@ -124,6 +124,11 @@
   opacity: 0;
   mix-blend-mode: screen;
 }
+.hallow-glow {
+  fill: url(#hallow-glow-g);
+  opacity: 0;
+  mix-blend-mode: screen;
+}
 .hallow-ember {
   fill: #ffe9c8;
 }
@@ -139,7 +144,7 @@
 
 /* the soot */
 .hallow-stone {
-  fill: #c9c4b6;
+  fill: url(#hallow-stone-g);
   stroke: #8f8a7d;
   stroke-width: 2;
   opacity: 0;
@@ -182,7 +187,7 @@
 .hallow-board-knock {
   position: absolute;
   left: calc(var(--unit-w) * -0.55);
-  top: calc(var(--unit-w) * -0.12);
+  top: calc(var(--unit-w) * -0.3);
   width: calc(var(--unit-w) * 1.1);
   height: calc(var(--unit-w) * 0.36);
   overflow: visible;
@@ -198,7 +203,7 @@
 .hallow-board-scratch-hot {
   fill: none;
   stroke: #f4fbff;
-  stroke-width: 1.6;
+  stroke-width: 3;
   stroke-linecap: round;
   stroke-dasharray: 90;
   stroke-dashoffset: calc(90 - var(--pe) * 90);
@@ -247,7 +252,7 @@
 .hallow-board-stone {
   position: absolute;
   left: calc(var(--unit-w) * -0.7);
-  top: calc(var(--unit-w) * -0.16);
+  top: calc(var(--unit-w) * -0.25);
   width: calc(var(--unit-w) * 1.4);
   height: calc(var(--unit-w) * 0.36);
   overflow: visible;
@@ -255,13 +260,15 @@
   transform: scale(calc(0.7 + var(--pe) * 0.3));
 }
 .hallow-board-flag {
-  fill: #c9c4b6;
+  fill: #d3cec0;
+  fill-opacity: 0.32;
   stroke: #cdf5ff;
-  stroke-width: 1.6;
+  stroke-width: 1.8;
 }
 .hallow-board-flag-joint {
   fill: none;
-  stroke: #8f8a7d;
+  stroke: #d3cec0;
+  stroke-opacity: 0.5;
   stroke-width: 1.2;
 }
 .hallow-board-lift {

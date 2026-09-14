@@ -43,9 +43,9 @@ const COUCHED_DROP = 0.1;
 /** The face the Herald is drawn with: open, earnest, eyes wide. */
 const EARNEST: Expression = { brow: -1, knit: -3, open: 1.15, mouth: 1, wide: 1 };
 /** Looking down at the floor by its feet: lids half down, the smile easing. */
-const FLOOR: Expression = { brow: -0.4, knit: -1, open: 0.6, mouth: 0.72, wide: 0.92 };
+const FLOOR: Expression = { brow: -0.4, knit: -1, open: 0.55, mouth: 0.45, wide: 0.92 };
 /** Set: the smile pressed to a line, the brows level and down a hair, the eyes steady. */
-const SET: Expression = { brow: 0.7, knit: 4, open: 0.86, mouth: 0.42, wide: 0.86 };
+const SET: Expression = { brow: 0.9, knit: 5, open: 0.74, mouth: 0.22, wide: 0.9 };
 /** The grounding: an open call, not a shout. */
 const CALL: Expression = { brow: -0.8, knit: 2, open: 1.05, mouth: 1.7, wide: 0.95 };
 /** After: the drawn smile coming back. */
@@ -180,9 +180,9 @@ const lift: Clip = {
   parts: {
     banner: [
       { at: 0, rotate: COUCHED - 12, y: COUCHED_DROP - 0.03, x: 0 },
-      { at: 0.3, rotate: 2, y: -0.06, x: 0 },
-      { at: 0.4, rotate: 0, y: -0.065, x: 0 },
-      { at: 1, rotate: 0, y: -0.062, x: 0 },
+      { at: 0.3, rotate: 2, y: -0.03, x: 0 },
+      { at: 0.4, rotate: 0, y: -0.034, x: 0 },
+      { at: 1, rotate: 0, y: -0.032, x: 0 },
     ],
     flag: [
       { at: 0, rotate: -12, squash: 0.96 },
@@ -217,7 +217,7 @@ const ground: Clip = {
   ],
   parts: {
     banner: [
-      { at: 0, rotate: 0, y: -0.05, x: 0 },
+      { at: 0, rotate: 0, y: -0.03, x: 0 },
       { at: 0.3, rotate: 0, y: 0.024, x: 0 },
       { at: 1, rotate: 0, y: 0.026, x: 0 },
     ],

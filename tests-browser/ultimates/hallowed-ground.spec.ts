@@ -41,16 +41,21 @@ test("the Sanctifier plays Hallowed Ground, with no enemy in it, and hands back 
 });
 
 test("the whole party is warded and regenerating for four rounds, nobody is Empowered, and the Sanctifier holds the front", async ({ page }) => {
-  await page.goto(lab({ auto: 1, party: 4, mode: "fast" }));
+  await page.goto(lab({ auto: 1, party: 4, mode: "fast" }), { waitUntil: "commit" });
   await expect(cinematic(page)).toHaveAttribute("data-cinematic", "hallowed-ground", { timeout: 30_000 });
   await expect(cinematic(page)).toHaveCount(0, { timeout: 30_000 });
   await expect(page.locator(".stage.is-replaying")).toHaveCount(0, { timeout: 40_000 });
   await page.getByRole("button", { name: "Battle history" }).click();
   await expect(page.locator(".history-drawer li").first()).toBeAttached();
   const lines = await page.locator(".history-drawer li").allTextContents();
-  expect(lines.filter((l) => /: Barrier \+16$/.test(l)).length).toBe(4);
+  // An Ultimate's Barrier logs a ward beat; an enemy's own Barrier (the Bulwark's
+  // Lock shields) does not, so only the lines a ward follows are the Sanctifier's.
+  const warded = (n: number) => lines.filter((l, i) => new RegExp(`: Barrier \\+${n}$`).test(l) && / is warded\.$/.test(lines[i + 1] ?? "")).length;
+  expect(warded(16)).toBe(4);
   expect(lines.filter((l) => /: Regeneration \+4$/.test(l)).length).toBe(4);
-  expect(lines.filter((l) => / is warded\.$/.test(l)).length).toBe(4);
+  // And the Sanctifier's own 12 for standing in front.
+  expect(warded(12)).toBe(1);
+  expect(lines.filter((l) => / is warded\.$/.test(l)).length).toBe(5);
   expect(lines.some((l) => /Empowered/.test(l))).toBe(false);
   expect(lines.some((l) => /strips/.test(l))).toBe(false);
   await page.keyboard.press("Escape");
@@ -156,7 +161,8 @@ test("a boss changes nothing but the board, the worn weapon is grounded, FAST ke
       if (shot && w.shots.at(-1) !== shot) w.shots.push(shot);
     }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-shot", "data-mode"] });
   });
-  await page.goto(lab({ auto: 1, mode: "fast" }));
+  // From commit, not load: a FAST film can be over before a slow load event.
+  await page.goto(lab({ auto: 1, mode: "fast" }), { waitUntil: "commit" });
   await expect(cinematic(page)).toHaveAttribute("data-mode", "fast", { timeout: 30_000 });
   await expect(cinematic(page)).toHaveCount(0, { timeout: 30_000 });
   const shots = await page.evaluate(() => (window as unknown as { shots: string[] }).shots);

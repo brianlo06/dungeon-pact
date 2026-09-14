@@ -75,7 +75,7 @@ export const voices: Record<string, Voice> = {
   "hallow-scrape": {
     bus: "sfx",
     render: (c, o, t) => {
-      knock(c, o, t, 0.3);
+      knock(c, o, t, 0.2);
       // The grind: two noise bands, one climbing, one under it.
       crash(c, o, t + 0.04, { seconds: 0.86, gain: 0.34, type: "bandpass", freq: 520, sweepTo: 1650, q: 1.6 });
       crash(c, o, t + 0.04, { seconds: 0.86, gain: 0.26, type: "bandpass", freq: 260, sweepTo: 700, q: 1.1 });
@@ -135,8 +135,8 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       // Transient: the knock, hard, and the ignition.
-      knock(c, o, t, 1.0);
-      crash(c, o, t + 0.006, { seconds: 0.09, gain: 0.7, type: "highpass", freq: 4200, q: 0.5 });
+      knock(c, o, t, 0.8);
+      crash(c, o, t + 0.006, { seconds: 0.09, gain: 0.55, type: "highpass", freq: 4200, q: 0.5 });
       hit(c, o, t, { type: "triangle", from: 300, to: 110, gain: 0.5, attack: 0.001, decay: 0.08 });
       // Sub.
       hit(c, o, t, { type: "sine", from: 120, to: 30, gain: 1.0, attack: 0.002, decay: 0.8 });

@@ -89,6 +89,11 @@ function ScoreRenderer({ cue }: VfxProps): ReactNode {
             <stop offset="0.45" stopColor={HALO} stopOpacity="0.16" />
             <stop offset="1" stopColor={HALO} stopOpacity="0" />
           </linearGradient>
+          <radialGradient id="hallow-glow-g">
+            <stop offset="0" stopColor="#ffe9c8" stopOpacity="0.55" />
+            <stop offset="0.5" stopColor="#ffd39a" stopOpacity="0.14" />
+            <stop offset="1" stopColor="#ffd39a" stopOpacity="0" />
+          </radialGradient>
           <linearGradient id="hallow-halo-g" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor={HALO} stopOpacity="0" />
             <stop offset="0.5" stopColor={WHITE} stopOpacity="0.9" />
@@ -96,6 +101,7 @@ function ScoreRenderer({ cue }: VfxProps): ReactNode {
           </linearGradient>
         </defs>
         <path className="hallow-throw" />
+        <ellipse className="hallow-glow" rx={150} ry={46} />
         {/* the chipped edge of the stone, the groove, and the light in it */}
         <path className="hallow-groove-edge" />
         <path className="hallow-groove" />
@@ -152,6 +158,7 @@ const score: Frame = (el, p, age, ctx) => {
   const hot = box.querySelector<SVGPathElement>(".hallow-hot");
   const halo = box.querySelector<SVGRectElement>(".hallow-halo");
   const throw_ = box.querySelector<SVGPathElement>(".hallow-throw");
+  if (mode !== "quiet") setOpacity(box.querySelector<SVGElement>(".hallow-glow"), 0);
   if (mode === "score") {
     // A dull ember light along what has been cut, hotter just behind the foot.
     setOpacity(core, 0.32);
@@ -160,7 +167,12 @@ const score: Frame = (el, p, age, ctx) => {
     setOpacity(halo, 0);
     setOpacity(throw_, 0);
   } else if (mode === "quiet") {
-    // The embers going out: the core dims over the shot.
+    // The embers going out: the core dims over the shot, and the warm glow
+    // they throw up on the ferrule and the boots goes with them.
+    const glow = box.querySelector<SVGEllipseElement>(".hallow-glow");
+    setAttr(glow, "cx", f1(head - 40));
+    setAttr(glow, "cy", f1(y));
+    setOpacity(glow, lerp(0.9, 0.15, ease("out", p)) * (0.85 + 0.15 * Math.sin(age / 70)));
     setOpacity(core, lerp(0.3, 0.08, ease("out", p)));
     setAttr(hot, "d", `M${f1(Math.max(x0, head - 90))} ${f1(y)} L${f1(head)} ${f1(y)}`);
     setOpacity(hot, lerp(0.7, 0.12, ease("out", p)));
@@ -271,6 +283,11 @@ function SootRenderer({ cue }: VfxProps): ReactNode {
               <clipPath id="hallow-stone-clip">
                 <rect className="hallow-stone-clip-rect" x="0" y="0" width="1600" height="0" />
               </clipPath>
+              <linearGradient id="hallow-stone-g" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0" stopColor="#d3cec0" />
+                <stop offset="0.55" stopColor="#b9b4a6" />
+                <stop offset="1" stopColor="#8f8b80" />
+              </linearGradient>
             </defs>
             <g className="hallow-stone-g" clipPath="url(#hallow-stone-clip)">
               <path className="hallow-stone" />
