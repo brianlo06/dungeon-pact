@@ -260,11 +260,14 @@ and the pour are aimed. Nothing moves `.cine-look`.
 ## Performance
 
 `GPU=1 scripts/profile-ultimate.ts 5501 1920x1080` (Rivet Sniper, a row of
-two): the film p50 16.7ms / p95 16.8ms, the round after it p50 16.7ms / p95
-16.8ms; 1 frame over 34ms in the film, 2 in the round. The film's peak is
-1,527 nodes (1,471 in SVG): every tongue is three `<use>`s of one of three
-drawings, shown one at a time. One filtered element at the peak (the stage's
-own two-tone frame). No filter, blur or keyframe in this folder.
+two), after the revision: the film p50 16.7ms / p95 16.8ms, the round after
+it p50 16.7ms / p95 16.8ms; 2 frames over 34ms in each. The film's peak is
+933 nodes (877 in SVG), down from 1,527 before the flood became one outline:
+it is a handful of paths whose `d` is rebuilt each frame (three layers, the
+streaks, and the spray folded into the layers) rather than hundreds of
+tongues. No filter, blur or keyframe in this folder. (A run under a load
+average of 27 measured p95 100ms for the film and 66.7ms for the round; the
+figures above are from a quieter machine.)
 
 ## What the engine could not do, and what was built instead
 
