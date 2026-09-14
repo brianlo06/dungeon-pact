@@ -174,7 +174,7 @@ export const sunblind: Cinematic = {
       background: "sb-roofs",
       lighting: { exposure: 1, under: [BOUNCE, 0.2], back: [GLARE, 0.2], vignette: 0.2, letterbox: BARS },
       toLighting: { exposure: 1, under: [BOUNCE, 0.2], back: [GLARE, 0.2], vignette: 0.22, letterbox: BARS },
-      actors: wideActors([980, 822], 280, [190, 14]),
+      actors: wideActors([950, 822], 270, [310, 16]),
       vfx: wideVfx(),
       sound: [
         { at: 0.04, sfx: "sb-motif" },
@@ -188,6 +188,26 @@ export const sunblind: Cinematic = {
         { at: 0.24, label: "title" },
         { at: 0.62, label: "drawn" },
       ],
+      framing: {
+        large: {
+          camera: {
+            from: { x: 810, y: 545, zoom: 1.02 },
+            to: { x: 835, y: 538, zoom: 1.06 },
+            ease: "inOut",
+          },
+          actors: wideActors([1000, 830], 250, [280, 16]),
+          vfx: wideVfx(),
+        },
+        boss: {
+          camera: {
+            from: { x: 820, y: 520, zoom: 0.96 },
+            to: { x: 845, y: 514, zoom: 1 },
+            ease: "inOut",
+          },
+          actors: wideActors([1150, 842], 240, [300, 16]),
+          vfx: wideVfx(),
+        },
+      },
     },
 
     /* 3 · LOOSE — from below: four arrows into the sky in one breath. */
@@ -236,11 +256,23 @@ export const sunblind: Cinematic = {
       background: "sb-roofs",
       lighting: { exposure: 0.85, under: [BOUNCE, 0.15], vignette: 0.45, letterbox: 0.14 },
       toLighting: { exposure: 0.58, under: [BOUNCE, 0.1], vignette: 0.7, letterbox: 0.15 },
-      actors: quietActors([1150, 852], 420, [170, 10]),
+      actors: quietActors([1080, 852], 400, [340, 12]),
       vfx: quietVfx(700),
       duck: [{ at: 0, level: 0.03, ms: 600 }],
       sound: [{ at: 0.02, sfx: "sb-hush" }],
       markers: [{ at: 0.9, label: "at their feet" }],
+      framing: {
+        large: {
+          camera: { from: { x: 960, y: 760, zoom: 1.4 } },
+          actors: quietActors([1110, 856], 350, [340, 12]),
+          vfx: quietVfx(760),
+        },
+        boss: {
+          camera: { from: { x: 960, y: 700, zoom: 1.2 } },
+          actors: quietActors([1160, 862], 290, [360, 12]),
+          vfx: quietVfx(820),
+        },
+      },
     },
 
     /* 5 · VOLLEY — the impact: arrows standing in the ends of their shadows. */
@@ -261,8 +293,8 @@ export const sunblind: Cinematic = {
       background: "sb-roofs",
       lighting: { exposure: 1, tint: [GLARE, 0.12], under: [BOUNCE, 0.2], vignette: 0.2, letterbox: BARS },
       toLighting: { exposure: 0.92, tint: [GLARE, 0], under: [BOUNCE, 0.2], vignette: 0.3, letterbox: BARS },
-      actors: [FAR_KID, struck([930, 842], 340, [210, 12], [70, -10], 9)],
-      vfx: volleyVfx(1),
+      actors: [FAR_KID, struck([880, 842], 310, [300, 12], [70, -10], 9)],
+      vfx: volleyVfx(0.9),
       screen: [{ kind: "two-tone", at: 0, ms: 40 }],
       stop: [{ at: 0.08, ms: 150 }],
       shake: [
@@ -279,6 +311,26 @@ export const sunblind: Cinematic = {
         { kind: "voice", at: 0.4, until: 1, text: "$voice.impact" },
       ],
       markers: [{ at: 0.08, label: "lands" }],
+      framing: {
+        large: {
+          camera: {
+            from: { x: 990, y: 590, zoom: 1.2 },
+            to: { x: 980, y: 582, zoom: 1.13 },
+            ease: "out",
+          },
+          actors: [FAR_KID, struck([940, 846], 290, [270, 12], [44, -6], 5)],
+          vfx: volleyVfx(0.8),
+        },
+        boss: {
+          camera: {
+            from: { x: 980, y: 560, zoom: 1.06 },
+            to: { x: 970, y: 554, zoom: 1 },
+            ease: "out",
+          },
+          actors: [FAR_KID, struck([1010, 852], 240, [290, 12], [22, -4], 2.5)],
+          vfx: volleyVfx(0.66),
+        },
+      },
     },
 
     /* 6 · SUNSTRUCK — the real board: every enemy in the sun, the row struck. */
