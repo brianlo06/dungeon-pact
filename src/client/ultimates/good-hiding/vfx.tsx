@@ -214,9 +214,11 @@ const Wipe = ({ cue }: VfxProps) => (
 /* ── The glare ─────────────────────────────────────────────────────────── */
 
 /**
- * The slat light blown out behind the blow: a field of pale bars laid behind
- * the figures. On the two-tone frame it is what turns iron while the figures
- * go to ink; after it, it sinks back to the loft's own light.
+ * The slat light blown out behind the blow: a pale field laid behind the
+ * figures, above the exposure. On the two-tone frame it is what turns iron
+ * while every figure goes to ink (the dent is drawn on the blow itself);
+ * after the frame it sinks back to the loft's own light. Held at a fixed
+ * opacity (`hold`) it is the light the quiet's silhouettes stand against.
  */
 const Glare = ({ cue }: VfxProps) => {
   const p = cue.params ?? {};
@@ -239,14 +241,6 @@ const Glare = ({ cue }: VfxProps) => {
         </radialGradient>
       </defs>
       <ellipse rx={880} ry={580} fill={`url(#hiding-glare-fade-${seed})`} />
-      {!hold && (
-        /* The dent at the size of the room: lumpy rings round the blow, pressed in. */
-        <g className="hiding-glare-rings">
-          {[0, 1].map((i) => (
-            <path key={i} d={lump(seed + i * 3, 1, 0.16)} transform={`scale(${300 + i * 260})`} fill="none" stroke={INK} strokeWidth={(0.03 - i * 0.008).toFixed(3)} opacity={0.8 - i * 0.2} />
-          ))}
-        </g>
-      )}
     </svg>
   );
 };
