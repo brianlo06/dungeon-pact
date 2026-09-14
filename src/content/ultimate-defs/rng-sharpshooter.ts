@@ -13,10 +13,10 @@ import type { UltimateDef } from "../ultimates";
  * hole the first one made:
  *
  *  - the target's Barrier is stripped: the plate it trusted comes off first;
- *  - **the proof shot**: 12 precision through armour (a Mark the party left
+ *  - **the proof shot**: 8 precision through armour (a Mark the party left
  *    on the target is cashed: EXPLOIT), and the arrow standing in the target
  *    is its **Mark**;
- *  - **the second shot**: 12 precision through armour into the same hole,
+ *  - **the second shot**: 8 precision through armour into the same hole,
  *    which cashes that Mark: a second EXPLOIT, always;
  *  - the armour has a hole in it now: the target is **Vulnerable for 2
  *    rounds** for the whole party;
@@ -44,7 +44,7 @@ export const ultimate: UltimateDef = {
   name: "Proof Shot",
   epithet: "One to prove the plate. One to go through it.",
   description:
-    "Strip the target's Barrier, then two shots from the far end of the range: 12 precision through armour, the arrow standing in it as a Mark, and 12 more through the same hole (EXPLOIT). The armour has a hole in it now: the target is Vulnerable for 2 rounds. +2 Focus. Resolves after most other Ultimates.",
+    "Strip the target's Barrier, then two shots from the far end of the range: 8 precision through armour, the arrow standing in it as a Mark, and 8 more through the same hole (EXPLOIT). The armour has a hole in it now: the target is Vulnerable for 2 rounds. +2 Focus. Resolves after most other Ultimates.",
   target: "enemy",
   effects: [
     {
@@ -55,7 +55,7 @@ export const ultimate: UltimateDef = {
     {
       // The proof shot: through the armour; a Mark already there is cashed.
       kind: "damage",
-      amount: 12,
+      amount: 8,
       precision: true,
       pierce: true,
     },
@@ -69,7 +69,7 @@ export const ultimate: UltimateDef = {
     {
       // The second shot, through the same hole: EXPLOIT.
       kind: "damage",
-      amount: 12,
+      amount: 8,
       precision: true,
       pierce: true,
     },

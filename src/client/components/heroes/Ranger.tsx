@@ -45,6 +45,15 @@ const PARTS = [
 ] as const;
 /** The face, moved only in an Ultimate close-up (see `CloseUpContext`). */
 const FACE_PARTS = ["brow", "eyes", "mouth"] as const;
+/**
+ * The drawing hand, opened or closed for an Ultimate close-up only: `open`
+ * (fingers spread, letting grit go to read the wind) and `thumb` (a fist with
+ * the thumb up at arm's length, which is how far away a thing is). Drawn
+ * over the mitten, shown only where a film sets `--ps-open` / `--ps-thumb`
+ * (Proof Shot), and scaled by its clips, so a round's Ranger and every other
+ * film keep the mitten.
+ */
+const HAND_PARTS = ["open", "thumb"] as const;
 
 /**
  * The youngest face in the party: a round cranium, full cheeks and a small
@@ -62,6 +71,7 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
   // Held (and so named as parts) only where they are driven, so a round's
   // figure has no part the animator is not writing.
   const facePart = (name: (typeof FACE_PARTS)[number]) => (closeUp ? face(name) : undefined);
+  const hand = useRigParts(unitId, closeUp ? animators : undefined, HAND_PARTS);
   const g = useShades("rng");
   const [bx, by] = BODY.shoulderBack;
   const [fx, fy] = BODY.shoulderFront;
@@ -472,6 +482,38 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
             <path d="M33.8 67.8 H39.4" stroke={RAMP.leather[2]} strokeWidth={1.2} strokeLinecap="round" />
             <path d="M31.6 62 C32.4 60 34 59.2 35.6 59.4" stroke={RAMP.leather[0]} strokeWidth={1.1} fill="none" strokeLinecap="round" />
             <path d="M30.4 67.8 C29.6 69.4 30.6 70.8 32.2 70.4 C33.2 70.1 33.4 69 33 68.2" fill={RAMP.leather[1]} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+          </g>
+        )}
+        {/*
+          The same fingerless glove, opened: the fingers spread and the thumb
+          out, for letting a pinch of grit go into the wind (Proof Shot's
+          read). Over the mitten; shown only where `--ps-open` is set, and
+          scaled up by the clip that opens it.
+        */}
+        {closeUp && (
+          <g ref={hand("open")} data-part="open" className="rng-open" style={{ ...at(35.5, 64), opacity: "var(--ps-open, 0)" }}>
+            <path d="M30.5 61 C30 58.5 33 57 36 57.5 C39.5 58 41 60 40.8 63 L40.5 67 C40.5 69 38 70 35.5 70 C32.5 70 30.5 68.5 30.6 66 Z" fill={RAMP.leather[1]} stroke={INK} strokeWidth={LINE} strokeLinejoin="round" />
+            <path d="M40.6 61 C42.5 59.6 44.8 61 44.6 63.2 C44.4 64.9 42.6 65.8 41 65.2 Z" fill={RAMP.skinFair[1]} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+            <path d="M31 69 L30 76.5 L32.2 76.8 L33.2 69.5 Z" fill={RAMP.skinFair[1]} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+            <path d="M33.6 70 L33.4 77.8 L35.6 77.9 L35.9 70 Z" fill={RAMP.skinFair[0]} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+            <path d="M36.4 70 L37 77.6 L39.1 77.2 L38.6 69.8 Z" fill={RAMP.skinFair[1]} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+            <path d="M39 69.2 L40.6 75.8 L42.5 75 L40.9 68.8 Z" fill={RAMP.skinFair[0]} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+            <path d="M31.4 69.3 H39.8" stroke={RAMP.leather[2]} strokeWidth={1.2} strokeLinecap="round" />
+            <path d="M31.6 61.2 C32.6 59.4 34.4 58.6 36.2 58.8" stroke={RAMP.leather[0]} strokeWidth={1.1} fill="none" strokeLinecap="round" />
+          </g>
+        )}
+        {/*
+          The glove closed to a fist with the thumb out along the front, so
+          with the arm held straight out the thumb stands up: ranging a far
+          thing against a thumbnail. Shown only where `--ps-thumb` is set.
+        */}
+        {closeUp && (
+          <g ref={hand("thumb")} data-part="thumb" className="rng-thumb" style={{ ...at(35.5, 64), opacity: "var(--ps-thumb, 0)" }}>
+            <path d="M30.6 60.4 C30.4 58.2 32.6 57 35.4 57.2 C38.6 57.4 40.4 59 40.4 61.6 L40.4 66.4 C40.4 68.8 38.2 70 35.4 70 C32.4 70 30.4 68.6 30.5 66.2 Z" fill={RAMP.leather[1]} stroke={INK} strokeWidth={LINE} strokeLinejoin="round" />
+            <path d="M33.8 62.6 V68.6 M36.8 62.4 V69" stroke={RAMP.leather[2]} strokeWidth={1.1} strokeLinecap="round" />
+            <path d="M40.2 60.6 C41.6 58.6 44.2 58.2 46.6 59.6 C48.6 60.8 48.4 63 46.8 63.6 C45.2 64.2 42.6 63.6 40.4 64.4 Z" fill={RAMP.skinFair[1]} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+            <path d="M44.6 60.2 C45.8 60.4 46.8 61.2 46.9 62.2" stroke={RAMP.skinFair[0]} strokeWidth={0.9} fill="none" strokeLinecap="round" />
+            <path d="M31.8 60.8 C32.8 59.2 34.4 58.4 36.2 58.6" stroke={RAMP.leather[0]} strokeWidth={1.1} fill="none" strokeLinecap="round" />
           </g>
         )}
       </g>

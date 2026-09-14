@@ -1,0 +1,246 @@
+/* ------------------------------------------------------------- Proof Shot -- */
+/*
+ * Everything the Sharpshooter's Ultimate draws. Progress arrives as the
+ * film's variables (`--p`, `--pe`, `--pi`, `--f`) and a few written by frame
+ * functions (`--k`, `--f2`); nothing animates by itself, nothing filters, and
+ * softness is gradients.
+ *
+ * Palette: cinder #26282b, pewter sky #9aa3ab–#c5cbd0, plate steel #8b96a2,
+ * iron #1b1d20, ink #111418; the accent, far blue #6a9bff, for distance and
+ * the fresh proof mark; and the streamer's oxblood #8a3b30, the fletching's
+ * red.
+ */
+
+.cine-vfx > .ps-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none;
+}
+
+/* ---- the close-up hands (Ranger.tsx draws them in a close-up copy) ---- */
+.ult-cinematic[data-cinematic="proof-shot"][data-shot="wind"] .cine-actor[data-role="caster"] {
+  --ps-open: 1;
+}
+.ult-cinematic[data-cinematic="proof-shot"][data-shot="range"] .cine-actor[data-role="caster"] {
+  --ps-thumb: 1;
+}
+
+/* ---- wind ---- */
+.ps-wind {
+  position: absolute;
+  inset: 0;
+}
+.ps-wind i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--len);
+  height: calc(2px * var(--s));
+  margin-top: calc(-1px * var(--s));
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgb(120 126 132 / 0), rgb(150 156 162 / calc(var(--o) * var(--o2))) 60%, rgb(200 205 210 / calc(var(--o) * var(--o2))));
+  will-change: transform;
+}
+
+/* ---- grit from the hand ---- */
+.cine-vfx > .ps-grit {
+  width: 0;
+  height: 0;
+  transform: none;
+}
+.ps-grit i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(4px * var(--s));
+  height: calc(3px * var(--s));
+  border-radius: 40%;
+  background: #4a4e53;
+  box-shadow: 1px -1px 0 0 rgb(200 205 210 / 0.5);
+  --k: clamp(0, calc((var(--p) - var(--d)) / (1 - var(--d))), 1);
+  transform: translate(calc(var(--dx) * var(--k) + var(--w) * var(--k) * var(--k)), calc(var(--dy) * var(--k) + 140px * var(--k) * var(--k)));
+  opacity: calc(min(1, var(--k) * 8) * (1 - var(--k) * var(--k)));
+}
+
+/* ---- the streamer ---- */
+.ps-streamer-cloth {
+  fill: #8a3b30;
+  stroke: #111418;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+.ps-streamer-shadow {
+  fill: #111418;
+  opacity: 0.25;
+  transform: translate(4px, 7px);
+}
+.ps-streamer-fold {
+  fill: none;
+  stroke: #5e2419;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+
+/* The cloth across the lens: 300% wide, its wavy leading edge on the right;
+   `in` comes over the frame from the left until it covers it, `out` leaves
+   off the right. The cut is behind it. */
+.ps-wipe {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  --x: calc(-300% + min(1, var(--pi) * 1.25) * 300%);
+}
+.ps-wipe[data-mode="out"] {
+  --x: calc(var(--pe) * 300%);
+}
+.ps-wipe-cloth {
+  position: absolute;
+  top: -8%;
+  bottom: -8%;
+  left: var(--x);
+  width: 300%;
+  height: 116%;
+  transform: skewX(-6deg);
+}
+
+/* ---- the plate on its frame ---- */
+.cine-vfx > .ps-plate {
+  width: calc(var(--ah, 300px) * 0.62);
+  height: calc(var(--ah, 300px) * 0.9);
+  transform: translate(-50%, -100%) scale(var(--s));
+}
+.ps-plate-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.ps-plate-mark {
+  display: none;
+}
+.ps-plate[data-struck] .ps-plate-mark {
+  display: inline;
+}
+.ps-plate-shine {
+  opacity: calc(0.55 - var(--k, 0) * 0.4);
+  transform: scale(calc(1.6 - var(--k, 0) * 0.9));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* ---- the arrows ---- */
+.ps-arrow-streak {
+  fill: none;
+  stroke: #e8eef5;
+  stroke-width: 5;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+.ps-arrow[data-stuck] .ps-arrow-streak {
+  opacity: 0.5;
+}
+.ps-arrow-spark {
+  fill: #eef4ff;
+  stroke: #111418;
+  stroke-width: 2;
+}
+.ps-arrow:not([data-stuck]) .ps-arrow-spark {
+  display: none;
+}
+.ps-half-shaft {
+  fill: none;
+  stroke: #111418;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.ps-half-shaft::before {
+  content: "";
+}
+.ps-half {
+  transform: translate(calc(var(--dx) * var(--k, 0) * 1px), calc(var(--dy) * var(--k, 0) * 1px + var(--k, 0) * var(--k, 0) * 60px)) rotate(calc(var(--r) * var(--k, 0) * 1deg));
+  opacity: calc(1 - var(--k, 0) * 0.9);
+}
+.ps-half-fletch {
+  fill: #c4533f;
+  stroke: #111418;
+  stroke-width: 0.9;
+}
+.ps-hole-glow {
+  opacity: calc(0.2 + var(--f2, 0) * 0.35);
+  transform: scale(calc(0.6 + var(--k, 0) * 0.6 + var(--f2, 0) * 0.6));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.ps-hole-mark {
+  opacity: var(--k, 0);
+}
+.ps-hole-rays {
+  opacity: var(--f2, 0);
+}
+
+/* ---- the light behind the blow ---- */
+.cine-vfx > .ps-glare {
+  width: calc(var(--ah, 300px) * 2.4);
+  height: calc(var(--ah, 300px) * 1.8);
+  transform: translate(-50%, -60%) scale(var(--s));
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #dfe6ec 0%, #c9d2da 40%, rgba(190, 200, 210, 0.5) 70%, rgba(190, 200, 210, 0));
+  opacity: calc(1 - var(--pe) * 0.9);
+}
+
+/* ---- on the battlefield ---- */
+.ps-board {
+  width: 0;
+  height: 0;
+}
+.ps-board-paces {
+  position: absolute;
+  width: calc(var(--unit-w, 120px) * 3.6);
+  height: calc(var(--unit-w, 120px) * 0.66);
+  left: calc(var(--unit-w, 120px) * -3.3);
+  top: calc(var(--unit-w, 120px) * -0.5);
+  overflow: visible;
+}
+.ps-board-pace {
+  --k: clamp(0, calc((var(--p) - var(--d)) * 4), 1);
+  opacity: calc(var(--k) * (1 - max(0, calc(var(--p) - 0.7)) * 3.3));
+  transform: translateX(calc((1 - var(--k)) * 30px));
+}
+.ps-board-proved {
+  position: absolute;
+  width: calc(var(--unit-w, 120px) * 2);
+  height: calc(var(--unit-w, 120px) * 1.2);
+  left: calc(var(--unit-w, 120px) * -1);
+  top: calc(var(--unit-w, 120px) * -1.07);
+  overflow: visible;
+}
+.ps-board-plate {
+  opacity: min(1, calc(var(--p) * 6));
+}
+.ps-board-arrow {
+  --k: clamp(0, calc((var(--p) - var(--d)) * 8), 1);
+  opacity: min(1, calc(var(--k) * 3));
+}
+.ps-board-arrow use {
+  translate: calc((1 - var(--k)) * -90px) 0;
+}
+.ps-board-half {
+  fill: none;
+  stroke: #111418;
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: min(1, calc((var(--p) - var(--d)) * 6));
+}
+.ps-board-glow {
+  opacity: calc(0.35 + var(--pe) * 0.3);
+  transform: scale(calc(0.6 + var(--pe) * 0.6));
+  transform-box: fill-box;
+  transform-origin: center;
+}
