@@ -49,7 +49,9 @@ unseen and fast: it marks nothing, pierces nothing, and turns the party's
 setup into a whole row's damage in the first instant of the round, then
 leaves the whole enemy side open. It is not False Footing (snare, Weak,
 windups broken on Marked quarry): nobody is Weak, nothing is interrupted, and
-nothing about it is defence. It is a team play two ways: Marks from a Quarry
+nothing about it is defence. Nor Dry Flood (merged while this was authored:
+a row set burning, Vulnerable only where it burns): nothing burns, and its
+opening reaches the whole enemy side through no status of the party's. It is a team play two ways: Marks from a Quarry
 sign, a Snare, a Hunter's sign or another Ranger are Exploits the volley
 cashes, and every other hero's blow, and every other Ultimate queued that
 round, lands on Vulnerable.
@@ -93,10 +95,11 @@ Tests: `tests/ultimates-sunblind.test.ts`.
 ## Space, palette, shape
 
 - **Space: the white roofs, in the afternoon glare.** The flat, whitewashed
-  roofs of a hill town under a hard low sun: a tall block the kid has climbed,
-  a ladder still leaning on it; an alley between in blue shade; a lower
-  terrace roof with a parapet, clay water jars and a drain spout, where the
-  enemy row stands; and beyond, roofs stepping away to a bleached sky. It is
+  roofs of a hill town under a hard low sun: a lone tower the kid has
+  climbed, with the sun standing right over it; the drop to the street in
+  deep blue shade, a ladder leaning across it; a lower terrace roof with a
+  parapet, clay water jars and a drain spout, where the enemy row stands; and
+  beyond, flat roofs and a dome or two stepping away to a bleached sky. It is
   the one film in daylight and the brightest space in the game. Not fog or a
   wood (the Hundredth Mark), not mud at dusk (False Footing), snow (Warpath),
   sand in a pit (Red Ledger), a ridge at dusk with a low sun on the horizon
@@ -138,12 +141,13 @@ the roof behind it, because the light is in its eyes.
   (transient), a sub drop, a crack of plaster and a spray of chips (body), and
   chalk dust sifting down with the chime's low B4 left ringing (tail).
 - **The quiet:** music at 3%; no chime; a faint high hiss of heat off the
-  roof, and the rush of the falling volley so soft it is almost nothing.
+  roof and the falling volley so soft it is almost nothing, until in the
+  last half of the shot its rush (`sb-fall`) swells up into the cut.
 
 ## Rhythm
 
-identity (the kid slides its head in front of the sun: the glare goes out
-behind the hood, the squint opens, a grin) → stakes and target (from far off,
+identity (the kid's head rises across the sun: the glare goes out behind
+the hood, the squint opens, a grin) → stakes and target (from far off,
 the whole roofscape: the row on the terrace squinting into the sun, and in
 the sun, if you look hard, a kid drawing a bow; title) → escalation (from
 below the kid: four arrows loosed straight up in one breath; the sun flares
@@ -154,22 +158,22 @@ shadows, all along the row; plaster chips and chalk dust) → release (the real
 board: every enemy standing in a hard pool of sun with its shadow thrown long
 behind it, the struck row stuck round with arrows).
 
-The kid is never in a shot on the row's side of the roof. The row never sees
-it, and neither does the camera, once it is with them.
+Once the camera is with the row, the kid is never seen except as a notch in
+the sun, far off: the row never sees it, and neither does the camera.
 
 ## Shots — FULL 4700ms, FAST 2440ms (52%)
 
 | # | Shot | ms (FAST) | Camera | Pose | Background / light | VFX | Audio | Target | Transition in | Purpose |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 0 | Call | 420 (240) | battle camera | real Ranger `ult:sb-crouch`: drops low, the hood pulled forward, the bow brought in | real battlefield bleached hot, bars close | lemon call aura; a glare blooms behind the real Ranger (`sb-sun`, anchored); a hard pool of sun lands under every real enemy and its shadow swings out long behind it (`sb-board` call) | call bell; `sb-glare` (a hot shimmer rising); music ducks | on board | — | break the round: the light turns hard |
-| 1 | Eclipse · face close-up | 620 (400) | tight on the face, level, a slow push; the sun just left of the head | `ult:sb-eclipse` (`root: false`; the cue slides the figure left): squinting hard in the glare, brow knit, mouth tight; the head comes across in front of the sun; the eyes open wide in its own shade, the brow lifts, one corner of the mouth goes up | the glare sky over the roof's edge; exposure high, then down as the sun goes behind the hood; a hot rim round the hood; bounce light from the roof below | the sun (`sb-sun`, back) swallowed by the hood; spokes of glare round its edge | `sb-eclipse`: the shimmer drops to a hush as the sun is covered; "Don't look at me. Look at the sun." | no | black 50ms | identity: the kid hides in the one place nobody can look |
-| 2 | Glare · target wide | 1000 (—) | wide over the roofs, a slow truck right | the kid small on the high roof at the left, inside the sun, `ult:sb-rise`: stands, bow raised high, draws | the white roofs, lit hard from the left; the sun over the kid's roof | the sun in front of the kid (`sb-sun`, front) so the kid is a notch in the glare; **the real row** on the terrace, each with **its own shadow laid long behind it** (`sb-cast`); heat shimmer off the roof (`sb-heat`) | **motif** (chimes); a bow creak | **the real row**, squinting into the light (`anticipate` at 0.5) | cut | stakes and target: they are looking right at it; title |
-| 3 | Loose · low angle | 560 (360) | from below the kid, Dutch 9° → 5°, rising | `ult:sb-volley`: the bow tipped up at the sky, four draws and looses in one breath, the hand snapping back to the quiver between | glare sky, the sun behind the kid's shoulder, hot rim | each loosed arrow (the real arrow from the hand) climbs out of the bow and is gone into the sky (`sb-loosed`); at the end **the sun flares across the lens** (`sb-flare` in) | `sb-loose`: four string snaps and hisses | no | cut | escalation: speed, and the volley already in the air |
-| 4 | Shadows · the quiet | 600 (400) | at roof level on the row's feet, locked off | — (the kid is not on this side) | the terrace at plaster level; exposure 0.8 → 0.4: the glare stopping down; vignette | the flare leaves the lens (`sb-flare` out); **a comb of thin shadows slides over the white plaster towards every enemy's feet** and slows as it comes (`sb-shadows`); the row's own shadows behind it (`sb-cast`) | **music 3%**; `sb-hush`: heat hiss and the faintest rush | **yes**, from the knees down, still, looking up into the light | in-folder: the flare (`sb-flare`) | the quiet: what the row sees last, and does not look at |
-| 5 | Volley · impact | 760 (560) | medium wide on the row, level, easing back | — ; the row `hurt`, shoved, tilted | the terrace and the roofs, blown out then settling; the sun high at the upper left | **two-tone frame (40ms)**, then held in colour: **the arrows standing in every enemy and in the ends of their shadows** (`sb-volley`, the real arrow, staggered along the row), their streaks back to the sun; **chalk dust and plaster chips** bursting in three drawings (`sb-chips`); the row's shadows (`sb-cast`) | `sb-fall` into `sb-impact`; **150ms stop**; heavy shake | **the row** | cut on the two-tone | impact: the volley and the damage on the held frame; "Heads down!" |
-| 6 | Sunstruck · return | 740 (480) | battle camera | real Ranger `ult:sb-lower`: stands, pushes the hood back | real battlefield; the bleach lifts; bars open | **every real enemy in a hard pool of sun with its shadow laid long behind it** (Vulnerable); **the struck row stuck round with arrows, each with its shadow** (`sb-board` struck) | `sb-after`: the motif's last two chimes; dust; tail | on board | flash 80ms | release: the whole side open, the row struck |
+| 0 | Call | 420 (240) | battle camera | real Ranger `ult:sb-crouch`: drops low, the drawing hand to the hood's brim, the bow brought in | real battlefield bleached hot, bars close | lemon call aura; a glare blooms over the real Ranger's shoulder (`sb-sun`, anchored); a pool of sun lands under every real enemy and its shadow, a copy of its board figure, swings out long behind it (`sb-board` field) | call bell; `sb-glare` (a hot shimmer rising, one far chime); music ducks | on board | — | break the round: the light turns hard |
+| 1 | Eclipse · face close-up | 620 (400) | tight on the face, easing up and in; the sun above and left of the hood | `ult:sb-eclipse` (`root: false`; the cue lifts the figure up and left across the sun): squinting hard in the glare, brow down and knit, mouth tight; the head rises over the sun; the eyes open wide in its own shade, the brow lifts, one corner of the mouth goes up | `sb-sky`, the glare sky over the roof edge; exposure 1 → 0.72; the glare rim round the hood; bounce light from the roof | the sun (`sb-sun`, back) swallowed by the hood, its spokes round the hood's edge | `sb-eclipse`: shimmer, a rustle of the hood, cut to a hush as the sun is covered; "Don't look at me. Look at the sun." | no | black 50ms | identity: the kid hides in the one place nobody can look |
+| 2 | Glare · target wide | 1000 (—) | wide over the roofs, a slow truck right | the kid small on the tower's roof at the left, inside the sun, `ult:sb-rise`: up, a fresh arrow, the bow raised and drawn at the sky; `silhouette` | `sb-roofs`: a tower, a ladder across the drop to a terrace with a parapet and clay jars, the town stepping away; lit hard from the left | the sun behind the kid (`sb-sun`, back) and its spokes over the kid (`sb-sun`, front, no core), so the kid is a notch in the glare; **the real row** on the terrace, each with **its own shadow laid long behind it** (`sb-cast`); heat rising off the roof (`sb-heat`) | **motif** (chimes); a bow creak (`sb-draw`) | **the real row**, looking into the light (`anticipate` at 0.5) | cut | stakes and target: they are looking right at it; title |
+| 3 | Loose · low angle | 560 (360) | from below the kid, Dutch 9° → 5°, rising | `ult:sb-volley` (release 0.16): the bow tipped up at the sky, four draws and looses in one breath, the hand flying back past the ear and over the shoulder for the next | `sb-sky`; the sun behind the kid's shoulder; glare rim | each loosed arrow (the real arrow, measured off the hand at the loose) climbs out of the bow along its streak and is gone into the sky (`sb-loosed`); at the end **the sun flares across the lens** and whites out the frame (`sb-flare` in) | `sb-loose`: four string snaps and hisses; `sb-flare` | no | cut | escalation: speed, and the volley already in the air |
+| 4 | Shadows · the quiet | 600 (400) | at roof level on the row's legs, locked off | — (the kid is not on this side) | `sb-roofs` close; exposure 0.85 → 0.58: the glare stopping down; vignette 0.45 → 0.7 | the flare leaves the lens (`sb-flare` out); **a comb of thin, hard shadows slides in over the white plaster towards every enemy's feet**, fast and then creeping (`sb-shadows`); the row's own shadows behind it (`sb-cast`) | **music 3%**; `sb-hush` (heat hiss, the faintest fletching); from 0.52 the signature `sb-fall` swells up into the cut | **yes**, from the chest down, still, looking into the light | in-folder: the flare (`sb-flare`) | the quiet: what the row sees last, and does not look at |
+| 5 | Volley · impact | 760 (560) | medium wide on the row, level, easing back | the kid far off in the sun, `ult:sb-after` (contact 0.08: the arrival); the row `hurt` at 0.08, shoved, tilted | `sb-roofs`, blown out then settling; the sun at the upper left | **two-tone frame (40ms)**: lemon and ink, the arrows coming in; then, held in colour: **three arrows in every enemy of the row and four in the plaster round its feet** (`sb-volley`, the real arrow, staggered along the row), each with a streak back to the sun and a shadow laid from its base; **plaster chips and chalk dust** boiling in three drawings; the row's shadows (`sb-cast`) | `sb-impact` (layered); **150ms stop**; heavy shake | **the row** | cut on the two-tone | impact: the volley and the damage on the held frame; "Heads down!" |
+| 6 | Sunstruck · return | 740 (480) | battle camera | real Ranger `ult:sb-lower`: stands, the hand pushes the hood back, the bow down | real battlefield; the bleach lifts; bars open | **every real enemy in a lemon pool of sun with its shadow laid long behind it** (Vulnerable, `sb-board` field held); **the struck row stuck round with arrows, each with its shadow** (`sb-board` struck, staggered 90ms) | `sb-after`: the motif's last two chimes; `ult-tail` | on board | flash 80ms | release: the whole side open, the row struck |
 
-FAST drops the wide; the title moves to the loose. It keeps the eclipse, the
+FAST drops the wide; the title moves to the eclipse. It keeps the eclipse, the
 volley loosed, the quiet with the real row in it, and the impact.
 
 ## Voice
@@ -186,3 +190,104 @@ looked up."
 - **Row size.** Every cinematic shot lays out one to three enemies along the
   terrace, each with its own shadow, shadows and arrows placed from where the
   stage really put each figure.
+
+## Performance: the face
+
+The Ranger is a face-layer hero, and the eclipse is the film's one face
+close-up. It acts with `face()` from a squint to open eyes: the brow down
+1.6–1.8 and knit 10–11°, the eyes to 0.18–0.22 of their height, the mouth
+pressed (0.6–0.7) and widened, while the glare is beside the hood; then as the
+head crosses the sun, the brow lifts (−0.8 to −1.1), the eyes open to 1.2–1.3,
+and the mouth widens to 1.3 at one height: a grin. The head turns from 8° to
+−3° as it rises. The low angle keeps a milder face (a set, narrow draw
+opening into a small grin after the fourth loose). Nothing was added to
+`Ranger.tsx`: the bowstring halves (`stringTop`, `stringBottom`) are solved
+for every draw along any aim (`aimed()` in `poses.ts`), and False Footing's
+close-up glove is untouched (it only shows where `--ff-reach` is set).
+
+## Whole-body motion
+
+Root keys, authored for the size each clip plays at: `ult:sb-crouch` (the
+board: down 0.028, lean 3–4°, squash 1.07), `ult:sb-rise` (the wide, at a
+tiny size: up out of the crouch, leaning back to −10° into the draw),
+`ult:sb-volley` (the low angle: held at −10°, each loose rocking back x −0.026
+and −13°), `ult:sb-after` (far off in the impact: settling from −6° to −2°)
+and `ult:sb-lower` (the board: standing out of the crouch). `ult:sb-eclipse`
+has a still root and its close-up cue sets **`root: false`**; the rise across
+the sun is the cue's own `at → to`, so the face stays framed. Nothing is
+built on `.cine-look`.
+
+## Notes from the lab
+
+- **Placed from probes.** In the eclipse at size 1000 the head's centre runs
+  from (845, 586) to (699, 484) and the eyes to (786, 487); the sun is set at
+  (690, 455), so it is above and left of the head at the start and behind the
+  hood at the end. The loosed arrows leave from the drawn arrow's own box,
+  measured on the frame of each loose.
+- **The draw was solved, not posed.** The first cut hand-set the arm angles
+  and the arrow floated clear of the string with the head behind the grip.
+  `aimed(elevation, pull)` now turns the bow square to the line, solves the
+  drawing arm (with the part's offset carrying what the arm cannot reach), and
+  `drawn()` lays the arrow from the hand through the grip and meets the string
+  halves at its nock. Between looses the hand goes back over the shoulder so
+  the fresh arrow is not seen crossing the face.
+- **The kid in the sun** was first lit, and read as a figure standing in
+  front of a lamp. It is now a `silhouette` with the sun's core behind it and
+  a second, coreless `sb-sun` in front, so its spokes cross the figure and it
+  is a notch in the glare that still reads as a kid with a bow.
+- **Shadows are copies of the real figures.** `sb-cast` clones each placed
+  target's actor node once, strips its names, fills it with shade and lays it
+  down about the feet (a quarter turn, stretched ×2.1, flattened ×0.22); the
+  copy follows the live placement so a shove carries it. On the board,
+  `sb-board` copies each enemy's `.combatant-rig` the same way. The first
+  board shadows were flattened to smears; at ×0.5 across they read as the
+  creature lying on the floor. The creatures' drawn glows are CSS
+  `drop-shadow`s and came along in the copies (13 filtered elements); a
+  shadow now drops every filter.
+- **The quiet's shadows** first stopped as short dashes in one line and read
+  as UI arrows. They are now one hard shape each (fletch, shaft, head) over a
+  soft wider copy, nine per enemy spread in depth over the floor, long when
+  they enter and shortening as they slow.
+- **The flare** first crossed the frame too late to hide the cut. Its white
+  heart is a frame and a half wide and covers the frame from 95% of the low
+  angle; the quiet opens under it.
+- **Row sizes.** The wide, quiet and impact spread a row 310–360 world units
+  apart, so a two-enemy back row (Kiln Mender and Rivet Sniper) keeps each
+  figure's arrows and shadow apart.
+- **Sounds, rendered offline** (three renders each, peak and loudest-300ms
+  RMS): `sb-impact` 1.27–1.46 / 0.250 against the Hundredth Mark's impact
+  1.23–1.39 / 0.252 and False Footing's 1.14–1.24 / 0.247; the motif 0.18 /
+  0.055 (theirs 0.15–0.17 / 0.051 and 0.25 / 0.054; first cut 0.22 / 0.065);
+  the signature `sb-fall` 0.19–0.23 / 0.030 (first cut 0.08 / 0.005, inaudible,
+  against `ff-rip` 0.27 / 0.045); the loose 0.19–0.21; the call's glare 0.12.
+
+## Performance
+
+`GPU=1 scripts/profile-ultimate.ts 5491 1920x1080` (dev build, shared
+machine at load 7–9): film p50 16.7ms / p95 16.8ms, 4 frames over 34ms (at
+its first frames); the round after it p50 16.7ms / p95 16.8ms, 0 over 34ms.
+Peak 2,202 nodes (2,136 SVG), 4 live effects, **0 filtered elements**. The
+node count is the shadow copies: each is a whole figure, copied once.
+
+## What the engine could not do, and what was built instead
+
+- **A figure's shadow.** No effect is handed a cast member, so `sb-cast`
+  clones the stage's actor nodes and `sb-board` clones the board's rigs. A
+  copy holds the pose it was copied in (it follows the placement, not the
+  animation), so a shadow does not flinch with its figure. The engine would
+  need a `slot` that hands an effect a live copy of any cast member, or a
+  `shadow` look on an actor cue.
+- **Every enemy on the board, from one cue.** `anchor: "targets"` reaches
+  only the row the volley struck, but the whole side is Vulnerable; the
+  field of pools and shadows is anchored on the caster and finds every enemy
+  on the board itself. The engine would need `anchor: "enemies"`.
+- **A status on an enemy the Ultimate did not damage is not in the cast**, so
+  the other row's Vulnerable (this round) appears only on the board, never in
+  the film's cinematic shots.
+- **A row's reactions land together**: every enemy's `hurt` plays at 0.08; the
+  arrows bite staggered along the row (35ms apart) inside `sb-volley`.
+- **The occlusion is always a cape**: the flare across the lens is an
+  in-folder screen effect straddling the cut (`in`, then `out`).
+- **Pose at a time for a projectile.** The loosed arrows are measured off the
+  drawn arrow on the first frame after each loose; a seek that lands late
+  starts them a little further along.
