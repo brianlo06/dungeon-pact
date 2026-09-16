@@ -80,7 +80,7 @@
 
 /* ---- on the board ---- */
 .cine-anchored > .give-board {
-  width: calc(var(--unit-w) * 0.22);
+  width: calc(var(--unit-w) * 0.3);
   height: calc(var(--unit-h) * 0.9);
   left: 0;
   top: calc(var(--unit-h) * -0.5);

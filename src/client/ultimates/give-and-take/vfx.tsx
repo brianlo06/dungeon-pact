@@ -223,7 +223,7 @@ const Board = ({ cue }: VfxProps) => {
       <svg viewBox="-20 -200 40 220" aria-hidden="true">
         {/* A run standing on the figure: down it from the chest (open), or up it into the chest (home). */}
         <g className="give-board-run" transform={home ? "translate(0 -150) rotate(-90)" : "translate(0 -10) rotate(90)"}>
-          <Run len={150} w={11} fill={home ? GARNET : SCARLET} lip={home ? "#2a0510" : "#3a0610"} shine={home ? ROSE : "#ffb3bd"} />
+          <Run len={150} w={14} fill={home ? GARNET : SCARLET} lip={home ? "#2a0510" : "#3a0610"} shine={home ? ROSE : "#ffb3bd"} />
         </g>
       </svg>
     </div>

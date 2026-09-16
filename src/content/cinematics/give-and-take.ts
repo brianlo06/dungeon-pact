@@ -203,7 +203,7 @@ export const giveAndTake: Cinematic = {
       actors: [
         {
           role: "target",
-          at: [990, 830],
+          at: [1010, 830],
           size: 380,
           face: -1,
           z: 1,

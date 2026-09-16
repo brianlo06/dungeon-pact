@@ -82,7 +82,7 @@ export const voices: Record<string, Voice> = {
         crash(c, o, t + i * 0.03, { seconds: 0.05, gain: 0.05, type: "highpass", freq: 1800 + i * 200, q: 0.6 });
       hit(c, o, t + 0.12, { type: "triangle", from: 520, to: 516, gain: 0.08, attack: 0.002, decay: 0.12 });
       crash(c, o, t + 0.12, { seconds: 0.04, gain: 0.16, type: "lowpass", freq: 400, q: 0.8 });
-      drawn(c, o, t + 0.17, 0.28, true, 0.3);
+      drawn(c, o, t + 0.17, 0.28, true, 0.75);
     },
   },
   /** The motif: E4, B♭4, E4, and E3 under — out and back. */
@@ -99,7 +99,7 @@ export const voices: Record<string, Voice> = {
   /** The crossroads: wind over the down. */
   "give-wind": {
     bus: "sfx",
-    render: (c, o, t) => wind(c, o, t, 0.9, 0.06),
+    render: (c, o, t) => wind(c, o, t, 0.9, 0.22),
   },
   /** The quiet: the wind cut off, one creak of the fingerpost, and nothing. */
   "give-hush": {
@@ -131,7 +131,7 @@ export const voices: Record<string, Voice> = {
   "give-take": {
     bus: "sfx",
     render: (c, o, t) => {
-      drawn(c, o, t + 0.06, 0.34, false, 0.26);
+      drawn(c, o, t + 0.06, 0.34, false, 0.75);
       crash(c, o, t + 0.2, { seconds: 0.4, gain: 0.07, type: "bandpass", freq: 520, sweepTo: 900, q: 0.7 });
       saw(c, o, t + 0.36, 70, 0.04, 0.3);
     },

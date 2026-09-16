@@ -36,7 +36,7 @@ const trackAt = (y: number) => {
 /** Tufts of turf: short ink blades, denser and bigger near the lens. */
 const TUFTS = (() => {
   const rand = seeded(9107);
-  return Array.from({ length: 150 }, () => {
+  return Array.from({ length: 70 }, () => {
     const y = HORIZON + 30 + Math.pow(rand(), 0.7) * 1000;
     const t = trackAt(y);
     let x = -800 + rand() * 3200;
@@ -51,7 +51,7 @@ const TUFTS = (() => {
 /** Flints lying in the chalk. */
 const FLINTS = (() => {
   const rand = seeded(4471);
-  return Array.from({ length: 60 }, () => {
+  return Array.from({ length: 36 }, () => {
     const onCross = rand() > 0.55;
     const y = onCross ? CROSS.far + 8 + rand() * (CROSS.near - CROSS.far - 16) : HORIZON + 60 + Math.pow(rand(), 0.8) * 900;
     const t = trackAt(y);
