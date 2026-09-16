@@ -22,6 +22,12 @@ import type { MapNode, RunState } from "../shared/model";
 export const FLOORS = 3;
 /** Floors in a run that began before boss pools: the Collector, then the Miser. */
 export const LEGACY_FLOORS = 2;
+/**
+ * The bosses a run from before floors drew between. Frozen: a saved room of
+ * that age must not meet a boss added since, or its dice would fall
+ * differently from the moment it entered the vault.
+ */
+export const LEGACY_BOSSES = ["collector", "miser"];
 /** Chambers on one floor, boss included. */
 export const FLOOR_DEPTH = 6;
 

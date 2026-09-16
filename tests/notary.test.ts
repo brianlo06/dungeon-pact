@@ -52,9 +52,9 @@ it("presses three seals across both rows as a WINDUP, and they count down", () =
   const pressed = seals(s);
   expect(pressed.map((x) => x.row).sort()).toEqual(["back", "back", "front"]);
   expect(pressed.every((x) => x.owner === notary(s).id)).toBe(true);
-  expect(pressed[0].intent.ability.name).toBe("Setting · 2");
+  expect(pressed[0].intent.ability.name).toBe("Sets in 2");
   idle(s);
-  expect(seals(s)[0].intent.ability.name).toBe("Setting · 1");
+  expect(seals(s)[0].intent.ability.name).toBe("Sets in 1");
   idle(s);
   expect(seals(s)[0].intent.ability.id).toBe("enforce");
 });
@@ -129,7 +129,7 @@ it("presses four seals on a two-round fuse in phase two", () => {
   expect(boss.phase).toBe(2);
   idle(s);
   expect(seals(s)).toHaveLength(4);
-  expect(seals(s)[0].intent.ability.name).toBe("Setting · 1");
+  expect(seals(s)[0].intent.ability.name).toBe("Sets in 1");
 });
 
 /** A hero's blow that breaks a seal, through the ordinary damage path. */

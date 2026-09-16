@@ -1,4 +1,5 @@
 import { floorsIn } from "./map";
+import { LEGACY_BOSSES } from "../content/floors";
 import { applyHazard } from "./chambers";
 import { chooseEncounter } from "../content/encounters";
 import { reachError } from "../shared/reach";
@@ -94,7 +95,7 @@ export function prepareIntents(s: RunState) {
     if (def.clock && e.fuse) {
       const left = fuseLeft(s, e);
       ability = structuredClone(left > 0 ? def.clock.waiting : def.clock.due);
-      if (left > 0) ability.name = `${ability.name} · ${left}`;
+      if (left > 0) ability.name = `${ability.name} ${left}`;
     }
     if (e.phase === 2 && !authoredPhase)
       for (const effect of ability.effects)
@@ -167,16 +168,25 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
   if (s.ultimateVersion === 1) s.ultimates = {};
   s.enemies = [];
   const count = boss ? 1 : Math.min(4, s.players.length);
-  const pool = definitions.filter((d) => !!d.boss === boss && !d.object);
+  const pool = definitions.filter(
+    (d) =>
+      !!d.boss === boss &&
+      !d.object &&
+      (!boss || LEGACY_BOSSES.includes(d.id)),
+  );
   // Each floor has its own boss, so the vault a party reaches is the one the
   // floor was built around rather than whichever the dice preferred. With
   // boss pools the map drew it and wrote it on the chamber; before them the
   // Collector kept floor one and the Miser every floor below.
-  const floorBoss =
-    boss && s.floor !== undefined
-      ? (s.map.find((n) => n.id === s.currentNode)?.boss ??
-        (s.floor <= 1 ? "collector" : "miser"))
-      : undefined;
+  const drawn = s.map.find((n) => n.id === s.currentNode)?.boss;
+  const floorBoss = !boss
+    ? undefined
+    : (drawn ??
+      (s.floor === undefined
+        ? undefined
+        : s.floor <= 1
+          ? "collector"
+          : "miser"));
   const deeper = floorScale(s);
   const encounter =
     !boss && s.encounterVersion === 2 ? chooseEncounter(s) : undefined;

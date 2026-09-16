@@ -14,7 +14,7 @@ import { enemies, enemyAbilities } from "../../content/enemies";
  * and the Miser's banked treasury. Matched by what the ability does, not by who
  * is using it, so any content that seizes or banks gets the same choreography.
  */
-const OBJECTIVE = new Set<Effect["kind"]>(["seize", "bank"]);
+const OBJECTIVE = new Set<Effect["kind"]>(["seize", "bank", "spawn"]);
 
 /**
  * Whether an enemy is holding a wind-up: it has announced an interruptible
@@ -64,12 +64,15 @@ export function isSignatureMove(ability: Ability): boolean {
 export function castClip(s: Snapshot | null, beat: Beat): ClipName {
   const enemy = s?.enemies.find((e) => e.id === beat.actor);
   if (s && enemy) {
-    if (beat.target === beat.actor) return "block";
-    if (s.enemies.some((e) => e.id === beat.target)) return "cast";
     const def = enemies.find((d) => d.id === enemy.definition);
     const ability =
       def &&
       enemyAbilities(def, s.combatVersion).find((a) => a.name === beat.label);
+    // Bringing something into the fight is aimed at nobody but is still the
+    // move the creature wound up for: the Notary's pressing lands.
+    if (ability?.effects.some((e) => e.kind === "spawn")) return "signature";
+    if (beat.target === beat.actor) return "block";
+    if (s.enemies.some((e) => e.id === beat.target)) return "cast";
     return ability && isSignatureMove(ability) ? "signature" : "attack";
   }
   const hero = s?.players.find((p) => p.id === beat.actor);

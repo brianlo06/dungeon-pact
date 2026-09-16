@@ -62,7 +62,7 @@ pressing back on the Notary.
 - **Pressing** (a WINDUP, so it can be interrupted outright): three wax seals
   are spawned, one in the front row and two in the back, each an object with a
   **fuse of 3**. A Notary that already has seals standing strikes instead.
-- **A seal's intent** is its clock: `Setting · 2`, `Setting · 1`, then
+- **A seal's intent** is its clock: `Sets in 2`, `Sets in 1`, then
   `Enforce the signature`, which strikes every standing hero. The seal is
   spent when it enforces.
 - **Breaking a seal** cracks it back up the Notary's arm (8 through armour).

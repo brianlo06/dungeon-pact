@@ -18,7 +18,7 @@ const attack = (
 /** A wax seal's clock while it sets: it hardens, and its intent counts down. */
 const waxSetting: Ability = {
   id: "setting",
-  name: "Setting",
+  name: "Sets in",
   description: "The wax hardens. When it sets, the signature is enforced.",
   cost: 0,
   speed: 0,
@@ -288,7 +288,7 @@ export const enemies: EnemyDef[] = [
   {
     presentation: {
       spriteSet: "wax-seal",
-      footprint: "container",
+      footprint: "small",
       theme: "contract",
       idlePeriod: 4.2,
       shadow: 0.8,

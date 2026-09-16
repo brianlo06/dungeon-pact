@@ -19,6 +19,8 @@ import bellows from "./bellows";
 import strongbox from "./strongbox";
 import collector from "./collector";
 import miser from "./miser";
+import notary from "./notary";
+import waxSeal from "./wax-seal";
 
 /**
  * Choreography annotations, by hero id or enemy definition id. One file per
@@ -45,6 +47,8 @@ export const CHOREOGRAPHY: Record<string, CreatureChoreography> = {
   strongbox,
   collector,
   miser,
+  notary,
+  "wax-seal": waxSeal,
 };
 
 export const COMMON: CreatureChoreography = common;

@@ -1,6 +1,6 @@
 import { useCallback, useRef, type ReactNode } from "react";
 import type { Snapshot } from "../../shared/model";
-import { isBoss, isObject } from "../../content/enemies";
+import { enemies as enemyDefs, isBoss, isObject } from "../../content/enemies";
 import { BattleUnit, type Impact } from "./BattleUnit";
 import { describeIntentEffect } from "../combat-presentation";
 import { unitPresentation, type Placement } from "../battle/layout";
@@ -80,12 +80,23 @@ export function BattleStage({
     if (e.hp <= 0)
       return (
         <span className="intent-chip intent-gone">
-          {isObject(e.definition) ? "Opened" : "Defeated"}
+          {e.fuse
+          ? e.spent
+            ? "Set"
+            : "Broken"
+          : isObject(e.definition)
+            ? "Opened"
+            : "Defeated"}
         </span>
       );
     const a = e.intent.ability;
-    const aim =
-      a.target === "enemyRow"
+    // A clock threatens nobody yet; say what it will do, and to whom.
+    const def = enemyDefs.find((d) => d.id === e.definition);
+    const aim = def?.clock
+      ? a.id === def.clock.due.id
+        ? "every hero"
+        : "then every hero"
+      : a.target === "enemyRow"
         ? `${e.intent.row ?? s.players.find((p) => p.id === e.intent.target)?.row ?? ""} row · locked`
         : ([...s.players, ...s.enemies].find((u) => u.id === e.intent.target)
             ?.name ?? "");
