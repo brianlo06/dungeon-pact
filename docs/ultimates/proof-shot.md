@@ -58,16 +58,18 @@ them.
 ### Balance
 
 `scripts/ultimate-report.ts 4 --sample=6` (324 runs), same machine, stub
-`null` and then Proof Shot:
+`null` and then Proof Shot. Measured first on a base with Compound Interest,
+then again after rebasing onto `0b86568` (Living Bone, Undertow and Elegy for
+the Standing merged), which moved the baseline's duos from 79% to 88%:
 
-| Win rate | off | on, stub (Hundredth Mark) | **on, Proof Shot** |
-| --- | ---: | ---: | ---: |
-| 2 players | 75% | 79% | **79%** |
-| 3 players | 94% | 95% | **95%** |
-| 4 players | 92% | 93% | **95%** |
-| all | 91% | 93% | **94%** |
+| Win rate | off | on, stub (first base) | **on, Proof Shot** (first base) | on, stub (`0b86568`) | **on, Proof Shot** (`0b86568`) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 2 players | 75% | 79% | **79%** | 88% | **88%** |
+| 3 players | 94% | 95% | **95%** | 95% | **95%** |
+| 4 players | 92% | 93% | **95%** | 94% | **95%** |
+| all | 91% | 93% | **94%** | 94% | **95%** |
 
-Ranger uses per run 3.24 → 3.14, charge 329 → 324: the bot trains a Ranger
+Ranger uses per run 3.24 → 3.14, charge 329 → 324 (on `0b86568`: 3.23 → 3.14, 329 → 323): the bot trains a Ranger
 into the Sharpshooter more often than into the other two paths (the
 Whetstone is the first mentor), so unlike False Footing and Sunblind this one
 registers in the whole-game matrix; "all" moves one point. It was also
@@ -191,7 +193,7 @@ of the lane: the shot arrives before the sound of it.
 | 2 | Range · wide | 1000 (—) | wide along the lane from beside the shooting line, a slow push; the kid left, the lane running away to the butt at the upper right | `ult:ps-range`: side-on, the arm straight out with **the thumb up** (`--ps-thumb`); the arm drops, the hand goes to the quiver, nocks, and draws to the cheek by the end | `ps-lane`: the frames with holed plates receding, the pace lines, the banks, the butt far off in blue haze; pewter sky | **the real target, tiny, at the far end** behind the last frame's plate (`ps-plate` hung), the streamer flying above it (`ps-streamer`); grit blowing (`ps-wind`) | **motif** (four plates rung, each further); the streamer snapping; a bow creak | **yes**, a speck, unaware (`idle`) | cut | stakes and distance: the target is the size of a thumbnail; title |
 | 3 | Breath · face close-up | 600 (380) | tight on the face over the string, level, a slow drift in; exposure falling | `ult:ps-breath` (`root: false`): full draw held; the eyes narrow, **close**, the mouth lets a breath out and shuts, the eyes open calm; the loose at 0.66 (the string past the cheek, the head knocked back a hair), the hand back to the quiver, a second arrow nocked and drawn, the second loose at 0.9 | `ps-lane` near-black (exposure 0.55 → 0.4), far-blue rim, bars deepen | the string halves snapping straight and shivering; at the end **the streamer's cloth crosses the lens** (`ps-streamer` wipe, in) | music 12%; `ps-breath`: a breath let out, then held; two snaps (`ps-loose`) | no | cut | anticipation: the breath, and two arrows in it |
 | 4 | Streamer · the quiet | 600 (400) | at the far end, level on the target from the butt's side, locked off | — (the kid is not on this side) | `ps-butt`: the butt behind, the lane running off to the left into blue haze; exposure 0.7 → 0.45, vignette 0.4 → 0.7 | the cloth leaves the lens (`ps-streamer` wipe, out); **the streamer on its pole flying, then dropping and hanging still** by the middle of the shot (`ps-streamer` drop); the target behind **its plate on the frame** (`ps-plate` hung), swaying a little and then still; grit that stops (`ps-wind`, `stopAt`) | **music 3%**; `ps-settle`: the wind dying, the cloth settling, nothing | **yes**, unaware, idle | in-folder: the streamer wipe | the quiet: the wind drops, and nothing arrives yet |
-| 5 | Proof · impact | 760 (560) | the same end, medium on the target, easing back a little; Dutch −4° → −2° | far off at the shooting line, the kid a speck, `ult:ps-after` (contact 0.06); the target `hurt` at 0.06, shoved and tilted; `hurt` again at 0.34 | `ps-butt`, blown out then settling | **two-tone frame (40ms)**: the first arrow in the plate; then in colour: **the plate knocked off its hook, holed, spinning away** to the ground (`ps-plate` proof), the arrow standing in the target (`ps-arrows`); at 0.34 **the second arrow splits the first** and stands in the same hole; held from 0.5: the plate on the cinder with its proof mark, the split halves, the hole shining far blue | `ps-impact` (layered) at 0.05; **150ms stop** at 0.06, heavy shake; `ps-second` at 0.33, 60ms stop, a smaller shake; "Clean through." | **yes** | cut on the two-tone | impact: the plate proved nothing; the damage on the held frame |
+| 5 | Proof · impact | 760 (560) | the same end, medium on the target, easing back a little; Dutch −4° → −2° | far off at the shooting line, the kid a speck, `ult:ps-after` (contact 0.06); the target `hurt` at 0.06, shoved and tilted; `hurt` again at 0.34 | `ps-butt`, blown out then settling | **two-tone frame (40ms FULL, 30ms FAST)**: the first arrow through the plate; then, on the held frame in colour: **the blow drawn where the arrow goes into the chest** (a ragged white flare thrown forward along the line, a far-blue core, ink spray out of the far side), **steel torn out of the plate's proof mark** on the exit side, the target shoved; **the plate knocked off its hook, holed, turning down** onto the cinder at the frame's foot (`ps-plate` proof), the arrow standing in the target (`ps-arrows`); at 0.34 **the second arrow splits the first** and stands in the same hole; held from 0.5: the plate on the cinder with its proof mark, the split halves, the hole shining far blue | `ps-impact` (layered) at 0.05; **150ms stop** at 0.06, heavy shake; `ps-second` at 0.33, 60ms stop, a smaller shake; "Clean through." | **yes** | cut on the two-tone | impact: the plate proved nothing; the damage on the held frame |
 | 6 | Proved · return | 740 (480) | battle camera | real Ranger `ult:ps-lower`: the bow comes down, the drawing hand shakes out | real battlefield; the pewter lifts; bars open | on the target: **the holed plate lying at its feet, the two arrows in it, and the hole shining** (`ps-board` proved); the pace lines fading | `ps-after`: the motif's last plate, far off; `ult-tail` | on board | flash 80ms | release: what it did, where it matters |
 
 FAST drops the wide; the title moves to the wind close-up. It keeps the wind,
@@ -266,24 +268,51 @@ settling) and `ult:ps-lower` (the board: settling forward). The close-ups
 - **The pace lines on the board** first stood up like posts; they now lie
   along the floor in front of the target, towards the party, stepping away
   from it.
+- **The loudest frame, second pass (resumed run).** The first cut's held
+  frame (the 150ms stop after the two-tone) read as a poke: the arrow stood
+  in the hound's *mouth* (the entry point was 0.55 of the drawn height, where
+  a hound's head is), the only mark of the blow was a small four-point
+  sparkle that read as a glyph, and the plate's hole sat below the line of
+  the shot. Now: the entry is 0.42 up and 0.14 forward (the chest, on the
+  hound, the Bulwark, the Sniper, the Collector and the Miser alike); the
+  plate hangs 16 units lower on its chain in the quiet and the impact, so
+  the streak, the hole and the arrow are one line; the stop holds a drawn
+  punch (`punch()` in `vfx.tsx`: a ragged flare elongated forward, a blue
+  core and hard ink spray, whole for 50ms of film time and gone by 220ms,
+  1.5x at the first arrow, 0.95x at the second) and nine steel flecks flung
+  out of the plate's far side; the shove is 50 (38 large, 24 boss) with 6°
+  of tilt. FAST's two-tone is 30ms, because at 560ms the 40ms frame covered
+  the stop at 0.06 and the held frame was the silhouette.
+- **The plate fell through the floor**: it dropped 232 units and lay below
+  the bars. It now drops to the frame's foot and is in frame at the end of
+  the impact (the spec checks it). The split halves of the first arrow were
+  scaled strokes that read as black bars; they are wood splinters with a
+  non-scaling ink edge, flung a shaft's length.
+- **The board**: the arrow and hole sit at the same chest point as in the
+  film, and the fallen plate is lifted clear of the target's name plate.
 - Sounds, rendered offline (three renders each, peak and loudest-300ms
-  RMS): `ps-impact` 1.54–1.64 / 0.266 in its first cut, against the
-  Hundredth Mark's 1.36–1.38 / 0.252, Sunblind's 1.25–1.32 / 0.252 and
-  False Footing's 1.30–1.39 / 0.248; its punch and sub were trimmed (the
-  measured numbers after the trim are in the report). The motif 0.22 / 0.046
-  (Sunblind's 0.20 / 0.055, the Hundredth Mark's 0.60–0.96 / 0.051); the
-  second arrow 0.78–0.95 / 0.101 before its trim; the loose 0.26–0.68, its
-  snap trimmed; the quiet's `ps-settle` 0.05 / 0.006.
+  RMS), after the trims: `ps-impact` 1.28–1.55 / 0.239–0.241, against the
+  Hundredth Mark's 1.33–1.37 / 0.254, Sunblind's 1.31–1.48 / 0.252 and
+  False Footing's 1.38–1.62 / 0.248; `ps-second` 0.75–0.97 / 0.100; the
+  motif 0.22–0.23 / 0.046 (Sunblind's 0.20 / 0.055, the Hundredth Mark's
+  0.15–0.59 / 0.051); `ps-loose` 0.19–0.94 / 0.024 (a one-sample noise peak;
+  its crack was trimmed again); the quiet's `ps-settle` 0.04 / 0.006.
 - Root keys: `ult:ps-step` (the board: x −0.05, leans −2°, squash 1.02),
   `ult:ps-range` (the wide: weight back to −2.5° under the thumb, forward to
   1.2° into the draw), `ult:ps-after` (a speck: −3° settling to −1°) and
   `ult:ps-lower` (the board: from x −0.05 back to rest). The close-ups
   `ult:ps-wind` and `ult:ps-breath` keep a still root and their cues set
   `root: false`. Nothing is built on `.cine-look`.
-- Profile (`GPU=1 scripts/profile-ultimate.ts 5491 1920x1080`, dev build,
-  shared machine under load): film p50 16.7ms / p95 50ms, 12 frames over
-  34ms (at its first frames); the round after it p50 16.7ms / p95 66.6ms, 13
-  over 34ms. Peak 949 nodes (879 SVG), 5 live effects, 0 filtered elements.
+- Profile (`GPU=1 scripts/profile-ultimate.ts 5531 1920x1080`, dev build,
+  shared machine with two other agents): film p50 16.7ms / p95 16.8ms, max
+  50ms, 11 frames over 20ms and 4 over 34ms; the round after it p50 16.7ms /
+  p95 16.8ms, max 50ms, 5 over 20ms, 1 over 34ms. Peak 982 nodes (912 SVG),
+  5 live effects, 0 filtered elements.
+- **Films merged since** (Living Bone's shedding ground, Undertow's flats at
+  the harbour mouth, Elegy for the Standing's burying ground) share nothing
+  with the proof range. Elegy's flat, sunless sky is also called pewter; its
+  ground is raw clay with open graves and cypresses, lit by nothing, where
+  this is black cinder, iron frames and plates, hazed blue with distance.
 
 ## What the engine could not do, and what was built instead
 

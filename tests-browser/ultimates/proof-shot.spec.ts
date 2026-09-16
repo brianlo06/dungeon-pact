@@ -127,6 +127,18 @@ test("the quiet: the flag drops and hangs still, the target stands behind its pl
 test("the proof: the first arrow through the plate on a drawn frame, the plate down, the second through the first, and the damage shown", async ({ page }) => {
   await hold(page, { shot: 5, at: 0.01 }, "proof");
   await expect(page.locator('.cine-accent[data-screen="two-tone"]')).toBeAttached();
+  // The held frame (the stop): the blow drawn where the arrow goes in, large, inside the
+  // target and in frame; and steel flung out of the plate's hole along the shot.
+  await hold(page, { shot: 5, at: 0.06 }, "proof");
+  const struckBody = (await target(page).locator(".cine-sprite").boundingBox())!;
+  const blow = (await page.locator('.ps-arrow[data-i="0"] .ps-punch-flare').boundingBox())!;
+  const view = (await film(page).boundingBox())!;
+  expect(blow.width).toBeGreaterThan(struckBody.width * 0.25);
+  expect(centre(blow)[0]).toBeGreaterThan(struckBody.x);
+  expect(centre(blow)[0]).toBeLessThan(struckBody.x + struckBody.width);
+  expect(centre(blow)[1]).toBeGreaterThan(view.y);
+  expect(centre(blow)[1]).toBeLessThan(view.y + view.height);
+  await expect(page.locator(".ps-fleck").first()).toBeVisible();
   await hold(page, { shot: 5, at: 0.2 }, "proof");
   const body = (await target(page).locator(".cine-sprite").boundingBox())!;
   const first = (await page.locator('.ps-arrow[data-i="0"][data-stuck] .ps-arrow-shaft').boundingBox())!;
@@ -141,6 +153,9 @@ test("the proof: the first arrow through the plate on a drawn frame, the plate d
   const plateLate = (await page.locator(".ps-plate-body").first().boundingBox())!;
   // Knocked off its hook and down onto the cinder.
   expect(plateLate.y).toBeGreaterThan(plateEarly.y + 60);
+  // ... and it lies in frame, above the bars, not through the floor.
+  const shown = (await film(page).boundingBox())!;
+  expect(plateLate.y + plateLate.height * 0.5).toBeLessThan(shown.y + shown.height * 0.88);
   // The second arrow stands in the same place; the first's shaft is split and gone.
   const second = (await page.locator('.ps-arrow[data-i="1"][data-stuck] .ps-arrow-shaft').boundingBox())!;
   expect(Math.abs(second.x + second.width - (first.x + first.width))).toBeLessThan(30);
