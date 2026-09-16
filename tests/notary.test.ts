@@ -6,7 +6,12 @@
  */
 import { expect, it } from "vitest";
 import { addPlayer, createRun, reduce } from "../src/engine/game";
-import { enterCombat, resolveRound, combatants } from "../src/engine/combat";
+import {
+  ENEMY_HIT,
+  enterCombat,
+  resolveRound,
+  combatants,
+} from "../src/engine/combat";
 import { generateMap } from "../src/engine/map";
 import { effects, status } from "../src/engine/effects";
 import type { Enemy, RunState } from "../src/shared/model";
@@ -69,7 +74,9 @@ it("enforces every standing seal on every hero, then the seals are spent, not br
   const power = seals(s)[0].power;
   idle(s); // round 5: three seals come due
   s.players.forEach((p, i) =>
-    expect(before[i] - p.hp).toBe(3 * Math.max(1, 8 + power - p.guard)),
+    expect(before[i] - p.hp).toBe(
+      3 * Math.max(1, Math.round(12 * ENEMY_HIT) + power - p.guard),
+    ),
   );
   expect(seals(s).every((x) => x.hp === 0 && x.spent)).toBe(true);
   // Spent wax answers to nobody.

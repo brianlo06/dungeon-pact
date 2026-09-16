@@ -52,6 +52,44 @@ code.
 - Objects (`object: true`) are enemies that never block a clear and give no
   kill charge: the Strongbox, and the objects the new bosses spawn.
 
+## Difficulty: enemies hit harder
+
+A playtest note said wins came too easily and asked too little strategy.
+Every enemy damage effect in a three-floor room is multiplied by
+`ENEMY_HIT = 1.3` (`engine/combat.ts`), scoped effects included; rooms from
+before boss pools keep the old numbers. Damage, not health, is the lever: a
+harder hit makes reading intents, interrupting and intercepting worth more,
+where more health only makes a fight longer and meets the escalation clock.
+
+Measured with `scripts/simulate.ts 6 --matrix --sample=4` (122 compositions,
+732 runs each). "Tactical" reads intents; "attack" only attacks.
+
+| Build | Tactical 2p / 3p / 4p / all | Attack, all |
+| --- | --- | --- |
+| three floors, ×1.0 | 91 / 91 / 91 / **91%** | 26% |
+| ×1.15 | 76 / 86 / 84 / **84%** | — |
+| ×1.3 | 65 / 77 / 78 / **77%** | 13% |
+| ×1.3, Notary retuned (shipped) | 59 / 72 / 70 / **70%** | — |
+| ×1.4, Notary retuned | 50 / 68 / 60 / **61%** | 6% |
+
+At ×1.3 alone the floor-three boss took only 5–7% of losses: a party that
+reaches it carries three mentors' paths. The Notary was retuned so the last
+floor is a finale — 200 HP (was 170), seals of 34 (26) enforcing 12 (8), and
+Countersign 24 (18) — which puts 14–30% of losses on floor three. Duos trail,
+as they did on two floors (85% against 95%): a duo has no spare action to
+answer an objective with.
+
+Confirmed on every 2nd composition, 8 seeds (1,944 runs each): tactical
+**72%** (62 / 73 / 73), attack **9%**.
+
+The harder hit also widens the class spread, and that is the next problem,
+not a solved one. Parties with a Warden win 97% against 60% without; with a
+Vanguard 86% against 65%; with a Reaver 54% against 81%. Healing and
+interception are worth more when every blow is heavier, and the Reaver, which
+pays health for damage, is worth less. The handoff already named the Reaver
+as the outlier on two floors (84% against 95%); ×1.3 more than doubles that
+gap.
+
 ## The Notary — Ledger Archive
 
 **Two words: witness, enforce.** The Notary presses its seal into the room.

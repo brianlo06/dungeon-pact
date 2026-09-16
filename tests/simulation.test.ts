@@ -11,7 +11,8 @@ it("completes deterministic runs across party sizes and seeds", () => {
       expect(a).toEqual(simulate(`regression-${i}`, count));
       expect(a.gold).toBeGreaterThanOrEqual(0);
     }
-});
+  // Sixty whole runs, each played twice: seconds, not the default five.
+}, 120000);
 
 it("enumerates every class combination without repeats", () => {
   // Combinations with repetition: duplicated classes are legal parties.
@@ -35,6 +36,8 @@ it("enumerates every class combination without repeats", () => {
  * neither win nor lose used to be reachable: sustain heroes against a
  * fortifying enemy traded shields forever.
  */
+// Three floors make every run half as long again as two did, so the sweeps
+// below get more time; what they check is unchanged.
 it("terminates for every composition and policy", () => {
   for (const name of Object.keys(policies))
     for (const size of [2, 3, 4])
@@ -43,7 +46,7 @@ it("terminates for every composition and policy", () => {
         expect(r.state.phase).toBe("COMPLETE");
         expect(r.state.outcome).not.toBeNull();
       }
-}, 180000);
+}, 420000);
 
 /**
  * A rejected plan means the policy proposed something the server refused, so
@@ -55,7 +58,7 @@ it("never proposes a plan the server rejects", () => {
     for (const party of partyList(size))
       for (let i = 0; i < 2; i++)
         expect(run(`policy-${i}`, party, "tactical").invalid).toBe(0);
-}, 180000);
+}, 420000);
 
 it("gives every hero their branch picks over a full run", () => {
   const r = run("regression-3", ["ranger", "arcanist"], "tactical");

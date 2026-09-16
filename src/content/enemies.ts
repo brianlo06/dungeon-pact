@@ -296,7 +296,7 @@ export const enemies: EnemyDef[] = [
     id: "wax-seal",
     name: "Wax Seal",
     glyph: "◉",
-    hp: 26,
+    hp: 34,
     power: 4,
     guard: 0,
     speed: 1,
@@ -315,7 +315,7 @@ export const enemies: EnemyDef[] = [
         speed: 0,
         target: "enemy",
         cooldown: 0,
-        effects: [{ kind: "enemies", effects: [{ kind: "damage", amount: 8 }] }],
+        effects: [{ kind: "enemies", effects: [{ kind: "damage", amount: 12 }] }],
       },
     },
     // Wax cracked before it sets splits back up the hand that pressed it, and
@@ -341,7 +341,7 @@ export const enemies: EnemyDef[] = [
     id: "notary",
     name: "The Notary",
     glyph: "✒",
-    hp: 170,
+    hp: 200,
     power: 3,
     guard: 3,
     speed: 3,
@@ -355,7 +355,7 @@ export const enemies: EnemyDef[] = [
       attack("attest", "Attest", 20),
       attack("strike-record", "Strike from the record", 14, "enemyRow"),
     ],
-    busy: attack("countersign", "Countersign", 18),
+    busy: attack("countersign", "Countersign", 24),
   },
 ];
 

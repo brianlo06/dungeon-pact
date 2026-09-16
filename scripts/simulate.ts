@@ -11,6 +11,7 @@ import {
   ultimatesOn,
 } from "./policy";
 import { ultimate as ultimateDef } from "../src/content/ultimates";
+import { TUNING } from "../src/engine/combat";
 
 /** `--bosses=legacy` plays the two-floor run from before boss pools, as a baseline. */
 let bossPools = true;
@@ -398,6 +399,9 @@ if (process.argv[1]?.endsWith("simulate.ts")) {
   const ult = flag("ultimates");
   if (ult === "off") setUltimates(false);
   else if (ult && ult !== "on") throw Error(`Unknown --ultimates=${ult}`);
+  const hit = flag("hit");
+  if (hit) TUNING.enemyHit = Number(hit);
+  const sample = Number(flag("sample") ?? 1);
   const bosses = flag("bosses");
   if (bosses === "legacy") setBossPools(false);
   else if (bosses && bosses !== "pools") throw Error(`Unknown --bosses=${bosses}`);
@@ -411,7 +415,9 @@ if (process.argv[1]?.endsWith("simulate.ts")) {
     const parties: Party[] = only
       ? [only]
       : matrix
-        ? [2, 3, 4].flatMap((n) => partyList(n))
+        ? [2, 3, 4].flatMap((n) =>
+            partyList(n).filter((_, i) => i % sample === 0),
+          )
         : [2, 3, 4].map((n) => heroes.slice(0, n).map((h) => h.id));
     const rows = parties.map((party) =>
       summarise(name(party), party, seeds, policyName),
@@ -448,6 +454,7 @@ if (process.argv[1]?.endsWith("simulate.ts")) {
         console.log(`  ${n}p losses (${losses.length}): ${top}`);
       }
       for (const n of [2, 3, 4]) bucket((p) => p.length === n, `${n} players`);
+      bucket(() => true, "all");
       console.log("");
       for (const h of heroes) {
         bucket((p) => p.includes(h.id), `with ${short[h.id]}`);
