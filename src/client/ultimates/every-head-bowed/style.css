@@ -1,0 +1,315 @@
+/*
+ * Every Head Bowed. Everything moves through the film's frame functions or
+ * --p written from the combat clock; no keyframes, and no filter or blur on
+ * anything that moves or is large. Glows are gradients. Soot, sunflower gold,
+ * the lantern's amber, and the blight: seed black and a mould-white bloom.
+ */
+
+/* ---- the late field (background) ---- */
+.bowed-clouds path {
+  fill: #0b0a08;
+}
+.bowed-furrows path {
+  fill: none;
+  stroke: #0a0806;
+  opacity: 0.55;
+}
+.bowed-far-mass {
+  fill: #0c0a07;
+}
+.bowed-far .stalk {
+  fill: none;
+  stroke: #0c0a07;
+  stroke-linecap: round;
+}
+.bowed-far .head {
+  fill: #120f0a;
+}
+
+/* ---- world-space containers ---- */
+.cine-vfx > .bowed-field,
+.cine-vfx > .bowed-seeds {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  transform: none;
+  overflow: visible;
+}
+.bowed-field-svg,
+.bowed-seeds-svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+}
+.cine-vfx > .bowed-blight-anchor {
+  transform: none;
+}
+
+/* ---- a sunflower ---- */
+.bowed-stalk-ink {
+  fill: none;
+  stroke: #0b0906;
+  stroke-linecap: round;
+}
+.bowed-stalk {
+  fill: none;
+  stroke: #3d4722;
+  stroke-linecap: round;
+}
+.bowed-leaf {
+  fill: #2c3419;
+  stroke: #0b0906;
+  stroke-linejoin: round;
+}
+.bowed-calyx {
+  fill: #2f3a1a;
+  stroke: #0b0906;
+}
+.bowed-petals {
+  fill: #e3ae34;
+  stroke: #3a2208;
+  stroke-linejoin: round;
+}
+.bowed-disc {
+  fill: #3b2412;
+  stroke: #0b0906;
+}
+.bowed-whorl {
+  fill: none;
+  stroke: #5e3a1a;
+}
+.bowed-eye {
+  fill: #20140a;
+}
+.bowed-shade {
+  fill: #07060a;
+  opacity: 0.8;
+}
+.bowed-rot {
+  opacity: 0;
+}
+.bowed-rot-black {
+  fill: #110d09;
+  stroke: #000;
+  stroke-width: 2;
+}
+.bowed-rot-bloom {
+  fill: #d9d4c3;
+  opacity: 0;
+}
+.bowed-dry {
+  fill: #4a3218;
+  stroke: #0b0906;
+  stroke-linejoin: round;
+}
+.bowed-rot-specks {
+  fill: #d9d4c3;
+  opacity: 0;
+}
+/* The field's back band sits further off: a little less contrast. */
+.bowed-field[data-band="back"] .bowed-petals {
+  fill: #c8952c;
+}
+
+/* ---- the lantern's light ---- */
+.cine-vfx > .bowed-light {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  opacity: 0;
+}
+.bowed-light i {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.bowed-light-pool {
+  left: -500px;
+  top: -500px;
+  width: 1000px;
+  height: 1000px;
+  background: radial-gradient(closest-side, rgba(255, 193, 90, 0.42) 0%, rgba(255, 170, 70, 0.2) 38%, rgba(255, 150, 60, 0.07) 70%, transparent 100%);
+}
+.bowed-light-core {
+  left: -90px;
+  top: -90px;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(closest-side, rgba(255, 246, 214, 0.9) 0%, rgba(255, 200, 110, 0.5) 40%, transparent 100%);
+}
+.bowed-light[data-face] .bowed-light-core,
+.cine-vfx[data-face] .bowed-light-core {
+  display: none;
+}
+/* In the face close-up the light on the face is the pool alone, warm and soft. */
+.ult-cinematic[data-cinematic="every-head-bowed"][data-shot="hush"] .bowed-light-core {
+  display: none;
+}
+
+/* The Warden's lamp burns brighter in this film: it is the only light. */
+.ult-cinematic[data-cinematic="every-head-bowed"] .cine-actor[data-role="caster"] .ph-wdn-lamp.ph-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(1.7);
+}
+
+/* ---- blight on a figure ---- */
+.cine-look:has(> .bowed-rot-fig) {
+  position: relative;
+}
+.bowed-rot-fig {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.bowed-coat,
+.bowed-coat-top {
+  fill: #110d09;
+  opacity: 0;
+}
+.bowed-lesion {
+  opacity: 0;
+}
+.bowed-lesion > * {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.bowed-lesion-black {
+  fill: #0b0806;
+}
+.bowed-lesion-bloom {
+  fill: #cfc9b6;
+}
+.bowed-lesion-seed {
+  fill: #d9d4c3;
+  opacity: 0.8;
+}
+
+/* ---- seed ---- */
+.bowed-seed {
+  opacity: 0;
+}
+.bowed-seed-body {
+  fill: #110d09;
+  stroke: #000;
+  stroke-width: 0.8;
+}
+.bowed-seed-stripe {
+  stroke: #cfc8b4;
+  stroke-width: 1.2;
+  fill: none;
+}
+
+/* ---- the real battlefield ---- */
+.bowed-board {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+}
+.cine-vfx > .bowed-board {
+  transform: none;
+}
+.bowed-board i {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+}
+.bowed-board-pool {
+  left: calc(var(--unit-w) * -1.6);
+  top: calc(var(--unit-w) * -0.36);
+  width: calc(var(--unit-w) * 3.2);
+  height: calc(var(--unit-w) * 0.72);
+  background: radial-gradient(closest-side, rgba(255, 193, 90, 0.5) 0%, rgba(255, 170, 70, 0.22) 50%, transparent 100%);
+  opacity: 0;
+}
+.bowed-board-halo {
+  width: calc(var(--unit-w) * 1.6);
+  height: calc(var(--unit-w) * 1.6);
+  margin-left: calc(var(--unit-w) * -0.8);
+  margin-top: calc(var(--unit-w) * -0.8);
+  background: radial-gradient(closest-side, rgba(255, 244, 200, 0.85) 0%, rgba(255, 193, 90, 0.4) 35%, transparent 100%);
+  opacity: 0;
+}
+.bowed-board-rot {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+}
+.bowed-board-dead {
+  position: absolute;
+  overflow: visible;
+  opacity: 0;
+  pointer-events: none;
+}
+.bowed-dead-stalk-ink {
+  fill: none;
+  stroke: #0b0906;
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+.bowed-dead-stalk {
+  fill: none;
+  stroke: #4a4424;
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+.bowed-dead-leaf {
+  fill: #2e2614;
+  stroke: #0b0906;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.bowed-dead-calyx {
+  fill: #1d1a10;
+  stroke: #0b0906;
+  stroke-width: 2;
+}
+.bowed-dead-head {
+  fill: #110d09;
+  stroke: #000;
+  stroke-width: 3;
+}
+.bowed-dead-bloom {
+  fill: #d9d4c3;
+  opacity: 0.9;
+}
+.bowed-dead-dry {
+  fill: #5a3d1a;
+  stroke: #0b0906;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+/* ---- the flare down the row ---- */
+.cine-vfx > .bowed-glare {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+.bowed-glare i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 240, 200, 0.95) 0%, rgba(255, 198, 100, 0.8) 35%, rgba(230, 150, 60, 0.35) 70%, transparent 100%);
+}
+
+/* The healing hand does nothing in this film: its light stands down. */
+.ult-cinematic[data-cinematic="every-head-bowed"] .cine-actor[data-role="caster"] .ph-wdn-mote {
+  animation: none;
+  opacity: 0;
+}
