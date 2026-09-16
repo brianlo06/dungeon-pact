@@ -55,14 +55,13 @@ export const voices: Record<string, Voice> = {
   "elbow-crack": {
     bus: "sfx",
     render: (c, o, t) => {
-      crash(c, o, t + 0.12, { seconds: 0.02, gain: 0.3, type: "highpass", freq: 2600, q: 0.8 });
-      crash(c, o, t + 0.16, { seconds: 0.018, gain: 0.22, type: "highpass", freq: 3000, q: 0.8 });
-      crash(c, o, t + 0.26, { seconds: 0.02, gain: 0.26, type: "highpass", freq: 2400, q: 0.8 });
-      for (let i = 0; i < 6; i++) crash(c, o, t + 0.05 + i * 0.07, { seconds: 0.06, gain: 0.05, freq: 330 + i * 24, q: 10 });
+      // Clicks are tones, not noise: a noise burst this short spikes through the filter.
+      for (const [dt, f] of [[0.12, 2600], [0.16, 3100], [0.26, 2300]]) hit(c, o, t + dt, { type: "square", from: f, to: f * 0.7, gain: 0.05, attack: 0.001, decay: 0.018 });
+      for (let i = 0; i < 6; i++) crash(c, o, t + 0.05 + i * 0.07, { seconds: 0.06, gain: 0.04, freq: 330 + i * 24, q: 10 });
       hit(c, o, t + 0.34, { type: "sine", from: 120, to: 60, gain: 0.18, decay: 0.12 });
     },
   },
-  /** The blade on the shoulder knocks the beam, and plaster comes down. */
+  /** The head cracked on the beam, and plaster coming down. */
   "elbow-bump": {
     bus: "sfx",
     render: (c, o, t) => {
@@ -75,14 +74,14 @@ export const voices: Record<string, Voice> = {
   "elbow-rattle": {
     bus: "sfx",
     render: (c, o, t) => {
-      rattle(c, o, t + 0.05, 0.8, 0.09);
+      rattle(c, o, t + 0.05, 0.8, 0.13);
       for (let i = 0; i < 4; i++) step(c, o, t + 0.04 + i * 0.26);
     },
   },
   "elbow-rattle-fast": {
     bus: "sfx",
     render: (c, o, t) => {
-      rattle(c, o, t + 0.03, 0.42, 0.09);
+      rattle(c, o, t + 0.03, 0.42, 0.13);
       for (let i = 0; i < 2; i++) step(c, o, t + 0.03 + i * 0.24);
     },
   },
@@ -90,11 +89,11 @@ export const voices: Record<string, Voice> = {
   "elbow-motif": {
     bus: "sfx",
     render: (c, o, t) => {
-      reed(c, o, t, 46, 0.05, 0.1, 0.12);
-      reed(c, o, t + 0.17, 49, 0.05, 0.1, 0.12);
-      reed(c, o, t + 0.34, 56, 0.055, 0.12, 0.16);
-      reed(c, o, t + 0.56, 34, 0.07, 0.24, 0.4);
-      reed(c, o, t + 0.56, 46, 0.025, 0.24, 0.4);
+      reed(c, o, t, 46, 0.085, 0.1, 0.12);
+      reed(c, o, t + 0.17, 49, 0.085, 0.1, 0.12);
+      reed(c, o, t + 0.34, 56, 0.09, 0.12, 0.16);
+      reed(c, o, t + 0.56, 34, 0.11, 0.24, 0.4);
+      reed(c, o, t + 0.56, 46, 0.04, 0.24, 0.4);
     },
   },
   /** The wind-up: the straps creaking as it turns, a breath in, and the point biting the post. */
@@ -120,8 +119,8 @@ export const voices: Record<string, Voice> = {
   "elbow-swing": {
     bus: "sfx",
     render: (c, o, t) => {
-      crash(c, o, t, { seconds: 0.16, gain: 0.45, type: "lowpass", freq: 260, sweepTo: 1300, q: 0.9 });
-      crash(c, o, t + 0.02, { seconds: 0.12, gain: 0.25, freq: 600, sweepTo: 2200, q: 1.4 });
+      crash(c, o, t, { seconds: 0.16, gain: 1.6, type: "lowpass", freq: 260, sweepTo: 1300, q: 0.9 });
+      crash(c, o, t + 0.02, { seconds: 0.12, gain: 0.8, freq: 600, sweepTo: 2200, q: 1.4 });
     },
   },
   /**
@@ -135,7 +134,7 @@ export const voices: Record<string, Voice> = {
     render: (c, o, t) => {
       crash(c, o, t, { seconds: 0.03, gain: 0.8, type: "highpass", freq: 2200, q: 0.6 });
       knock(c, o, t + 0.002, 0.5, 0.8);
-      hit(c, o, t, { type: "sine", from: 120, to: 26, gain: 0.85, attack: 0.002, decay: 0.8 });
+      hit(c, o, t, { type: "sine", from: 120, to: 26, gain: 0.95, attack: 0.002, decay: 0.8 });
       crash(c, o, t + 0.004, { seconds: 0.18, gain: 0.5, type: "lowpass", freq: 520, sweepTo: 140, q: 0.8 });
       hit(c, o, t + 0.004, { type: "triangle", from: 210, to: 80, gain: 0.35, decay: 0.16 });
       crumble(c, o, t + 0.03, 0.16, 9);
@@ -153,8 +152,8 @@ export const voices: Record<string, Voice> = {
     render: (c, o, t) => {
       for (let i = 0; i < 8; i++)
         crash(c, o, t + i * 0.035, { seconds: 0.03, gain: 0.03 - i * 0.003, freq: 2800 + ((i * 410) % 1400), q: 3 });
-      reed(c, o, t + 0.12, 56, 0.03, 0.08, 0.12);
-      reed(c, o, t + 0.3, 46, 0.035, 0.2, 0.4);
+      reed(c, o, t + 0.12, 56, 0.05, 0.08, 0.12);
+      reed(c, o, t + 0.3, 46, 0.06, 0.2, 0.4);
     },
   },
 };
