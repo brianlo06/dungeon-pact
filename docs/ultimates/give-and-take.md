@@ -268,8 +268,11 @@ frame. Nothing is rebuilt on `.cine-look`.
   base is hidden (`style="display: none"`) a CSS sibling rule swaps the blade
   outline for a band along the same axis.
 - **Films merged while this was authored:** Hallowed Ground (the Sanctifier's
-  cold casting floor, a line scored and lit). It owns no crossroads, blade,
-  blood or hand; nothing here was changed for it.
+  cold casting floor, a line scored and lit) and Hammer Price (the Magnate's
+  saleroom after dark, paddles going out, a hammer crushing the lot on a
+  Tyrian two-tone). Neither owns a crossroads, a blade, blood, an opened hand
+  or a frame shown one way and then inverted; nothing here was changed for
+  them.
 
 ## What the engine could not do, and what was built instead
 
