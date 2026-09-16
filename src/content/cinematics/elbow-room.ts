@@ -164,7 +164,7 @@ export const elbowRoom: Cinematic = {
           z: 1,
           react: [{ at: 0.55, clip: "anticipate", then: "idle" }],
         },
-        { role: "caster", at: [640, 1040], to: [720, 980], size: 460, toSize: 420, clip: "ult:elbow-stride", look: "lit", z: 2 },
+        { role: "caster", at: [600, 1000], to: [670, 945], size: 440, toSize: 400, clip: "ult:elbow-stride", look: "lit", z: 2 },
       ],
       vfx: [{ kind: "dust", at: 0.1, until: 1, follow: "caster", x: 0, y: -10, scale: 0.6, color: "#e4c58c", layer: "back" }],
       sound: [
@@ -186,7 +186,7 @@ export const elbowRoom: Cinematic = {
           },
           actors: [
             { role: "targets", at: [1000, 760], spread: [190, 0], size: 230, face: -1, look: "lit", z: 1, react: [{ at: 0.55, clip: "anticipate", then: "idle" }] },
-            { role: "caster", at: [620, 1040], to: [700, 980], size: 420, toSize: 390, clip: "ult:elbow-stride", look: "lit", z: 2 },
+            { role: "caster", at: [590, 1000], to: [660, 945], size: 420, toSize: 380, clip: "ult:elbow-stride", look: "lit", z: 2 },
           ],
         },
       },

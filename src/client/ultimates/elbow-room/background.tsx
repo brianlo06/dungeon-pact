@@ -91,6 +91,29 @@ const DUST = (() => {
   });
 })();
 
+/** An ellipse as a sub-path. */
+const ell = (cx: number, cy: number, rx: number, ry: number) =>
+  `M${f(cx - rx)} ${f(cy)} a${f(rx)} ${f(ry)} 0 1 0 ${f(rx * 2)} 0 a${f(rx)} ${f(ry)} 0 1 0 ${f(-rx * 2)} 0 Z`;
+const COBBLE_PATHS = [0, 1].map((k) =>
+  COBBLES.filter((c) => (c.t > 0.5 ? 1 : 0) === k)
+    .map((c) => ell(c.x + c.w / 2, c.y, c.w / 2, c.h / 2))
+    .join(" "),
+);
+/** A fleck of sawdust as a turned quad. */
+const DUST_PATH = DUST.map((d) => {
+  const a = (d.a * Math.PI) / 180;
+  const w = d.r * 1.8;
+  const h = d.r * 0.8;
+  const [cx, sx] = [Math.cos(a), Math.sin(a)];
+  const pts: [number, number][] = [
+    [0, 0],
+    [w * cx, w * sx],
+    [w * cx - h * sx, w * sx + h * cx],
+    [-h * sx, h * cx],
+  ];
+  return `M${pts.map(([x, y]) => `${f(d.x + x)} ${f(d.y + y)}`).join(" L")} Z`;
+}).join(" ");
+
 function Front({ x, w, pink, lean, win }: (typeof BAYS)[number]) {
   const wash = pink ? PINK : OCHRE;
   const lit = pink ? PINK_LIT : OCHRE_LIT;
@@ -119,11 +142,7 @@ function Front({ x, w, pink, lean, win }: (typeof BAYS)[number]) {
       <path d={`M${x + 20} ${BEAM + 120} L${x + w * 0.5 - 20} ${BEAM + 40} M${x + w * 0.5 + 20} ${BEAM + 40} L${x + w - 20} ${BEAM + 120}`} stroke={TIMBER} strokeWidth={10} opacity={0.9} />
       {/* The jetty beam, and the empty hooks under it. */}
       <rect x={x - 6} y={BEAM - 16} width={w + 12} height={30} fill={TIMBER} />
-      <g stroke={HOOK} strokeWidth={5} fill="none" strokeLinecap="round">
-        {hooks.map((hx, i) => (
-          <path key={i} d={`M${hx} ${BEAM + 14} V${BEAM + 58 + (i % 3) * 6} q0 22 -14 22 q-12 0 -12 -12`} />
-        ))}
-      </g>
+      <path d={hooks.map((hx, i) => `M${hx} ${BEAM + 14} V${BEAM + 58 + (i % 3) * 6} q0 22 -14 22 q-12 0 -12 -12`).join(" ")} stroke={HOOK} strokeWidth={5} fill="none" strokeLinecap="round" />
       {/* The shutter, folded down on its chains into the bench. */}
       <path d={`M${x + 26} ${BENCH} L${x + w - 26} ${BENCH} L${x + w - 18} ${BENCH + 24} L${x + 18} ${BENCH + 24} Z`} fill="#3a2a22" stroke={TIMBER} strokeWidth={6} strokeLinejoin="round" />
       <path d={`M${x + 34} ${BENCH + 4} H${x + w - 34}`} stroke="#6b5140" strokeWidth={3} opacity={0.7} />
@@ -163,18 +182,12 @@ function Street() {
       {/* The cobbles, the gutter, and the sawdust. */}
       <rect x="-800" y={FOOT} width="3200" height={1350 - FOOT} fill="url(#elbow-street-ground)" />
       <path d={`M-800 ${FOOT} H2400`} stroke={TIMBER} strokeWidth={8} />
-      <g fill={COBBLE}>
-        {COBBLES.map((c, i) => (
-          <ellipse key={i} cx={f(c.x + c.w / 2)} cy={f(c.y)} rx={f(c.w / 2)} ry={f(c.h / 2)} opacity={0.55 + c.t * 0.45} />
-        ))}
-      </g>
+      {/* Two paths, not a thousand ellipses: the lighter stones and the darker. */}
+      <path d={COBBLE_PATHS[0]} fill={COBBLE} opacity={0.62} />
+      <path d={COBBLE_PATHS[1]} fill={COBBLE} opacity={0.95} />
       <path d={`M-800 ${FOOT + 150} C0 ${FOOT + 158} 1600 ${FOOT + 142} 2400 ${FOOT + 150}`} stroke="#0e0d11" strokeWidth={26} fill="none" />
       <path d={`M-800 ${FOOT + 140} C0 ${FOOT + 148} 1600 ${FOOT + 132} 2400 ${FOOT + 140}`} stroke="#5c7e78" strokeWidth={3} fill="none" opacity={0.35} />
-      <g fill={SAWDUST}>
-        {DUST.map((d, i) => (
-          <rect key={i} x={f(d.x)} y={f(d.y)} width={f(d.r * 1.8)} height={f(d.r * 0.8)} transform={`rotate(${f(d.a)} ${f(d.x)} ${f(d.y)})`} opacity={0.75} />
-        ))}
-      </g>
+      <path d={DUST_PATH} fill={SAWDUST} opacity={0.75} />
     </svg>
   );
 }
@@ -235,13 +248,19 @@ function Lane() {
           <path d={quad(P(s * W0, 0.42, d.z0 + 0.1), P(s * W0, 0.42, d.z1 - 0.1), P(s * (W0 - 0.1), 0.4, d.z1 - 0.1), P(s * (W0 - 0.1), 0.4, d.z0 + 0.1))} fill="#3a2a22" stroke={TIMBER} strokeWidth={f(Math.max(1, 12 / d.z0))} />
           <path d={face(s * W0, 0.48, 0.86, d.z0 + 0.14, d.z1 - 0.14)} fill="#0d0a0b" opacity={0.7} />
           {/* Hooks under the jetty. */}
-          <g stroke={HOOK} strokeWidth={f(Math.max(1, 10 / d.z0))} fill="none" strokeLinecap="round">
-            {hooks.map((hz, k) => {
-              const [hx, hy] = P(s * (W0 - 0.02), 0.94, hz);
-              const len = 0.16 * (F / hz);
-              return <path key={k} d={`M${f(hx)} ${f(hy)} v${f(len)} q0 ${f(len * 0.35)} ${f(-s * len * 0.22)} ${f(len * 0.35)}`} />;
-            })}
-          </g>
+          <path
+            d={hooks
+              .map((hz) => {
+                const [hx, hy] = P(s * (W0 - 0.02), 0.94, hz);
+                const len = 0.16 * (F / hz);
+                return `M${f(hx)} ${f(hy)} v${f(len)} q0 ${f(len * 0.35)} ${f(-s * len * 0.22)} ${f(len * 0.35)}`;
+              })
+              .join(" ")}
+            stroke={HOOK}
+            strokeWidth={f(Math.max(1, 10 / d.z0))}
+            fill="none"
+            strokeLinecap="round"
+          />
         </g>
       );
     });
