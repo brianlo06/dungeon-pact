@@ -245,10 +245,10 @@ const Last = ({ cue }: VfxProps) => (
     <g className="hammer-last-paddle">
       <path className="hammer-last-handle" d="M0 40 L0 520" />
       <path className="hammer-last-grain" d="M-4 60 L-3 500" />
-      <ellipse className="hammer-last-face" cx="0" cy="-120" rx="150" ry="180" />
-      {/* Card on a wooden handle: the grain of the card, and the light along one edge. */}
-      <path className="hammer-last-card" d="M-96 -250 Q-40 -262 70 -240 M-120 -170 Q-20 -186 110 -160 M-130 -90 Q0 -104 126 -80 M-116 -10 Q-10 -22 104 0" />
-      <path className="hammer-last-lit" d="M-104 -196 Q-112 -120 -90 -56" />
+      {/* A round card paddle on a turned wooden neck, and the light along one edge. */}
+      <ellipse className="hammer-last-face" cx="0" cy="-130" rx="165" ry="165" />
+      <path className="hammer-last-neck" d="M-26 30 L-16 70 L16 70 L26 30 Z" />
+      <path className="hammer-last-lit" d="M-120 -220 Q-150 -130 -110 -40" />
       {/* A gloved hand round the handle, a sleeve and a shirt cuff under it. */}
       <g transform="translate(0 -60)">
         <path className="hammer-last-sleeve" d="M-190 560 L-120 330 Q-60 300 40 330 L120 560 Z" />
@@ -612,7 +612,7 @@ const outbid: Frame = (el, p) => {
     svg.style.width = `${f1(size)}px`;
     svg.style.height = `${f1(size * 1.5)}px`;
     const paddle = svg.querySelector<SVGGElement>(".hammer-outbid-paddle");
-    paddle?.setAttribute("transform", `translate(0 ${f1(-40 * (1 - down) + 8 * down)}) rotate(${(down * (i % 2 ? 96 : -96)).toFixed(1)} 0 0)`);
+    paddle?.setAttribute("transform", `translate(${f1((i % 2 ? 30 : -30) * down)} ${f1(-40 * (1 - down) + 14 * down)}) rotate(${(down * (i % 2 ? 96 : -96)).toFixed(1)} 0 0)`);
     setStyle(svg, "opacity", (clamp(p / 0.1) * clamp((1 - p) * 5)).toFixed(3));
     setStyle(svg.querySelector<SVGElement>(".hammer-outbid-halo"), "opacity", ((1 - down) * 0.8).toFixed(3));
   });

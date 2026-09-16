@@ -182,11 +182,11 @@
   stroke: #6e5638;
   stroke-width: 12;
 }
-.hammer-last-card {
-  fill: none;
-  stroke: #d8cbb0;
-  stroke-width: 4;
-  stroke-linecap: round;
+.hammer-last-neck {
+  fill: #2a1a1e;
+  stroke: #0b0709;
+  stroke-width: 10;
+  stroke-linejoin: round;
 }
 .hammer-last-catch {
   fill: none;
