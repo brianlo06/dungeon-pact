@@ -111,3 +111,94 @@ turning to the light) and keeps the lantern, the quiet and the bow.
   with a smaller shove (a boss bends, it does not fall over).
 - **A row of one, a row of two.** The row is the real cast (`targets`) at its
   real footprints, spread along the drilled row.
+
+## Balance
+
+`scripts/ultimate-report.ts 4 --sample=6` (324 runs), same machine, on
+`28c367f`: first with this path's stub still `null` (the Blightcaller on Green
+Reckoning), then with Every Head Bowed.
+
+| Win rate | off | on, stub (Green Reckoning) | **on, Every Head Bowed** |
+| --- | ---: | ---: | ---: |
+| 2 players | 75% | 88% | **88%** |
+| 3 players | 94% | 96% | **96%** |
+| 4 players | 92% | 96% | **95%** |
+| all | 91% | 95% | **95%** |
+
+The Warden's uses per run 1.86 → 2.09 (the bot holds a heal for a party in
+trouble; a force Ultimate it spends when there is enemy left to spend it on).
+Charge earned 220 → 239.
+
+## Notes from the lab
+
+- **The heads look at the real lantern.** `bowed-field` reads the flame of the
+  caster copy's `lantern` part every frame (once a frame, cached on
+  `document.timeline.currentTime`: three effects ask, and each read after
+  another effect's writes was a forced layout — the first profile ran p50
+  33ms against the round's 16.7), turns every head towards it with its own
+  lag, and lights it by its distance from the flame. Plants are laid out in
+  fractions of the frame that shoots them, so a set follows its camera.
+- **The first two-tone frame was black on black.** The field after sundown is
+  dark and the filter took everything to ink. `bowed-glare` flares the
+  lantern's light down the row behind the enemy on the contact, so the drawn
+  frame is the bowed heads and the bent row cut out against amber, and the
+  held frame after it shows them lit.
+- **Hung heads first read as black mushrooms, then as clocks, then as eyes.**
+  A disc facing the ground is a flat cap in profile; the dotted mould ring
+  read as a clock face and a pale centre as an eye. The neck now arches over
+  and the head hangs off the arch, widening towards the lens as it falls,
+  with shrivelled brown petals and a few grey specks — no rings, no pale
+  middle.
+- **Blight on the figure.** A clipPath may hold only shapes, so the first
+  clip (groups copied from the drawing) clipped everything away. The target's
+  drawing is now flattened into shapes with each one's transform baked in,
+  and a black coat and irregular lesions with a dull grey bloom are drawn
+  inside it — in the target copy's `.cine-look` in the film, and over the real
+  figure's box in the return. Big pale blooms read as cow-print; they are now
+  dark and small.
+- **gear=kit takes the lantern away.** A worn weapon replaces `BaseWeapon`,
+  and the lantern is inside it. The film hangs a copy of the lantern's own
+  drawing from the highest point of the worn weapon (measured in the staff
+  arm's units) and keeps it plumb, in the film's copy only.
+- The healing hand's mote is put out on the film's copy: that hand does
+  nothing here.
+- **Root keys.** `ult:bowed-raise` (battlefield: rises 0.014, leans −1.2°),
+  `ult:bowed-swing` (the wide: weight shifts x ±0.014, ±2°),
+  `ult:bowed-down` (the impact: stoops y 0.028, rotate 7°, squash 0.965 on the
+  contact) and `ult:bowed-rest` (battlefield settle). The close-ups
+  `ult:bowed-lift` and `ult:bowed-hush` keep a still root and are cued
+  `root: false`. Nothing is built on `.cine-look` except the blight overlay
+  (an appended node, no transform).
+- **The staff turned over.** On the contact the staff arm is at 146°, crook
+  down, so the lantern sits on the dirt at the Warden's feet: the staff that
+  points up, pointed the other way.
+- **Sounds**, rendered offline (peak / RMS): `bowed-impact` 1.23 / 0.160
+  against `green-impact` 1.28 / 0.161, `bone-snap` 1.17 / 0.160 and
+  `mourn-impact` 1.32 / 0.156; `bowed-motif` 0.19 / 0.045 against
+  `green-motif` 0.20 / 0.036 and `mourn-motif` 0.19 / 0.047; the quiet's
+  `bowed-hush` 0.04 / 0.007, the dusk crickets 0.03, on purpose.
+- **Profile** (`GPU=1 profile-ultimate.ts`, 1920×1080, dev build, load 24–32
+  on a shared machine): film p50 16.7 / p95 66.7 ms, 15 frames over 34 ms,
+  against the round after it p50 16.7 / p95 33.4, 10 over; a second run at
+  load 32, film p95 100 / round p95 50. Peak 1301 nodes (1243 SVG), 3 live
+  effects, no filtered elements. The field is the cost: ~70 plants in the
+  wide rewriting a transform and a stalk each frame.
+
+## What the engine could not do, and what was built instead
+
+- **An Ultimate's status effects do not put a unit in the cast**, but this one
+  bites (10 through armour), so the row is the real cast. The bite is honest
+  gameplay — the blight's first bite ignores Guard like its poison — not a
+  workaround.
+- **Poison, Weak and Vulnerable leave no beat.** The reveal punches only the
+  damage; the film draws the rest on the figures itself (the blight on the
+  silhouette, the bow).
+- **A row's reactions land together.** The blight overlays are staggered
+  inside `bowed-blight` (6% of the shot per target) and in the return by the
+  anchor's `stagger`.
+- **Presentation copies do not carry statuses from before the cast**, so a
+  row that was already Poisoned (and rots through, Vulnerable) looks the same
+  in the film as one that was not.
+- **A worn weapon hides the lantern** (above): the engine would need the base
+  weapon's parts to be available to a film when a weapon replaces them, or a
+  per-hero "carried light" mount.
