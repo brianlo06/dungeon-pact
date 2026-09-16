@@ -49,18 +49,15 @@ describe("Hallowed Ground", () => {
     expect(text).not.toContain("damage");
   });
 
-  it("wards the whole party for four rounds, with Regeneration under it, and puts the Sanctifier in front", () => {
+  it("wards the whole party for four rounds and puts the Sanctifier in front", () => {
     const s = fight();
     const sanctifier = s.players[0];
     sanctifier.resource = 2;
     expect(sanctifier.row).toBe("back");
     effects(s, sanctifier, sanctifier, ultimateFor(sanctifier)!.effects);
     for (const p of s.players) {
-      const own = p.id === sanctifier.id;
-      expect(status(p, "barrier")?.stacks, p.id).toBe(own ? 28 : 16);
+      expect(status(p, "barrier")?.stacks, p.id).toBe(10);
       expect(status(p, "barrier")?.duration, p.id).toBe(4);
-      expect(status(p, "regen")?.stacks, p.id).toBe(4);
-      expect(status(p, "regen")?.duration, p.id).toBe(4);
       expect(status(p, "empowered"), p.id).toBeUndefined();
     }
     expect(sanctifier.row).toBe("front");
@@ -68,20 +65,25 @@ describe("Hallowed Ground", () => {
     for (const e of s.enemies) expect(e.statuses, e.id).toEqual([]);
   });
 
-  it("lasts: the ground is still holy three rounds on, and gone after four", () => {
+  it("lasts: the ground still holds three rounds on, and is gone after four", () => {
     const s = fight();
     const sanctifier = s.players[0];
     effects(s, sanctifier, sanctifier, ultimateFor(sanctifier)!.effects);
     const ally = s.players[1];
-    ally.hp = 40;
     for (let round = 1; round <= 3; round++) {
       tickStatuses(s, ally);
-      expect(status(ally, "barrier"), `round ${round}`).toBeDefined();
-      expect(ally.hp, `round ${round}`).toBe(40 + 4 * round);
+      expect(status(ally, "barrier")?.stacks, `round ${round}`).toBe(10);
     }
     tickStatuses(s, ally);
     expect(status(ally, "barrier")).toBeUndefined();
-    expect(status(ally, "regen")).toBeUndefined();
+  });
+
+  it("leaves room for Sanctuary the next round: the +3 Verse pays for it", () => {
+    const s = fight();
+    const sanctifier = s.players[0];
+    sanctifier.resource = 0;
+    effects(s, sanctifier, sanctifier, ultimateFor(sanctifier)!.effects);
+    expect(sanctifier.resource).toBeGreaterThanOrEqual(3);
   });
 
   it("draws the enemy's blows onto the line: every front-row-hunting enemy now aims at the Sanctifier", () => {
@@ -115,7 +117,8 @@ describe("Hallowed Ground", () => {
     const warded = segments[0].beats.filter((b) => b.kind === "ward").map((b) => b.target);
     for (const p of s.players) expect(warded, p.id).toContain(p.id);
     expect(s.players[0].ultimateCharge).toBeLessThan(ULTIMATE_MAX);
-    // Still there after the round: lasting, not lapsing.
-    for (const p of s.players.filter((p) => p.hp > 0)) expect(status(p, "regen")?.duration, p.id).toBe(3);
+    // Still there after the round, on everyone it was not spent on: lasting, not lapsing.
+    const kept = s.players.filter((p) => p.hp > 0 && status(p, "barrier"));
+    for (const p of kept) expect(status(p, "barrier")?.duration, p.id).toBe(3);
   });
 });

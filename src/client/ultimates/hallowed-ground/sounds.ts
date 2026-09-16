@@ -3,13 +3,13 @@ import { crash, hit, hz, swell, type Voice } from "../../audio/synth";
 /**
  * Hallowed Ground's sounds. A reed organ, iron on stone, and the soot going
  * off the floor — nothing blown, nothing sung, no bell, no drum. The
- * signature is the sound only this film has: the shod foot of a standard
- * dragged the length of a stone floor, grinding and slowly rising, with grit
- * in it; and the knock of that foot grounded.
+ * signature is the sound only this film has: the foot of a standard dragged
+ * the length of a stone floor, grinding and slowly rising, with grit in it;
+ * and the same grind in one short hard stroke to close the line.
  *
  * The motif is original and rises: F3, B♭3, C4 on the organ as the line is
  * drawn, and the fourth note, F4, lands as an F major chord with the ninth
- * in it on the grounding. Not the Anthem's horn and answer, the Din's drum
+ * in it on the stroke. Not the Anthem's horn and answer, the Din's drum
  * and bell, or the Elegy's falling voice.
  */
 
@@ -32,7 +32,7 @@ function reed(
   crash(c, o, t, { seconds: attack + hold * 0.5, gain: gain * 0.5, type: "lowpass", freq: 700, q: 0.5 });
 }
 
-/** The shod foot of the standard knocked on stone: wood, iron and the stone under it. */
+/** The foot of the standard knocked on stone: wood, iron and the stone under it. */
 function knock(c: AudioContext, o: AudioNode, t: number, gain = 0.4) {
   crash(c, o, t, { seconds: 0.05, gain: gain * 0.9, type: "highpass", freq: 2600, q: 0.6 });
   hit(c, o, t + 0.002, { type: "triangle", from: 640, to: 210, gain: gain * 0.6, attack: 0.001, decay: 0.07 });
@@ -126,15 +126,22 @@ export const voices: Record<string, Voice> = {
     },
   },
   /**
-   * The grounding, in layers: the shod foot on stone and the hiss of the
-   * line igniting (transient), a sub drop, the fourth note as an F major
-   * chord with the ninth on the organ and a low iron ring (body), and the
-   * long white hiss of the soot going off the floor (tail).
+   * The stroke, in layers: the grind of the foot swept through the end of
+   * the score, climbing hard for the 38ms before contact (played from the
+   * shot's first frame, so the contact lands with the picture in FULL and
+   * FAST), then the foot's crack on stone and the hiss of the line catching
+   * (transient), a sub drop, the fourth note as an F major chord with the
+   * ninth on the organ and a low iron ring (body), and the long white hiss
+   * of the soot going off the floor (tail).
    */
   "hallow-strike": {
     bus: "sfx",
-    render: (c, o, t) => {
-      // Transient: the knock, hard, and the ignition.
+    render: (c, o, t0) => {
+      // The sweep: a short grind rising into the contact.
+      crash(c, o, t0, { seconds: 0.06, gain: 0.4, type: "bandpass", freq: 900, sweepTo: 3200, q: 1.4 });
+      crash(c, o, t0, { seconds: 0.05, gain: 0.22, type: "bandpass", freq: 380, sweepTo: 900, q: 1 });
+      const t = t0 + 0.038;
+      // Transient: the crack, hard, and the ignition.
       knock(c, o, t, 0.8);
       crash(c, o, t + 0.006, { seconds: 0.09, gain: 0.55, type: "highpass", freq: 4200, q: 0.5 });
       hit(c, o, t, { type: "triangle", from: 300, to: 110, gain: 0.5, attack: 0.001, decay: 0.08 });

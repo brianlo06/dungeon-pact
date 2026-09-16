@@ -88,34 +88,58 @@
 
 /* the line */
 .hallow-groove-edge {
-  fill: none;
-  stroke: #2e2a27;
-  stroke-width: 11;
+  fill: #3b3530;
+  stroke: #3b3530;
+  stroke-width: 17;
   stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .hallow-groove {
-  fill: none;
-  stroke: #040404;
-  stroke-width: 6;
+  fill: #030303;
+  stroke: #030303;
+  stroke-width: 10;
   stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .hallow-core {
-  fill: none;
-  stroke: #f4fbff;
-  stroke-width: 3;
+  fill: #ffb070;
+  stroke: #ffb070;
+  stroke-width: 4;
   stroke-linecap: round;
   opacity: 0;
 }
+.hallow-score[data-mode="burn"] .hallow-core {
+  fill: #f4fbff;
+  stroke: #f4fbff;
+  stroke-width: 9;
+}
+.hallow-score[data-mode="quiet"] .hallow-groove-edge,
+.hallow-score[data-mode="quiet"] .hallow-groove,
+.hallow-score[data-mode="quiet"] .hallow-core {
+  stroke: none;
+}
 .hallow-hot {
   fill: none;
-  stroke: #ffffff;
-  stroke-width: 4.5;
+  stroke: #fff1d6;
+  stroke-width: 6;
   stroke-linecap: round;
   opacity: 0;
   mix-blend-mode: screen;
 }
+.hallow-score[data-mode="burn"] .hallow-hot {
+  stroke: #ffffff;
+  stroke-width: 20;
+}
 .hallow-halo {
   fill: url(#hallow-halo-g);
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+.hallow-bead {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 26;
+  stroke-linecap: round;
   opacity: 0;
   mix-blend-mode: screen;
 }
@@ -130,16 +154,14 @@
   mix-blend-mode: screen;
 }
 .hallow-ember {
-  fill: #ffe9c8;
+  fill: #ffc98a;
 }
-.hallow-spark {
-  fill: none;
-  stroke: #fff6e6;
-  stroke-width: 2.2;
-  stroke-linecap: round;
+.hallow-spark,
+.hallow-streak {
+  fill: #fff8ec;
 }
-.hallow-flare-spike {
-  fill: #f4fbff;
+.hallow-spark-warm {
+  fill: #ffc27a;
 }
 
 /* the soot */
@@ -157,17 +179,18 @@
 .hallow-flake {
   stroke-width: 1.4;
 }
+/* soot flakes are lit on their edges by the line under them, so they read on the dark */
 .hallow-soot-0 {
   fill: #0e0c0b;
-  stroke: #000;
+  stroke: #7d8c93;
 }
 .hallow-soot-1 {
   fill: #1d1916;
-  stroke: #000;
+  stroke: #9fb3bb;
 }
 .hallow-soot-2 {
   fill: #2a2523;
-  stroke: #0a0908;
+  stroke: #5f6a70;
 }
 .hallow-ash {
   fill: #8a8f96;

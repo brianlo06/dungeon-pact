@@ -6,16 +6,17 @@ import "./style.css";
 /**
  * Hallowed Ground's effects.
  *
- * The idea they serve: the Sanctifier draws the line itself — the shod foot
- * of its standard scores the foundry floor behind it as it walks the party's
- * front, and when the standard is grounded on the end of the score the whole
- * line burns white and the soot is blown off the stone on the party's side.
+ * The idea they serve: the Sanctifier draws the line itself — the foot of its
+ * standard scores the foundry floor behind it as it walks the party's front,
+ * and when it closes the score with one hard stroke the whole line burns
+ * white and the soot is blown off the stone on the party's side.
  *
- *   hallow-score   the line: a groove scored across the floor behind the ferrule
- *                  with sparks off the foot and an ember light in it (`score`);
- *                  its end close, the embers ticking out (`quiet`); the whole
- *                  length igniting white with a flare at the foot, light thrown
- *                  on the floor (`burn`)
+ *   hallow-score   the line: a groove scored across the floor behind the foot,
+ *                  sparks thrown back off it and an ember light in it (`score`);
+ *                  seen along its length from the near end, a wedge to the
+ *                  foot, the embers going out (`quiet`); the whole length white
+ *                  at once on the stroke, a burst of streaks thrown forward off
+ *                  the foot, light thrown on the floor (`burn`)
  *   hallow-soot    ash drifting down the cold air (`drift`), hanging still (`hang`);
  *                  the soot blown off the party's side of the line in a wave, the
  *                  pale flagstones showing where it was (`blow`)
@@ -73,8 +74,8 @@ function chip(r: number, seed: number, n = 6, rough = 0.5) {
 
 /* ── The line ─────────────────────────────────────────────────────────── */
 
-const SPARKS = 11;
-const FLARE = 14;
+const SPARKS = 24;
+const BURST = 30;
 
 function ScoreRenderer({ cue }: VfxProps): ReactNode {
   const mode = String(cue.params?.mode ?? "score");
@@ -82,55 +83,62 @@ function ScoreRenderer({ cue }: VfxProps): ReactNode {
   return (
     <div className="hallow-score" data-mode={mode} {...data(cue)}>
       <svg className="hallow-world" viewBox="0 0 1600 900" aria-hidden="true">
-        {/* light thrown on the floor on the party's side, once the line burns */}
         <defs>
+          {/* light thrown on the floor on the party's side, once the line burns */}
           <linearGradient id="hallow-throw-g" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0" stopColor={HALO} stopOpacity="0.55" />
-            <stop offset="0.45" stopColor={HALO} stopOpacity="0.16" />
+            <stop offset="0" stopColor={HALO} stopOpacity="0.6" />
+            <stop offset="0.45" stopColor={HALO} stopOpacity="0.18" />
             <stop offset="1" stopColor={HALO} stopOpacity="0" />
           </linearGradient>
           <radialGradient id="hallow-glow-g">
-            <stop offset="0" stopColor="#ffe9c8" stopOpacity="0.55" />
-            <stop offset="0.5" stopColor="#ffd39a" stopOpacity="0.14" />
-            <stop offset="1" stopColor="#ffd39a" stopOpacity="0" />
+            <stop offset="0" stopColor="#ffd9a8" stopOpacity="0.7" />
+            <stop offset="0.45" stopColor="#ff9a4a" stopOpacity="0.2" />
+            <stop offset="1" stopColor="#ff9a4a" stopOpacity="0" />
           </radialGradient>
           <linearGradient id="hallow-halo-g" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor={HALO} stopOpacity="0" />
-            <stop offset="0.5" stopColor={WHITE} stopOpacity="0.9" />
+            <stop offset="0.5" stopColor={WHITE} stopOpacity="0.95" />
             <stop offset="1" stopColor={HALO} stopOpacity="0" />
           </linearGradient>
         </defs>
         <path className="hallow-throw" />
         <ellipse className="hallow-glow" rx={150} ry={46} />
-        {/* the chipped edge of the stone, the groove, and the light in it */}
+        {/* the chipped lip of the stone, the groove, and the light in it */}
         <path className="hallow-groove-edge" />
         <path className="hallow-groove" />
         <path className="hallow-core" />
         <path className="hallow-hot" />
         <rect className="hallow-halo" />
+        <path className="hallow-bead" />
         <g className="hallow-embers">
-          {Array.from({ length: 9 }, (_, i) => (
-            <circle key={i} className="hallow-ember" opacity={0} r={2.2 + rand() * 2.4} data-u={rand()} data-ph={rand()} />
+          {Array.from({ length: 14 }, (_, i) => (
+            <path key={i} className="hallow-ember" opacity={0} d={chip(2.6 + rand() * 3.2, 900 + i, 5, 0.6)} data-u={rand()} data-ph={rand()} />
           ))}
         </g>
+        {/* a rooster tail of sparks thrown back off the dragged foot */}
         <g className="hallow-sparks">
           {Array.from({ length: SPARKS }, (_, i) => (
-            <path key={i} className="hallow-spark" opacity={0} data-ph={rand()} data-a={-150 + rand() * 120} data-l={14 + rand() * 30} />
+            <path key={i} className={i % 3 ? "hallow-spark" : "hallow-spark hallow-spark-warm"} opacity={0} data-ph={rand()} data-a={rand()} data-l={rand()} data-v={rand()} />
           ))}
         </g>
-        <g className="hallow-flare" opacity={0}>
-          {Array.from({ length: FLARE }, (_, i) => {
-            const a = (i / FLARE) * Math.PI * 2 + (rand() - 0.5) * 0.3;
-            const len = 60 + rand() * 90 + (i % 3 === 0 ? 70 : 0);
-            const w = 4 + rand() * 4;
-            const x = Math.cos(a);
-            const y = Math.sin(a);
-            return <path key={i} className="hallow-flare-spike" d={`M${f1(-y * w)} ${f1(x * w)} L${f1(x * len)} ${f1(y * len)} L${f1(y * w)} ${f1(-x * w)} Z`} />;
-          })}
+        {/* the stroke's burst: streaks thrown forward off the foot along the sweep */}
+        <g className="hallow-burst">
+          {Array.from({ length: BURST }, (_, i) => (
+            <path key={i} className={i % 4 ? "hallow-streak" : "hallow-streak hallow-spark-warm"} opacity={0} data-a={rand()} data-l={rand()} data-v={rand()} data-w={rand()} />
+          ))}
         </g>
       </svg>
     </div>
   );
+}
+
+/** A tapered streak from (x, y) back along the direction (ux, uy), `len` long and `w` wide at its head. */
+function streak(x: number, y: number, ux: number, uy: number, len: number, w: number) {
+  const bx = x - ux * len;
+  const by = y - uy * len;
+  const nx = -uy * w;
+  const ny = ux * w;
+  return `M${f1(x + nx)} ${f1(y + ny)} Q${f1(x + ux * w * 1.6)} ${f1(y + uy * w * 1.6)} ${f1(x - nx)} ${f1(y - ny)} L${f1(bx)} ${f1(by)} Z`;
 }
 
 const score: Frame = (el, p, age, ctx) => {
@@ -138,117 +146,182 @@ const score: Frame = (el, p, age, ctx) => {
   if (!box) return;
   const d = box.dataset;
   const mode = d.mode ?? "score";
+  const core = box.querySelector<SVGPathElement>(".hallow-core");
+  const hot = box.querySelector<SVGPathElement>(".hallow-hot");
+  const halo = box.querySelector<SVGRectElement>(".hallow-halo");
+  const throw_ = box.querySelector<SVGPathElement>(".hallow-throw");
+  const glow = box.querySelector<SVGEllipseElement>(".hallow-glow");
+  const bead = box.querySelector<SVGPathElement>(".hallow-bead");
+  const edge = box.querySelector(".hallow-groove-edge");
+  const groove = box.querySelector(".hallow-groove");
+  const embers = box.querySelectorAll<SVGPathElement>(".hallow-ember");
+  const sparks = box.querySelectorAll<SVGPathElement>(".hallow-spark");
+  const burst = box.querySelectorAll<SVGPathElement>(".hallow-streak");
+
+  if (mode === "quiet") {
+    // Along the groove: a wedge from the near end (wide, at the lens) to the
+    // far end, where the foot of the standard rests. The embers cool from the
+    // near end, which was cut first, to the foot, which is still warm.
+    const nx = num(d, "nx", 300);
+    const ny = num(d, "ny", 1100);
+    const fx = num(d, "fx", 800);
+    const fy = num(d, "fy", 800);
+    const nw = num(d, "nw", 60);
+    const fw = num(d, "fw", 10);
+    const len = Math.hypot(fx - nx, fy - ny) || 1;
+    const ux = (fx - nx) / len;
+    const uy = (fy - ny) / len;
+    const wedge = (k: number) =>
+      `M${f1(nx - uy * nw * k)} ${f1(ny + ux * nw * k)} L${f1(fx - uy * fw * k)} ${f1(fy + ux * fw * k)} L${f1(fx + uy * fw * k)} ${f1(fy - ux * fw * k)} L${f1(nx + uy * nw * k)} ${f1(ny - ux * nw * k)} Z`;
+    setAttr(edge, "d", wedge(1));
+    setAttr(groove, "d", wedge(0.62));
+    setAttr(core, "d", wedge(0.2));
+    const cool = ease("out", p);
+    setOpacity(core, lerp(0.55, 0.18, cool));
+    // The warm stretch just behind the foot.
+    const hk = 0.72;
+    setAttr(hot, "d", `M${f1(lerp(nx, fx, hk))} ${f1(lerp(ny, fy, hk))} L${f1(fx)} ${f1(fy)}`);
+    setOpacity(hot, lerp(0.85, 0.3, cool) * (0.9 + 0.1 * Math.sin(age / 60)));
+    setAttr(glow, "cx", f1(fx));
+    setAttr(glow, "cy", f1(fy));
+    setAttr(glow, "rx", f1(num(d, "glow", 160)));
+    setAttr(glow, "ry", f1(num(d, "glow", 160) * 0.34));
+    setOpacity(glow, lerp(0.95, 0.35, cool) * (0.88 + 0.12 * Math.sin(age / 90)));
+    setOpacity(halo, 0);
+    setOpacity(throw_, 0);
+    setOpacity(bead, 0);
+    for (const [i, e] of embers.entries()) {
+      const u = Number(e.dataset.u);
+      const ph = Number(e.dataset.ph);
+      // Each ember goes out when the cooling reaches it: the near ones first.
+      const out = clamp((p * 1.4 - (u * 0.9)) * 3);
+      const flicker = 0.55 + 0.45 * Math.sin(age / 50 + ph * 40 + i);
+      const k = 0.1 + u * 0.88;
+      const w = lerp(nw, fw, k) * 0.5 * (ph - 0.5);
+      setAttr(e, "transform", `translate(${f1(lerp(nx, fx, k) - uy * w)} ${f1(lerp(ny, fy, k) + ux * w)}) scale(${f3(lerp(2.4, 0.9, k))})`);
+      setAttr(e, "opacity", f3(flicker * (1 - out)));
+    }
+    for (const s of sparks) setAttr(s, "opacity", "0");
+    for (const s of burst) setAttr(s, "opacity", "0");
+    return;
+  }
+
   const x0 = num(d, "x0", 200);
   const x1 = num(d, "x1", 1400);
   const y = num(d, "y", 850);
   const trail = num(d, "trail", 34);
   const caster = ctx.actor("caster");
-  // The head of the score: where the ferrule is, trailing the walking figure.
+  // The head of the score: where the foot is, trailing the walking figure.
   const head = mode === "score" ? clamp(caster ? caster.x - trail : x0, x0, x1) : num(d, "head", x1);
-  const ignite = num(d, "ignite", 0.05);
-  const settled = d.settle !== undefined;
-  const lit = mode === "burn" ? (settled ? 1 : span(p, ignite, ignite + 0.05)) : 0;
+  const line = `M${f1(x0)} ${f1(y)} L${f1(head)} ${f1(y)}`;
+  setAttr(edge, "d", line);
+  setAttr(groove, "d", line);
+  setAttr(core, "d", line);
+  setOpacity(glow, 0);
 
-  const groove = `M${f1(x0)} ${f1(y)} L${f1(head)} ${f1(y)}`;
-  setAttr(box.querySelector(".hallow-groove-edge"), "d", groove);
-  setAttr(box.querySelector(".hallow-groove"), "d", groove);
-  setAttr(box.querySelector(".hallow-core"), "d", groove);
-
-  const core = box.querySelector<SVGPathElement>(".hallow-core");
-  const hot = box.querySelector<SVGPathElement>(".hallow-hot");
-  const halo = box.querySelector<SVGRectElement>(".hallow-halo");
-  const throw_ = box.querySelector<SVGPathElement>(".hallow-throw");
-  if (mode !== "quiet") setOpacity(box.querySelector<SVGElement>(".hallow-glow"), 0);
   if (mode === "score") {
-    // A dull ember light along what has been cut, hotter just behind the foot.
-    setOpacity(core, 0.32);
-    setAttr(hot, "d", `M${f1(Math.max(x0, head - 150))} ${f1(y)} L${f1(head)} ${f1(y)}`);
-    setOpacity(hot, 0.9);
+    // A dull ember light along what has been cut, hot just behind the foot.
+    setOpacity(core, 0.5);
+    setAttr(hot, "d", `M${f1(Math.max(x0, head - 170))} ${f1(y)} L${f1(head)} ${f1(y)}`);
+    setOpacity(hot, 0.95);
     setOpacity(halo, 0);
     setOpacity(throw_, 0);
-  } else if (mode === "quiet") {
-    // The embers going out: the core dims over the shot, and the warm glow
-    // they throw up on the ferrule and the boots goes with them.
-    const glow = box.querySelector<SVGEllipseElement>(".hallow-glow");
-    setAttr(glow, "cx", f1(head - 40));
-    setAttr(glow, "cy", f1(y));
-    setOpacity(glow, lerp(0.9, 0.15, ease("out", p)) * (0.85 + 0.15 * Math.sin(age / 70)));
-    setOpacity(core, lerp(0.3, 0.08, ease("out", p)));
-    setAttr(hot, "d", `M${f1(Math.max(x0, head - 90))} ${f1(y)} L${f1(head)} ${f1(y)}`);
-    setOpacity(hot, lerp(0.7, 0.12, ease("out", p)));
-    setOpacity(halo, 0);
-    setOpacity(throw_, 0);
-  } else {
-    // Burn: the whole length at once, then breathing.
-    const breathe = 0.86 + 0.14 * (0.5 + 0.5 * Math.sin(age / 260));
-    setOpacity(core, lit > 0 ? lerp(0.25, breathe, lit) : 0.14);
-    setAttr(hot, "d", groove);
-    setOpacity(hot, lit > 0 ? lit * (0.55 + 0.45 * Math.max(0, 1 - (age - ignite * num(d, "shotMs", 780)) / 700)) : 0);
-    const h = num(d, "haloH", 64);
-    setAttr(halo, "x", f1(x0 - 20));
-    setAttr(halo, "width", f1(x1 - x0 + 40));
-    setAttr(halo, "y", f1(y - h / 2));
-    setAttr(halo, "height", f1(h));
-    setOpacity(halo, lit * (0.55 + 0.25 * breathe));
-    // Light thrown on the party's side of the line.
-    const depth = num(d, "depth", 240);
-    const taper = num(d, "taper", 90);
-    setAttr(throw_, "d", `M${f1(x0 - 60)} ${f1(y + 6)} L${f1(x1 + 60)} ${f1(y + 6)} L${f1(x1 - taper + 60)} ${f1(y - depth)} L${f1(x0 + taper - 60)} ${f1(y - depth)} Z`);
-    setOpacity(throw_, (settled ? 1 : ease("out", span(p, ignite, ignite + 0.3))) * (0.7 + 0.3 * breathe));
+    setOpacity(bead, 0);
+    for (const [i, e] of embers.entries()) {
+      const u = Number(e.dataset.u);
+      const ph = Number(e.dataset.ph);
+      const ex = head - 30 - u * 520;
+      if (ex < x0) {
+        setAttr(e, "opacity", "0");
+        continue;
+      }
+      const flicker = 0.5 + 0.5 * Math.sin(age / 55 + ph * 40 + i);
+      setAttr(e, "transform", `translate(${f1(ex)} ${f1(y + (ph - 0.5) * 5)})`);
+      setAttr(e, "opacity", f3((0.35 + 0.65 * flicker) * (1 - u * 0.7)));
+    }
+    // Sparks thrown back and up off the foot, falling: each lives a short
+    // while, then is thrown again from wherever the foot is now.
+    const on = head > x0 + 4 && head < x1 - 2;
+    // The foot has moved on since a spark was thrown: world units a millisecond.
+    const walk = num(d, "walk", 0.9);
+    for (const s of sparks) {
+      if (!on) {
+        setAttr(s, "opacity", "0");
+        continue;
+      }
+      const sd = s.dataset;
+      const life = 150 + Number(sd.v) * 110;
+      const t = age + Number(sd.ph) * life;
+      const k = (t % life) / life;
+      const cycle = Math.floor(t / life);
+      const jitter = ((cycle * 37 + Number(sd.a) * 100) % 100) / 100;
+      const a = ((196 + jitter * 44) * Math.PI) / 180; // back and up
+      const speed = 0.9 + Number(sd.v) * 1.4;
+      const dist = speed * life * k;
+      const sx = head - walk * life * k + Math.cos(a) * dist;
+      const sy = y - 4 + Math.sin(a) * dist + 260 * k * k;
+      const vx = Math.cos(a) * speed;
+      const vy = Math.sin(a) * speed + (520 * k) / life;
+      const vl = Math.hypot(vx, vy) || 1;
+      const len = (18 + Number(sd.l) * 46) * (1 - k * 0.6);
+      setAttr(s, "d", streak(sx, sy, vx / vl, vy / vl, len, 1.8 + Number(sd.l) * 1.2));
+      setAttr(s, "opacity", f3(1 - k * k));
+    }
+    for (const s of burst) setAttr(s, "opacity", "0");
+    return;
   }
 
-  // Embers: a few points along the last stretch, flickering; only while cutting or cooling.
-  const embersOn = mode !== "burn";
-  for (const [i, e] of box.querySelectorAll<SVGCircleElement>(".hallow-ember").entries()) {
-    if (!embersOn) {
-      setAttr(e, "opacity", "0");
-      continue;
-    }
-    const u = Number(e.dataset.u);
-    const ph = Number(e.dataset.ph);
-    const ex = head - 20 - u * (mode === "quiet" ? 260 : 400);
-    if (ex < x0) {
-      setAttr(e, "opacity", "0");
-      continue;
-    }
-    const flicker = 0.5 + 0.5 * Math.sin(age / 55 + ph * 40 + i);
-    const cool = mode === "quiet" ? 1 - ease("in", p) * 0.9 : 1;
-    setAttr(e, "cx", f1(ex));
-    setAttr(e, "cy", f1(y + (ph - 0.5) * 3));
-    setAttr(e, "opacity", f3((0.35 + 0.65 * flicker) * cool * (1 - u * 0.6)));
-  }
+  // Burn: the whole length white at once on contact, then breathing.
+  const ignite = num(d, "ignite", 0.05);
+  const shotMs = num(d, "shotMs", 860);
+  const settled = d.settle !== undefined;
+  const lit = settled || p >= ignite ? 1 : 0;
+  const since = settled ? 10000 : (p - ignite) * shotMs;
+  const breathe = 0.86 + 0.14 * (0.5 + 0.5 * Math.sin(age / 260));
+  setOpacity(core, lit ? breathe : 0.2);
+  setAttr(hot, "d", line);
+  setOpacity(hot, lit ? 0.55 + 0.45 * Math.max(0, 1 - since / 600) : 0);
+  const h = num(d, "haloH", 90) * (1 + 0.6 * Math.max(0, 1 - since / 260));
+  setAttr(halo, "x", f1(x0 - 30));
+  setAttr(halo, "width", f1(head - x0 + 60));
+  setAttr(halo, "y", f1(y - h / 2));
+  setAttr(halo, "height", f1(h));
+  setOpacity(halo, lit * (0.6 + 0.25 * breathe));
+  // Light thrown on the party's side of the line, full on contact.
+  const depth = num(d, "depth", 240);
+  const taper = num(d, "taper", 90);
+  setAttr(throw_, "d", `M${f1(x0 - 60)} ${f1(y + 6)} L${f1(x1 + 60)} ${f1(y + 6)} L${f1(x1 - taper + 60)} ${f1(y - depth)} L${f1(x0 + taper - 60)} ${f1(y - depth)} Z`);
+  setOpacity(throw_, lit * (0.75 + 0.25 * breathe));
+  // A bead of white running back along the line from the foot, after the stop.
+  const run = clamp((since - 20) / 260);
+  if (lit && run > 0 && run < 1) {
+    const bx = lerp(head, x0, ease("out", run));
+    setAttr(bead, "d", `M${f1(bx)} ${f1(y)} L${f1(Math.min(head, bx + 160))} ${f1(y)}`);
+    setOpacity(bead, 1 - run);
+  } else setOpacity(bead, 0);
+  for (const e of embers) setAttr(e, "opacity", "0");
+  for (const s of sparks) setAttr(s, "opacity", "0");
 
-  // Sparks off the foot while it cuts: each lives 110ms, then is thrown again.
-  const sparksOn = mode === "score" && head > x0 + 4;
-  for (const s of box.querySelectorAll<SVGPathElement>(".hallow-spark")) {
-    if (!sparksOn) {
+  // The burst off the foot: streaks thrown forward and up along the sweep,
+  // already out on the contact frame, falling and gone in 420ms.
+  const dir = num(d, "dir", 1);
+  for (const s of burst) {
+    if (!lit || settled || since > 420) {
       setAttr(s, "opacity", "0");
       continue;
     }
-    const ph = Number(s.dataset.ph);
-    const life = 110;
-    const k = ((age + ph * life) % life) / life;
-    const cycle = Math.floor((age + ph * life) / life);
-    const a = ((Number(s.dataset.a) + ((cycle * 37) % 50) - 25) * Math.PI) / 180;
-    const len = Number(s.dataset.l) * (0.6 + ((cycle * 13) % 7) / 10);
-    const travel = 30 + ((cycle * 7) % 40);
-    const sx = head + Math.cos(a) * travel * k;
-    const sy = y + Math.sin(a) * travel * k + 90 * k * k;
-    setAttr(s, "d", `M${f1(sx)} ${f1(sy)} l${f1(-Math.cos(a) * len * (1 - k) - 6)} ${f1(-Math.sin(a) * len * (1 - k) + 3)}`);
+    const sd = s.dataset;
+    const k = clamp((since + 40) / 460);
+    const a = ((-8 - Number(sd.a) * 62) * Math.PI) / 180; // forward, from flat to steep
+    const speed = 380 + Number(sd.v) * 520;
+    const dist = speed * ease("out", k) * 0.9;
+    const ux = Math.cos(a) * dir;
+    const uy = Math.sin(a);
+    const sx = head + ux * dist;
+    const sy = y - 6 + uy * dist + 180 * k * k;
+    const len = (40 + Number(sd.l) * 150) * (1 - k * 0.7);
+    setAttr(s, "d", streak(sx, sy, ux, uy + 0.35 * k, len, 2.4 + Number(sd.w) * 3.6));
     setAttr(s, "opacity", f3(1 - k * k));
-  }
-
-  // The flare at the foot on ignition: a hand-cut star, out and gone in 300ms.
-  const flare = box.querySelector<SVGGElement>(".hallow-flare");
-  if (flare) {
-    const since = mode === "burn" && !settled ? age - ignite * num(d, "shotMs", 780) : -1;
-    if (since < 0 || since > 320) setAttr(flare, "opacity", "0");
-    else {
-      const k = since / 320;
-      const grow = k < 0.35 ? ease("out", k / 0.35) : 1;
-      setAttr(flare, "transform", `translate(${f1(head)} ${f1(y)}) scale(${f3(0.3 + grow * 1.3)}, ${f3(0.2 + grow * 0.7)}) rotate(${f1(k * 14)})`);
-      setAttr(flare, "opacity", f3(k < 0.5 ? 1 : 1 - (k - 0.5) * 2));
-    }
   }
 };
 
@@ -344,17 +417,18 @@ const soot: Frame = (el, p, age) => {
     return;
   }
 
-  // Blow: the soot lifted off the party's side of the line in a wave from it,
-  // and the pale stone showing where it was.
+  // Blow: the soot lifted off the party's side of the line all at once, and
+  // the pale stone under it. On the contact frame (the stop holds it) most of
+  // the stone already shows and every flake has just jumped off it.
   const x0 = num(d, "x0", 200);
   const x1 = num(d, "x1", 1400);
   const y = num(d, "y", 850);
   const depth = num(d, "depth", 240);
   const taper = num(d, "taper", 90);
   const at = num(d, "at", 0.06);
-  const rise = num(d, "rise", 200);
+  const rise = num(d, "rise", 260);
   const settled = d.settle !== undefined;
-  const front = settled ? 1 : ease("out", span(p, at, at + 0.5));
+  const front = settled ? 1 : p < at ? 0 : 0.7 + 0.3 * ease("out", span(p, at, at + 0.22));
 
   const stone = box.querySelector<SVGPathElement>(".hallow-stone");
   const joints = box.querySelector<SVGPathElement>(".hallow-stone-joints");
@@ -387,27 +461,28 @@ const soot: Frame = (el, p, age) => {
     setOpacity(stone, front > 0 ? 1 : 0);
   }
 
-  const life = num(d, "life", 0.5);
+  const life = num(d, "life", 0.55);
   for (const f of flakes) {
     const fd = f.dataset;
     const u = Number(fd.u);
     const v = Number(fd.v);
-    // A flake at depth v is lifted when the wave reaches it.
-    const start = at + v * 0.36;
-    const q = settled ? 1.2 : clamp((p - start) / life, 0, 1.2);
-    if (q <= 0 || q >= 1.2) {
+    // A flake at depth v goes a breath after the ones at the line; every one
+    // is already off the stone on the contact frame.
+    const start = at + v * 0.05;
+    const q = settled ? 1.2 : p < at ? -1 : clamp((p - start) / life + 0.06 * (1 - v), 0.02, 1.2);
+    if (q < 0 || q >= 1.2) {
       setAttr(f, "opacity", "0");
       continue;
     }
+    const h = Number(fd.h);
     const inset = taper * v;
     const fx0 = lerp(x0 + inset, x1 - inset, u);
-    const fy0 = y + 8 - (depth + 8) * v;
-    const arc = 4 * Math.min(q, 1) * (1 - Math.min(q, 1));
-    const away = q * (60 + v * 40) * Number(fd.h);
-    const x = fx0 + Number(fd.dx) * 90 * q;
-    const yy = fy0 - away - Number(fd.h) * rise * arc * 0.5 + (q > 1 ? (q - 1) * 120 : 0);
-    setAttr(f, "transform", `translate(${f1(x)} ${f1(yy)}) rotate(${f1(Number(fd.spin) * q)}) scale(${f3(1 - v * 0.45)})`);
-    setAttr(f, "opacity", f3(q < 0.85 ? 1 : clamp(1 - (q - 0.85) * 3)));
+    const fy0 = y + 4 - (depth + 4) * v;
+    const lift = ease("out", Math.min(q, 1));
+    const x = fx0 + Number(fd.dx) * 110 * lift;
+    const yy = fy0 - rise * h * lift - (1 - v) * 40 * lift + (q > 1 ? (q - 1) * 90 : 0);
+    setAttr(f, "transform", `translate(${f1(x)} ${f1(yy)}) rotate(${f1(Number(fd.spin) * q)}) scale(${f3((1 - v * 0.45) * (1 - 0.3 * lift))})`);
+    setAttr(f, "opacity", f3(q < 0.8 ? 1 : clamp(1 - (q - 0.8) * 2.5)));
   }
 };
 

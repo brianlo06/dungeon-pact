@@ -4,39 +4,39 @@ import type { Cinematic } from "../../shared/cinematic";
  * HALLOWED GROUND — the Herald · Sanctifier's Ultimate.
  *
  * The idea, in one sentence: the Sanctifier draws the line itself — it walks
- * the length of the party's front with the iron-shod foot of its standard
- * scoring the foundry floor behind it, and when it grounds the standard on
- * the end of the score the whole line burns white and the soot is blown off
- * the stone on the party's side: the ground they stand on is made holy, and
- * they are already standing on it.
+ * the party's front scoring the sooted foundry floor with the foot of its
+ * standard, and closes the score with one hard low stroke that lights the
+ * whole line white and blows the soot off the stone on the party's side: the
+ * ground they are standing on is made clean and holy under their feet.
  *
  * Only the Sanctifier could have it. The Herald tells people what they are
  * worth; the Sanctifier's title is *Hold the line by holding the people on
  * it*, and its kit is Sanctuary, a row's ground made safe. Its standard is a
- * pole with a shod foot, and a standard-bearer's ceremonial gesture is to
- * ground it. So the consecration is a mark made on the floor with the foot
- * of the thing it carries — no horn, no song, no note in the air, no dome.
+ * long pole with a foot, and a line drawn on the ground with it — the oldest
+ * way to say "here, and no further" — is the consecration: no horn, no song,
+ * no note in the air, no dome, and no pole planted.
  *
- * Gameplay it shows: nothing is struck and no enemy is in it. The real
- * party set their feet on the cold floor, the line is drawn along their
- * front, and on the grounding every one of them is warded (Barrier, revealed
- * on the frame) on ground that stays lit (Regeneration, lasting); then a lit
- * seam along the real party's front and a clean flagstone under each.
+ * Gameplay it shows: nothing is struck and no enemy is in it. The real party
+ * set their feet on the cold floor, the line is scored along their front,
+ * and on the stroke every one of them is warded (Barrier, revealed on the
+ * frame) on ground that stays lit (Regeneration, lasting); then a lit seam
+ * along the real party's front and a clean flagstone under each.
  *
- * Rhythm: identity (the open face looks at the floor and sets) → stakes (the
- * real party, feet set, while the Sanctifier walks their front scoring the
- * line; title) → quiet (the ferrule held over the end of the score, the
- * embers going out) → impact (the two-tone; the grounding; the line ignites
- * end to end; the soot blown off the party's side; nobody moves) → the
- * ground (at their boots on the clean stone) → release (the board).
+ * Rhythm: identity (the open smile goes and the face sets, a nod) → stakes
+ * (the real party, feet set, while the Sanctifier walks their front scoring
+ * the line; title) → quiet (down the groove to its end: the Sanctifier
+ * coiled over it, the foot drawn back, the embers going out) → impact (the
+ * two-tone; the stroke; the line white end to end; the soot blown off the
+ * party's side; nobody moves) → release (the board).
  *
  * It shares nothing with Anthem of the Unpaid (a horn, ribbons, a dusk
  * ridge, a braided banner), Into the Din (noise strokes, one ringing note,
  * black-bone-gold) or Elegy for the Standing (a burying ground, a grave, a
- * shadow laid down, a wreath, lilac); nor with the Lantern Wall (wards over
- * the party), the Small Print (paper screens), Breakwater (a wave on a
- * shield) or Good Hiding (a body absorbing blows). The storyboard is
- * `docs/ultimates/hallowed-ground.md`.
+ * shadow laid down, a banner driven into the earth, lilac); nor with the
+ * Lantern Wall (a shield planted, wards over the party), the Small Print
+ * (paper screens), Breakwater (a wave on a shield), Good Hiding (a body
+ * absorbing blows) or Undertow (a sea drawn back off the sand). The
+ * storyboard is `docs/ultimates/hallowed-ground.md`.
  */
 
 const HALO = "#cdf5ff";
@@ -45,10 +45,17 @@ const STONE = "#c9c4b6";
 const IRON = "#0c1016";
 const BARS = 0.1;
 
-/** The line, in world units: scored along y from x0 towards x1; the ferrule ends it. */
-const LINE = { x0: 260, y: 850, end: 1268 };
-/** Where the Sanctifier grounds the standard, and where the party stands behind the line. */
-const GROUND = { caster: [1180, 850] as [number, number], allies: [1000, 722] as [number, number], spread: [-200, 16] as [number, number] };
+/** The line on the impact: scored along y from x0; the stroke ends it at `end`. */
+const LINE = { x0: 180, y: 800, end: 1300 };
+/** Where the Sanctifier makes the stroke, and where the party stands behind the line. */
+const GROUND = { caster: [1170, 800] as [number, number], allies: [960, 690] as [number, number], spread: [-230, 12] as [number, number] };
+/**
+ * The stroke's contact: `ult:hallow-stroke` reaches it 45ms in, so in the
+ * 860ms shot it is at 0.052. FAST plays the shot in 700ms and the same
+ * fraction lands 37ms in, where the stroke is already all but through.
+ */
+const CONTACT = 0.052;
+const IMPACT_MS = 860;
 
 export const hallowedGround: Cinematic = {
   id: "hallowed-ground",
@@ -60,7 +67,7 @@ export const hallowedGround: Cinematic = {
       id: "call",
       kind: "call",
       purpose:
-        "The round stops: the real battlefield goes cold iron, the Herald tips the standard forward onto its shoulder, and the shod foot of it knocks the floor once — a scratch of light under its feet.",
+        "The round stops: the real battlefield goes cold iron, the Herald tips the standard forward onto its shoulder, and the foot of it knocks the floor once — a scratch of light under its feet.",
       space: "battlefield",
       ms: 400,
       fastMs: 240,
@@ -114,7 +121,7 @@ export const hallowedGround: Cinematic = {
       id: "line",
       kind: "low-angle",
       purpose:
-        "Stakes. At floor height in front of the real party: they set their feet on the cold flagstones while the Sanctifier walks the whole length of their front, the standard couched forward and its shod foot dragging the floor behind it — a groove opening across the foreground with sparks off the foot and an ember light in it.",
+        "Stakes. At floor height in front of the real party: they set their feet on the cold flagstones while the Sanctifier walks the whole length of their front, the standard couched forward and its foot dragging the floor behind it — a groove opening across the foreground with sparks off the foot and an ember light in it.",
       space: "cinematic",
       ms: 900,
       fastMs: 460,
@@ -157,52 +164,50 @@ export const hallowedGround: Cinematic = {
       ],
     },
 
-    /* 3 · THE FERRULE — the quiet: the standard's foot held over the end of the score. */
+    /* 3 · DOWN THE LINE — the quiet: the groove to its end, the Sanctifier coiled over it. */
     {
-      id: "ferrule",
+      id: "coil",
       kind: "extreme-close-up",
       purpose:
-        "The quiet. On the floor, Dutch: the standard brought up to the vertical, its shod foot held a hand's breadth over the end of the score, the embers in the groove ticking out one by one, the ash in the air hanging still. Nothing else moves.",
+        "The quiet. Down on the stone at the near end of the score, looking along it: the groove runs away from the lens to where the Sanctifier stands coiled over its end, weight back, the foot of the standard drawn back into the groove. The embers in it go out from the near end towards the foot; the ash in the air hangs still. Nothing else moves.",
       space: "cinematic",
-      ms: 560,
-      fastMs: 360,
+      ms: 600,
+      fastMs: 380,
       camera: {
-        from: { x: 700, y: 900, zoom: 2.2, rotate: 8 },
-        to: { x: 702, y: 902, zoom: 2.23, rotate: 8 },
+        from: { x: 690, y: 610, zoom: 1.4, rotate: 5 },
+        to: { x: 692, y: 612, zoom: 1.43, rotate: 5 },
         ease: "linear",
       },
       background: "hallow-foundry",
-      lighting: { exposure: 0.55, under: [HALO, 0.3], rim: [HALO, 0.35, 1], vignette: 0.72, letterbox: 0.13 },
-      toLighting: { exposure: 0.38, under: [HALO, 0.14], rim: [HALO, 0.25, 1], vignette: 0.84, letterbox: 0.14 },
-      actors: [
-        { role: "caster", at: [420, 960], size: 1100, clip: "ult:hallow-lift", then: "ult:hallow-lift", look: "lit", rim: HALO, root: false },
-      ],
+      lighting: { exposure: 0.42, under: ["#ffb070", 0.28], rim: [HALO, 0.35, 1], vignette: 0.74, letterbox: 0.13 },
+      toLighting: { exposure: 0.22, under: ["#ffb070", 0.12], rim: [HALO, 0.25, 1], vignette: 0.86, letterbox: 0.14 },
+      actors: [{ role: "caster", at: [720, 800], size: 440, clip: "ult:hallow-coil", then: "ult:hallow-coil", look: "lit", rim: HALO }],
       vfx: [
-        { kind: "hallow-score", at: 0, until: 1, layer: "front", seed: 19, params: { mode: "quiet", x0: -400, x1: 651, head: 651, y: 960 } },
-        { kind: "hallow-soot", at: 0, until: 1, layer: "front", seed: 11, params: { mode: "hang", cx: 700, cy: 900, w: 760, h: 420, count: 22, fall: 3 } },
+        { kind: "hallow-score", at: 0, until: 1, layer: "back", seed: 19, params: { mode: "quiet", nx: 200, ny: 1060, fx: 676, fy: 800, nw: 90, fw: 9, glow: 150 } },
+        { kind: "hallow-soot", at: 0, until: 1, layer: "front", seed: 11, params: { mode: "hang", cx: 690, cy: 610, w: 1000, h: 560, count: 22, fall: 3 } },
       ],
-      duck: [{ at: 0, level: 0.03, ms: 560 }],
+      duck: [{ at: 0, level: 0.03, ms: 600 }],
       sound: [{ at: 0.06, sfx: "hallow-ember" }],
       markers: [{ at: 0.5, label: "still" }],
     },
 
-    /* 4 · GROUNDED — impact: the standard driven down; the line ignites; the soot goes off the floor. */
+    /* 4 · THE STROKE — impact: the foot swept through the end of the score; the line lights; the soot goes off the floor. */
     {
-      id: "ground",
+      id: "stroke",
       kind: "impact",
       purpose:
-        "Impact. One frame of light and shadow, then the standard driven down onto the end of the score: the whole line ignites white end to end with a flare at the foot, and the soot on the party's side is blown off the stone in a wave from it, the pale flagstones showing where it was — and the party does not move; only their cloaks and hair blow. Barrier and Regeneration land on everyone.",
+        "Impact. One frame of light and shadow, then the stroke: the foot of the standard swept hard through the end of the score, a burst of sparks thrown forward off it, the whole line white end to end, and the soot on the party's side blown up off the stone at once, the pale flagstones under it — and the party does not move; only their cloaks and hair blow. Barrier and Regeneration land on everyone.",
       space: "cinematic",
-      ms: 780,
-      fastMs: 560,
+      ms: IMPACT_MS,
+      fastMs: 700,
       camera: {
-        from: { x: 830, y: 640, zoom: 1.35, rotate: -3 },
-        to: { x: 824, y: 626, zoom: 1.18, rotate: -1 },
+        from: { x: 800, y: 596, zoom: 1.5, rotate: -2 },
+        to: { x: 790, y: 586, zoom: 1.34, rotate: 0 },
         ease: "out",
       },
       background: "hallow-foundry",
-      lighting: { exposure: 0.5, rim: [HALO, 0.7, 1], vignette: 0.4, letterbox: BARS },
-      toLighting: { exposure: 0.62, under: [HALO, 0.55], rim: [HALO, 0.6, 1], vignette: 0.42, letterbox: BARS },
+      lighting: { exposure: 0.55, under: [HALO, 0.6], rim: [HALO, 0.7, 1], vignette: 0.38, letterbox: BARS },
+      toLighting: { exposure: 0.6, under: [HALO, 0.55], rim: [HALO, 0.6, 1], vignette: 0.42, letterbox: BARS },
       actors: [
         {
           role: "allies",
@@ -214,76 +219,38 @@ export const hallowedGround: Cinematic = {
           clip: "ult:hallow-still",
           then: "ult:hallow-still",
         },
-        { role: "caster", at: GROUND.caster, size: 420, clip: "ult:hallow-ground", then: "ult:hallow-held", look: "lit", rim: HALO, z: 3 },
+        { role: "caster", at: GROUND.caster, size: 410, clip: "ult:hallow-stroke", then: "ult:hallow-held", look: "lit", rim: HALO, z: 3 },
       ],
       vfx: [
-        { kind: "hallow-soot", at: 0, until: 1, layer: "back", seed: 23, params: { mode: "blow", x0: LINE.x0, x1: LINE.end, y: LINE.y, depth: 220, taper: 80, at: 0.075, count: 140, rise: 220, life: 0.5 } },
-        { kind: "hallow-score", at: 0, until: 1, layer: "front", seed: 19, params: { mode: "burn", x0: LINE.x0, x1: LINE.end, head: LINE.end, y: LINE.y, ignite: 0.069, shotMs: 780, depth: 220, taper: 80 } },
-        { kind: "dust", at: 0.07, until: 0.6, x: LINE.end, y: LINE.y, scale: 1.6, color: "#5c5a58", seed: 5, layer: "front" },
+        { kind: "hallow-soot", at: 0, until: 1, layer: "back", seed: 23, params: { mode: "blow", x0: LINE.x0, x1: LINE.end, y: LINE.y, depth: 260, taper: 80, at: CONTACT, count: 150, rise: 280, life: 0.6 } },
+        { kind: "hallow-score", at: 0, until: 1, layer: "front", seed: 19, params: { mode: "burn", x0: LINE.x0, x1: LINE.end, head: LINE.end, y: LINE.y, ignite: CONTACT, shotMs: IMPACT_MS, depth: 260, taper: 80 } },
+        { kind: "dust", at: CONTACT, until: 0.6, x: LINE.end, y: LINE.y, scale: 1.4, color: "#5c5a58", seed: 5, layer: "front" },
       ],
       // The accents end before contact: the hit-stop holds presentation time,
       // so anything on the lens at contact would be held with it. The frame
-      // the stop holds is in colour: the flare, the line lit, the soot rising.
+      // the stop holds is in colour: the stroke, the line lit, the stone
+      // bared and the soot off it.
       screen: [
-        { kind: "two-tone", at: 0, ms: 44, color: STONE, mode: "full" },
-        { kind: "invert", at: 0, ms: 40, mode: "fast" },
-        { kind: "flash", at: 0.035, ms: 24, amount: 0.8, color: WHITE },
+        { kind: "two-tone", at: 0, ms: 30, color: STONE, mode: "full" },
+        { kind: "invert", at: 0, ms: 24, mode: "fast" },
+        { kind: "flash", at: 0.035, ms: 12, amount: 0.8, color: WHITE, mode: "full" },
         { kind: "chromatic", at: 0.28, ms: 120, amount: 0.5 },
       ],
-      stop: [{ at: 0.075, ms: 150 }],
+      stop: [{ at: CONTACT, ms: 150 }],
       shake: [
-        { at: 0.07, amount: 0.04 },
+        { at: CONTACT, amount: 0.04 },
         { at: 0.36, amount: 0.012 },
       ],
       sound: [
-        { at: 0.066, sfx: "hallow-strike" },
-        { at: 0.072, sfx: "ult-boom" },
+        { at: 0, sfx: "hallow-strike" },
+        { at: 0.05, sfx: "ult-boom" },
       ],
       reveal: [
-        { at: 0.069, reveal: "impact" },
-        { at: 0.069, reveal: "ward" },
+        { at: CONTACT, reveal: "impact" },
+        { at: CONTACT, reveal: "ward" },
       ],
       text: [{ kind: "voice", at: 0.3, until: 1, text: "$voice.impact" }],
-      markers: [{ at: 0.069, label: "contact" }],
-    },
-
-    /* 5 · STANDING — at their boots on the clean stone. */
-    {
-      id: "standing",
-      kind: "aftermath",
-      purpose:
-        "What they are standing on. Low, at the party's boots on the clean stone, the line burning steady behind them and the last of the soot settling past the lens; nobody has moved. The Sanctifier stands at the end of the line with the standard grounded and its chin up.",
-      space: "cinematic",
-      ms: 600,
-      fastMs: 0,
-      camera: {
-        from: { x: 760, y: 780, zoom: 2.0, rotate: 2 },
-        to: { x: 760, y: 740, zoom: 1.84, rotate: 1 },
-        ease: "inOut",
-      },
-      background: "hallow-foundry",
-      lighting: { exposure: 0.6, under: [HALO, 0.5], rim: [HALO, 0.5, 1], vignette: 0.5, letterbox: BARS },
-      toLighting: { exposure: 0.62, under: [HALO, 0.45], rim: [HALO, 0.5, 1], vignette: 0.5, letterbox: BARS },
-      actors: [
-        {
-          role: "allies",
-          at: GROUND.allies,
-          spread: GROUND.spread,
-          size: 330,
-          look: "lit",
-          z: 1,
-          clip: "ult:hallow-still",
-          clipAt: 0,
-          then: "ult:hallow-still",
-        },
-        { role: "caster", at: GROUND.caster, size: 420, clip: "ult:hallow-held", then: "ult:hallow-held", look: "lit", rim: HALO, z: 3 },
-      ],
-      vfx: [
-        { kind: "hallow-soot", at: 0, until: 1, layer: "back", seed: 23, params: { mode: "blow", x0: LINE.x0, x1: LINE.end, y: LINE.y, depth: 220, taper: 80, settle: 1 } },
-        { kind: "hallow-score", at: 0, until: 1, layer: "front", seed: 19, params: { mode: "burn", x0: LINE.x0, x1: LINE.end, head: LINE.end, y: LINE.y, settle: 1, depth: 220, taper: 80 } },
-        { kind: "hallow-soot", at: 0, until: 1, layer: "front", seed: 41, params: { mode: "drift", cx: 760, cy: 760, w: 900, h: 460, count: 14, fall: 110 } },
-      ],
-      markers: [{ at: 0.5, label: "standing" }],
+      markers: [{ at: CONTACT, label: "contact" }],
     },
 
     /* 6 · HELD — back on the board. */
@@ -291,7 +258,7 @@ export const hallowedGround: Cinematic = {
       id: "held",
       kind: "return",
       purpose:
-        "Release. Back on the real battlefield, what it did is where it matters: a lit seam runs along the real party's front, a clean flagstone shows under every one of them in turn, and the Herald stands with the standard grounded upright.",
+        "Release. Back on the real battlefield, what it did is where it matters: a lit seam runs along the real party's front, a clean flagstone shows under every one of them in turn, and the Herald stands with the standard stood upright on the line.",
       space: "battlefield",
       ms: 720,
       fastMs: 480,

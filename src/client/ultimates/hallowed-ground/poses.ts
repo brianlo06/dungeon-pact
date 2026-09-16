@@ -6,24 +6,31 @@ import { face, type Expression } from "../../battle/face";
  *
  * The Herald's combat rig blows the horn and waves the banner over the party.
  * The Sanctifier does neither. It carries the standard couched forward, low,
- * with its shod foot dragging on the floor behind it, and at the end of the
- * line it brings the standard up and grounds it — the butt struck on the
- * stone, the flag flying. The horn stays at the hip: nothing here is blown.
+ * with its foot dragging on the floor behind it, and at the end of the line
+ * it closes the score with one hard low stroke of that foot — a sweep along
+ * the stone, not a blow at anything and not a pole planted. The horn stays
+ * at the hip: nothing here is blown.
  *
  *   the Herald   `ult:hallow-slope`   on the board: the standard tips forward onto the shoulder, its foot knocks the floor
- *                `ult:hallow-set`     the close-up: the open face looks at the floor, then straight out, and sets
+ *                `ult:hallow-set`     the close-up: the open smile goes, the face sets, a nod
  *                `ult:hallow-walk`    the line: walking, the standard couched, the foot scoring behind
- *                `ult:hallow-lift`    the quiet: the standard brought up to the vertical, its foot held over the stone
- *                `ult:hallow-ground`  the grounding: the standard driven down onto the end of the line; `contact`
- *                `ult:hallow-held`    held after it, the flag flying, the chin up
- *                `ult:hallow-hold`    on the board after: the standard grounded upright
+ *                `ult:hallow-coil`    the quiet: coiled over the end of the score, the foot drawn back in the groove
+ *                `ult:hallow-stroke`  the stroke: the foot swept forward through the end of the line; `contact`
+ *                `ult:hallow-held`    after it: the standard brought upright onto the lit line, the chin up
+ *                `ult:hallow-hold`    on the board after: the standard upright
  *   every ally   `ult:hallow-stand`   the line: feet set on the cold floor, watching the Sanctifier pass
- *                `ult:hallow-still`   the grounding: nothing moves but cloth and hair
+ *                `ult:hallow-still`   the stroke: nothing moves but cloth and hair
+ *
+ * Pole geometry, for placing the foot: the banner pivots at the front
+ * shoulder (60, 50) and its foot is at (69, 96), 46 units below and 9 in
+ * front of the pivot; the floor is at 97. Rotated by a, the foot's height is
+ * 50 + 9·sin a + 46·cos a, so the drop that sets it on the floor is 0.116 at
+ * 52°, 0.06 at 40°, 0.01 at 0° and 0.04 at −12°.
  *
  * Root tracks are authored for the shot size each clip plays at: the walk's
- * bob and the grounding's drop move the whole figure in wide shots; the
- * close-up and the quiet play with `root: false`, so the face and the
- * ferrule stay where the camera is.
+ * bob, the coil's crouch and the stroke's lunge move the whole figure in the
+ * wide shots; the close-up plays with `root: false`, so the face stays where
+ * the camera is.
  */
 
 type Part = Record<string, Pose[]>;
@@ -33,7 +40,7 @@ const turn = (...keys: [number, number][]): Pose[] => keys.map(([at, rotate]) =>
 
 /**
  * Couched: the standard leaned forward over the shoulder at 52°, the group
- * dropped so its shod foot rides the floor behind the heels (the pole's foot
+ * dropped so its foot rides the floor behind the heels (the pole's foot
  * is 46 drawing units below the hand; at 52° and +0.1 it sits at the ground
  * line, 25 units behind the body's centre).
  */
@@ -42,11 +49,13 @@ const COUCHED_DROP = 0.1;
 
 /** The face the Herald is drawn with: open, earnest, eyes wide. */
 const EARNEST: Expression = { brow: -1, knit: -3, open: 1.15, mouth: 1, wide: 1 };
-/** Looking down at the floor by its feet: lids half down, the smile easing. */
-const FLOOR: Expression = { brow: -0.4, knit: -1, open: 0.55, mouth: 0.45, wide: 0.92 };
-/** Set: the smile pressed to a line, the brows level and down a hair, the eyes steady. */
-const SET: Expression = { brow: 0.9, knit: 5, open: 0.74, mouth: 0.22, wide: 0.9 };
-/** The grounding: an open call, not a shout. */
+/** The smile going: the mouth closing on it, the brows coming level, a breath. */
+const GOING: Expression = { brow: 0.2, knit: 1, open: 1.0, mouth: 0.5, wide: 0.94 };
+/** Set: the smile pressed to a line, the brows down and drawn in, the eyes steady under them. */
+const SET: Expression = { brow: 1.3, knit: 6, open: 0.72, mouth: 0.2, wide: 0.9 };
+/** The nod: the lids drop with the chin. */
+const NOD: Expression = { brow: 1.5, knit: 6, open: 0.5, mouth: 0.18, wide: 0.9 };
+/** The stroke: an open call, not a shout. */
 const CALL: Expression = { brow: -0.8, knit: 2, open: 1.05, mouth: 1.7, wide: 0.95 };
 /** After: the drawn smile coming back. */
 const EASE: Expression = { brow: -0.6, knit: -2, open: 0.92, mouth: 1.15, wide: 1.08 };
@@ -86,10 +95,12 @@ const slope: Clip = {
 };
 
 /**
- * The close-up. The open face looks down at the floor by its feet (the head
- * bows, the lids come half down), then comes up and looks straight out, and
- * sets: the smile pressed to a line, the brows level, the eyes steady. A
- * short nod at the end. Played with `root: false`.
+ * The close-up. The face the Herald is drawn with — the open smile — looks
+ * straight out and the smile goes: the mouth closes on it, the chin lifts on
+ * a breath, then the brows come down and in and the mouth presses to a line.
+ * One short, hard nod on it, the lids dropping with the chin, and the eyes
+ * come back up steady. No look away, no eyes shut: it has decided. Played
+ * with `root: false`.
  */
 const set: Clip = {
   duration: 640,
@@ -98,7 +109,7 @@ const set: Clip = {
     { at: 1, x: 0, y: 0.004, rotate: 0.5, squash: 1.005 },
   ],
   parts: {
-    head: turn([0, -1], [0.16, 9], [0.36, 9], [0.52, -2], [0.62, 0], [0.8, -3], [0.9, 3], [1, 0.5]),
+    head: turn([0, 0], [0.14, 0], [0.34, -4], [0.52, -1], [0.7, 8], [0.84, -1.5], [1, 0.5]),
     banner: [
       { at: 0, rotate: COUCHED, y: COUCHED_DROP },
       { at: 1, rotate: COUCHED + 1, y: COUCHED_DROP },
@@ -107,11 +118,11 @@ const set: Clip = {
     horn: turn([0, 6], [1, 5]),
     body: [
       { at: 0, squash: 1, y: 0 },
-      { at: 0.3, squash: 1.015, y: 0.003 },
-      { at: 0.6, squash: 0.995, y: -0.002 },
+      { at: 0.34, squash: 0.985, y: -0.004 },
+      { at: 0.7, squash: 1.015, y: 0.003 },
       { at: 1, squash: 1, y: 0 },
     ],
-    ...face([0, EARNEST], [0.1, EARNEST], [0.24, FLOOR], [0.4, FLOOR], [0.56, SET], [0.78, SET], [1, SET]),
+    ...face([0, EARNEST], [0.14, EARNEST], [0.34, GOING], [0.54, SET], [0.7, NOD], [0.84, SET], [1, SET]),
   },
 };
 
@@ -167,115 +178,140 @@ const walk: Clip = {
 };
 
 /**
- * The quiet: the standard brought up from the couch to the vertical and held
- * with its foot a hand's breadth over the end of the score. The figure is
- * still by a third of the way in and stays still. Played with `root: false`.
+ * The quiet: the standard drawn back and held. The Sanctifier stands coiled
+ * over the end of the score, the weight back and low, the standard leaned
+ * forward over it so its foot rests behind the heels in the end of the
+ * groove (at 40° the foot is 6 drawing units off the floor; the group drops
+ * 0.055 to set it there). Still by a third of the way in, and still after.
+ * The last key is the stroke's first. Played with `root: false` where the
+ * camera is tight.
  */
-const lift: Clip = {
-  duration: 560,
+const COIL = 40;
+const COIL_DROP = 0.055;
+const coil: Clip = {
+  duration: 600,
   poses: [
-    { at: 0, x: 0, y: 0, rotate: -2, squash: 1.01 },
-    { at: 1, x: 0, y: 0, rotate: -1, squash: 1.005 },
+    { at: 0, x: 0, y: 0.004, rotate: -3, squash: 1.02 },
+    { at: 0.32, x: -0.012, y: 0.012, rotate: -5, squash: 1.06 },
+    { at: 1, x: -0.014, y: 0.013, rotate: -5.2, squash: 1.065 },
   ],
   parts: {
     banner: [
-      { at: 0, rotate: COUCHED - 12, y: COUCHED_DROP - 0.03, x: 0 },
-      { at: 0.3, rotate: 2, y: -0.03, x: 0 },
-      { at: 0.4, rotate: 0, y: -0.034, x: 0 },
-      { at: 1, rotate: 0, y: -0.032, x: 0 },
+      { at: 0, rotate: COUCHED, y: COUCHED_DROP, x: 0 },
+      { at: 0.32, rotate: COIL, y: COIL_DROP, x: 0 },
+      { at: 1, rotate: COIL, y: COIL_DROP, x: 0 },
     ],
     flag: [
-      { at: 0, rotate: -12, squash: 0.96 },
-      { at: 0.3, rotate: 6, squash: 1.03 },
-      { at: 0.5, rotate: 1, squash: 1 },
-      { at: 1, rotate: 0, squash: 1 },
+      { at: 0, rotate: -14, squash: 0.97 },
+      { at: 0.32, rotate: -4, squash: 0.94 },
+      { at: 1, rotate: -3, squash: 0.93 },
     ],
-    horn: turn([0, 6], [0.35, -2], [1, -1]),
-    head: turn([0, 4], [0.3, 6], [1, 7]),
+    horn: turn([0, 8], [0.32, 16], [1, 16]),
+    head: turn([0, 3], [0.32, 7], [1, 7.5]),
     body: [
       { at: 0, squash: 1.01, y: 0 },
-      { at: 0.35, squash: 1.0, y: -0.002 },
-      { at: 1, squash: 1.005, y: 0 },
+      { at: 0.32, squash: 1.04, y: 0.008 },
+      { at: 1, squash: 1.042, y: 0.008 },
     ],
-    ...face([0, SET], [0.3, FLOOR], [1, FLOOR]),
+    legs: [
+      { at: 0, squash: 1.02, rotate: 0 },
+      { at: 0.32, squash: 1.1, rotate: -3 },
+      { at: 1, squash: 1.1, rotate: -3 },
+    ],
+    ...face([0, SET], [0.32, SET], [1, SET]),
   },
 };
 
 /**
- * The grounding. Short, so it blends in from the quiet in a few frames and
- * the hit-stop holds the struck pose: the standard driven straight down onto
- * the end of the line (`contact`), the knees taking it, the flag snapping
- * up, the head thrown up on the call and the horn arm flung out for balance.
+ * The stroke. From the coil, the standard's foot is swept forward through
+ * the end of the score in one hard low stroke (+40° to −12° at `contact`, 45ms in,
+ * the foot on the floor all the way), the body lunging after it, the flag
+ * dragged out flat behind the swinging pole; then the follow-through lifts
+ * the foot forward off the stone (−38°). Short, so the hit-stop holds the
+ * stroke mid-sweep with the pole low and diagonal, not upright.
  */
-const ground: Clip = {
+const stroke: Clip = {
   duration: 180,
-  markers: { contact: 0.3 },
+  markers: { contact: 0.25 },
+  // Most of the sweep is done by 0.19, so a frame held a little before
+  // contact (FAST plays the shot shorter; the stop lands at the same
+  // fraction) still has the pole low and forward, never upright.
   poses: [
-    { at: 0, x: 0, y: -0.01, rotate: -1, squash: 1, flash: 0 },
-    { at: 0.3, x: 0.01, y: 0.02, rotate: 2, squash: 1.08, flash: 0 },
-    { at: 1, x: 0.01, y: 0.022, rotate: 2, squash: 1.085, flash: 0 },
+    { at: 0, x: -0.014, y: 0.013, rotate: -5.2, squash: 1.065, flash: 0 },
+    { at: 0.19, x: 0.042, y: 0.026, rotate: 6, squash: 1.1, flash: 0 },
+    { at: 0.25, x: 0.05, y: 0.028, rotate: 7, squash: 1.1, flash: 0 },
+    { at: 1, x: 0.07, y: 0.03, rotate: 9, squash: 1.08, flash: 0 },
   ],
   parts: {
     banner: [
-      { at: 0, rotate: 0, y: -0.03, x: 0 },
-      { at: 0.3, rotate: 0, y: 0.024, x: 0 },
-      { at: 1, rotate: 0, y: 0.026, x: 0 },
+      { at: 0, rotate: COIL, y: COIL_DROP, x: 0 },
+      { at: 0.19, rotate: -8, y: 0.02, x: 0.008 },
+      { at: 0.25, rotate: -12, y: 0.022, x: 0.01 },
+      { at: 1, rotate: -38, y: 0.1, x: 0.02 },
     ],
     flag: [
-      { at: 0, rotate: 0, squash: 1 },
-      { at: 0.3, rotate: -26, squash: 1.14 },
-      { at: 1, rotate: -28, squash: 1.12 },
+      { at: 0, rotate: -3, squash: 0.93 },
+      { at: 0.19, rotate: 26, squash: 1.16 },
+      { at: 0.25, rotate: 30, squash: 1.18 },
+      { at: 1, rotate: 36, squash: 1.2 },
     ],
-    horn: turn([0, -2], [0.3, -34], [1, -36]),
-    head: turn([0, 5], [0.3, -12], [1, -13]),
+    horn: turn([0, 16], [0.19, -24], [0.25, -28], [1, -34]),
+    head: turn([0, 7.5], [0.25, 4], [1, -6]),
     body: [
-      { at: 0, squash: 1, y: 0 },
-      { at: 0.3, squash: 1.07, y: 0.018 },
-      { at: 1, squash: 1.075, y: 0.02 },
+      { at: 0, squash: 1.042, y: 0.008 },
+      { at: 0.25, squash: 1.06, y: 0.012 },
+      { at: 1, squash: 1.05, y: 0.012 },
     ],
     legs: [
-      { at: 0, rotate: 0, squash: 1 },
-      { at: 0.3, rotate: 0, squash: 1.1 },
-      { at: 1, rotate: 0, squash: 1.11 },
+      { at: 0, squash: 1.1, rotate: -3 },
+      { at: 0.19, squash: 1.14, rotate: 4 },
+      { at: 0.25, squash: 1.14, rotate: 5 },
+      { at: 1, squash: 1.12, rotate: 6 },
     ],
-    ...face([0, FLOOR], [0.3, CALL], [1, CALL]),
+    ...face([0, SET], [0.25, CALL], [1, CALL]),
   },
 };
 
-/** Held after the grounding: the standard stands, the flag flies, the knees come back, the smile returns. */
+/**
+ * Held after the stroke: the lunge comes back, the standard is brought up
+ * out of the follow-through and stood upright with its foot on the lit line,
+ * the flag flying, the chin up, the smile coming back.
+ */
 const held: Clip = {
   duration: 900,
   poses: [
-    { at: 0, x: 0.01, y: 0.022, rotate: 2, squash: 1.085 },
-    { at: 0.4, x: 0.008, y: 0.012, rotate: 1, squash: 1.04 },
-    { at: 1, x: 0.006, y: 0.006, rotate: 0.5, squash: 1.02 },
+    { at: 0, x: 0.07, y: 0.03, rotate: 9, squash: 1.08 },
+    { at: 0.35, x: 0.04, y: 0.014, rotate: 3, squash: 1.035 },
+    { at: 1, x: 0.03, y: 0.006, rotate: 1, squash: 1.015 },
   ],
   parts: {
     banner: [
-      { at: 0, rotate: 0, y: 0.026, x: 0 },
-      { at: 1, rotate: 0, y: 0.024, x: 0 },
+      { at: 0, rotate: -38, y: 0.1, x: 0.02 },
+      { at: 0.35, rotate: -4, y: 0.012, x: 0.004 },
+      { at: 1, rotate: 0, y: 0.01, x: 0 },
     ],
     flag: [
-      { at: 0, rotate: -28, squash: 1.12 },
-      { at: 0.3, rotate: -14, squash: 0.96 },
-      { at: 0.6, rotate: -20, squash: 1.04 },
-      { at: 1, rotate: -16, squash: 1.0 },
+      { at: 0, rotate: 36, squash: 1.2 },
+      { at: 0.35, rotate: -18, squash: 0.94 },
+      { at: 0.6, rotate: -8, squash: 1.04 },
+      { at: 1, rotate: -12, squash: 1.0 },
     ],
-    horn: turn([0, -36], [0.5, -16], [1, -8]),
-    head: turn([0, -13], [0.5, -9], [1, -6]),
+    horn: turn([0, -34], [0.4, -12], [1, -6]),
+    head: turn([0, -6], [0.4, -9], [1, -6]),
     body: [
-      { at: 0, squash: 1.075, y: 0.02 },
-      { at: 1, squash: 1.02, y: 0.006 },
+      { at: 0, squash: 1.05, y: 0.012 },
+      { at: 1, squash: 1.015, y: 0.004 },
     ],
     legs: [
-      { at: 0, squash: 1.11 },
-      { at: 1, squash: 1.04 },
+      { at: 0, squash: 1.12, rotate: 6 },
+      { at: 0.4, squash: 1.05, rotate: 1 },
+      { at: 1, squash: 1.03, rotate: 0 },
     ],
     ...face([0, CALL], [0.35, CALL], [0.7, EASE], [1, EASE]),
   },
 };
 
-/** On the board after: the standard grounded upright, the horn arm at rest, the lean coming off. */
+/** On the board after: the standard stood upright on the line, the horn arm at rest, the lean coming off. */
 const hold: Clip = {
   duration: 760,
   poses: [
@@ -363,7 +399,7 @@ function stand(hero: string): Clip {
 }
 
 /**
- * The grounding: nobody moves. The root keys nothing; only cloth and hair
+ * The stroke: nobody moves. The root keys nothing; only cloth and hair
  * blow in the rush off the floor and settle, and the chin comes up a hair.
  * Faces blink once and hold.
  */
@@ -402,8 +438,8 @@ export const poses: Record<string, Rig> = Object.fromEntries(
             "ult:hallow-slope": slope,
             "ult:hallow-set": set,
             "ult:hallow-walk": walk,
-            "ult:hallow-lift": lift,
-            "ult:hallow-ground": ground,
+            "ult:hallow-coil": coil,
+            "ult:hallow-stroke": stroke,
             "ult:hallow-held": held,
             "ult:hallow-hold": hold,
           }
