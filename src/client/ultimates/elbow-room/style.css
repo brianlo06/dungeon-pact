@@ -219,10 +219,12 @@
 
 /* ---- on the board ---- */
 .cine-anchored > .elbow-board {
-  width: calc(var(--unit-w) * 1.7);
-  height: calc(var(--unit-w) * 1.7);
-  left: calc(var(--unit-w) * -0.85);
-  top: calc(var(--unit-w) * 1.7 * -0.1667);
+  /* Sized from the unit, but a boss's bank stays the size of a row's. */
+  --bw: min(calc(var(--unit-w) * 1.7), 190px);
+  width: var(--bw);
+  height: var(--bw);
+  left: calc(var(--bw) * -0.5);
+  top: calc(var(--bw) * -0.1667);
   transform: none;
 }
 .elbow-board svg {
