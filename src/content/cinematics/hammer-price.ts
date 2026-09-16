@@ -1,0 +1,244 @@
+import type { Cinematic } from "../../shared/cinematic";
+
+/**
+ * HAMMER PRICE — the Broker · Magnate's Ultimate.
+ *
+ * The idea, in one sentence: the Magnate buys the enemy at an auction in a
+ * dark saleroom where every rival paddle is a light, and every rival it
+ * outbids goes out and adds its weight to the Magnate's hammer — so when the
+ * room is dark and the hammer comes down, the hammer price falls on the lot.
+ *
+ * Storyboard: `docs/ultimates/hammer-price.md`.
+ */
+
+const TYRIAN = "#e05bd8";
+const HOT = "#ffd6f6";
+const LACQUER = "#0b0709";
+const IVORY = "#efe5cf";
+const BARS = 0.1;
+const ROOM = "hammer-saleroom";
+/**
+ * The knock, as a fraction of the impact shot: 140ms in FULL and 98ms in
+ * FAST, either side of the hammer's contact 125ms into `ult:hammer-knock`.
+ */
+const HIT = 0.175;
+
+export const hammerPrice: Cinematic = {
+  id: "hammer-price",
+  heroId: "broker",
+  motif: "hammer-motif",
+  shots: [
+    /* 0 · CALL — the target is a lot. */
+    {
+      id: "call",
+      kind: "call",
+      purpose: "The round stops: the battlefield sinks to lacquer black, the Broker touches its cap, and the target stands on a sale block.",
+      space: "battlefield",
+      ms: 400,
+      fastMs: 240,
+      background: "battlefield",
+      lighting: { tint: [LACQUER, 0], letterbox: 0 },
+      toLighting: { tint: [LACQUER, 0.55], letterbox: BARS },
+      actors: [{ role: "caster", at: [0, 0], size: 0, clip: "ult:hammer-call" }],
+      vfx: [
+        { kind: "hammer-block", at: 0.2, until: 1, anchor: "targets", layer: "back", params: { mode: "call", w: 0.5, uw: 0.55 } },
+        { kind: "call-aura", at: 0, until: 1, anchor: "caster", color: TYRIAN },
+      ],
+      sound: [
+        { at: 0, sfx: "ult-call" },
+        { at: 0.42, sfx: "hammer-rap" },
+      ],
+      duck: [{ at: 0, level: 0.3, ms: 4800 }],
+      markers: [{ at: 0, label: "called" }],
+    },
+
+    /* 1 · THE NOD — face close-up. */
+    {
+      id: "nod",
+      kind: "face-close-up",
+      purpose: "Identity. The Magnate bids with its chin.",
+      space: "cinematic",
+      ms: 620,
+      fastMs: 400,
+      transition: { kind: "black", ms: 60 },
+      camera: {
+        from: { x: 830, y: 610, zoom: 1.95, rotate: -6 },
+        to: { x: 836, y: 614, zoom: 2.08, rotate: -3 },
+        ease: "out",
+      },
+      background: ROOM,
+      lighting: { exposure: 0.5, rim: [TYRIAN, 0.4, 1], vignette: 0.66, letterbox: BARS },
+      toLighting: { exposure: 0.42, rim: [TYRIAN, 0.5, 1], vignette: 0.66, letterbox: BARS },
+      actors: [
+        { role: "caster", at: [640, 1330], size: 1100, clip: "ult:hammer-nod", then: "ult:hammer-nod", look: "rim", rim: TYRIAN, root: false },
+      ],
+      vfx: [{ kind: "hammer-paddles", at: 0, until: 1, layer: "back", params: { keys: "0:0 0.46:0 0.7:0.1", soft: 1 } }],
+      // The tock lands on the nod, 294ms into the clip, which plays at one rate in both cuts.
+      sound: [
+        { at: 0.087, sfx: "hammer-nod", mode: "full" },
+        { at: 0.135, sfx: "hammer-nod", mode: "fast" },
+      ],
+      text: [{ kind: "voice", at: 0.12, until: 1, text: "$voice.activation" }],
+      markers: [{ at: 0.46, label: "nod" }],
+    },
+
+    /* 2 · THE ROOM — wide. */
+    {
+      id: "room",
+      kind: "wide-hero",
+      purpose: "Stakes and escalation: every rival outbid, row by row; the hammer swells; the lot braces. Title.",
+      space: "cinematic",
+      ms: 1000,
+      fastMs: 520,
+      transition: { kind: "whip", ms: 110, dir: 1 },
+      camera: {
+        from: { x: 790, y: 540, zoom: 1.06 },
+        to: { x: 810, y: 520, zoom: 1.12 },
+        ease: "inOut",
+      },
+      background: ROOM,
+      lighting: { exposure: 0.9, rim: [TYRIAN, 0.7, 1], vignette: 0.4, letterbox: BARS },
+      toLighting: { exposure: 0.45, rim: [TYRIAN, 0.85, 1], vignette: 0.62, letterbox: BARS },
+      actors: [
+        { role: "target", at: [1150, 850], size: 250, face: -1, z: 1, react: [{ at: 0.5, clip: "anticipate", then: "idle" }] },
+        { role: "caster", at: [330, 880], size: 600, clip: "ult:hammer-outbid", look: "rim", rim: TYRIAN, z: 3 },
+      ],
+      vfx: [
+        { kind: "hammer-paddles", at: 0, until: 1, layer: "back", params: { keys: "0:0.07 0.18:0.07 0.3:0.33 0.43:0.33 0.55:0.64 0.68:0.64 0.8:0.93 1:0.95" } },
+        { kind: "hammer-block", at: 0, until: 1, follow: "target", layer: "back", params: { mode: "stand", w: 0.72 } },
+      ],
+      sound: [
+        { at: 0.1, sfx: "hammer-motif" },
+        { at: 0.18, sfx: "hammer-slaps", mode: "full" },
+        { at: 0.18, sfx: "hammer-slaps-fast", mode: "fast" },
+      ],
+      text: [
+        { kind: "name", at: 0.42, until: 1, text: "$name", x: 0.5, y: 0.2 },
+        { kind: "epithet", at: 0.5, until: 1, text: "$epithet", x: 0.5, y: 0.29 },
+      ],
+      markers: [{ at: 0.42, label: "title" }],
+    },
+
+    /* 3 · GOING TWICE — low angle. */
+    {
+      id: "hoist",
+      kind: "low-angle",
+      purpose: "Anticipation: the hammer hoisted at its full price over the lot, which cowers.",
+      space: "cinematic",
+      ms: 540,
+      fastMs: 340,
+      transition: { kind: "cut" },
+      camera: {
+        from: { x: 760, y: 520, zoom: 1.2, rotate: 7 },
+        to: { x: 764, y: 512, zoom: 1.28, rotate: 10 },
+        ease: "out",
+      },
+      background: ROOM,
+      lighting: { exposure: 0.4, rim: [TYRIAN, 0.9, 1], vignette: 0.7, letterbox: BARS },
+      toLighting: { exposure: 0.3, rim: [HOT, 1, 1], vignette: 0.78, letterbox: BARS },
+      actors: [
+        { role: "caster", at: [560, 1000], size: 700, clip: "ult:hammer-hoist", then: "ult:hammer-hoist", look: "rim", rim: TYRIAN, z: 3 },
+        { role: "target", at: [1150, 900], size: 480, face: -1, z: 5, look: "rim", rim: TYRIAN, react: [{ at: 0.3, clip: "block", then: "block" }] },
+      ],
+      vfx: [{ kind: "hammer-paddles", at: 0, until: 1, layer: "back", params: { keys: "0:0.95 0.6:0.99" } }],
+      sound: [{ at: 0, sfx: "hammer-hoist" }],
+      markers: [{ at: 0.35, label: "hoisted" }],
+    },
+
+    /* 4 · THE LAST PADDLE — the quiet. */
+    {
+      id: "last",
+      kind: "extreme-close-up",
+      purpose: "The quiet: one paddle left up in the black, trembling, and lowered. Nobody else.",
+      space: "cinematic",
+      ms: 560,
+      fastMs: 380,
+      transition: { kind: "cut" },
+      camera: { from: { x: 800, y: 450, zoom: 1.35 }, to: { x: 800, y: 452, zoom: 1.38 }, ease: "linear" },
+      background: ROOM,
+      lighting: { exposure: 0.2, vignette: 0.9, letterbox: 0.13 },
+      toLighting: { exposure: 0.08, vignette: 0.94, letterbox: 0.14 },
+      vfx: [{ kind: "hammer-last", at: 0, until: 1, x: 800, y: 540, layer: "front", params: { give: 0.56 } }],
+      duck: [{ at: 0, level: 0.04, ms: 620 }],
+      sound: [
+        { at: 0.06, sfx: "hammer-tremble" },
+        { at: 0.34, sfx: "hammer-tremble", mode: "full" },
+      ],
+      markers: [{ at: 0.56, label: "it gives" }],
+    },
+
+    /* 5 · GONE — impact. */
+    {
+      id: "gone",
+      kind: "impact",
+      purpose: "Impact: the hammer on the lot, the block split under it. Sold.",
+      space: "cinematic",
+      ms: 800,
+      fastMs: 560,
+      transition: { kind: "cut" },
+      camera: {
+        from: { x: 820, y: 630, zoom: 1.34, rotate: -6 },
+        to: { x: 820, y: 640, zoom: 1.24, rotate: -2 },
+        ease: "out",
+      },
+      background: ROOM,
+      lighting: { exposure: 1, tint: [TYRIAN, 0.28], back: [TYRIAN, 0.9], rim: [HOT, 1, 1], vignette: 0.32, letterbox: BARS },
+      toLighting: { exposure: 0.6, tint: [TYRIAN, 0], back: [TYRIAN, 0.26], rim: [TYRIAN, 0.7, 1], vignette: 0.44, letterbox: BARS },
+      actors: [
+        { role: "caster", at: [560, 980], size: 720, clip: "ult:hammer-knock", then: "ult:hammer-knock", look: "rim", rim: TYRIAN, z: 3 },
+        { role: "target", at: [1000, 900], size: 400, face: -1, z: 1, react: [{ at: HIT, clip: "hurt" }], shove: { at: HIT, by: [16, 24] }, toTilt: 6 },
+      ],
+      vfx: [
+        { kind: "hammer-glow", at: 0, until: 1, follow: "target", layer: "back" },
+        { kind: "hammer-block", at: 0, until: 1, follow: "target", layer: "back", params: { mode: "split", hit: HIT, w: 0.72 } },
+        { kind: "hammer-knock", at: HIT, until: 0.75, follow: "target", layer: "back", params: { half: "back", ox: -0.06, oy: -0.62, size: 0.9 } },
+        { kind: "hammer-knock", at: HIT, until: 0.75, follow: "target", layer: "front", params: { half: "front", ox: -0.06, oy: -0.62, size: 0.9 } },
+        { kind: "hammer-splinters", at: HIT, until: 0.85, follow: "target", layer: "front", params: { count: 24 } },
+      ],
+      screen: [{ kind: "two-tone", at: HIT, ms: 70 }],
+      stop: [{ at: HIT, ms: 150 }],
+      sound: [
+        { at: 0.09, sfx: "hammer-swing" },
+        { at: HIT - 0.004, sfx: "hammer-impact" },
+      ],
+      shake: [
+        { at: HIT, amount: 0.034 },
+        { at: 0.4, amount: 0.011 },
+      ],
+      reveal: [{ at: HIT, reveal: "impact" }],
+      text: [
+        { kind: "impact", at: HIT + 0.01, until: 0.9, text: "$damage", x: 0.66, y: 0.2, rotate: 5 },
+        { kind: "voice", at: 0.36, until: 1, text: "$voice.impact" },
+      ],
+      markers: [{ at: HIT, label: "sold" }],
+    },
+
+    /* 6 · KNOCKED DOWN — return. */
+    {
+      id: "knocked-down",
+      kind: "return",
+      purpose: "Release: the split block under the real target, and every other real enemy outbid.",
+      space: "battlefield",
+      ms: 820,
+      fastMs: 520,
+      transition: { kind: "flash", ms: 70 },
+      background: "battlefield",
+      lighting: { tint: [LACQUER, 0.42], letterbox: BARS },
+      toLighting: { tint: [LACQUER, 0], letterbox: 0 },
+      actors: [{ role: "caster", at: [0, 0], size: 0, clip: "ult:hammer-settle" }],
+      vfx: [
+        { kind: "hammer-block", at: 0, until: 1, anchor: "targets", params: { mode: "board", w: 0.5, uw: 0.55 } },
+        { kind: "hammer-outbid", at: 0, until: 1, layer: "screen" },
+      ],
+      sound: [
+        { at: 0.2, sfx: "hammer-down" },
+        { at: 0.62, sfx: "ult-tail" },
+      ],
+      reveal: [{ at: 0.58, reveal: "all" }],
+      text: [{ kind: "voice", at: 0.14, until: 1, text: "$voice.after" }],
+      markers: [{ at: 0.3, label: "outbid" }],
+    },
+  ],
+};
+
+void IVORY;

@@ -1,0 +1,362 @@
+/*
+ * Hammer Price — effects and space.
+ *
+ * Lacquer black, walnut, cane, paddle ivory, and one Tyrian for the Magnate's
+ * hammer and what it does. No filters and no keyframes: paths are rebuilt on
+ * the combat clock (`vfx.tsx`), and light is a gradient or a translucent fill,
+ * never a blur.
+ */
+
+/* ---- the saleroom ---- */
+.hammer-coffer {
+  fill: #0f090b;
+  stroke: #1c1215;
+  stroke-width: 6;
+}
+.hammer-panel {
+  fill: none;
+  stroke: #24171a;
+  stroke-width: 5;
+}
+.hammer-pilaster {
+  fill: #150d0e;
+  stroke: #26181a;
+  stroke-width: 3;
+}
+.hammer-cornice {
+  fill: #1c1113;
+}
+.hammer-dado {
+  fill: #1a1012;
+}
+.hammer-skirting {
+  fill: #0a0607;
+}
+.hammer-rostrum-body {
+  fill: #0c0708;
+  stroke: #2b1b1f;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+.hammer-rostrum-desk {
+  fill: #140c0e;
+  stroke: #33212a;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.hammer-rostrum-panel {
+  fill: #0f090b;
+}
+.hammer-rostrum-line {
+  fill: none;
+  stroke: #3a2a26;
+  stroke-width: 2;
+}
+.hammer-rostrum-block {
+  fill: #20141a;
+  stroke: #3a2730;
+  stroke-width: 2;
+}
+.hammer-rostrum-steps {
+  fill: #0d0809;
+  stroke: #22161a;
+  stroke-width: 2;
+}
+.hammer-seams {
+  fill: none;
+  stroke: #0a0606;
+  stroke-width: 4;
+}
+.hammer-ends {
+  fill: none;
+  stroke: #0a0606;
+  stroke-width: 3;
+}
+.hammer-chandelier {
+  fill: none;
+  stroke: #1d1316;
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+.hammer-chandelier-drops {
+  fill: #1a1114;
+  stroke: #0a0607;
+  stroke-width: 2;
+}
+.hammer-chandelier-glint {
+  fill: #efe5cf;
+  opacity: 0.35;
+}
+
+/* ---- effect boxes ---- */
+.hammer-box,
+.hammer-world {
+  overflow: visible;
+}
+.cine-vfx > .hammer-box {
+  left: -500px;
+  top: -500px;
+  width: 1000px;
+  height: 1000px;
+  transform: none;
+}
+.cine-vfx > .hammer-world {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  transform: none !important;
+}
+
+/* ---- the paddles and the chairs ---- */
+.hammer-halo {
+  fill: #efe5cf;
+  opacity: 0.09;
+}
+.hammer-handle {
+  fill: none;
+  stroke: #0b0709;
+  stroke-linecap: round;
+}
+.hammer-paddle {
+  fill: #efe5cf;
+  stroke: #0b0709;
+  stroke-linejoin: round;
+}
+.hammer-paddle-mark {
+  fill: none;
+  stroke: #6e5638;
+  opacity: 0.8;
+}
+.hammer-chair {
+  fill: none;
+  stroke: #1a100d;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.hammer-chair-legs {
+  fill: none;
+  stroke: #120b09;
+  stroke-linecap: round;
+}
+/* Behind a close-up the room is out of the lens's reach: no ink, dimmer, more light. */
+.hammer-soft .hammer-paddle {
+  stroke: none;
+  opacity: 0.55;
+}
+.hammer-soft .hammer-paddle-mark,
+.hammer-soft .hammer-handle {
+  opacity: 0.25;
+}
+.hammer-soft .hammer-halo {
+  opacity: 0.12;
+}
+.hammer-chair-cane {
+  fill: #6e5638;
+  opacity: calc(0.08 + var(--lit, 0) * 0.34);
+}
+
+/* ---- the last paddle ---- */
+.hammer-last-halo {
+  fill: url(#hammer-last-light);
+  opacity: 0.9;
+}
+.hammer-last-handle {
+  fill: none;
+  stroke: #0b0709;
+  stroke-width: 40;
+  stroke-linecap: round;
+}
+.hammer-last-grain {
+  fill: none;
+  stroke: #2a1a1e;
+  stroke-width: 6;
+}
+.hammer-last-face {
+  fill: #efe5cf;
+  stroke: #0b0709;
+  stroke-width: 14;
+}
+.hammer-last-mark {
+  fill: none;
+  stroke: #6e5638;
+  stroke-width: 12;
+}
+.hammer-last-card {
+  fill: none;
+  stroke: #d8cbb0;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.hammer-last-catch {
+  fill: none;
+  stroke: #efe5cf;
+  stroke-width: 10;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+.hammer-last-chair {
+  fill: none;
+  stroke: #1a100d;
+  stroke-width: 44;
+  stroke-linejoin: round;
+}
+.hammer-last-cane {
+  fill: #6e5638;
+  opacity: 0.22;
+}
+.hammer-last-sleeve {
+  fill: #140c10;
+  stroke: #0b0709;
+  stroke-width: 10;
+  stroke-linejoin: round;
+}
+.hammer-last-cuff {
+  fill: #cfc4ad;
+  stroke: #0b0709;
+  stroke-width: 8;
+  stroke-linejoin: round;
+}
+.hammer-last-glove {
+  fill: #221519;
+  stroke: #0b0709;
+  stroke-width: 12;
+  stroke-linejoin: round;
+}
+.hammer-last-knuckles,
+.hammer-last-thumb {
+  fill: none;
+  stroke: #3e2a30;
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+.hammer-last-lit {
+  fill: none;
+  stroke: #fffaf0;
+  stroke-width: 10;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+
+/* ---- the sale block ---- */
+.hammer-block-shadow {
+  fill: #000;
+  opacity: 0.55;
+}
+.hammer-block-side {
+  fill: #0d0709;
+  stroke: #0b0709;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.hammer-block-top {
+  fill: #1f1318;
+  stroke: #0b0709;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.hammer-block-rim {
+  fill: none;
+  stroke: #efe5cf;
+  stroke-width: 2.4;
+  opacity: 0.35;
+}
+.hammer-block-inner {
+  fill: #e05bd8;
+  opacity: calc(0.3 + var(--glow, 0) * 0.7);
+}
+.hammer-block-split {
+  fill: none;
+  stroke: #ffd6f6;
+  stroke-width: 5;
+  stroke-linejoin: round;
+  opacity: var(--glow, 0);
+}
+
+/* ---- the knock ---- */
+.hammer-knock-grain {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.hammer-knock-grain.thick {
+  stroke: #e05bd8;
+  stroke-width: calc(22px - var(--k, 0) * 14px);
+}
+.hammer-knock-grain.thin {
+  stroke: #0b0709;
+  stroke-width: calc(12px - var(--k, 0) * 7px);
+}
+.hammer-knock-wedge {
+  fill: #0b0709;
+  stroke: #e05bd8;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+.hammer-knock-stamp {
+  fill: #ffd6f6;
+  stroke: #e05bd8;
+  stroke-width: 8;
+}
+.hammer-knock-split {
+  fill: none;
+  stroke: #0b0709;
+  stroke-width: 14;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.hammer-knock.front .hammer-knock-split {
+  filter: none;
+}
+
+/* ---- splinters ---- */
+.hammer-splinter-body {
+  fill: #140b0e;
+}
+.hammer-splinter-edge {
+  fill: none;
+  stroke: #e05bd8;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+
+/* ---- the light behind the lot ---- */
+.cine-vfx > .hammer-glow {
+  left: calc(var(--ah, 160px) * -0.2);
+  top: calc(var(--ah, 160px) * -0.95);
+  width: calc(var(--ah, 160px) * 3);
+  height: calc(var(--ah, 160px) * 2.6);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 55%, #ffd6f6 0%, #e05bd8 34%, rgba(224, 91, 216, 0) 70%);
+  opacity: 0.92;
+}
+
+/* ---- the room outbid, on the board ---- */
+.cine-screen > .cine-vfx > .hammer-outbid {
+  inset: 0;
+}
+.hammer-outbid-one {
+  position: absolute;
+  overflow: visible;
+}
+.hammer-outbid-halo {
+  fill: #efe5cf;
+  opacity: 0.8;
+  fill-opacity: 0.16;
+}
+.hammer-outbid-handle {
+  fill: none;
+  stroke: #0b0709;
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+.hammer-outbid-face {
+  fill: #efe5cf;
+  stroke: #0b0709;
+  stroke-width: 4;
+}
+.hammer-outbid-mark {
+  fill: none;
+  stroke: #e05bd8;
+  stroke-width: 3;
+}
