@@ -59,8 +59,7 @@ const bowedRow = (at: [number, number], size: number, spread: [number, number], 
   spread,
   size,
   face: -1,
-  look: "rim",
-  rim: LAMP,
+  look: "lit",
   z: 2,
   react: [
     { at: 0, clip: "anticipate" },
@@ -77,8 +76,7 @@ const stooping = (at: [number, number], size: number): ActorCue => ({
   size,
   clip: "ult:bowed-down",
   then: "ult:bowed-down",
-  look: "rim",
-  rim: LAMP,
+  look: "lit",
   z: 3,
 });
 
@@ -88,8 +86,7 @@ const watching = (at: [number, number], size: number, spread: [number, number]):
   spread,
   size,
   face: -1,
-  look: "rim",
-  rim: LAMP,
+  look: "lit",
   z: 2,
   react: [{ at: 0.3, clip: "anticipate" }],
 });
@@ -135,8 +132,8 @@ export const everyHeadBowed: Cinematic = {
       fastMs: 380,
       transition: { kind: "black", ms: 50 },
       camera: {
-        from: { x: 770, y: 720, zoom: 2.05, rotate: -7 },
-        to: { x: 766, y: 690, zoom: 2.2, rotate: -4 },
+        from: { x: 790, y: 800, zoom: 1.45, rotate: -7 },
+        to: { x: 786, y: 770, zoom: 1.55, rotate: -4 },
         ease: "out",
       },
       background: "bowed-late",
@@ -147,8 +144,8 @@ export const everyHeadBowed: Cinematic = {
       ],
       vfx: [
         { kind: "bowed-light", at: 0, until: 1, layer: "back", params: { size: 1300, strength: 1 } },
-        field("lift", "back", "420,495,700,394", { radius: 700 }),
-        field("lift", "front", "420,495,700,394", { radius: 700 }),
+        field("lift", "back", "240,490,1100,620", { radius: 700 }),
+        field("lift", "front", "240,490,1100,620", { radius: 700 }),
       ],
       sound: [
         { at: 0.05, sfx: "bowed-chain" },
@@ -174,10 +171,10 @@ export const everyHeadBowed: Cinematic = {
         ease: "inOut",
       },
       background: "bowed-late",
-      lighting: { exposure: 0.55, rim: [LAMP, 0.7, -1], vignette: 0.5, letterbox: BARS },
-      toLighting: { exposure: 0.6, rim: [LAMP, 0.8, -1], vignette: 0.45, letterbox: BARS },
+      lighting: { exposure: 0.55, rim: [LAMP, 0.25, -1], vignette: 0.5, letterbox: BARS },
+      toLighting: { exposure: 0.6, rim: [LAMP, 0.3, -1], vignette: 0.45, letterbox: BARS },
       actors: [
-        { role: "caster", at: [330, 770], size: 290, clip: "ult:bowed-swing", then: "ult:bowed-swing", look: "rim", rim: LAMP, z: 3 },
+        { role: "caster", at: [330, 770], size: 290, clip: "ult:bowed-swing", then: "ult:bowed-swing", look: "lit", z: 3 },
         watching([1170, 770], 290, [190, -4]),
       ],
       vfx: [
@@ -191,8 +188,8 @@ export const everyHeadBowed: Cinematic = {
         { at: 0.18, sfx: "bowed-turn" },
       ],
       text: [
-        { kind: "name", at: 0.25, until: 1, text: "$name", x: 0.06, y: 0.72 },
-        { kind: "epithet", at: 0.35, until: 1, text: "$epithet", x: 0.06, y: 0.81 },
+        { kind: "name", at: 0.25, until: 1, text: "$name", x: 0.06, y: 0.16 },
+        { kind: "epithet", at: 0.35, until: 1, text: "$epithet", x: 0.06, y: 0.25 },
       ],
       markers: [
         { at: 0.3, label: "swung back" },
@@ -206,7 +203,7 @@ export const everyHeadBowed: Cinematic = {
             ease: "inOut",
           },
           actors: [
-            { role: "caster", at: [330, 770], size: 280, clip: "ult:bowed-swing", then: "ult:bowed-swing", look: "rim", rim: LAMP, z: 3 },
+            { role: "caster", at: [330, 770], size: 280, clip: "ult:bowed-swing", then: "ult:bowed-swing", look: "lit", z: 3 },
             watching([1180, 770], 270, [220, -4]),
           ],
         },
@@ -217,7 +214,7 @@ export const everyHeadBowed: Cinematic = {
             ease: "inOut",
           },
           actors: [
-            { role: "caster", at: [300, 790], size: 270, clip: "ult:bowed-swing", then: "ult:bowed-swing", look: "rim", rim: LAMP, z: 3 },
+            { role: "caster", at: [300, 790], size: 270, clip: "ult:bowed-swing", then: "ult:bowed-swing", look: "lit", z: 3 },
             watching([1220, 800], 240, [260, -4]),
           ],
           vfx: [
@@ -240,8 +237,8 @@ export const everyHeadBowed: Cinematic = {
       fastMs: 400,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 756, y: 476, zoom: 3.0, rotate: 0 },
-        to: { x: 758, y: 482, zoom: 3.08, rotate: 0 },
+        from: { x: 786, y: 486, zoom: 3.3, rotate: 0 },
+        to: { x: 788, y: 492, zoom: 3.4, rotate: 0 },
         ease: "linear",
       },
       background: "bowed-late",
@@ -283,6 +280,7 @@ export const everyHeadBowed: Cinematic = {
       actors: [stooping([250, 930], 560), bowedRow([1020, 830], 330, [210, -6], 18, 9)],
       vfx: [
         { kind: "bowed-light", at: 0, until: 1, layer: "back", params: { size: 1500, strength: 1, flareAt: 0.1 } },
+        { kind: "bowed-glare", at: 0, until: 1, layer: "back", params: { at: 0.1, x: 1150, y: 640, w: 1500, h: 760, hold: 0.3, until: 0.6 } },
         field("bow", "back", "190,250,1280,720", { radius: 1400, bowAt: 0.1 }),
         field("bow", "front", "190,250,1280,720", { radius: 1400, bowAt: 0.1 }),
         { kind: "bowed-blight", at: 0, until: 1, layer: "front", params: { at: 0.1, until: 0.75 } },
@@ -322,6 +320,7 @@ export const everyHeadBowed: Cinematic = {
           actors: [stooping([250, 960], 520), bowedRow([1130, 880], 290, [280, -6], 8, 4)],
           vfx: [
             { kind: "bowed-light", at: 0, until: 1, layer: "back", params: { size: 1700, strength: 1, flareAt: 0.1 } },
+            { kind: "bowed-glare", at: 0, until: 1, layer: "back", params: { at: 0.1, x: 1250, y: 560, w: 1900, h: 1100, hold: 0.3, until: 0.6 } },
             field("bow", "back", "40,40,1720,968", { radius: 1600, bowAt: 0.1 }),
             field("bow", "front", "40,40,1720,968", { radius: 1600, bowAt: 0.1 }),
             { kind: "bowed-blight", at: 0, until: 1, layer: "front", params: { at: 0.1, until: 0.75 } },

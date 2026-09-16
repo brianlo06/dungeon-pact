@@ -115,12 +115,12 @@ const hush: Clip = {
   duration: 620,
   poses: [{ at: 0 }, { at: 1 }],
   parts: {
+    // The lantern stays above the frame; its going down is the light sliding off the face.
     staff: [
       { at: 0, rotate: 38, y: HIGH.y },
-      { at: 0.4, rotate: 44, y: HIGH.y + 0.02 },
-      { at: 1, rotate: 80, y: 0.02 },
+      { at: 1, rotate: 42, y: HIGH.y - 0.02 },
     ],
-    lantern: [hang(0, 38), hang(0.4, 44, 3), hang(1, 80, -6)],
+    lantern: [hang(0, 38), hang(1, 42, 3)],
     head: [
       { at: 0, rotate: -5, y: 0 },
       { at: 0.4, rotate: -4, y: 0 },

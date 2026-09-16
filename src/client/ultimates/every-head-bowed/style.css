@@ -99,8 +99,7 @@
   stroke-width: 2;
 }
 .bowed-rot-bloom {
-  fill: #d9d4c3;
-  opacity: 0;
+  display: none;
 }
 .bowed-dry {
   fill: #4a3218;
@@ -108,7 +107,7 @@
   stroke-linejoin: round;
 }
 .bowed-rot-specks {
-  fill: #d9d4c3;
+  fill: #a8a290;
   opacity: 0;
 }
 /* The field's back band sits further off: a little less contrast. */
@@ -190,11 +189,11 @@
   fill: #0b0806;
 }
 .bowed-lesion-bloom {
-  fill: #cfc9b6;
+  fill: #736e5f;
 }
 .bowed-lesion-seed {
-  fill: #d9d4c3;
-  opacity: 0.8;
+  fill: #cfc9b6;
+  opacity: 0.85;
 }
 
 /* ---- seed ---- */
@@ -207,8 +206,8 @@
   stroke-width: 0.8;
 }
 .bowed-seed-stripe {
-  stroke: #cfc8b4;
-  stroke-width: 1.2;
+  stroke: #5d574a;
+  stroke-width: 1;
   fill: none;
 }
 

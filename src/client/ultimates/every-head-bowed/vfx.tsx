@@ -157,10 +157,10 @@ function specs(set: string, band: string): Spec[] {
     // Low at the soil down a drilled row: heads high over everyone, so when
     // they fall they hang over the row.
     if (band === "back") {
-      row(13, 0.2, 1.08, 0.66, 0.7, 0.4, 0.46, 0.028, 0.033);
-      row(10, 0.28, 1.08, 0.74, 0.79, 0.58, 0.66, 0.04, 0.046);
+      row(13, 0.2, 1.08, 0.66, 0.7, 0.3, 0.36, 0.034, 0.04);
+      row(10, 0.28, 1.08, 0.74, 0.79, 0.4, 0.46, 0.046, 0.052);
     } else {
-      row(4, 0.34, 1.1, 1.08, 1.16, 0.88, 0.98, 0.058, 0.066, (u) => u > 0.46 && u < 0.92);
+      row(4, 0.34, 1.1, 1.08, 1.16, 0.7, 0.78, 0.062, 0.07, (u) => u > 0.46 && u < 0.92);
     }
   }
   return out;
@@ -205,12 +205,12 @@ function petalRing(r: number) {
 function mouldSpecks(r: number, seed: number) {
   const rand = seeded(seed);
   let d = "";
-  for (let i = 0; i < 9; i++) {
+  for (let i = 0; i < 6; i++) {
     const a = rand() * Math.PI * 2;
-    const k = 0.2 + rand() * 0.7;
-    const x = Math.cos(a) * r * 0.3 * k;
-    const y = Math.sin(a) * r * 0.62 * k;
-    const s = r * (0.04 + rand() * 0.05);
+    const k = 0.55 + rand() * 0.4;
+    const x = Math.cos(a) * r * 0.36 * k;
+    const y = Math.sin(a) * r * 0.72 * k;
+    const s = r * (0.025 + rand() * 0.03);
     d += `M${f1(x - s)} ${f1(y)} a${f1(s)} ${f1(s * 0.8)} 0 1 0 ${f1(s * 2)} 0 a${f1(s)} ${f1(s * 0.8)} 0 1 0 ${f1(-s * 2)} 0 Z`;
   }
   return d;
@@ -290,7 +290,7 @@ const Field = ({ cue }: VfxProps): ReactNode => {
                 <g className="bowed-rot">
                   <path className="bowed-dry" d={petalRing(pl.r * 0.78)} strokeWidth={f1(Math.max(1, pl.r * 0.035))} />
                   <path className="bowed-rot-black" d={blob(pl.r * 0.5, pl.r * 0.95, i * 7 + 3, 11)} strokeWidth={f1(Math.max(1.5, pl.r * 0.06))} />
-                  <path className="bowed-rot-bloom" d={blob(pl.r * 0.24, pl.r * 0.42, i * 5 + 1)} transform={`translate(${f1(pl.r * 0.08)} ${f1(pl.r * 0.18)})`} />
+                  <path className="bowed-rot-bloom" d={blob(pl.r * 0.5, pl.r * 0.95, i * 7 + 3, 11)} fill="none" strokeWidth={f1(Math.max(1.2, pl.r * 0.07))} />
                   <path className="bowed-rot-specks" d={mouldSpecks(pl.r, i * 13 + 5)} />
                 </g>
               </g>
@@ -353,22 +353,24 @@ const field: Frame = (el, p, age) => {
     state!.angle[i] = next;
     // Hung: straight down, a little towards where the light went.
     const side = lamp[0] < nx ? 1 : -1;
-    const hung = 90 + side * (14 + (off % 7)) - side * 6 * ease("back", settle);
+    const hung = 90 + side * (38 + (off % 9)) - side * 8 * ease("back", settle);
     const down = Math.max(fall, bowed);
     const angle = next + turnTo(next, hung) * down;
     const rad = (angle * Math.PI) / 180;
     // The neck arches over as it gives up, and the head hangs off the arch.
-    const topX = nx + Math.cos(rad) * r * 0.55 * down;
-    const topY = ny - r * 0.3 * down;
-    const reach = 0.42 + 0.2 * down;
+    const sx = Math.cos(rad) < 0 ? -1 : 1;
+    const topX = nx + sx * r * 0.75 * down;
+    const topY = ny - r * 0.5 * down;
+    const reach = 0.42 + 0.4 * down;
     const cx = topX + Math.cos(rad) * r * reach;
     const cy = topY + Math.sin(rad) * r * reach;
-    const stalk = `M${f1(x)} ${f1(y)} Q${f1(x + lean * h * 0.2)} ${f1(y - h * 0.62)} ${f1(nx)} ${f1(ny + r * 0.2)} Q${f1(nx)} ${f1(topY - r * 0.25 * down)} ${f1(topX)} ${f1(topY)}`;
+    const stalk = `M${f1(x)} ${f1(y)} Q${f1(x + lean * h * 0.2)} ${f1(y - h * 0.62)} ${f1(nx)} ${f1(ny + r * 0.2)} Q${f1(nx + sx * r * 0.1 * down)} ${f1(topY - r * 0.45 * down)} ${f1(topX)} ${f1(topY)}`;
     const kids = g.children;
     setAttr(kids[0], "d", stalk);
     setAttr(kids[1], "d", stalk);
     const head = kids[kids.length - 1] as SVGGElement;
-    setAttr(head, "transform", `translate(${f1(cx)} ${f1(cy)}) rotate(${f1(angle)})`);
+    // A hung head turns partly to the lens as it falls, so it reads as a face and not a cap.
+    setAttr(head, "transform", `translate(${f1(cx)} ${f1(cy)}) rotate(${f1(angle)}) scale(${f2(1 + 0.55 * down)} 1)`);
     // Lit by how near the lantern is.
     const dist = Math.hypot(lamp[0] - cx, lamp[1] - cy);
     const lit = clamp(1 - dist / radius);
@@ -452,12 +454,12 @@ const glare: Frame = (el, p) => {
 /** Lesions, as fractions of the painted box from its top-left: where the heads bowed onto it, high first. */
 const LESIONS = (() => {
   const rand = seeded(733);
-  return Array.from({ length: 11 }, (_, i) => ({
-    u: 0.18 + rand() * 0.64,
-    v: 0.05 + (i / 11) * 0.6 + rand() * 0.12,
-    s: 0.08 + rand() * 0.1,
+  return Array.from({ length: 16 }, (_, i) => ({
+    u: 0.15 + rand() * 0.7,
+    v: 0.04 + (i / 16) * 0.66 + rand() * 0.1,
+    s: 0.05 + rand() * 0.06,
     a: rand() * 180,
-    d: i / 11,
+    d: i / 16,
   }));
 })();
 
@@ -484,28 +486,28 @@ function buildRot(svg: SVGSVGElement, host: Element, cls: string) {
   let y0 = Infinity;
   let x1 = -Infinity;
   let y1 = -Infinity;
-  for (const child of [...svg.children]) {
-    if (child.tagName === "defs" || child.tagName === "title" || !(child instanceof SVGGraphicsElement)) continue;
-    const copy = child.cloneNode(true) as SVGElement;
-    for (const n of [copy, ...copy.querySelectorAll<SVGElement>("*")]) {
-      n.removeAttribute("id");
-      n.removeAttribute("filter");
-      n.removeAttribute("class");
-      n.style?.removeProperty("filter");
-      n.style?.removeProperty("animation");
-      n.style?.removeProperty("opacity");
-      n.removeAttribute("opacity");
-      n.removeAttribute("mask");
-    }
-    copy.querySelectorAll("defs, text, title").forEach((n) => n.remove());
+  // A clip may hold only shapes, so the drawing is flattened: every filled,
+  // visible shape, with the transforms above it baked into one matrix.
+  const base = svg.getScreenCTM();
+  for (const shape of svg.querySelectorAll<SVGGeometryElement>("path, rect, circle, ellipse, polygon, polyline")) {
+    if (shape.closest("defs, clipPath, mask, pattern, symbol, marker")) continue;
+    if (!shape.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue;
+    if (getComputedStyle(shape).fill === "none") continue;
+    const own = shape.getScreenCTM();
+    if (!base || !own) continue;
+    const m = base.inverse().multiply(own);
+    const copy = shape.cloneNode(false) as SVGElement;
+    for (const a of ["id", "class", "style", "filter", "mask", "opacity", "stroke", "fill", "clip-path", "transform"]) copy.removeAttribute(a);
+    copy.setAttribute("transform", `matrix(${[m.a, m.b, m.c, m.d, m.e, m.f].map((n) => n.toFixed(3)).join(" ")})`);
     clip.appendChild(copy);
     try {
-      const b = child.getBBox();
-      if (b.width && b.height) {
-        x0 = Math.min(x0, b.x);
-        y0 = Math.min(y0, b.y);
-        x1 = Math.max(x1, b.x + b.width);
-        y1 = Math.max(y1, b.y + b.height);
+      const b = shape.getBBox();
+      for (const [px, py] of [[b.x, b.y], [b.x + b.width, b.y], [b.x, b.y + b.height], [b.x + b.width, b.y + b.height]]) {
+        const q = new DOMPoint(px, py).matrixTransform(m);
+        x0 = Math.min(x0, q.x);
+        y0 = Math.min(y0, q.y);
+        x1 = Math.max(x1, q.x);
+        y1 = Math.max(y1, q.y);
       }
     } catch {
       /* not rendered */
@@ -525,9 +527,8 @@ function buildRot(svg: SVGSVGElement, host: Element, cls: string) {
     const cy = y0 + l.v * H;
     const rr = l.s * S;
     inner += `<g class="bowed-lesion" data-i="${i}" data-d="${l.d.toFixed(2)}" transform="translate(${f1(cx)} ${f1(cy)}) rotate(${f1(l.a)})">
-      <path class="bowed-lesion-bloom" d="${blob(rr * 1.35, rr * 1.0, i * 31 + 7, 10)}"/>
+      <path class="bowed-lesion-bloom" d="${blob(rr * 1.14, rr * 0.84, i * 31 + 7, 10)}"/>
       <path class="bowed-lesion-black" d="${blob(rr, rr * 0.72, i * 17 + 3, 9)}"/>
-      <path class="bowed-lesion-seed" d="${blob(rr * 0.22, rr * 0.16, i * 3 + 1, 6)}" transform="translate(${f1(rr * 0.3)} ${f1(-rr * 0.12)})"/>
     </g>`;
   });
   const g = document.createElementNS(SVG, "g");
@@ -543,8 +544,8 @@ function buildRot(svg: SVGSVGElement, host: Element, cls: string) {
 
 /** How far the blight has taken a figure's overlay, 0 … 1. */
 function drawRot(over: SVGSVGElement, k: number, coat: number) {
-  setStyle(over.querySelector<SVGElement>(".bowed-coat"), "opacity", f2(coat * 0.5));
-  setStyle(over.querySelector<SVGElement>(".bowed-coat-top"), "opacity", f2(coat * 0.45));
+  setStyle(over.querySelector<SVGElement>(".bowed-coat"), "opacity", f2(coat * (0.4 + 0.2 * k)));
+  setStyle(over.querySelector<SVGElement>(".bowed-coat-top"), "opacity", f2(coat * (0.3 + 0.3 * k)));
   over.querySelectorAll<SVGGElement>(".bowed-lesion").forEach((g) => {
     const dd = Number(g.dataset.d);
     const kk = ease("out", span(k, dd * 0.55, dd * 0.55 + 0.45));
@@ -594,14 +595,15 @@ const blight: Frame = (el, p) => {
   const at = num(d, "at", 0.1);
   const k = span(p, at, num(d, "until", 0.7));
   const coat = p >= at ? 0.65 + 0.35 * ease("out", span(p, at, at + 0.2)) : 0;
-  rots.forEach((r, i) => drawRot(r, span(k, i * 0.06, 1), coat));
+  // A first bloom of it is on the figure the instant the heads come down.
+  rots.forEach((r, i) => drawRot(r, p >= at ? 0.3 + 0.7 * span(k, i * 0.06, 1) : 0, coat));
 };
 
 /* ── Seed shaken out of the heads ─────────────────────────────────────── */
 
 const SEEDS = (() => {
   const rand = seeded(97);
-  return Array.from({ length: 34 }, () => ({
+  return Array.from({ length: 22 }, () => ({
     u: (rand() - 0.5) * 1.5,
     v: -1.25 - rand() * 0.45,
     d: rand() * 0.5,
@@ -645,7 +647,7 @@ const seeds: Frame = (el, p, _age, ctx) => {
       if (!on) return;
       const x = who.x + sd.u * who.h * 0.5;
       const y = who.y + sd.v * who.h * 0.55 + k * k * who.h * 1.6 * sd.fall;
-      setAttr(s, "transform", `translate(${f1(x)} ${f1(Math.min(y, who.y))}) rotate(${f1(sd.spin * k)}) scale(${f2((sd.s * who.h) / 160)})`);
+      setAttr(s, "transform", `translate(${f1(x)} ${f1(Math.min(y, who.y))}) rotate(${f1(sd.spin * k)}) scale(${f2((sd.s * who.h) / 300)})`);
     });
   });
 };
@@ -672,7 +674,6 @@ const Board = ({ cue }: VfxProps): ReactNode => {
             <path className="bowed-dead-dry" d={petalRing(30)} />
             <ellipse className="bowed-dead-calyx" cx="-8" rx="12" ry="26" />
             <path className="bowed-dead-head" d={blob(15, 30, 5, 11)} />
-            <path className="bowed-dead-bloom" d={blob(6, 11, 9)} transform="translate(3 6)" />
           </g>
           <g className="bowed-board-drops">
             {[0, 1, 2, 3, 4].map((i) => (
