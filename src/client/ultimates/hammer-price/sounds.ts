@@ -55,11 +55,11 @@ export const voices: Record<string, Voice> = {
   "hammer-motif": {
     bus: "sfx",
     render: (c, o, t) => {
-      organ(c, o, t, [60, 64, 67], 0.026, 0.1, 0.14);
-      organ(c, o, t + 0.18, [62, 66, 69], 0.026, 0.1, 0.14);
-      organ(c, o, t + 0.36, [64, 68, 71], 0.028, 0.12, 0.16);
-      organ(c, o, t + 0.58, [53, 57, 60, 65], 0.03, 0.24, 0.5);
-      swell(c, o, t + 0.58, { type: "sine", freq: hz(33), gain: 0.05, attack: 0.04, hold: 0.3, release: 0.5, cutoff: 400 });
+      organ(c, o, t, [60, 64, 67], 0.018, 0.1, 0.14);
+      organ(c, o, t + 0.18, [62, 66, 69], 0.018, 0.1, 0.14);
+      organ(c, o, t + 0.36, [64, 68, 71], 0.019, 0.12, 0.16);
+      organ(c, o, t + 0.58, [53, 57, 60, 65], 0.02, 0.24, 0.5);
+      swell(c, o, t + 0.58, { type: "sine", freq: hz(33), gain: 0.04, attack: 0.04, hold: 0.3, release: 0.5, cutoff: 400 });
     },
   },
 
@@ -71,7 +71,7 @@ export const voices: Record<string, Voice> = {
       waves.forEach((w, n) => {
         for (let i = 0; i < 9; i++) {
           const k = i / 9;
-          slap(c, o, t + w + k * 0.12 + ((i * 37) % 7) * 0.003, 0.05 * (1 - n * 0.2) * (1 - k * 0.4), 1 - n * 0.12 + (i % 3) * 0.05);
+          slap(c, o, t + w + k * 0.12 + ((i * 37) % 7) * 0.003, 0.13 * (1 - n * 0.2) * (1 - k * 0.4), 1 - n * 0.12 + (i % 3) * 0.05);
         }
       });
     },
@@ -82,7 +82,7 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       [0, 0.13, 0.26].forEach((w, n) => {
-        for (let i = 0; i < 6; i++) slap(c, o, t + w + (i / 6) * 0.07, 0.05 * (1 - n * 0.2), 1 - n * 0.12 + (i % 3) * 0.05);
+        for (let i = 0; i < 6; i++) slap(c, o, t + w + (i / 6) * 0.07, 0.13 * (1 - n * 0.2), 1 - n * 0.12 + (i % 3) * 0.05);
       });
     },
   },
@@ -102,7 +102,7 @@ export const voices: Record<string, Voice> = {
     bus: "sfx",
     render: (c, o, t) => {
       for (let i = 0; i < 7; i++)
-        hit(c, o, t + i * 0.035 + (i % 2) * 0.008, { type: "triangle", from: 1900 + (i % 3) * 140, to: 1300, gain: 0.018 * (1 - i / 9), attack: 0.001, decay: 0.012 });
+        hit(c, o, t + i * 0.035 + (i % 2) * 0.008, { type: "triangle", from: 1900 + (i % 3) * 140, to: 1300, gain: 0.045 * (1 - i / 9), attack: 0.001, decay: 0.012 });
     },
   },
 
@@ -124,9 +124,9 @@ export const voices: Record<string, Voice> = {
   "hammer-impact": {
     bus: "sfx",
     render: (c, o, t) => {
-      rap(c, o, t, 0.62, 1.6);
-      crash(c, o, t, { seconds: 0.04, gain: 0.5, type: "highpass", freq: 2600, q: 0.5 });
-      hit(c, o, t, { type: "sine", from: 118, to: 26, gain: 0.9, attack: 0.002, decay: 0.8 });
+      rap(c, o, t, 0.46, 1.6);
+      crash(c, o, t, { seconds: 0.04, gain: 0.4, type: "highpass", freq: 2600, q: 0.5 });
+      hit(c, o, t, { type: "sine", from: 118, to: 26, gain: 0.78, attack: 0.002, decay: 0.8 });
       // The block: hollow, wooden, inharmonic, and splitting.
       hit(c, o, t + 0.004, { type: "triangle", from: 172, to: 150, gain: 0.34, attack: 0.002, decay: 0.42 });
       hit(c, o, t + 0.004, { type: "sine", from: 172 * 2.3, to: 172 * 2.1, gain: 0.16, attack: 0.002, decay: 0.28 });

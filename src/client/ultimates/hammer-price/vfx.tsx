@@ -130,9 +130,10 @@ const CHAIRS = ROWS.map((row) => {
   let cane = "";
   for (const c of row.chairs) {
     const x = c.x;
-    frame += `M${f1(x - 17 * s)} ${f1(y)} L${f1(x - 17 * s)} ${f1(y - 50 * s)} Q${f1(x - 17 * s)} ${f1(y - 68 * s)} ${f1(x)} ${f1(y - 68 * s)} Q${f1(x + 17 * s)} ${f1(y - 68 * s)} ${f1(x + 17 * s)} ${f1(y - 50 * s)} L${f1(x + 17 * s)} ${f1(y)} M${f1(x - 21 * s)} ${f1(y)} H${f1(x + 21 * s)} `;
-    legs += `M${f1(x - 17 * s)} ${f1(y)} L${f1(x - 20 * s)} ${f1(y + 32 * s)} M${f1(x + 17 * s)} ${f1(y)} L${f1(x + 20 * s)} ${f1(y + 32 * s)} M${f1(x - 8 * s)} ${f1(y + 2 * s)} L${f1(x - 9 * s)} ${f1(y + 30 * s)} `;
-    cane += `M${f1(x - 12 * s)} ${f1(y - 6 * s)} L${f1(x - 12 * s)} ${f1(y - 48 * s)} Q${f1(x - 12 * s)} ${f1(y - 62 * s)} ${f1(x)} ${f1(y - 62 * s)} Q${f1(x + 12 * s)} ${f1(y - 62 * s)} ${f1(x + 12 * s)} ${f1(y - 48 * s)} L${f1(x + 12 * s)} ${f1(y - 6 * s)} Z `;
+    // Two back posts, a crest rail that overhangs them, a seat rail, and a cane panel between.
+    frame += `M${f1(x - 16 * s)} ${f1(y)} L${f1(x - 17 * s)} ${f1(y - 60 * s)} M${f1(x + 16 * s)} ${f1(y)} L${f1(x + 17 * s)} ${f1(y - 60 * s)} M${f1(x - 23 * s)} ${f1(y - 62 * s)} Q${f1(x)} ${f1(y - 68 * s)} ${f1(x + 23 * s)} ${f1(y - 62 * s)} M${f1(x - 21 * s)} ${f1(y)} H${f1(x + 21 * s)} `;
+    legs += `M${f1(x - 16 * s)} ${f1(y)} L${f1(x - 19 * s)} ${f1(y + 32 * s)} M${f1(x + 16 * s)} ${f1(y)} L${f1(x + 19 * s)} ${f1(y + 32 * s)} M${f1(x - 8 * s)} ${f1(y + 2 * s)} L${f1(x - 9 * s)} ${f1(y + 30 * s)} `;
+    cane += `M${f1(x - 12 * s)} ${f1(y - 8 * s)} L${f1(x - 13 * s)} ${f1(y - 56 * s)} L${f1(x + 13 * s)} ${f1(y - 56 * s)} L${f1(x + 12 * s)} ${f1(y - 8 * s)} Z `;
   }
   return { frame, legs, cane, s };
 });
@@ -463,9 +464,9 @@ const knock: Frame = (el, p, age) => {
   const rand = seeded(pn(o, "seed", 13));
   let thick = "";
   let thin = "";
-  const rings = 5;
+  const rings = 4;
   for (let r = 0; r < rings; r++) {
-    const base = size * (0.26 + r * 0.19) * (1 + k * (0.25 + r * 0.08));
+    const base = size * (0.24 + r * 0.14) * (1 + k * (0.3 + r * 0.12));
     const n = 3 + Math.floor(rand() * 3);
     const phase = rand() * Math.PI * 2;
     const amp = 0.05 + rand() * 0.05;
@@ -496,9 +497,9 @@ const knock: Frame = (el, p, age) => {
       continue;
     }
     const a = (side < 0 ? Math.PI : 0) + side * (up ? -1 : 1) * (0.06 + wr() * 0.3);
-    const len = size * (0.5 + wr() * 0.5) * (0.9 + 0.5 * k);
-    const w = size * (0.04 + wr() * 0.03);
-    const r0 = size * 0.2;
+    const len = size * (0.42 + wr() * 0.3) * (0.9 + 0.6 * k);
+    const w = size * (0.07 + wr() * 0.04);
+    const r0 = size * 0.18;
     const x0 = ox + Math.cos(a) * r0;
     const y0 = oy + Math.sin(a) * r0 * flat;
     const x1 = ox + Math.cos(a) * len;

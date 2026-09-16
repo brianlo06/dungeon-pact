@@ -70,7 +70,7 @@ export const hammerPrice: Cinematic = {
       lighting: { exposure: 0.5, rim: [TYRIAN, 0.4, 1], vignette: 0.66, letterbox: BARS },
       toLighting: { exposure: 0.42, rim: [TYRIAN, 0.5, 1], vignette: 0.66, letterbox: BARS },
       actors: [
-        { role: "caster", at: [640, 1330], size: 1100, clip: "ult:hammer-nod", then: "ult:hammer-nod", look: "rim", rim: TYRIAN, root: false },
+        { role: "caster", at: [640, 1330], size: 1100, clip: "ult:hammer-nod", then: "ult:hammer-nod", look: "lit", rim: TYRIAN, root: false },
       ],
       vfx: [{ kind: "hammer-paddles", at: 0, until: 1, layer: "back", params: { keys: "0:0 0.46:0 0.7:0.1", soft: 1 } }],
       // The tock lands on the nod, 294ms into the clip, which plays at one rate in both cuts.
@@ -122,7 +122,7 @@ export const hammerPrice: Cinematic = {
     /* 3 · GOING TWICE — low angle. */
     {
       id: "hoist",
-      kind: "low-angle",
+      kind: "dutch",
       purpose: "Anticipation: the hammer hoisted at its full price over the lot, which cowers.",
       space: "cinematic",
       ms: 540,
