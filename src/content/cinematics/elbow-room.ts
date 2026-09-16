@@ -6,7 +6,7 @@ import type { Cinematic, VfxCue } from "../../shared/cinematic";
  * The idea, in one sentence: the Butcher is standing in the Shambles, the
  * butchers' lane so narrow its upper storeys nearly touch, with the enemy row
  * packed across it wall to wall — and it swings anyway: one flat swing wider
- * than the street, that bites both walls and sweeps the whole row back down
+ * than the street, that tears a gouge along the wall and sweeps the whole row back down
  * the lane.
  *
  * Only the Butcher could have it: *Wider swings. Fewer problems.* It traded
@@ -22,8 +22,8 @@ import type { Cinematic, VfxCue } from "../../shared/cinematic";
  * until its point bites a post) → quiet (the lane cat gets down) → impact (a
  * teal-and-ink frame; the swing wrapped round the row, a gouge torn along the
  * far wall, sawdust lifted in a sheet, the row knocked back down the lane) →
- * release (the real board: the lane's walls pushed back out, heel-skids in
- * sawdust behind the row, now in the back line).
+ * release (the real board: the lane's walls pushed back out, a bank of
+ * sawdust in front of each of the row, now in the back line).
  *
  * It shares nothing with Red Ledger (a pit, one top light, a blood stroke), A
  * Good Hiding (a tannery loft, the dent), Gatebreaker (a forge, a gate, a
@@ -323,7 +323,7 @@ export const elbowRoom: Cinematic = {
       id: "room",
       kind: "return",
       purpose:
-        "Release, over the real battlefield: the lane's house-fronts pushed back out off the screen, the row now standing in the back line with heel-skids ploughed through sawdust behind each of them where they were swept from, and the Butcher setting the blade down and stretching its arms out wide. That's better.",
+        "Release, over the real battlefield: the lane's house-fronts pushed back out off the screen, the row now standing in the back line with a curved bank of swept sawdust in front of each of them where they stood, and the Butcher setting the blade down and stretching its arms out wide. That's better.",
       space: "battlefield",
       ms: 720,
       fastMs: 480,

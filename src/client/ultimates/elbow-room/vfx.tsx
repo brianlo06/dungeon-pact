@@ -13,7 +13,7 @@ import "./style.css";
  * ends of the lane. Everything else is what that swing does to a lane:
  * plaster knocked out of the walls, a gouge torn level along the far houses,
  * a post splintered past the lens, the sawdust lifted off the cobbles in one
- * flat sheet, and on the board the heel-skids of a row swept back.
+ * flat sheet, and on the board a bank of sawdust swept in front of each unit.
  *
  *   elbow-lane      the Shambles' house-fronts leaning in over the real board
  *                   from both edges of the screen (`in`), or pushed back out
@@ -25,7 +25,7 @@ import "./style.css";
  *   elbow-gouge     the level gouge torn along the far wall, left to right
  *   elbow-sawdust   the sawdust lifted off the cobbles in a flat sheet
  *   elbow-splinter  a near post splintering, thrown past the lens
- *   elbow-board     on the board after: heel-skids through sawdust, and a bank
+ *   elbow-board     on the board after: a curved bank of swept sawdust
  *
  * Nothing is filtered, nothing is blurred, and nothing re-renders React while
  * it plays: flecks fly on `--p`, and the swing and the gouge are paths
