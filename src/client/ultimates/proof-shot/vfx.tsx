@@ -240,15 +240,25 @@ const streamerFrame: Frame = (el, p, age) => {
 const Plate = ({ cue }: VfxProps) => {
   const q = cue.params ?? {};
   const mode = String(q.mode ?? "hung");
+  /** How much lower than the frame's usual hook the plate hangs, in the plate's units. */
+  const hang = Number(q.hang ?? 0);
+  const rand = seeded(cue.seed ?? 29);
+  // Steel torn out of the far side of the proof mark, flung on along the shot.
+  const flecks = Array.from({ length: 9 }, () => ({
+    a: ((rand() - 0.5) * 70).toFixed(1),
+    r: (60 + rand() * 120).toFixed(0),
+    l: 18 + rand() * 22,
+    w: 4 + rand() * 4,
+  }));
   return (
     <div className="ps-plate" data-mode={mode} {...data(q)}>
       <svg className="ps-plate-svg" viewBox="-110 -300 220 320">
         <ellipse cx="0" cy="8" rx="70" ry="11" fill={PEWTER.ink} opacity="0.4" />
         <path d="M-56 0 L-16 -268 L16 -268 L56 0" fill="none" stroke={PEWTER.iron} strokeWidth="9" strokeLinejoin="round" strokeLinecap="round" />
         <path d="M-18 -268 H18" stroke={PEWTER.iron} strokeWidth="11" strokeLinecap="round" />
-        <path className="ps-plate-chain" d="M0 -264 V-214" stroke={PEWTER.iron} strokeWidth="5" strokeDasharray="7 5" />
+        <path className="ps-plate-chain" d={`M0 -264 V${-214 + hang}`} stroke={PEWTER.iron} strokeWidth="5" strokeDasharray="7 5" />
         <g className="ps-plate-swing">
-          <g className="ps-plate-body" transform="translate(0 -160) scale(1.45)">
+          <g className="ps-plate-body" transform={`translate(0 ${-160 + hang}) scale(1.45)`}>
             <PlateArt holes={[[-13, 12, 4]]} />
             <g className="ps-plate-mark">
               <circle className="ps-plate-shine" r="18" fill={BLUE} />
@@ -257,6 +267,13 @@ const Plate = ({ cue }: VfxProps) => {
             </g>
           </g>
         </g>
+        {mode === "proof" && (
+          <g className="ps-flecks" transform={`translate(0 ${-160 + hang})`}>
+            {flecks.map((f, i) => (
+              <path key={i} className="ps-fleck" d={`M0 ${-f.w} L${f.l} 0 L0 ${f.w} L${-f.l * 0.3} 0 Z`} style={v({ "--a": f.a, "--r": f.r })} />
+            ))}
+          </g>
+        )}
       </svg>
     </div>
   );
@@ -286,14 +303,49 @@ const plateFrame: Frame = (el, p, age) => {
     return;
   }
   // Knocked off the hook: it turns as it drops, bounces once on the cinder and lies.
+  const hang = num(q, "hang", 0);
   const fall = k < 0.72 ? Math.pow(k / 0.72, 1.8) : 1 - Math.sin(((k - 0.72) / 0.28) * Math.PI) * 0.07;
-  const dx = 30 * k + 26 * Math.min(1, k * 2);
-  const dy = 232 * fall;
-  const rot = 12 * Math.min(1, k * 6) + 74 * clamp((k - 0.12) / 0.7);
-  setAttr(swing, "transform", `translate(${f1(dx)} ${f1(dy)}) rotate(${f1(rot)} 0 -160)`);
+  // Kicked back along the shot on the blow, then down: it lies at the frame's foot, on the cinder.
+  const kick = Math.min(1, (p - hit) * 40);
+  const dx = 34 * kick + 30 * k;
+  const dy = (160 - hang - 50) * fall;
+  const rot = 14 * kick + 74 * clamp((k - 0.12) / 0.7);
+  setAttr(swing, "transform", `translate(${f1(dx)} ${f1(dy)}) rotate(${f1(rot)} 0 ${-160 + hang})`);
   show(box.querySelector(".ps-plate-chain"), k < 0.06);
   setVar(box, "--k", f3(k));
+  // The flecks fly from where the hole was on the blow, and are gone in a fifth of a second.
+  const fk = clamp((p - hit) * 5);
+  setVar(box, "--fk", f3(fk));
 };
+
+/**
+ * The blow where the arrow goes in, drawn at a 300-unit figure's scale with
+ * the shot arriving from the left: a ragged white flare thrown forward along
+ * the line (through, not back), a hot core, and hard ink strokes sprayed out
+ * of the far side.
+ */
+function punch(rand: () => number) {
+  const n = 13;
+  const flare: string[] = [];
+  const core: string[] = [];
+  const spray: string[] = [];
+  for (let i = 0; i < n * 2; i++) {
+    const a = (i / (n * 2)) * Math.PI * 2 + (rand() - 0.5) * 0.18;
+    const fwd = Math.max(0, Math.cos(a));
+    const outer = i % 2 === 0;
+    const r = outer ? (30 + rand() * 26) * (1 + fwd * 1.5) : 9 + rand() * 7;
+    flare.push(`${f1(Math.cos(a) * r)} ${f1(Math.sin(a) * r * 0.8)}`);
+    const rc = outer ? (13 + rand() * 9) * (1 + fwd * 0.9) : 5 + rand() * 3;
+    core.push(`${f1(Math.cos(a) * rc)} ${f1(Math.sin(a) * rc * 0.8)}`);
+  }
+  for (let i = 0; i < 7; i++) {
+    const a = (rand() - 0.5) * 1.5;
+    const r0 = 40 + rand() * 30;
+    const r1 = r0 + 30 + rand() * 50;
+    spray.push(`M${f1(Math.cos(a) * r0)} ${f1(Math.sin(a) * r0)} L${f1(Math.cos(a) * r1)} ${f1(Math.sin(a) * r1)}`);
+  }
+  return { flare: `M${flare.join(" L")} Z`, core: `M${core.join(" L")} Z`, spray: spray.join(" ") };
+}
 
 /* ── The arrows ────────────────────────────────────────────────────────── */
 
@@ -308,6 +360,7 @@ const plateFrame: Frame = (el, p, age) => {
 const Arrows = ({ cue }: VfxProps) => {
   const id = `ps-aa-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const rand = seeded(cue.seed ?? 53);
+  const punches = [punch(seeded((cue.seed ?? 53) + 1)), punch(seeded((cue.seed ?? 53) + 2))];
   return (
     <svg className="ps-world ps-arrows" viewBox="0 0 1600 900" {...data(cue.params)}>
       <defs>
@@ -324,16 +377,25 @@ const Arrows = ({ cue }: VfxProps) => {
           <g className="ps-arrow-shaft">
             <use href={`#${id}`} />
           </g>
-          <path className="ps-arrow-spark" d="M0 -16 L4 -4 L16 0 L4 4 L0 16 L-4 4 L-16 0 L-4 -4 Z" />
+          <g className="ps-punch">
+            <path className="ps-punch-spray" d={punches[i].spray} />
+            <path className="ps-punch-flare" d={punches[i].flare} />
+            <path className="ps-punch-core" d={punches[i].core} />
+          </g>
         </g>
       ))}
       <g className="ps-halves" style={{ display: "none" }}>
-        {[0, 1, 2, 3].map((i) => (
-          <g key={i} className="ps-half" data-i={i} style={v({ "--dx": (-40 - rand() * 90).toFixed(1), "--dy": ((i % 2 ? 1 : -1) * (30 + rand() * 50)).toFixed(1), "--r": ((rand() - 0.5) * 300).toFixed(0) })}>
-            <path className="ps-half-shaft" d={`M0 0 H${(14 + rand() * 12).toFixed(0)}`} />
-            {i === 0 && <path className="ps-half-fletch" d="M-6 -2.6 L-1 0 L-6 2.6 L-4 0 Z" />}
-          </g>
-        ))}
+        {[0, 1, 2, 3].map((i) => {
+          const l = 9 + rand() * 7;
+          return (
+            <g key={i} className="ps-half" data-i={i} style={v({ "--dx": (-3 - rand() * 9).toFixed(1), "--dy": ((i % 2 ? 1 : -1) * (3 + rand() * 6)).toFixed(1), "--r": ((rand() - 0.5) * 260).toFixed(0) })}>
+              <path className="ps-half-ink" d={`M0 0 H${l.toFixed(1)}`} />
+              <path className="ps-half-wood" d={`M0.6 0 H${(l - 0.6).toFixed(1)}`} />
+              <path className="ps-half-split" d={`M${l.toFixed(1)} 0 l1.6 -1.2 l0.6 1.4 l1.4 -0.4`} />
+              {i === 0 && <path className="ps-half-fletch" d="M-6 -2.6 L-1 0 L-6 2.6 L-4 0 Z" />}
+            </g>
+          );
+        })}
       </g>
     </svg>
   );
@@ -376,8 +438,15 @@ const arrowsFrame: Frame = (el, p, age, ctx) => {
     setAttr(shaft?.firstElementChild, "transform", arrowAt(x, y, ang, len));
     const streakLen = k < 0 ? 520 : Math.max(0, 1 - k / 200) * 520;
     setAttr(g.querySelector(".ps-arrow-streak"), "d", `M${f1(x - len * 0.9)} ${f1(y)} L${f1(x - len * 0.9 - streakLen)} ${f1(y + 2)}`);
-    const sparkK = k >= 0 ? clamp(k / 160) : 0;
-    setAttr(g.querySelector(".ps-arrow-spark"), "transform", `translate(${f1(ex)} ${f1(ey)}) scale(${f3((1 - sparkK) * Math.max(0.6, a.h / 300) * (k >= 0 ? 1 : 0))})`);
+    // The punch: whole for the first 50ms (the stop holds it), gone by 220ms; the second is smaller.
+    const pk = k >= 0 ? clamp((k - 50) / 170) : 1;
+    const punchEl = g.querySelector<SVGGElement>(".ps-punch");
+    show(punchEl, k >= 0 && pk < 1);
+    if (punchEl && k >= 0 && pk < 1) {
+      const size = Math.max(0.6, a.h / 300) * (i === 0 ? 1.5 : 0.95) * (1 + pk * 0.25);
+      setAttr(punchEl, "transform", `translate(${f1(ex + len * 0.04)} ${f1(ey)}) rotate(${f1(ang)}) scale(${f3(size)})`);
+      setVar(punchEl, "--pk", f3(pk));
+    }
     g.toggleAttribute("data-stuck", k >= 0);
   }
   // The halves of the first shaft, flung off the line at the second hit.
@@ -435,7 +504,7 @@ const Board = ({ cue }: VfxProps) => {
         <defs>
           <ArrowArt id={id} />
         </defs>
-        <g className="ps-board-plate" transform="translate(-58 -6) rotate(-78) scale(0.62)">
+        <g className="ps-board-plate" transform="translate(-72 -24) rotate(-78) scale(0.62)">
           <PlateArt holes={[[-13, 10, 4]]} />
           <path d="M-9 -1 L-3 -9 L6 -7 L10 2 L4 9 L-6 7 Z" fill={PEWTER.skyLow} stroke="#eaf2ff" strokeWidth="2.5" strokeLinejoin="round" />
         </g>
@@ -461,8 +530,8 @@ const boardFrame: Frame = (el) => {
   // The hole and the arrow sit on the figure's chest, whatever its height.
   const unitH = parseFloat(getComputedStyle(el).getPropertyValue("--unit-h")) || 150;
   const unitW = parseFloat(getComputedStyle(el).getPropertyValue("--unit-w")) || 120;
-  const chest = -(unitH / unitW) * 150 * 0.55;
-  const front = -0.32 * 150;
+  const chest = -(unitH / unitW) * 150 * 0.45;
+  const front = -0.2 * 150;
   setAttr(box.querySelector(".ps-board-hole"), "transform", `translate(${f1(front)} ${f1(chest)})`);
   setAttr(box.querySelector(".ps-board-arrow use"), "transform", arrowAt(front + 8, chest, -6, 78));
   setAttr(box.querySelector(".ps-board-half"), "transform", `translate(${f1(front - 40)} ${f1(chest + 22)}) rotate(28) scale(2.1)`);

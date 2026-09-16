@@ -46,6 +46,11 @@ const PEWTER = "#aeb6bd";
 /** Sky light bounced up off the cinder: cold and faint. */
 const BOUNCE = "#8e979f";
 const BARS = 0.1;
+/** The plate hangs low on its chain, so the shot through its middle finds the target's chest. */
+const HANG = 16;
+/** Where the arrows go in: fractions of the target's drawn height, forward of and above its ground point. */
+const EX = -0.14;
+const EY = 0.42;
 
 /* ── The wide ──────────────────────────────────────────────────────────── */
 
@@ -61,7 +66,7 @@ const wideVfx = (plateX: number, plateScale: number): VfxCue[] => [
 
 const quietTarget = (at: [number, number], size: number): ActorCue => ({ role: "target", at, size, face: -1, look: "lit", z: 2 });
 const quietVfx = (plateX: number): VfxCue[] => [
-  { kind: "ps-plate", at: 0, until: 1, follow: "target", x: plateX, y: 0, layer: "front", params: { mode: "hung", stillAt: 0.45 } },
+  { kind: "ps-plate", at: 0, until: 1, follow: "target", x: plateX, y: 0, layer: "front", params: { mode: "hung", stillAt: 0.45, hang: HANG } },
   { kind: "ps-streamer", at: 0, until: 1, layer: "back", seed: 5, params: { x: 1302, y: 414, len: 250, w: 32, dropAt: 0.18 } },
   { kind: "ps-wind", at: 0, until: 1, layer: "screen", seed: 43, params: { count: 20, o: 0.4, stopAt: 0.42 } },
   { kind: "ps-streamer", at: 0, until: 0.26, layer: "screen", seed: 47, params: { wipe: true, mode: "out" } },
@@ -86,8 +91,8 @@ const struck = (at: [number, number], size: number, shove: [number, number], til
 const FAR_KID: ActorCue = { role: "caster", at: [446, 484], size: 98, clip: "ult:ps-after", then: "ult:ps-after", look: "lit", z: 1 };
 const proofVfx = (plate: [number, number], plateScale: number): VfxCue[] => [
   { kind: "ps-glare", at: 0, until: 0.5, follow: "target", x: 0, y: 0, layer: "back" },
-  { kind: "ps-plate", at: 0, until: 1, x: plate[0], y: plate[1], scale: plateScale, layer: "front", params: { mode: "proof", hit: 0 } },
-  { kind: "ps-arrows", at: 0, until: 1, layer: "front", seed: 53, params: { hit1: 0.02, hit2: 0.32, ex: -0.26, ey: 0.55 } },
+  { kind: "ps-plate", at: 0, until: 1, x: plate[0], y: plate[1], scale: plateScale, layer: "front", params: { mode: "proof", hit: 0, hang: HANG } },
+  { kind: "ps-arrows", at: 0, until: 1, layer: "front", seed: 53, params: { hit1: 0.02, hit2: 0.32, ex: EX, ey: EY } },
   { kind: "ps-streamer", at: 0, until: 1, layer: "back", seed: 5, params: { x: 1302, y: 414, len: 250, w: 32, dropAt: -1 } },
   { kind: "ps-wind", at: 0, until: 1, layer: "screen", seed: 45, params: { count: 14, o: 0.25, still: true } },
 ];
@@ -275,10 +280,12 @@ export const proofShot: Cinematic = {
       background: "ps-butt",
       lighting: { exposure: 1, tint: [PEWTER, 0.1], under: [BOUNCE, 0.15], vignette: 0.25, letterbox: BARS },
       toLighting: { exposure: 0.88, tint: [PEWTER, 0], under: [BOUNCE, 0.15], vignette: 0.35, letterbox: BARS },
-      actors: [FAR_KID, struck([1100, 840], 420, [30, -4], 4)],
+      actors: [FAR_KID, struck([1100, 840], 420, [50, -6], 6)],
       vfx: proofVfx([800, 840], 1.06),
       screen: [
-        { kind: "two-tone", at: 0, ms: 40 },
+        // One drawn frame, over before the stop, so the held frame is the blow in colour (FAST is shorter, so is its frame).
+        { kind: "two-tone", at: 0, ms: 40, mode: "full" },
+        { kind: "two-tone", at: 0, ms: 30, mode: "fast" },
         { kind: "chromatic", at: 0.32, ms: 90, amount: 0.7 },
       ],
       stop: [
@@ -309,7 +316,7 @@ export const proofShot: Cinematic = {
             to: { x: 992, y: 586, zoom: 1.2, rotate: -2 },
             ease: "out",
           },
-          actors: [FAR_KID, struck([1120, 846], 360, [22, -3], 3)],
+          actors: [FAR_KID, struck([1120, 846], 360, [38, -5], 5)],
           vfx: proofVfx([790, 846], 1.16),
         },
         boss: {
@@ -318,7 +325,7 @@ export const proofShot: Cinematic = {
             to: { x: 992, y: 562, zoom: 1.06, rotate: -1.5 },
             ease: "out",
           },
-          actors: [FAR_KID, struck([1160, 852], 270, [14, -2], 2)],
+          actors: [FAR_KID, struck([1160, 852], 270, [24, -3], 3)],
           vfx: proofVfx([788, 852], 1.3),
         },
       },

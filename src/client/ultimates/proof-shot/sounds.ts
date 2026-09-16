@@ -34,7 +34,7 @@ function wind(c: AudioContext, o: AudioNode, t: number, seconds: number, gain: n
 
 /** A bowstring let go, flat: a snap, a low thrum, and the arrow hissing away level. */
 function snap(c: AudioContext, o: AudioNode, t: number, gain = 0.2) {
-  crash(c, o, t, { seconds: 0.016, gain: gain * 0.4, type: "highpass", freq: 2400, q: 0.8 });
+  crash(c, o, t, { seconds: 0.016, gain: gain * 0.22, type: "highpass", freq: 2400, q: 0.8 });
   hit(c, o, t, { type: "triangle", from: 140, to: 98, gain: gain * 0.7, attack: 0.002, decay: 0.15 });
   hit(c, o, t, { type: "sine", from: 290, to: 200, gain: gain * 0.25, attack: 0.002, decay: 0.08 });
   crash(c, o, t + 0.008, { seconds: 0.2, gain: gain * 0.3, type: "bandpass", freq: 3000, sweepTo: 5200, q: 2.5 });

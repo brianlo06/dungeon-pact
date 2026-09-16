@@ -110,6 +110,14 @@
 }
 
 /* ---- the plate on its frame ---- */
+.ps-fleck {
+  fill: #eaf2ff;
+  stroke: #111418;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  transform: rotate(calc(var(--a) * 1deg)) translateX(calc(var(--r) * var(--fk, 0) * 1px + 14px));
+  opacity: calc((1 - var(--fk, 0)) * 1.5);
+}
 .cine-vfx > .ps-plate {
   width: calc(var(--ah, 300px) * 0.76);
   height: calc(var(--ah, 300px) * 1.1);
@@ -146,26 +154,51 @@
 .ps-arrow[data-stuck] .ps-arrow-streak {
   opacity: 0.5;
 }
-.ps-arrow-spark {
-  fill: #eef4ff;
-  stroke: #111418;
-  stroke-width: 2;
-}
-.ps-arrow:not([data-stuck]) .ps-arrow-spark {
-  display: none;
-}
-.ps-half-shaft {
-  fill: none;
+.ps-punch-flare {
+  fill: #f4f8ff;
   stroke: #111418;
   stroke-width: 3;
-  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: calc(1 - var(--pk, 0));
 }
-.ps-half-shaft::before {
-  content: "";
+.ps-punch-core {
+  fill: #6a9bff;
+  stroke: #eef4ff;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  opacity: calc(1 - var(--pk, 0) * 1.4);
+}
+.ps-punch-spray {
+  fill: none;
+  stroke: #111418;
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: calc(1 - var(--pk, 0) * 1.6);
 }
 .ps-half {
-  transform: translate(calc(var(--dx) * var(--k, 0) * 1px), calc(var(--dy) * var(--k, 0) * 1px + var(--k, 0) * var(--k, 0) * 60px)) rotate(calc(var(--r) * var(--k, 0) * 1deg));
-  opacity: calc(1 - var(--k, 0) * 0.9);
+  transform: translate(calc(var(--dx) * var(--k, 0) * 1px), calc(var(--dy) * var(--k, 0) * 1px + var(--k, 0) * var(--k, 0) * 10px)) rotate(calc(var(--r) * var(--k, 0) * 1deg));
+  opacity: calc(1 - max(0, var(--k, 0) - 0.4) * 1.6);
+}
+.ps-half-ink {
+  fill: none;
+  stroke: #111418;
+  stroke-width: 7;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.ps-half-wood {
+  fill: none;
+  stroke: #d9b27a;
+  stroke-width: 3;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.ps-half-split {
+  fill: none;
+  stroke: #f1dcb4;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
 }
 .ps-half-fletch {
   fill: #c4533f;
