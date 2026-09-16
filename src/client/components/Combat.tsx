@@ -23,7 +23,7 @@ import { useStagehand, type Stagehand } from "../battle/stagehand";
 import { stageGeometry } from "../battle/stage-geometry";
 import type { PlanOptions } from "../battle/round-plan";
 import type { RoundTimeline } from "../battle/choreography";
-import { ultimateFor, ULTIMATE_MAX } from "../../content/ultimates";
+import { flattenEffects, ultimateFor, ULTIMATE_MAX } from "../../content/ultimates";
 import { UltimateCinematic } from "../cinematic/UltimateCinematic";
 import type { CinematicRun, CinematicDebug } from "../cinematic/run";
 import type { Framing } from "../../shared/cinematic";
@@ -260,7 +260,13 @@ export function Combat({
       // An Ultimate reaches wherever it is aimed: no screen, no windup rule.
       if (rule === "self") ids.add(me.id);
       else if (rule === "ally" || rule === "allyRow") {
-        for (const p of s.players) if (!p.fallen && p.hp > 0) ids.add(p.id);
+        // As the server aims it: a downed ally counts (Living Bone revives),
+        // and a guard cannot be aimed at the one giving it.
+        const guards = flattenEffects(ult?.effects ?? []).some(
+          (e) => e.kind === "protect",
+        );
+        for (const p of s.players)
+          if (!p.fallen && !(guards && p.id === me.id)) ids.add(p.id);
       } else for (const e of s.enemies) if (e.hp > 0) ids.add(e.id);
       return ids;
     }
@@ -288,7 +294,7 @@ export function Combat({
       }
     }
     return ids;
-  }, [chosen, s.players, s.enemies, s.reachVersion, me, aiming, rule]);
+  }, [chosen, s.players, s.enemies, s.reachVersion, me, aiming, rule, ult]);
   const targetValid = targetable.has(selectedTarget);
 
   // A target that stops being legal should not silently stay selected.
