@@ -201,8 +201,8 @@ export const hallowedGround: Cinematic = {
       ms: IMPACT_MS,
       fastMs: 700,
       camera: {
-        from: { x: 900, y: 632, zoom: 1.42, rotate: -2 },
-        to: { x: 870, y: 620, zoom: 1.28, rotate: 0 },
+        from: { x: 930, y: 632, zoom: 1.42, rotate: -2 },
+        to: { x: 890, y: 620, zoom: 1.28, rotate: 0 },
         ease: "out",
       },
       background: "hallow-foundry",

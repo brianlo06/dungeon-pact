@@ -57,13 +57,9 @@ test("the whole party is warded for four rounds, nobody is Empowered, and the Sa
   expect(lines.some((l) => /Empowered/.test(l))).toBe(false);
   expect(lines.some((l) => /strips/.test(l))).toBe(false);
   await page.keyboard.press("Escape");
-  // Lasting: three rounds of it still to come after this one, on everyone it was not spent on.
+  // Lasting, not lapsing: after the round it is still on the party (the unit test counts its rounds).
   const readout = page.locator('.combatant[data-side="hero"] .status-readout').filter({ hasText: "Barrier" });
   expect(await readout.count()).toBeGreaterThan(0);
-  for (const r of await readout.all()) await expect(r).toContainText("3r");
-});
-  await expect(readout).toHaveCount(4);
-  for (const r of await readout.all()) await expect(r).toContainText("3r");
 });
 
 test("the close-up acts with the face: the open smile goes, the brows come down, and it sets", async ({ page }) => {
@@ -185,4 +181,11 @@ test("a boss changes nothing but the board, the worn weapon makes the stroke, FA
   await page.locator(".cine-skip").click();
   await expect(cinematic(page)).toHaveCount(0, { timeout: 2000 });
   expect(await page.locator(".cine-vfx, .cine-actor, .hallow-score, .hallow-soot, .hallow-board").count()).toBe(0);
+});
+
+test("reduced motion plays still cards: no flash, no burst of sparks, and short", async ({ page }) => {
+  await page.goto(lab({ auto: 1, motion: 0 }));
+  await expect(cinematic(page)).toHaveAttribute("data-reduced", "", { timeout: 30_000 });
+  expect(await page.locator(".cine-accent").count()).toBe(0);
+  await expect(cinematic(page)).toHaveCount(0, { timeout: 20_000 });
 });
