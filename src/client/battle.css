@@ -642,6 +642,9 @@
   opacity: 0.7;
   border-style: dashed;
 }
+.intent-chip b.intent-crack {
+  color: #ff9a5a;
+}
 .intent-chip b.intent-stopped {
   color: #9fd6a0;
 }

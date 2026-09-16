@@ -75,6 +75,13 @@ export const statuses: Record<
     description: "Restore stacks HP at round end while standing.",
     max: 20,
   },
+  heat: {
+    name: "Heat",
+    icon: "♦",
+    description:
+      "A crucible heating. At full heat the pour is announced; enough damage before it acts cracks it.",
+    max: 3,
+  },
   vulnerable: {
     name: "Vulnerable",
     icon: "◇",

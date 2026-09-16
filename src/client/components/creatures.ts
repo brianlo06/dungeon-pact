@@ -9,6 +9,7 @@ import { Bellows } from "./Bellows";
 import { Hound } from "./Hound";
 import { Miser } from "./Miser";
 import { Notary } from "./Notary";
+import { Assayer } from "./Assayer";
 import { WaxSeal } from "./WaxSeal";
 import { Sniper } from "./Sniper";
 import { Leech } from "./Leech";
@@ -32,6 +33,7 @@ export const CREATURES: Record<string, ComponentType<CreatureProps>> = {
   hound: Hound,
   miser: Miser,
   notary: Notary,
+  assayer: Assayer,
   "wax-seal": WaxSeal,
   sniper: Sniper,
   thief: Leech,

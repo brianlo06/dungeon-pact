@@ -5,7 +5,7 @@ import { items } from "../content/items";
 import { encounters } from "../content/encounters";
 import type { RunState } from "../shared/model";
 
-export type Boss = "collector" | "miser" | "notary";
+export type Boss = "collector" | "miser" | "notary" | "assayer";
 /** Bosses a single-floor room drew between; any other is staged by name. */
 const DRAWN: Boss[] = ["collector", "miser"];
 /**
@@ -140,7 +140,9 @@ export function bossFixture(options: FixtureOptions): RunState {
             : 3
           : options.boss === "notary"
             ? 2
-            : 1;
+            : options.boss === "assayer"
+              ? 4
+              : 1;
       prepareIntents(s);
     }
     if (options.stage === "resolved" || options.stage === "released")

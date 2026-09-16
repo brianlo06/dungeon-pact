@@ -20,6 +20,7 @@ import strongbox from "./strongbox";
 import collector from "./collector";
 import miser from "./miser";
 import notary from "./notary";
+import assayer from "./assayer";
 import waxSeal from "./wax-seal";
 
 /**
@@ -48,6 +49,7 @@ export const CHOREOGRAPHY: Record<string, CreatureChoreography> = {
   collector,
   miser,
   notary,
+  assayer,
   "wax-seal": waxSeal,
 };
 

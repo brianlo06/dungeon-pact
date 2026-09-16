@@ -141,6 +141,9 @@ export function BattleUnit({
       data-acting={acting ? "" : undefined}
       data-down={down ? "" : undefined}
       data-phase={enemy?.phase === 2 ? "2" : undefined}
+      data-heat={
+        unit.statuses.find((st) => st.id === "heat")?.stacks ?? undefined
+      }
       data-you={you ? "" : undefined}
       data-ult-ready={
         player && !down && (player.ultimateCharge ?? 0) >= ULTIMATE_MAX

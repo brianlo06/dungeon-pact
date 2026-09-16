@@ -3,6 +3,7 @@ import { GENERIC } from "./animation";
 import { FORGE_RIGS } from "./rigs-forge";
 import { DEBT_RIGS } from "./rigs-debt";
 import { ARCHIVE_RIGS } from "./rigs-archive";
+import { ASSAYER_RIGS } from "./rigs-assayer";
 import { PARTY_RIGS } from "./rigs-party";
 import { ULTIMATE_RIGS } from "./rigs-ultimate";
 
@@ -833,6 +834,7 @@ const RIGS: Record<string, Rig> = {
   ...FORGE_RIGS,
   ...DEBT_RIGS,
   ...ARCHIVE_RIGS,
+  ...ASSAYER_RIGS,
 };
 
 /** The rig for a unit, falling back to the generic one. */

@@ -27,7 +27,9 @@ export type StatusId =
   | "empowered"
   | "confused"
   | "guarded"
-  | "interrupted";
+  | "interrupted"
+  /** A crucible's charge: what a pour is building to. Shown, never read by damage. */
+  | "heat";
 export type Trigger =
   | "roundStart"
   | "afterAttack"
@@ -94,6 +96,13 @@ export interface Ability {
   reach?: "melee" | "reach" | "ranged";
   /** Aimed only at a downed ally: a revival. The engine refuses anyone standing. */
   revive?: boolean;
+  /**
+   * A move that breaks under enough damage rather than to an interrupt: if the
+   * enemy announcing it takes `per` × heroes damage before it acts this round
+   * (half that while it is Wet), the move is lost and `effects` land on the
+   * enemy itself. The Assayer's pour.
+   */
+  cracks?: { per: number; effects: Effect[] };
   /** How this action looks. Never how it resolves. */
   presentation?: AbilityPresentation;
   interruptible?: boolean;
@@ -240,6 +249,8 @@ export interface Enemy extends Unit {
   fuse?: { at: number; rounds: number };
   /** An object whose countdown ran out and did what it was for; not broken. */
   spent?: boolean;
+  /** Damage taken since this round's intents were announced: what cracks a move. */
+  taken?: number;
 }
 export interface EnemyDef {
   id: string;

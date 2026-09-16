@@ -3,7 +3,7 @@ import type { Snapshot } from "../../shared/model";
 import { enemies as enemyDefs, isBoss, isObject } from "../../content/enemies";
 import { BattleUnit, type Impact } from "./BattleUnit";
 import { describeIntentEffect } from "../combat-presentation";
-import { damageLabel, forecastIntent } from "../../shared/forecast";
+import { crackAt, damageLabel, forecastIntent } from "../../shared/forecast";
 import { unitPresentation, type Placement } from "../battle/layout";
 import type { Camera } from "../battle/camera";
 import type { Animators } from "../battle/useAnimators";
@@ -117,7 +117,7 @@ export function BattleStage({
       .join(" · ");
     return (
       <span
-        className={`intent-chip ${a.interruptible && !interrupted ? "intent-windup" : ""} ${interrupted ? "intent-broken" : ""}`}
+        className={`intent-chip ${(a.interruptible || a.cracks) && !interrupted ? "intent-windup" : ""} ${interrupted ? "intent-broken" : ""}`}
         data-damage={damage || undefined}
         title={reads}
       >
@@ -125,6 +125,11 @@ export function BattleStage({
             what every camera framing shows. The move, then what it does. */}
         <span className="intent-head">
           {a.interruptible && !interrupted && <b>WINDUP</b>}
+          {a.cracks && !interrupted && (
+            <b className="intent-crack" title="Damage this round that cracks it">
+              CRACK AT {crackAt(s, e)}
+            </b>
+          )}
           {interrupted && <b className="intent-stopped">BROKEN</b>}
           <strong>{a.name}</strong>
         </span>

@@ -231,8 +231,10 @@ function hurt(
   if (target.hp <= 0) return;
   const barrier = status(target, "barrier");
   let n = Math.max(0, Math.round(amount));
+  let soaked = 0;
   if (barrier) {
     const blocked = Math.min(barrier.stacks, n);
+    soaked = blocked;
     barrier.stacks -= blocked;
     n -= blocked;
     target.statuses = target.statuses.filter((x) => x.stacks > 0);
@@ -248,6 +250,9 @@ function hurt(
   }
   const actual = Math.min(target.hp, n);
   target.hp -= actual;
+  // What an enemy has taken this round, Barrier included: what cracks a move.
+  if (isEnemy(target) && source.id !== target.id)
+    target.taken = (target.taken ?? 0) + actual + soaked;
   if (isPlayer(source)) source.damage += actual;
   if (isPlayer(source) && !isPlayer(target)) charge(s, source, "damage", actual);
   if (isPlayer(target) && !isPlayer(source)) charge(s, target, "hurt", actual);

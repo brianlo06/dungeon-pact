@@ -166,9 +166,28 @@ see coming.
 ## The Assayer — Ember Foundry
 
 **Two words: heat, pour.** A smelting construct heats a crucible across
-rounds and pours it down one lane. Enough damage to the crucible while it is
-heating cracks it and spills the metal on the Assayer; a Wet crucible
-quenches. Principle: a charged state that damage knocks out.
+rounds and pours it down a row. The pour is not an interrupt's to stop: enough
+damage in the round it is announced cracks the crucible, and the metal goes
+over the Assayer instead. Principle: a charged state that damage knocks out
+(Monster Hunter's charged monsters losing their charge to a damage threshold).
+
+- **Rotation**: Heat the crucible (Heat 1, 6 Barrier) → Tongs 22 → Bring it to
+  the pour (Heat 2) → **Pour the crucible**: 34 down a row with Burn 4.
+- **Cracks** (`Ability.cracks`): if the Assayer takes **16 × heroes** damage,
+  Barrier included, between the announcement and its turn, the pour is lost
+  and the crucible spills on it — 24 through armour, Burn 6, Vulnerable 2, and
+  its Heat gone. Only that round's damage counts (`Enemy.taken`, reset when
+  intents are announced).
+- **Wet quenches**: while the Assayer is Wet, half that damage cracks it, so
+  the Warden's and Arcanist's Wet is a setup the party can bring to it.
+- **The chip** reads `CRACK AT 32` with the pour's damage and row; the rig
+  holds the crucible up through the round like a wind-up.
+- **Phase two**: Heat twice as fast, Slag spit 18 over a row, and a pour of 40
+  with Burn 6 that takes 20 × heroes to crack.
+
+The party's answer is to spend the round of the pour on the Assayer — every
+hero, Ultimates, Exploits and Chain Shock — or to step the threatened row out
+of the pour's lane and take it on Barrier.
 
 ## The Salvor — Drowned Cistern
 

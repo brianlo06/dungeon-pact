@@ -56,7 +56,7 @@ export const floors: FloorDef[] = [
     title: "THE EMBER FOUNDRY",
     heading: "Into the Foundry.",
     tier: 1,
-    bosses: ["collector"],
+    bosses: ["collector", "assayer"],
   },
   {
     biome: "cistern",

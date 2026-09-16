@@ -56,6 +56,7 @@ const STATUS_NAMES: Record<string, string> = {
   barrier: "Barrier",
   regen: "Regen",
   empowered: "Empowered",
+  heat: "Heat",
 };
 
 function ridersOf(list: Effect[]): string[] {
@@ -142,6 +143,21 @@ export function forecastIntent(s: State, enemy: Enemy): Forecast {
     riders,
     aim,
   };
+}
+
+/**
+ * The damage that cracks an enemy's announced move this round: `per` for each
+ * hero, halved while the enemy is Wet (quenched). Infinity for a move that
+ * does not crack. The engine resolves with this, and the chip counts toward it.
+ */
+export function crackAt(
+  s: Pick<RunState, "players">,
+  e: Pick<Enemy, "intent" | "statuses">,
+) {
+  const cracks = e.intent.ability.cracks;
+  if (!cracks) return Infinity;
+  const wet = e.statuses.some((x) => x.id === "wet");
+  return Math.round(cracks.per * s.players.length * (wet ? 0.5 : 1));
 }
 
 /** The damage line a chip shows: "34", "12–18 each", or "2 × 9". */

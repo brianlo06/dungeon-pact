@@ -24,7 +24,7 @@ const OBJECTIVE = new Set<Effect["kind"]>(["seize", "bank", "spawn"]);
 export function holdsWindup(enemy: Enemy): boolean {
   return (
     enemy.hp > 0 &&
-    !!enemy.intent?.ability.interruptible &&
+    (!!enemy.intent?.ability.interruptible || !!enemy.intent?.ability.cracks) &&
     !enemy.statuses.some((s) => s.id === "interrupted")
   );
 }
@@ -37,6 +37,7 @@ export function holdsWindup(enemy: Enemy): boolean {
 export function isSignatureMove(ability: Ability): boolean {
   return (
     !!ability.interruptible ||
+    !!ability.cracks ||
     ability.effects.some((e) => OBJECTIVE.has(e.kind))
   );
 }

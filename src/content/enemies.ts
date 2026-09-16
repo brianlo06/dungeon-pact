@@ -15,6 +15,40 @@ const attack = (
   cooldown: 0,
   effects: [{ kind: "damage", amount }, ...effects],
 });
+/** The Assayer heats its crucible: a little armour, and the heat shows. */
+const assay = (n: 1 | 2): Ability => ({
+  id: "assay",
+  name: n === 1 ? "Heat the crucible" : "Bring it to the pour",
+  description: "The crucible heats. At full heat, the pour.",
+  cost: 0,
+  speed: 0,
+  target: "self",
+  cooldown: 0,
+  effects: [
+    { kind: "status", status: "heat", stacks: 1, duration: 3 },
+    { kind: "status", status: "barrier", stacks: 6, duration: 1 },
+  ],
+});
+/**
+ * The pour: molten metal down a whole row. Not a WINDUP an interrupt can
+ * reach: it cracks under enough damage in the round it is announced, and the
+ * metal goes over the Assayer instead. Wet quenches it, halving what cracks it.
+ */
+const pour = (amount: number, burn: number, per: number): Ability => ({
+  ...attack("pour", "Pour the crucible", amount, "enemyRow", [
+    { kind: "status", status: "burn", stacks: burn, duration: 2 },
+  ]),
+  description: "Molten metal down a row. Enough damage this round cracks the crucible.",
+  cracks: {
+    per,
+    effects: [
+      { kind: "damage", amount: 24, pierce: true },
+      { kind: "status", status: "burn", stacks: 6, duration: 2 },
+      { kind: "status", status: "vulnerable", stacks: 1, duration: 2 },
+      { kind: "removeStatus", status: "heat" },
+    ],
+  },
+});
 /** A wax seal's clock while it sets: it hardens, and its intent counts down. */
 const waxSetting: Ability = {
   id: "setting",
@@ -287,6 +321,32 @@ export const enemies: EnemyDef[] = [
   },
   {
     presentation: {
+      spriteSet: "assayer",
+      footprint: "boss-large",
+      theme: "foundry",
+      idlePeriod: 5.2,
+      shadow: 1,
+    },
+    id: "assayer",
+    name: "The Assayer",
+    glyph: "⚗",
+    hp: 180,
+    power: 3,
+    guard: 3,
+    speed: 3,
+    row: "front",
+    boss: true,
+    epithet: "Who Weighs What You Are Worth in Heat",
+    lair: "The Assay Furnace",
+    objective:
+      "It heats a crucible and pours it down a row. Hit it hard enough in the round it pours and the crucible cracks over it — Wet makes that easier.",
+    abilities: [
+      attack("tongs", "Tongs", 20),
+      attack("slag", "Slag spit", 14, "enemyRow"),
+    ],
+  },
+  {
+    presentation: {
       spriteSet: "wax-seal",
       footprint: "small",
       theme: "contract",
@@ -439,6 +499,12 @@ export const tacticalIntents: Record<string, Ability[]> = {
     // about the damage changed: the same blow now also takes something.
     collateral,
   ],
+  assayer: [
+    assay(1),
+    attack("tongs", "Tongs", 22),
+    assay(2),
+    pour(34, 4, 16),
+  ],
   notary: [
     attack("attest", "Attest", 20),
     pressing(["front", "back", "back"], 3),
@@ -457,6 +523,12 @@ export const tacticalIntents: Record<string, Ability[]> = {
 };
 /** Containers are scenery with health: they never count as enemies to clear. */
 export const phaseTwoIntents: Record<string, Ability[]> = {
+  // Phase two heats faster and pours hotter, and a crack takes more.
+  assayer: [
+    assay(2),
+    attack("slag", "Slag spit", 18, "enemyRow"),
+    pour(40, 6, 20),
+  ],
   // Phase two presses a fourth seal and sets them faster.
   notary: [
     attack("attest", "Attest", 22),

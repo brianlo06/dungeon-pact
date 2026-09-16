@@ -25,6 +25,7 @@ const statusId = z.enum([
   "confused",
   "guarded",
   "interrupted",
+  "heat",
 ]);
 export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
   z.discriminatedUnion("kind", [
@@ -95,6 +96,12 @@ export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
 );
 const abilitySchema = z.object({
   interruptible: z.boolean().optional(),
+  cracks: z
+    .object({
+      per: z.number().int().positive(),
+      effects: z.array(effectSchema).min(1).max(20),
+    })
+    .optional(),
   revive: z.boolean().optional(),
   id: z.string().min(1),
   name: z.string().min(1),

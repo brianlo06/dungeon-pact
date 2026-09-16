@@ -1,5 +1,6 @@
 import { floorsIn } from "./map";
 import { LEGACY_BOSSES } from "../content/floors";
+import { crackAt } from "../shared/forecast";
 import { applyHazard } from "./chambers";
 import { chooseEncounter } from "../content/encounters";
 import { reachError } from "../shared/reach";
@@ -104,6 +105,8 @@ export function prepareIntents(s: RunState) {
   const impatience = pressure(s);
   for (const e of s.enemies.filter((e) => e.hp > 0)) {
     const def = definitions.find((d) => d.id === e.definition)!;
+    // A move that cracks is measured against this round's damage alone.
+    e.taken = 0;
     const phase = def.boss && e.hp < e.maxHp / 2 ? 2 : 1;
     if (phase !== e.phase) {
       e.phase = phase;
@@ -631,6 +634,19 @@ export function resolveRound(s: RunState) {
     if (e.hp <= 0) continue;
     if (status(e, "interrupted")) {
       log(s, `${e.name} loses its ${e.intent.ability.name}: interrupted.`);
+      continue;
+    }
+    // Enough damage before a cracking move lands breaks it, and it spills on
+    // the one who was making it.
+    const cracks = e.intent.ability.cracks;
+    if (cracks && (e.taken ?? 0) >= crackAt(s, e)) {
+      log(s, `${e.name}'s ${e.intent.ability.name} cracks under the blows!`, "combo", {
+        kind: "combo",
+        label: "CRACKED",
+        actor: e.id,
+        target: e.id,
+      });
+      effects(s, e, e, cracks.effects);
       continue;
     }
     const a = e.intent.ability;

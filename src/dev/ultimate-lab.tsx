@@ -33,16 +33,17 @@ import "./ultimate-lab.css";
  *     &mode=full&speed=1&tempo=1&auto=1&shot=4&pause=1
  */
 
-type Enemy = "hound" | "bulwark" | "sniper" | "collector" | "miser" | "notary";
+type Enemy = "hound" | "bulwark" | "sniper" | "collector" | "miser" | "notary" | "assayer";
 type Gear = "base" | "weapon" | "armor" | "relic" | "kit" | "seized";
 
-const FIGHTS: Record<Enemy, { boss?: "collector" | "miser" | "notary"; encounter?: string; label: string }> = {
+const FIGHTS: Record<Enemy, { boss?: "collector" | "miser" | "notary" | "assayer"; encounter?: string; label: string }> = {
   hound: { encounter: "diving-detail", label: "Slag Hound · normal" },
   sniper: { encounter: "sluice-sentries", label: "Rivet Sniper · normal (back row)" },
   bulwark: { encounter: "sluice-sentries", label: "Iron Bulwark · large" },
   collector: { boss: "collector", label: "The Collector · boss" },
   miser: { boss: "miser", label: "The Miser · boss" },
   notary: { boss: "notary", label: "The Notary · boss" },
+  assayer: { boss: "assayer", label: "The Assayer · boss" },
 };
 
 const GEAR: Record<Gear, { items: string[]; label: string }> = {
