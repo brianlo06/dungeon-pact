@@ -20,9 +20,9 @@ import type { Cinematic } from "../../shared/cinematic";
  * edge, the scarlet running out along it) → stakes (over its shoulder across a
  * crossroads at the real enemy, a fingerpost pointing both ways between them;
  * title) → quiet (the real enemy under the raised blade, a bead of scarlet
- * swelling on the edge, the wind cut) → impact (the frame split along the
- * blade, one half inverted; the cleaver through the enemy's guard and the run
- * going down into it) → the take (the face as the enemy's garnet comes up the
+ * swelling on the edge, the wind cut) → impact (a two-tone frame shown one way
+ * and then held inverted, the scarlet run cut across it along the blade; the
+ * cleaver through the enemy's guard and the run going down into it) → the take (the face as the enemy's garnet comes up the
  * blade into the palm) → release (on the real board, a run down the enemy and a
  * run up into the Reaver).
  *
@@ -187,7 +187,7 @@ export const giveAndTake: Cinematic = {
       id: "give",
       kind: "impact",
       purpose:
-        "Impact. The frame split along the blade, one half inverted, with the scarlet running down the cut; then in colour the cleaver buried through the enemy's guard with the whole body after it, the run going down the blade into the wound, the enemy thrown back.",
+        "Impact. A drawn frame both ways, the two figures ink on the accent and then held inverted, with the scarlet run cut across it along the blade; then in colour the cleaver buried through the enemy's guard with the whole body after it, the run going down the blade into the wound, the enemy thrown back.",
       space: "cinematic",
       ms: 840,
       fastMs: 600,

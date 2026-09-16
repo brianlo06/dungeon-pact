@@ -114,7 +114,7 @@ const oath: Clip = {
       hold(0.45, { y: -0.1, rotate: 40 }),
       hold(1, { y: 0.1, rotate: 60 }),
     ],
-    runOut: [hold(0, { x: OUT_HIDDEN }), hold(0.27, { x: OUT_HIDDEN }), out(0.28, 12), out(0.62, 27), out(0.74, 36), out(1, 36)],
+    runOut: [hold(0, { x: OUT_HIDDEN }), hold(0.27, { x: OUT_HIDDEN }), out(0.28, 12), out(0.6, 27), out(0.72, 36), out(1, 36)],
     head: turn([0, 4], [0.3, 8], [0.62, 6], [1, 5]),
     hair: turn([0, 0], [0.3, 4], [0.6, -3], [1, 0]),
     body: [
