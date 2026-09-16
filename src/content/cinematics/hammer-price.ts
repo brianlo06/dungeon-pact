@@ -143,6 +143,25 @@ export const hammerPrice: Cinematic = {
       vfx: [{ kind: "hammer-paddles", at: 0, until: 1, layer: "back", params: { keys: "0:0.95 0.6:0.99" } }],
       sound: [{ at: 0, sfx: "hammer-hoist" }],
       markers: [{ at: 0.35, label: "hoisted" }],
+      framing: {
+        large: {
+          actors: [
+            { role: "caster", at: [560, 1000], size: 700, clip: "ult:hammer-hoist", then: "ult:hammer-hoist", look: "rim", rim: TYRIAN, z: 3 },
+            { role: "target", at: [1180, 830], size: 360, face: -1, z: 5, look: "rim", rim: TYRIAN, react: [{ at: 0.3, clip: "block", then: "block" }] },
+          ],
+        },
+        boss: {
+          camera: {
+            from: { x: 780, y: 500, zoom: 1.12, rotate: 7 },
+            to: { x: 784, y: 492, zoom: 1.18, rotate: 10 },
+            ease: "out",
+          },
+          actors: [
+            { role: "caster", at: [540, 1000], size: 700, clip: "ult:hammer-hoist", then: "ult:hammer-hoist", look: "rim", rim: TYRIAN, z: 3 },
+            { role: "target", at: [1240, 920], size: 290, face: -1, z: 5, look: "rim", rim: TYRIAN, react: [{ at: 0.3, clip: "block", then: "block" }] },
+          ],
+        },
+      },
     },
 
     /* 4 · THE LAST PADDLE — the quiet. */
@@ -211,6 +230,33 @@ export const hammerPrice: Cinematic = {
         { kind: "voice", at: 0.36, until: 1, text: "$voice.impact" },
       ],
       markers: [{ at: HIT, label: "sold" }],
+      framing: {
+        large: {
+          camera: {
+            from: { x: 830, y: 610, zoom: 1.24, rotate: -5 },
+            to: { x: 830, y: 620, zoom: 1.16, rotate: -2 },
+            ease: "out",
+          },
+        },
+        boss: {
+          camera: {
+            from: { x: 850, y: 570, zoom: 1.14, rotate: -4 },
+            to: { x: 850, y: 580, zoom: 1.06, rotate: -1.5 },
+            ease: "out",
+          },
+          actors: [
+            { role: "caster", at: [520, 980], size: 720, clip: "ult:hammer-knock", then: "ult:hammer-knock", look: "rim", rim: TYRIAN, z: 3 },
+            { role: "target", at: [1080, 940], size: 330, face: -1, z: 1, react: [{ at: HIT, clip: "hurt" }], shove: { at: HIT, by: [8, 8] }, toTilt: 2 },
+          ],
+          vfx: [
+            { kind: "hammer-glow", at: 0, until: 1, follow: "target", layer: "back" },
+            { kind: "hammer-block", at: 0, until: 1, follow: "target", layer: "back", params: { mode: "split", hit: HIT, w: 0.6 } },
+            { kind: "hammer-knock", at: HIT, until: 0.75, follow: "target", layer: "back", params: { half: "back", ox: -0.28, oy: -0.47, size: 0.6 } },
+            { kind: "hammer-knock", at: HIT, until: 0.75, follow: "target", layer: "front", params: { half: "front", ox: -0.28, oy: -0.47, size: 0.6 } },
+            { kind: "hammer-splinters", at: HIT, until: 0.85, follow: "target", layer: "front", params: { count: 28 } },
+          ],
+        },
+      },
     },
 
     /* 6 · KNOCKED DOWN — return. */
