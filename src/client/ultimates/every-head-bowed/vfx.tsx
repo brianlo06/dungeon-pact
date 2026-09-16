@@ -136,11 +136,28 @@ function kitLantern(node: HTMLElement): SVGElement | null {
   return lamp.querySelector<SVGElement>("circle.ph-wdn-lamp:not(.ph-glow)");
 }
 
+/**
+ * The lantern, read once a frame. Three effects ask for it, and each reads
+ * layout; asked after another effect has written, that is a forced layout
+ * every time. `document.timeline.currentTime` is the same all frame.
+ */
+const LAMP_AT = new WeakMap<HTMLElement, { t: number | null; at: [number, number] | null }>();
+
 /** Where the lantern's flame is this frame, in world units: read off the caster's copy. */
 function lanternAt(el: HTMLElement): [number, number] | null {
   const root = rootOf(el);
-  const node = casterNode(el);
-  if (!root || !node || node.style.display === "none") return null;
+  if (!root) return null;
+  const t = Number(document.timeline.currentTime ?? -1);
+  const cached = LAMP_AT.get(root);
+  if (cached && cached.t === t) return cached.at;
+  const at = readLantern(root);
+  LAMP_AT.set(root, { t, at });
+  return at;
+}
+
+function readLantern(root: HTMLElement): [number, number] | null {
+  const node = root.querySelector<HTMLElement>('.cine-actor[data-role="caster"]');
+  if (!node || node.style.display === "none") return null;
   const flame = kitLantern(node) ?? node.querySelector<SVGElement>('[data-part="lantern"] circle.ph-wdn-lamp:not(.ph-glow)');
   const r = flame?.getBoundingClientRect();
   if (!r || (!r.width && !r.height)) return null;
@@ -339,12 +356,10 @@ const Field = ({ cue }: VfxProps): ReactNode => {
                 <path className="bowed-petals" d={petalRing(pl.r)} strokeWidth={f1(Math.max(1, pl.r * 0.035))} />
                 <ellipse className="bowed-disc" rx={f1(pl.r * 0.42)} ry={f1(pl.r * 0.86)} strokeWidth={f1(Math.max(1.5, pl.r * 0.06))} />
                 <ellipse className="bowed-whorl" rx={f1(pl.r * 0.28)} ry={f1(pl.r * 0.58)} strokeWidth={f1(Math.max(1, pl.r * 0.1))} strokeDasharray={`${f1(pl.r * 0.05)} ${f1(pl.r * 0.07)}`} />
-                <ellipse className="bowed-eye" rx={f1(pl.r * 0.1)} ry={f1(pl.r * 0.22)} />
                 <ellipse className="bowed-shade" rx={f1(pl.r * 0.8)} ry={f1(pl.r * 1.2)} />
                 <g className="bowed-rot">
                   <path className="bowed-dry" d={petalRing(pl.r * 0.78)} strokeWidth={f1(Math.max(1, pl.r * 0.035))} />
                   <path className="bowed-rot-black" d={blob(pl.r * 0.5, pl.r * 0.95, i * 7 + 3, 11)} strokeWidth={f1(Math.max(1.5, pl.r * 0.06))} />
-                  <path className="bowed-rot-bloom" d={blob(pl.r * 0.5, pl.r * 0.95, i * 7 + 3, 11)} fill="none" strokeWidth={f1(Math.max(1.2, pl.r * 0.07))} />
                   <path className="bowed-rot-specks" d={mouldSpecks(pl.r, i * 13 + 5)} />
                 </g>
               </g>
@@ -429,13 +444,12 @@ const field: Frame = (el, p, age) => {
     const dist = Math.hypot(lamp[0] - cx, lamp[1] - cy);
     const lit = clamp(1 - dist / radius);
     const hc = head.children;
-    setStyle(hc[5] as SVGElement, "opacity", f2(0.82 * Math.pow(1 - lit, 1.4)));
+    setStyle(hc[4] as SVGElement, "opacity", f2(0.82 * Math.pow(1 - lit, 1.4)));
     const rotted = Math.max(rot, bowed);
-    setStyle(hc[6] as SVGElement, "opacity", rotted ? "1" : "0");
-    const bl = (hc[6] as SVGGElement).children;
+    setStyle(hc[5] as SVGElement, "opacity", rotted ? "1" : "0");
+    const bl = (hc[5] as SVGGElement).children;
     const b = Math.max(bloom, bowed);
-    setStyle(bl[2] as SVGElement, "opacity", f2(b * (0.45 + 0.55 * lit)));
-    setStyle(bl[3] as SVGElement, "opacity", f2(b * (0.4 + 0.6 * lit)));
+    setStyle(bl[2] as SVGElement, "opacity", f2(b * (0.4 + 0.6 * lit)));
     // The petals go with the rot.
     setStyle(hc[1] as SVGElement, "opacity", rotted ? "0" : "1");
   });

@@ -34,7 +34,7 @@ export const RUST = "#5b3522";
 const rand = seeded(4471);
 
 /** The far field's heads along the horizon: small, dark, nodding every way. */
-const FAR = Array.from({ length: 230 }, () => {
+const FAR = Array.from({ length: 140 }, () => {
   const depth = rand();
   return {
     x: -800 + rand() * 3200,
