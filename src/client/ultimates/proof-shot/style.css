@@ -56,11 +56,11 @@
   position: absolute;
   left: 0;
   top: 0;
-  width: calc(4px * var(--s));
-  height: calc(3px * var(--s));
+  width: calc(7px * var(--s));
+  height: calc(5px * var(--s));
   border-radius: 40%;
-  background: #4a4e53;
-  box-shadow: 1px -1px 0 0 rgb(200 205 210 / 0.5);
+  background: #3a3e43;
+  box-shadow: 1px -1px 0 0 rgb(215 220 225 / 0.7);
   --k: clamp(0, calc((var(--p) - var(--d)) / (1 - var(--d))), 1);
   transform: translate(calc(var(--dx) * var(--k) + var(--w) * var(--k) * var(--k)), calc(var(--dy) * var(--k) + 140px * var(--k) * var(--k)));
   opacity: calc(min(1, var(--k) * 8) * (1 - var(--k) * var(--k)));
@@ -111,8 +111,8 @@
 
 /* ---- the plate on its frame ---- */
 .cine-vfx > .ps-plate {
-  width: calc(var(--ah, 300px) * 0.62);
-  height: calc(var(--ah, 300px) * 0.9);
+  width: calc(var(--ah, 300px) * 0.76);
+  height: calc(var(--ah, 300px) * 1.1);
   transform: translate(-50%, -100%) scale(var(--s));
 }
 .ps-plate-svg {
@@ -202,10 +202,10 @@
 }
 .ps-board-paces {
   position: absolute;
-  width: calc(var(--unit-w, 120px) * 3.6);
-  height: calc(var(--unit-w, 120px) * 0.66);
-  left: calc(var(--unit-w, 120px) * -3.3);
-  top: calc(var(--unit-w, 120px) * -0.5);
+  width: calc(var(--unit-w, 120px) * 4.4);
+  height: calc(var(--unit-w, 120px) * 0.8);
+  left: calc(var(--unit-w, 120px) * -4);
+  top: calc(var(--unit-w, 120px) * -0.6);
   overflow: visible;
 }
 .ps-board-pace {

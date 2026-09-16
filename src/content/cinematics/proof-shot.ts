@@ -83,7 +83,7 @@ const struck = (at: [number, number], size: number, shove: [number, number], til
   toTilt: tilt,
 });
 /** A speck at the shooting line: the arrival is its `contact`. */
-const FAR_KID: ActorCue = { role: "caster", at: [446, 478], size: 88, clip: "ult:ps-after", then: "ult:ps-after", look: "silhouette", z: 1 };
+const FAR_KID: ActorCue = { role: "caster", at: [446, 484], size: 98, clip: "ult:ps-after", then: "ult:ps-after", look: "lit", z: 1 };
 const proofVfx = (plate: [number, number], plateScale: number): VfxCue[] => [
   { kind: "ps-glare", at: 0, until: 0.5, follow: "target", x: 0, y: 0, layer: "back" },
   { kind: "ps-plate", at: 0, until: 1, x: plate[0], y: plate[1], scale: plateScale, layer: "front", params: { mode: "proof", hit: 0 } },
@@ -172,7 +172,7 @@ export const proofShot: Cinematic = {
       background: "ps-lane",
       lighting: { exposure: 0.95, under: [BOUNCE, 0.15], rim: [BLUE, 0.4, 1], vignette: 0.25, letterbox: BARS },
       toLighting: { exposure: 0.92, under: [BOUNCE, 0.15], rim: [BLUE, 0.5, 1], vignette: 0.3, letterbox: BARS },
-      actors: [KID, wideTarget([1338, 474], 96)],
+      actors: [KID, wideTarget([1296, 492], 96)],
       vfx: wideVfx(-40, 1),
       sound: [
         { at: 0.04, sfx: "ps-motif" },
@@ -187,8 +187,8 @@ export const proofShot: Cinematic = {
         { at: 0.92, label: "drawn" },
       ],
       framing: {
-        large: { actors: [KID, wideTarget([1330, 476], 90)], vfx: wideVfx(-46, 1) },
-        boss: { actors: [KID, wideTarget([1318, 480], 82)], vfx: wideVfx(-58, 1) },
+        large: { actors: [KID, wideTarget([1290, 494], 90)], vfx: wideVfx(-50, 1) },
+        boss: { actors: [KID, wideTarget([1284, 498], 82)], vfx: wideVfx(-64, 1) },
       },
     },
 
@@ -239,7 +239,7 @@ export const proofShot: Cinematic = {
       lighting: { exposure: 0.7, under: [BOUNCE, 0.12], vignette: 0.4, letterbox: 0.14 },
       toLighting: { exposure: 0.45, under: [BOUNCE, 0.08], vignette: 0.7, letterbox: 0.15 },
       actors: [quietTarget([1100, 840], 420)],
-      vfx: quietVfx(-262),
+      vfx: quietVfx(-300),
       duck: [{ at: 0, level: 0.03, ms: 600 }],
       sound: [{ at: 0.1, sfx: "ps-settle" }],
       markers: [{ at: 0.5, label: "still" }],
@@ -247,12 +247,12 @@ export const proofShot: Cinematic = {
         large: {
           camera: { from: { x: 1000, y: 580, zoom: 1.36 } },
           actors: [quietTarget([1120, 846], 360)],
-          vfx: quietVfx(-280),
+          vfx: quietVfx(-330),
         },
         boss: {
           camera: { from: { x: 1000, y: 560, zoom: 1.18 } },
           actors: [quietTarget([1160, 852], 270)],
-          vfx: quietVfx(-330),
+          vfx: quietVfx(-372),
         },
       },
     },
@@ -276,7 +276,7 @@ export const proofShot: Cinematic = {
       lighting: { exposure: 1, tint: [PEWTER, 0.1], under: [BOUNCE, 0.15], vignette: 0.25, letterbox: BARS },
       toLighting: { exposure: 0.88, tint: [PEWTER, 0], under: [BOUNCE, 0.15], vignette: 0.35, letterbox: BARS },
       actors: [FAR_KID, struck([1100, 840], 420, [30, -4], 4)],
-      vfx: proofVfx([838, 840], 1.06),
+      vfx: proofVfx([800, 840], 1.06),
       screen: [
         { kind: "two-tone", at: 0, ms: 40 },
         { kind: "chromatic", at: 0.32, ms: 90, amount: 0.7 },
@@ -310,7 +310,7 @@ export const proofShot: Cinematic = {
             ease: "out",
           },
           actors: [FAR_KID, struck([1120, 846], 360, [22, -3], 3)],
-          vfx: proofVfx([840, 846], 1.16),
+          vfx: proofVfx([790, 846], 1.16),
         },
         boss: {
           camera: {
@@ -319,7 +319,7 @@ export const proofShot: Cinematic = {
             ease: "out",
           },
           actors: [FAR_KID, struck([1160, 852], 270, [14, -2], 2)],
-          vfx: proofVfx([830, 852], 1.3),
+          vfx: proofVfx([788, 852], 1.3),
         },
       },
     },

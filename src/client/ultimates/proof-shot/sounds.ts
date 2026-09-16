@@ -34,8 +34,8 @@ function wind(c: AudioContext, o: AudioNode, t: number, seconds: number, gain: n
 
 /** A bowstring let go, flat: a snap, a low thrum, and the arrow hissing away level. */
 function snap(c: AudioContext, o: AudioNode, t: number, gain = 0.2) {
-  crash(c, o, t, { seconds: 0.016, gain: gain * 0.9, type: "highpass", freq: 2400, q: 0.8 });
-  hit(c, o, t, { type: "triangle", from: 140, to: 98, gain: gain * 0.9, attack: 0.002, decay: 0.15 });
+  crash(c, o, t, { seconds: 0.016, gain: gain * 0.4, type: "highpass", freq: 2400, q: 0.8 });
+  hit(c, o, t, { type: "triangle", from: 140, to: 98, gain: gain * 0.7, attack: 0.002, decay: 0.15 });
   hit(c, o, t, { type: "sine", from: 290, to: 200, gain: gain * 0.25, attack: 0.002, decay: 0.08 });
   crash(c, o, t + 0.008, { seconds: 0.2, gain: gain * 0.3, type: "bandpass", freq: 3000, sweepTo: 5200, q: 2.5 });
 }
@@ -127,8 +127,8 @@ export const voices: Record<string, Voice> = {
   "ps-impact": {
     bus: "sfx",
     render: (c, o, t) => {
-      punch(c, o, t, 0.85);
-      hit(c, o, t, { type: "sine", from: 125, to: 30, gain: 0.95, attack: 0.002, decay: 0.7 });
+      punch(c, o, t, 0.7);
+      hit(c, o, t, { type: "sine", from: 125, to: 30, gain: 0.85, attack: 0.002, decay: 0.7 });
       crash(c, o, t + 0.004, { seconds: 0.24, gain: 0.45, type: "lowpass", freq: 2400, sweepTo: 320, q: 1 });
       hit(c, o, t + 0.004, { type: "triangle", from: 230, to: 100, gain: 0.24, decay: 0.2 });
       hit(c, o, t + 0.01, { type: "sine", from: 1180, gain: 0.16, attack: 0.001, decay: 1.1 });
@@ -145,8 +145,8 @@ export const voices: Record<string, Voice> = {
   "ps-second": {
     bus: "sfx",
     render: (c, o, t) => {
-      crash(c, o, t, { seconds: 0.03, gain: 0.55, type: "bandpass", freq: 2600, q: 1.1 });
-      hit(c, o, t, { type: "triangle", from: 620, to: 280, gain: 0.32, attack: 0.001, decay: 0.09 });
+      crash(c, o, t, { seconds: 0.03, gain: 0.42, type: "bandpass", freq: 2600, q: 1.1 });
+      hit(c, o, t, { type: "triangle", from: 620, to: 280, gain: 0.28, attack: 0.001, decay: 0.09 });
       hit(c, o, t + 0.002, { type: "square", from: 900, to: 700, gain: 0.08, attack: 0.001, decay: 0.03 });
       hit(c, o, t, { type: "sine", from: 110, to: 40, gain: 0.5, attack: 0.002, decay: 0.35 });
       crash(c, o, t + 0.003, { seconds: 0.14, gain: 0.28, type: "lowpass", freq: 2000, sweepTo: 400, q: 1 });

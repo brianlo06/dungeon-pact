@@ -24,10 +24,10 @@ Target an enemy, cost 100, **speed 4** (it resolves after most other
 Ultimates, so it lands on whatever the party has already opened):
 
 1. the target's **Barrier is stripped**: the plate comes off first;
-2. **the proof shot**: 12 precision through armour (a Mark the party left
+2. **the proof shot**: 8 precision through armour (a Mark the party left
    there is cashed: EXPLOIT); the arrow standing in the target is its
    **Mark**, for one round;
-3. **the second shot**: 12 precision through armour into the same hole,
+3. **the second shot**: 8 precision through armour into the same hole,
    which cashes that Mark: a second **EXPLOIT**, always;
 4. the armour has a hole in it now: the target is **Vulnerable for 2
    rounds**;
@@ -36,7 +36,7 @@ Ultimates, so it lands on whatever the party has already opened):
 | | The Hundredth Mark (base) | **Proof Shot** (Sharpshooter) |
 | --- | --- | --- |
 | Marks | one on **every** enemy, for the party | **none for the party**; its own, spent by its own second arrow |
-| The strike | one arrow, 24 through armour | **two** arrows, 12 + 12 through armour, the second an Exploit |
+| The strike | one arrow, 24 through armour | **two** arrows, 8 + 8 through armour, the second an Exploit (8 + 7 + 8 + 7 + 20 = 50 at the path's power) |
 | Barrier | absorbs the shot | **stripped** first |
 | What it leaves the party | Marks to Exploit | **one target Vulnerable for two rounds** |
 | Reach | every enemy | **one enemy**, nothing else touched |
@@ -57,7 +57,46 @@ them.
 
 ### Balance
 
-See the tables at the end (filled in from the lab).
+`scripts/ultimate-report.ts 4 --sample=6` (324 runs), same machine, stub
+`null` and then Proof Shot:
+
+| Win rate | off | on, stub (Hundredth Mark) | **on, Proof Shot** |
+| --- | ---: | ---: | ---: |
+| 2 players | 75% | 79% | **79%** |
+| 3 players | 94% | 95% | **95%** |
+| 4 players | 92% | 93% | **95%** |
+| all | 91% | 93% | **94%** |
+
+Ranger uses per run 3.24 → 3.14, charge 329 → 324: the bot trains a Ranger
+into the Sharpshooter more often than into the other two paths (the
+Whetstone is the first mentor), so unlike False Footing and Sunblind this one
+registers in the whole-game matrix; "all" moves one point. It was also
+weighed head to head, as those two were: every Ranger plays one Ultimate's
+effects whatever its path, every Ranger party in every 2nd composition, 4
+seeds (328 runs each; "none" turns every class's off):
+
+| Every Ranger plays | 2p | 3p | 4p | all | Ranger uses / run |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| none | 81% | 94% | 90% | 91% | — |
+| The Hundredth Mark | 75% | 94% | 95% | 94% | 3.13 |
+| 12 + 12, Vulnerable 2 (first cut) | 81% | 100% | 98% | 97% | 2.91 |
+| 14 + 14, Vulnerable 2 | 88% | 100% | 98% | 98% | 2.92 |
+| 10 + 10, Vulnerable 2 | 81% | 100% | 96% | 96% | 2.95 |
+| 12 + 12, no Vulnerable | 69% | 99% | 95% | 95% | 2.96 |
+| 12 + 12, Vulnerable 1 | 75% | 100% | 96% | 96% | 2.92 |
+| 12 + 12, Barrier not stripped | 69% | 100% | 97% | 96% | 2.92 |
+| 10 + 10, Vulnerable 1 | 75% | 100% | 95% | 95% | 2.99 |
+| 6 + 6, Vulnerable 2 | 75% | 97% | 95% | 94% | 3.01 |
+| 8 + 8, Vulnerable 1 | 81% | 97% | 94% | 94% | 3.01 |
+| **8 + 8, Vulnerable 2 (shipped)** | **81%** | **99%** | **95%** | **95%** | **2.96** |
+
+The first cut sat three points over the base: two guaranteed Exploits and a
+two-round opening is a lot on one target. The damage is the lever that
+moved it (14 → 12 → 10 → 8 walks it down a point at a time); the
+Vulnerable's length moved it less, and taking it away cost duos six points
+while leaving the total high. 8 + 8 with the two-round opening lands a point
+over the Hundredth Mark, inside the noise of 328 runs, with the opening —
+the team play — kept whole.
 
 Tests: `tests/ultimates-proof-shot.test.ts`.
 
@@ -185,7 +224,66 @@ settling) and `ult:ps-lower` (the board: settling forward). The close-ups
 
 ## Notes from the lab
 
-Filled in as the film is tuned.
+- **Placed from probes** (`scripts/probe-ultimate.ts`): in the wind close-up
+  at size 1000 the open hand's centre is at world (686, 928) and the head
+  above the frame at (667, 588); the grit is let go from the fingertips, an
+  offset of (4, −196) from the ground point. In the wide the thumb sits at
+  (330, 699) beside the head's centre (293, 647). In the breath at size 1000
+  the eyes are at (744, 605) and the mouth at (750, 664); the camera holds
+  (806, 622) → (798, 618). In the quiet at size 420 the hound's body spans
+  x 888–1312, so the plate hangs 300 world units in front of the ground
+  point (330 for a large target, 372 for a boss).
+- **The hands are drawn in `Ranger.tsx`**, inside the `draw` part, as two
+  close-up-only parts (`open`, `thumb`) registered only in a close-up copy
+  (`CloseUpContext`) and shown only where this film's CSS sets `--ps-open`
+  (the wind) or `--ps-thumb` (the range). A part with no track in a clip
+  returns to rest — visible — so the CSS variable is what keeps them out of
+  every other film's close-ups; inside this film's shots their clips scale
+  them up and down (the thumb goes up at 0.08–0.16 of the range and away at
+  0.5–0.56 as the hand goes to the quiver). Each covers the mitten, so the
+  mitten is the closed hand and needs no rule of its own. False Footing's
+  glove (`--ff-reach`) is untouched.
+- **The draw was solved, not posed**, with the same solver the other two
+  path films use (`aimed`, `drawn`), but every draw here is `aimed(-2)`: flat
+  along the range, never at the sky. Two looses in one 600ms clip: the hand
+  goes back over the shoulder between them so the fresh arrow is not seen
+  crossing the face.
+- **The target stood on the far bank** in the first wide (its ground point
+  above the lane's far edge); it is now at (1296, 492), on the cinder, and
+  the flag's pole was moved in from the vanishing point so the streamer is
+  in frame beside it.
+- **The plate** was first two thirds of the figure's drawn height across and
+  read as a tag; it is now 0.76 of the drawn height wide and hangs on an
+  iron frame whose legs stand on the ground, so it reads as a thing hung in
+  the target's way. The mark it takes is a ragged hole with the sky through
+  it and a cold shine that fades as it falls.
+- **The two-tone frame** first went almost all to black: cinder and a dark
+  creature are one tone. A pale light (`ps-glare`) now sits behind the target
+  for the first half of the impact, so on that frame the target and its
+  plate are ink against it.
+- **The far kid** was a silhouette at size 88 and read as a blot at the end
+  of the lane; lit and at 98 it reads as the kid with its bow still up.
+- **The pace lines on the board** first stood up like posts; they now lie
+  along the floor in front of the target, towards the party, stepping away
+  from it.
+- Sounds, rendered offline (three renders each, peak and loudest-300ms
+  RMS): `ps-impact` 1.54–1.64 / 0.266 in its first cut, against the
+  Hundredth Mark's 1.36–1.38 / 0.252, Sunblind's 1.25–1.32 / 0.252 and
+  False Footing's 1.30–1.39 / 0.248; its punch and sub were trimmed (the
+  measured numbers after the trim are in the report). The motif 0.22 / 0.046
+  (Sunblind's 0.20 / 0.055, the Hundredth Mark's 0.60–0.96 / 0.051); the
+  second arrow 0.78–0.95 / 0.101 before its trim; the loose 0.26–0.68, its
+  snap trimmed; the quiet's `ps-settle` 0.05 / 0.006.
+- Root keys: `ult:ps-step` (the board: x −0.05, leans −2°, squash 1.02),
+  `ult:ps-range` (the wide: weight back to −2.5° under the thumb, forward to
+  1.2° into the draw), `ult:ps-after` (a speck: −3° settling to −1°) and
+  `ult:ps-lower` (the board: from x −0.05 back to rest). The close-ups
+  `ult:ps-wind` and `ult:ps-breath` keep a still root and their cues set
+  `root: false`. Nothing is built on `.cine-look`.
+- Profile (`GPU=1 scripts/profile-ultimate.ts 5491 1920x1080`, dev build,
+  shared machine under load): film p50 16.7ms / p95 50ms, 12 frames over
+  34ms (at its first frames); the round after it p50 16.7ms / p95 66.6ms, 13
+  over 34ms. Peak 949 nodes (879 SVG), 5 live effects, 0 filtered elements.
 
 ## What the engine could not do, and what was built instead
 
@@ -193,8 +291,14 @@ Filled in as the film is tuned.
   end is an in-folder screen effect, the streamer's cloth (`ps-streamer`
   wipe).
 - **One reveal, one contact**: the film's blow is the first arrow (the
-  reveal and the kid's `contact` sit on it); the second arrow is drawn 210ms
-  later and the damage number lands with it, the total of both hits.
+  reveal and the kid's `contact` sit on it, at 0.06); the second arrow is
+  drawn at 0.34 and the damage number lands with it, the total of both hits.
+  The board's two pops fall together at the first. A `contact` list on a
+  clip is read only for its first entry, so a second hit cannot carry its
+  own reveal.
+- **The engine's damage is not the film's**: the lab hound has 46 HP, so the
+  number on the frame in the lab is 46 and not the 50 the shots add up to
+  (the Collector shows 50).
 - **A status leaves no record but a chip**: the Vulnerable and the stripped
   Barrier are drawn by the film itself (the hole shining, the plate on the
   ground).

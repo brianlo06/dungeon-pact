@@ -314,7 +314,7 @@ const Arrows = ({ cue }: VfxProps) => {
         <ArrowArt id={id} />
       </defs>
       <g className="ps-hole">
-        <circle className="ps-hole-glow" r="14" fill={BLUE} />
+        <circle className="ps-hole-glow" r="16" fill={BLUE} />
         <path className="ps-hole-mark" d="M-9 -2 L-3 -10 L6 -8 L11 1 L5 9 L-6 8 Z" fill="#101318" stroke={BLUE} strokeWidth="2.5" strokeLinejoin="round" />
         <path className="ps-hole-rays" d="M-12 -5 L-19 -9 M8 -11 L13 -17 M13 4 L20 6 M-7 11 L-11 16" stroke="#dbe8ff" strokeWidth="2.5" strokeLinecap="round" />
       </g>
@@ -422,8 +422,8 @@ const Board = ({ cue }: VfxProps) => {
         <svg viewBox="-400 -60 440 80" className="ps-board-paces">
           {[0, 1, 2].map((i) => (
             <g key={i} className="ps-board-pace" style={v({ "--d": (i * 0.18).toFixed(2) })}>
-              <path d={`M${-90 - i * 105} -4 L${-70 - i * 105} -22`} stroke={PEWTER.line} strokeWidth={5 - i} strokeLinecap="round" opacity={0.75 - i * 0.15} />
-              <path d={`M${-90 - i * 105} -4 L${-70 - i * 105} -22`} stroke={BLUE} strokeWidth={9 - i * 2} strokeLinecap="round" opacity="0.2" />
+              <path d={`M${-104 - i * 105} 4 L${-46 - i * 105} -8`} stroke={BLUE} strokeWidth={12 - i * 2} strokeLinecap="round" opacity="0.35" />
+              <path d={`M${-104 - i * 105} 4 L${-46 - i * 105} -8`} stroke={PEWTER.line} strokeWidth={5 - i} strokeLinecap="round" opacity={0.9 - i * 0.15} />
             </g>
           ))}
         </svg>
