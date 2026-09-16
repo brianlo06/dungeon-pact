@@ -54,7 +54,7 @@ export const voices: Record<string, Voice> = {
   "hallow-knock": {
     bus: "sfx",
     render: (c, o, t) => {
-      knock(c, o, t, 0.45);
+      knock(c, o, t, 0.3);
       reed(c, o, t + 0.02, 41, { gain: 0.03, attack: 0.3, hold: 0.3, release: 0.7, cutoff: 700 });
     },
   },
