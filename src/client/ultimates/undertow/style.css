@@ -1,0 +1,67 @@
+/*
+ * Undertow — effects and space.
+ *
+ * Slate, wet sand, the sea's ink, and cobalt where the water moves. No
+ * filters and no keyframes: every outline is rebuilt from a frame function
+ * (`vfx.tsx`) on the combat clock, and a glow is a small flat gradient.
+ */
+
+/* ---- effects drawn in world units, over the whole stage ---- */
+.cine-vfx > .tide-world {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none !important;
+}
+
+/* ---- foam across the lens ---- */
+.cine-screen > .cine-vfx > .tide-wipe {
+  inset: -10% -30%;
+  width: auto;
+  height: auto;
+  will-change: transform;
+}
+.tide-wipe svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ---- on the board ---- */
+.cine-anchored > .tide-drain,
+.cine-anchored > .tide-standing {
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: none;
+  will-change: transform;
+}
+.tide-drain svg,
+.tide-standing svg {
+  position: absolute;
+  overflow: visible;
+  width: calc(var(--unit-w, 100px) * 2.4);
+  height: calc(var(--unit-w, 100px) * 1.2);
+  left: calc(var(--unit-w, 100px) * -1.2);
+  top: calc(var(--unit-w, 100px) * -1);
+}
+.tide-standing svg {
+  width: calc(var(--unit-w, 100px) * 1.6);
+  height: calc(var(--unit-w, 100px) * 0.8);
+  left: calc(var(--unit-w, 100px) * -0.8);
+  top: calc(var(--unit-w, 100px) * -0.67);
+}
+
+/* In this film's silhouettes the drawing's own eye-lights stay lit, cold. */
+.ult-cinematic[data-cinematic="undertow"] .cine-actor[data-role="caster"] .ph-glow-eyes ellipse {
+  fill: #cfe4ff !important;
+}
+
+/* A silhouette has no glow: the creatures' drawn glows are filters, and a shadow is flat. */
+.ult-cinematic[data-cinematic="undertow"] .cine-actor[data-look="silhouette"] .cine-look * {
+  filter: none !important;
+}
