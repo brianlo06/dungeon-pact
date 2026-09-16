@@ -125,20 +125,25 @@ film is handed its one target, the price, the damage and the healing as beats.
   into the palm, in the take. On a worn weapon it runs in a band along the
   same axis. On the board a scarlet run goes down the enemy and a garnet run
   up into the Reaver (`give-board`).
-- **The hand.** The fist opens: `knuckles` (the fist as drawn) goes, the
-  bandage comes off (`unwrap`) and an open hand with a cut across its palm
-  (`palm`) is laid on the blade: along the edge in the oath, across the spine
-  in the take. The hand is drawn over the cleaver and placed by its own keys,
-  since it lies on the blade.
+- **The hand — one, at the end of its arm.** The front arm is drawn again
+  over the cleaver (`palm`), hanging from the front shoulder and turned by its
+  clip, so the hand is always at the end of the forearm; while it plays, the
+  drawing's own front arm is hidden (`fist` at scale 0). It starts as the
+  bandaged fist lying on the steel (`fingers` curled, the bandage `unwrap` round
+  it), the bandage slips off over the knuckles, the fingers open, and the
+  forearm is drawn out along the blade towards the point. The other hand is
+  the one that holds the cleaver, and in a close-up the grip's end shows past
+  it so it reads as holding a handle.
 - **The drawn frame — both ways.** The impact's accent is the engine's
   two-tone, first as it is (the Reaver and the enemy ink on the accent) and
   then, for the whole hit-stop, inverted (the same two figures in the accent
   on ink): the one picture shown one way and then the other. A flat field of
   chalk light is laid behind the figures for it (`give-glare`) so they
-  separate from the night, and over both, in colour, the scarlet run is laid
-  across the whole frame along the blade on an ink cut (`give-split`). The
-  number is on it; a burst of notched wedges is thrown off the contact
-  (`give-notch`).
+  separate from the night. The staging does the rest: two silhouettes side-on
+  with a gap between them and the blade across it, its edge into the enemy.
+  The number is on it; after it, a burst of notched wedges is thrown out from
+  behind the entry (`give-notch`, behind both figures, so it never covers the
+  wound).
 - **Motif (original):** a bowed saw — a blade made to sing — over a low bowed
   drone: E4, B♭4, E4, then E3 under it. Out a tritone and back again: a tune
   that runs both ways. Not a drum and string (Red Ledger), a mallet on a
@@ -173,11 +178,11 @@ into the Reaver, whole: "Square.").
 | # | Shot | ms (FAST) | Camera | Pose | Background / light | VFX | Audio | Target | Transition in | Purpose |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 0 | Call | 400 (240) | battle camera | real Reaver `ult:give-call`: the cleaver swung up off the floor to lie across the body, the fist brought to it | real battlefield goes to night indigo, bars close | chalk-pale call aura | call bell; the blade brought up and a hand laid on it (`give-ring`); music ducks | on board | — | break the round |
-| 1 | Oath · extreme close-up | 700 (440) | on the blade across the chest and the hand, Dutch −8° → −5°, pushing in | `ult:give-oath` (`root: false`): the bandage comes off, the fist opens, the palm is laid along the edge and drawn towards the point; brow lowered, teeth set | crossroads, exposure 0.3, cold star rim | the bandage falling (`unwrap`), the open hand (`palm`), **the run out** along the blade (`runOut`) | `give-oath`: linen, a hand on steel, **the edge drawn** rising; "I bleed, you bleed." | no | black 70ms | identity: the one time the fist opens, and the price |
+| 1 | Oath · extreme close-up | 700 (440) | tight on the blade and the one forearm lying along it from the frame's edge (the gripping hand out of frame), Dutch −8° → −5°, pushing in | `ult:give-oath` (`root: false`): the bandaged fist on the steel; the bandage slips off, the fingers open, the forearm is drawn along the blade towards the point | crossroads, exposure 0.3, cold star rim | the bandage off (`unwrap`), the fist opening (`fingers`) at the end of its arm (`palm`), **the run out** along the blade (`runOut`) | `give-oath`: linen, a hand on steel, **the edge drawn** rising; "I bleed, you bleed." | no | black 70ms | identity: the one time the fist opens, and the price |
 | 2 | Crossroads · over-the-shoulder | 920 (480) | past the Reaver's shoulder across the crossing, slow push | `ult:give-hold`: the cleaver held out forward and down, the open hand on it, the blood at its point | crossroads, wide: tracks, fingerpost, gibbet, thorn, stars; star rim | wind streaks and chalk grit crossing low (`give-wind`) | wind (`give-wind`), **motif** (`give-motif`) | **the real target** across the crossing, lit cold, bracing (`anticipate`) | cut | stakes; title |
 | 3 | Under the blade · target (the quiet) | 520 (340) | level, dead still, on the enemy | `ult:give-raise`: the blade held level over the enemy from off the right of the frame, a hair of tremble | exposure 0.14 → 0.12, vignette 0.9, star rim on the enemy | **one bead of scarlet trembling on the edge over the enemy** (`give-bead`) | music at 3%; the wind cut; one fingerpost creak (`give-hush`) | **yes**, still, rimmed | cut | the quiet: what is about to come down |
-| 4 | Give · impact | 840 (600) | medium, Dutch 7° → 3°, easing out | `ult:give-strike` (contact 0.04): the cleaver over and down through the enemy's guard, the whole body after it; target `hurt`, shoved, tilted | crossroads lit, then settling | **the frame both ways**: two-tone 70ms, inverted for the stop (`give-glare` behind, `give-split` over); then the notched burst (`give-notch`) and **the run out** down the buried blade | `give-impact` + `ult-boom`; **150ms stop**; heavy shake | **yes** | cut on the frame | impact: `$damage`; "Your turn." |
-| 5 | Take · face close-up | 680 (460) | on the face and the blade under the jaw, level, a slow drift | `ult:give-take` (`root: false`): the blade drawn up under the jaw, the palm laid across its spine; the garnet comes up the blade; head back, brow lifted, eyes shut on a breath in; then eyes open on a grin | crossroads, exposure 0.4 → 0.46, a rose rim | **the run back** up the blade into the palm (`runBack`); the scarlet gone from the steel | **the edge drawn**, falling (`give-take`), a breath, one note of the saw | no | cut | the take: the blood coming home; healing revealed (0.5) |
+| 4 | Give · impact | 840 (600) | medium, the Reaver downstage left and the enemy upstage right, side-on with a gap, Dutch 4° → 1.5°, easing out | `ult:give-strike` (contact 0.09): a hop and a lunge, the arm and the cleaver across the gap and the edge down into the enemy's flank; target (turned side-on, drawn over the blade so the edge goes *in*) `hurt`, head thrown up, recoiling | crossroads lit, then settling | **the frame both ways**: two-tone 70ms, inverted for the stop (`give-glare` behind); then the notched burst from behind the entry (`give-notch`, back layer) and **the run out** down the buried blade | `give-impact` + `ult-boom`; **150ms stop**; heavy shake | **yes** | cut on the frame | impact: `$damage`; "Your turn." |
+| 5 | Take · face close-up | 680 (460) | on the face and the blade under the jaw, level, a slow drift | `ult:give-take` (`root: false`): the blade drawn up under the jaw, the open front hand laid on its flat; the garnet comes up the blade; head back, brow lifted, eyes shut on a breath in; then eyes open on a grin | crossroads, exposure 0.4 → 0.46, a rose rim | **the run back** up the blade into the palm (`runBack`, a lighter core brightest at its head); the scarlet gone from the steel | **the edge drawn**, falling (`give-take`), a breath, one note of the saw | no | cut | the take: the blood coming home; healing revealed (0.5) |
 | 6 | Square · return | 700 (460) | battle camera | real Reaver `ult:give-settle`: the blade let down, the hand closed back into a fist; target `hurt` | battlefield, bars open | a scarlet run down the real enemy (`give-board` open), a garnet run up into the real Reaver (`give-board` home) | the saw's last two notes (`give-settle`); tail | on board | flash 80ms | release: the enemy open for the party, the Reaver whole |
 
 ## Framing
@@ -185,8 +190,9 @@ into the Reaver, whole: "Square.").
 - **Boss** (`enemy=collector`): the crossroads pulls back (zoom 1.05) with the
   Reaver smaller in the foreground and the boss standing whole across the
   crossing below the title; the impact pulls back to the boss's height
-  (zoom 1.12 → 1.04) with the Reaver smaller, the blade into its robe and a
-  short shove. The quiet needs no override: the boss's chest and hands fill
+  (zoom 1.1 → 1.02) with the Collector turned side-on (its staff on the far
+  side), the Reaver lunging across the gap and the blade into its robe under
+  the hanging seals, clear of the staff, and a short shove. The quiet needs no override: the boss's chest and hands fill
   the frame under the bead.
 - **Large** (`enemy=bulwark`) plays the normal framing, which holds it whole.
 
@@ -232,20 +238,37 @@ knit never over 3°; the browser test holds the brow's tilt under 5°), and
 Root keys, authored for the shot each plays in: `ult:give-call` and
 `ult:give-settle` (battlefield size: a dip and a rise, ≤ 3°);
 `ult:give-hold` (3–4.5° lean, for the over-the-shoulder at 880);
-`ult:give-raise` (−2°, still); `ult:give-strike` (x 0.09–0.1, rotate 12–13°,
-squash 0.87, scale 1.04, for the medium impact). **`root: false`** on both
+`ult:give-raise` (−2°, still); `ult:give-strike` (a hop and a lunge: x
+0.12–0.14, y −0.05, rotate 10–13°, squash 0.9, scale 1.04, for the medium
+impact). **`root: false`** on both
 close-ups, the oath and the take: the oath's root is a hair, the take's
-carries the strike's lean (x 0.07, 8°), which would carry the face out of the
+carries a lean (x 0.05–0.07, 4–8°), which would carry the face out of the
 frame. Nothing is rebuilt on `.cine-look`.
 
 ## Notes from the lab
 
-- **The hand is drawn over the blade.** The open palm first lived in the
-  fist's group, under the cleaver arm, and was invisible under the blade in
-  every shot. It is now its own group after the cleaver in the drawing,
-  placed in the drawing's units by its own keys (`hand()` in `poses.ts`),
-  solved from the blade's axis: grip at the back shoulder plus the grip's
-  offset turned by the cleaver's rotation, the blade at 142° + that rotation.
+- **One hand, at the end of its arm** (lead review). The open palm first
+  lived in the fist's group, under the cleaver, where it was invisible; then
+  it was a hand placed on the blade by its own keys, which read as a second,
+  disembodied hand floating beside the bandaged fist. It is now the whole
+  front arm drawn again over the cleaver from the front shoulder, the drawing's
+  own front arm hidden while it plays, and the fist that opens is that arm's
+  own hand: one hand, always joined to its forearm. The oath is framed on the
+  blade and that forearm alone, the gripping hand out of the frame; in the
+  wider shots the gripping hand shows the grip's end past it.
+- **The blow was one mass** (lead review): the Reaver and the hound
+  overlapping, the cleaver under the hound's jaw, the burst drawn over the
+  contact, and on the boss the blade on the staff. The rig's reach is short
+  (arm and cleaver about half the Reaver's height) and a hound facing the
+  Reaver puts its head in front of every blade at that height, so every
+  version with a gap hit its face. It is staged in depth instead: the Reaver
+  downstage and larger, the enemy upstage, turned side-on, and a hop and a
+  lunge carry the edge across the gap and down into its flank, with the enemy
+  drawn over the blade so the edge is seen going in. The burst moved to the
+  back layer, round the entry. The contact moved from 0.04 to 0.09 of the
+  shot so the held frame is the pose at contact and not the swing still
+  arriving. The Collector turns the same way, so the blade lands in its robe
+  with the staff on the far side.
 - **The run was a red slab.** Drawn the blade's full width it turned the
   cleaver into a red bar; it runs along the lower flat now, above the notches,
   so the steel shows above it.
@@ -287,6 +310,12 @@ frame. Nothing is rebuilt on `.cine-look`.
   possible; the swapped two-tone runs across time instead of across the
   frame. The engine would need a screen accent with a clip region (a
   half-plane) or a blended layer inside `.cine-film`.
+- **A part cannot change its paint order.** The open hand lies on the blade,
+  but the front arm is drawn under the cleaver; the arm is drawn a second time
+  over it and the first hidden. The engine would need a per-clip paint order
+  for parts.
+- **An actor's facing is per shot**, so the enemy that faces the blade in the
+  quiet is turned side-on for the impact rather than turning in it.
 - **Equipment state is not exposed to a drawing.** Whether a worn weapon
   replaces the base is read by a CSS sibling selector on the base weapon's
   inline style; the engine would need `BaseWeapon` to expose a data attribute
@@ -298,16 +327,18 @@ frame. Nothing is rebuilt on `.cine-look`.
 
 ## Where it is weakest
 
-- **The take's garnet is dark on a dark blade.** Coming up the blade it reads
-  as blood moving towards the hand, but it is the quietest colour in the film
-  on its smallest element; a brighter sheen or a slower run would sell *back*
-  harder than the face does.
-- **The hand is pasted on.** The open palm is placed on the blade by its own
-  keys, not carried by the arm, so the forearm under the blade and the hand
-  over it do not quite join; in a close-up it reads as a hand pressed on the
-  steel, not as an arm reaching round it.
-- **On the drawn frame the two figures overlap** into one accent mass at the
-  contact; the silhouettes separate at the Reaver's head and the hound's tail,
-  but the blade itself is lost in the fill, and the cut line does the work.
+- **The enemy is turned for the blow.** It faces the blade in the crossroads
+  and the quiet, and is side-on, facing away, in the impact: the cut reads,
+  but it is a cut into a flank from behind, not a blow met.
+- **The boss's hanging seals** sit between the Reaver and the Collector's
+  robe, so on the boss the edge goes in through them; clear of the staff, but
+  less clean than the hound's flank.
+- **The take's garnet** has a lighter core and a bright head now, but it is
+  still the smallest moving thing in its shot, under the hand at the frame's
+  lower edge; the face carries *back* more than the run does.
+- **Two front arms in the wide shots.** In the crossroads and the take both
+  arms reach forward, the gripping one ending in its bandaged fist; the grip's
+  end shows past it, but at a glance it is still a round fist beside an open
+  hand.
 - **The quiet is framed around a blade whose owner is off screen**, which
   reads as menace but leaves the left third of the frame empty dark.

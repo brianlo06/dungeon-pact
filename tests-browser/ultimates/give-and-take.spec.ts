@@ -87,11 +87,12 @@ test("the impact is a drawn frame, both ways, with the real target, the number a
   const frame = await cinematic(page).boundingBox();
   expect(target!.x).toBeGreaterThan(frame!.x);
   expect(target!.x + target!.width).toBeLessThan(frame!.x + frame!.width);
-  // The blade reaches into the enemy's figure, and the Reaver's legs stay clear of it.
-  const blade = await caster(page).locator("[data-base-weapon] path").first().boundingBox();
-  expect(blade!.x + blade!.width).toBeGreaterThan(target!.x);
+  // The blade reaches into the enemy's body, and the Reaver's legs stay clear of it.
+  const blade = await caster(page).locator('[data-base-weapon] path[fill^="url"]').first().boundingBox();
+  const body = await page.locator('.cine-actor[data-role="targets"] [data-part="body"]').first().boundingBox();
+  expect(blade!.x + blade!.width).toBeGreaterThan(body!.x);
   const legs = await caster(page).locator('[data-part="legs"]').boundingBox();
-  expect(legs!.x + legs!.width).toBeLessThan(target!.x + target!.width * 0.35);
+  expect(legs!.x + legs!.width).toBeLessThan(body!.x);
 });
 
 test("the take: a face that acts while the enemy's blood comes back up the blade", async ({ page }) => {
