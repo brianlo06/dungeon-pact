@@ -601,14 +601,49 @@
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
-  padding: 2px 7px;
-  background: rgba(24, 20, 30, 0.9);
-  border: 1px solid #6a5570;
-  font-size: 9px;
-  line-height: 1.3;
-  color: #e7d4bb;
+  gap: 2px;
+  padding: 3px 8px;
+  background: rgba(18, 14, 24, 0.94);
+  border: 1px solid #7a6280;
+  font-size: 10px;
+  line-height: 1.25;
+  color: #f0e0c8;
   max-width: 100%;
+}
+/* The second line: how hard, at whom, and what comes with it. */
+.intent-line {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  max-width: 100%;
+  min-width: 0;
+  white-space: nowrap;
+}
+/* The number is the loudest thing on the chip: a clean red-orange figure. */
+.intent-damage {
+  flex: none;
+  font: 11px var(--pixel);
+  color: #ff8a5c;
+  letter-spacing: 0.02em;
+}
+/* What Barrier on the target will soak, in the colour of Barrier. */
+.intent-damage small {
+  font-size: 9px;
+  color: #8fc7ff;
+}
+.intent-riders {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  font-size: 9px;
+  color: #d7b8ff;
+}
+.intent-broken {
+  opacity: 0.7;
+  border-style: dashed;
+}
+.intent-chip b.intent-stopped {
+  color: #9fd6a0;
 }
 .intent-head {
   display: flex;
@@ -625,9 +660,10 @@
   max-width: 100%;
 }
 .intent-chip em {
+  flex: none;
   font-style: normal;
-  font-size: 8px;
-  color: var(--muted);
+  font-size: 9px;
+  color: #c8b8a4;
 }
 .intent-chip b {
   flex: none;

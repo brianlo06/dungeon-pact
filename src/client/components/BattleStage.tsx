@@ -3,6 +3,7 @@ import type { Snapshot } from "../../shared/model";
 import { enemies as enemyDefs, isBoss, isObject } from "../../content/enemies";
 import { BattleUnit, type Impact } from "./BattleUnit";
 import { describeIntentEffect } from "../combat-presentation";
+import { damageLabel, forecastIntent } from "../../shared/forecast";
 import { unitPresentation, type Placement } from "../battle/layout";
 import type { Camera } from "../battle/camera";
 import type { Animators } from "../battle/useAnimators";
@@ -90,6 +91,10 @@ export function BattleStage({
         </span>
       );
     const a = e.intent.ability;
+    const interrupted = e.statuses.some((x) => x.id === "interrupted");
+    // What the round will do with it, by the engine's own damage rule.
+    const forecast = forecastIntent(s, e);
+    const damage = interrupted ? "" : damageLabel(forecast);
     // A clock threatens nobody yet; say what it will do, and to whom.
     const def = enemyDefs.find((d) => d.id === e.definition);
     const aim = def?.clock
@@ -97,25 +102,46 @@ export function BattleStage({
         ? "every hero"
         : "then every hero"
       : a.target === "enemyRow"
-        ? `${e.intent.row ?? s.players.find((p) => p.id === e.intent.target)?.row ?? ""} row · locked`
-        : ([...s.players, ...s.enemies].find((u) => u.id === e.intent.target)
-            ?.name ?? "");
-    const reads = a.effects
-      .map((x) => describeIntentEffect(x, e.power, s))
+        ? `${forecast.aim} · locked`
+        : forecast.aim;
+    const riders = interrupted ? [] : forecast.riders;
+    const soaked = forecast.hits.reduce((n, h) => n + h.blocked, 0);
+    const reads = [
+      ...forecast.hits.map(
+        (h) =>
+          `${h.name}: ${h.damage} damage${h.blocked ? ` (Barrier soaks ${h.blocked})` : ""}`,
+      ),
+      ...a.effects.map((x) => describeIntentEffect(x, e.power, s)),
+    ]
       .filter(Boolean)
       .join(" · ");
     return (
       <span
-        className={`intent-chip ${a.interruptible ? "intent-windup" : ""}`}
+        className={`intent-chip ${a.interruptible && !interrupted ? "intent-windup" : ""} ${interrupted ? "intent-broken" : ""}`}
+        data-damage={damage || undefined}
         title={reads}
       >
-        {/* The warning rides the name's line: a third line put a back-row
-            chip above the top of what every camera framing shows. */}
+        {/* Two lines at most: a third put a back-row chip above the top of
+            what every camera framing shows. The move, then what it does. */}
         <span className="intent-head">
-          {a.interruptible && <b>WINDUP</b>}
+          {a.interruptible && !interrupted && <b>WINDUP</b>}
+          {interrupted && <b className="intent-stopped">BROKEN</b>}
           <strong>{a.name}</strong>
         </span>
-        {aim && <em>→ {aim}</em>}
+        {(damage || aim || riders.length > 0) && !interrupted && (
+          <span className="intent-line">
+            {damage && (
+              <span className="intent-damage" aria-label={`${damage} damage`}>
+                {damage}
+                {soaked > 0 && <small> −{soaked}</small>}
+              </span>
+            )}
+            {aim && <em>→ {aim}</em>}
+            {riders.length > 0 && (
+              <span className="intent-riders">{riders.join(" · ")}</span>
+            )}
+          </span>
+        )}
       </span>
     );
   };

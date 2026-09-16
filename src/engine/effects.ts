@@ -14,14 +14,8 @@ import { enemies as definitions } from "../content/enemies";
 import { resourceCap } from "../content/evolutions";
 import { charge, resolvingUltimate } from "./charge";
 import { floorScale } from "./combat";
-/** Mark + Precision bonus. Setting up an Exploit costs a whole action, so the
- * payoff has to beat simply attacking twice. */
-export const EXPLOIT = 20;
-/** Weak is the answer to a spike for parties with no Vanguard to intercept it,
- * so it has to be worth the action it costs. */
-export const WEAK = 0.65;
-/** Empowered is Weak's mirror: the Herald's whole job is making allies hit harder. */
-export const EMPOWERED = 1.3;
+import { hitDamage } from "../shared/damage";
+export { EXPLOIT, WEAK, EMPOWERED } from "../shared/damage";
 export function log(
   s: RunState,
   text: string,
@@ -607,14 +601,13 @@ export function effects(
         }
       }
       statusRecipient = victim;
-      let amount =
-        (e.amount + actor.power) *
-          (status(actor, "weak") ? WEAK : 1) *
-          (status(actor, "empowered") ? EMPOWERED : 1) -
-        (e.pierce ? 0 : victim.guard);
-      if (status(victim, "vulnerable")) amount *= 1.25;
-      if (e.precision && status(victim, "marked")) {
-        amount += EXPLOIT;
+      // The same function the battlefield forecasts intents with.
+      const exploit = !!e.precision && !!status(victim, "marked");
+      const amount = hitDamage(e.amount, actor, victim, {
+        pierce: e.pierce,
+        precision: e.precision,
+      });
+      if (exploit) {
         victim.statuses = victim.statuses.filter((x) => x.id !== "marked");
         charge(s, actor, "reaction");
         log(s, "EXPLOIT · Mark + Precision", "combo", {
