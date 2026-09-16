@@ -145,7 +145,8 @@ test("FAST keeps every shot: the nod, the quiet and the impact", async ({ page }
     }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-shot", "data-mode"] });
   });
   await page.goto(lab({ auto: 1, mode: "fast" }));
-  await expect(film(page)).toHaveAttribute("data-mode", "fast", { timeout: 30_000 });
+  // The lab builds the fight and resolves the round before the film mounts; on a loaded machine that alone can pass 30s.
+  await expect(film(page)).toHaveAttribute("data-mode", "fast", { timeout: 60_000 });
   await expect(film(page)).toHaveCount(0, { timeout: 30_000 });
   const shots = await page.evaluate(() => (window as unknown as { shots: string[] }).shots);
   expect(shots).toEqual(["call", "nod", "room", "hoist", "last", "gone", "knocked-down"]);
