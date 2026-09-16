@@ -16,8 +16,8 @@ import { face, type Expression } from "../../battle/face";
  *                `ult:hallow-walk`    the line: walking, the standard couched, the foot scoring behind
  *                `ult:hallow-coil`    the quiet: coiled over the end of the score, the foot drawn back in the groove
  *                `ult:hallow-stroke`  the stroke: the foot swept forward through the end of the line; `contact`
- *                `ult:hallow-held`    after it: the standard brought upright onto the lit line, the chin up
- *                `ult:hallow-hold`    on the board after: the standard upright
+ *                `ult:hallow-held`    after it: the standard in guard, its foot on the lit line, the chin up
+ *                `ult:hallow-hold`    on the board after: the guard let go to rest
  *   every ally   `ult:hallow-stand`   the line: feet set on the cold floor, watching the Sanctifier pass
  *                `ult:hallow-still`   the stroke: nothing moves but cloth and hair
  *
@@ -25,7 +25,7 @@ import { face, type Expression } from "../../battle/face";
  * shoulder (60, 50) and its foot is at (69, 96), 46 units below and 9 in
  * front of the pivot; the floor is at 97. Rotated by a, the foot's height is
  * 50 + 9·sin a + 46·cos a, so the drop that sets it on the floor is 0.116 at
- * 52°, 0.06 at 40°, 0.01 at 0° and 0.04 at −12°.
+ * 52°, 0.06 at 40°, 0.01 at 0°, 0.09 at −26° and 0.16 at −40°.
  *
  * Root tracks are authored for the shot size each clip plays at: the walk's
  * bob, the coil's crouch and the stroke's lunge move the whole figure in the
@@ -224,10 +224,10 @@ const coil: Clip = {
 
 /**
  * The stroke. From the coil, the standard's foot is swept forward through
- * the end of the score in one hard low stroke (+40° to −12° at `contact`, 45ms in,
+ * the end of the score in one hard low stroke (+40° to −26° at `contact`, 45ms in,
  * the foot on the floor all the way), the body lunging after it, the flag
  * dragged out flat behind the swinging pole; then the follow-through lifts
- * the foot forward off the stone (−38°). Short, so the hit-stop holds the
+ * the foot forward off the stone (−40°). Short, so the hit-stop holds the
  * stroke mid-sweep with the pole low and diagonal, not upright.
  */
 const stroke: Clip = {
@@ -245,9 +245,9 @@ const stroke: Clip = {
   parts: {
     banner: [
       { at: 0, rotate: COIL, y: COIL_DROP, x: 0 },
-      { at: 0.19, rotate: -8, y: 0.02, x: 0.008 },
-      { at: 0.25, rotate: -12, y: 0.022, x: 0.01 },
-      { at: 1, rotate: -38, y: 0.1, x: 0.02 },
+      { at: 0.19, rotate: -20, y: 0.07, x: 0.008 },
+      { at: 0.25, rotate: -26, y: 0.09, x: 0.01 },
+      { at: 1, rotate: -40, y: 0.14, x: 0.02 },
     ],
     flag: [
       { at: 0, rotate: -3, squash: 0.93 },
@@ -273,45 +273,46 @@ const stroke: Clip = {
 };
 
 /**
- * Held after the stroke: the lunge comes back, the standard is brought up
- * out of the follow-through and stood upright with its foot on the lit line,
- * the flag flying, the chin up, the smile coming back.
+ * Held after the stroke: the lunge comes back and the standard is brought
+ * down out of the follow-through into a guard — slanted forward, its foot
+ * resting on the lit line where the stroke ended it (−18°), never stood
+ * upright — the flag flying, the chin up, the smile coming back.
  */
 const held: Clip = {
   duration: 900,
   poses: [
     { at: 0, x: 0.07, y: 0.03, rotate: 9, squash: 1.08 },
-    { at: 0.35, x: 0.04, y: 0.014, rotate: 3, squash: 1.035 },
-    { at: 1, x: 0.03, y: 0.006, rotate: 1, squash: 1.015 },
+    { at: 0.35, x: 0.045, y: 0.016, rotate: 3, squash: 1.04 },
+    { at: 1, x: 0.035, y: 0.01, rotate: 1.5, squash: 1.025 },
   ],
   parts: {
     banner: [
-      { at: 0, rotate: -38, y: 0.1, x: 0.02 },
-      { at: 0.35, rotate: -4, y: 0.012, x: 0.004 },
-      { at: 1, rotate: 0, y: 0.01, x: 0 },
+      { at: 0, rotate: -40, y: 0.14, x: 0.02 },
+      { at: 0.35, rotate: -16, y: 0.055, x: 0.01 },
+      { at: 1, rotate: -18, y: 0.06, x: 0.01 },
     ],
     flag: [
       { at: 0, rotate: 36, squash: 1.2 },
-      { at: 0.35, rotate: -18, squash: 0.94 },
-      { at: 0.6, rotate: -8, squash: 1.04 },
-      { at: 1, rotate: -12, squash: 1.0 },
+      { at: 0.35, rotate: 4, squash: 0.94 },
+      { at: 0.6, rotate: 12, squash: 1.04 },
+      { at: 1, rotate: 8, squash: 1.0 },
     ],
     horn: turn([0, -34], [0.4, -12], [1, -6]),
     head: turn([0, -6], [0.4, -9], [1, -6]),
     body: [
       { at: 0, squash: 1.05, y: 0.012 },
-      { at: 1, squash: 1.015, y: 0.004 },
+      { at: 1, squash: 1.02, y: 0.006 },
     ],
     legs: [
       { at: 0, squash: 1.12, rotate: 6 },
-      { at: 0.4, squash: 1.05, rotate: 1 },
-      { at: 1, squash: 1.03, rotate: 0 },
+      { at: 0.4, squash: 1.06, rotate: 2 },
+      { at: 1, squash: 1.04, rotate: 1.5 },
     ],
     ...face([0, CALL], [0.35, CALL], [0.7, EASE], [1, EASE]),
   },
 };
 
-/** On the board after: the standard stood upright on the line, the horn arm at rest, the lean coming off. */
+/** On the board after: the guard let go, the standard coming back to rest, the lean coming off. */
 const hold: Clip = {
   duration: 760,
   poses: [
@@ -321,8 +322,8 @@ const hold: Clip = {
   ],
   parts: {
     banner: [
-      { at: 0, rotate: 0, y: 0.024, x: 0 },
-      { at: 0.5, rotate: -1, y: 0.01 },
+      { at: 0, rotate: -18, y: 0.06, x: 0 },
+      { at: 0.5, rotate: -6, y: 0.02 },
       { at: 1, rotate: 0, y: 0 },
     ],
     flag: [

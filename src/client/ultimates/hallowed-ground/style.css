@@ -108,6 +108,18 @@
   stroke-linecap: round;
   opacity: 0;
 }
+.hallow-score[data-mode="score"] .hallow-groove-edge {
+  stroke-width: 26;
+}
+.hallow-score[data-mode="score"] .hallow-groove {
+  stroke-width: 16;
+}
+.hallow-score[data-mode="score"] .hallow-core {
+  stroke-width: 6;
+}
+.hallow-score[data-mode="score"] .hallow-hot {
+  stroke-width: 9;
+}
 .hallow-score[data-mode="burn"] .hallow-core {
   fill: #f4fbff;
   stroke: #f4fbff;
@@ -117,6 +129,10 @@
 .hallow-score[data-mode="quiet"] .hallow-groove,
 .hallow-score[data-mode="quiet"] .hallow-core {
   stroke: none;
+}
+/* seen along its length, the cut's lip is only a shade off the sooted floor */
+.hallow-score[data-mode="quiet"] .hallow-groove-edge {
+  fill: #0d0c0b;
 }
 .hallow-hot {
   fill: none;

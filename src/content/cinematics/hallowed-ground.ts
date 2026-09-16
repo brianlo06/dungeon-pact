@@ -46,9 +46,9 @@ const IRON = "#0c1016";
 const BARS = 0.1;
 
 /** The line on the impact: scored along y from x0; the stroke ends it at `end`. */
-const LINE = { x0: 180, y: 800, end: 1300 };
+const LINE = { x0: 120, y: 800, end: 1270 };
 /** Where the Sanctifier makes the stroke, and where the party stands behind the line. */
-const GROUND = { caster: [1170, 800] as [number, number], allies: [960, 690] as [number, number], spread: [-230, 12] as [number, number] };
+const GROUND = { caster: [1100, 800] as [number, number], allies: [880, 690] as [number, number], spread: [-230, 12] as [number, number] };
 /**
  * The stroke's contact: `ult:hallow-stroke` reaches it 45ms in, so in the
  * 860ms shot it is at 0.052. FAST plays the shot in 700ms and the same
@@ -119,7 +119,7 @@ export const hallowedGround: Cinematic = {
     /* 2 · THE LINE — low tracking: the Sanctifier walks the party's front, scoring the floor. */
     {
       id: "line",
-      kind: "low-angle",
+      kind: "wide-hero",
       purpose:
         "Stakes. At floor height in front of the real party: they set their feet on the cold flagstones while the Sanctifier walks the whole length of their front, the standard couched forward and its foot dragging the floor behind it — a groove opening across the foreground with sparks off the foot and an ember light in it.",
       space: "cinematic",
@@ -127,36 +127,36 @@ export const hallowedGround: Cinematic = {
       fastMs: 460,
       transition: { kind: "whip", ms: 110, dir: 1 },
       camera: {
-        from: { x: 560, y: 700, zoom: 1.6 },
-        to: { x: 1130, y: 700, zoom: 1.6 },
+        from: { x: 560, y: 600, zoom: 1.3 },
+        to: { x: 1080, y: 600, zoom: 1.3 },
         ease: "inOut",
       },
       background: "hallow-foundry",
-      lighting: { exposure: 0.62, rim: [HALO, 0.4, -1], vignette: 0.45, letterbox: BARS },
-      toLighting: { exposure: 0.66, rim: [HALO, 0.5, -1], vignette: 0.42, letterbox: BARS },
+      lighting: { exposure: 0.74, under: ["#ffb070", 0.18], rim: [HALO, 0.45, -1], vignette: 0.4, letterbox: BARS },
+      toLighting: { exposure: 0.78, under: ["#ffb070", 0.22], rim: [HALO, 0.55, -1], vignette: 0.38, letterbox: BARS },
       actors: [
         {
           role: "allies",
-          at: [560, 722],
-          spread: [230, -4],
-          size: 300,
+          at: [520, 700],
+          spread: [250, -4],
+          size: 250,
           look: "lit",
           z: 1,
           clip: "ult:hallow-stand",
           then: "ult:hallow-stand",
         },
-        { role: "caster", at: [400, 850], to: [1210, 850], ease: "linear", size: 400, clip: "ult:hallow-walk", look: "lit", rim: HALO, z: 3 },
+        { role: "caster", at: [300, 820], to: [1250, 820], ease: "linear", size: 310, clip: "ult:hallow-walk", look: "lit", rim: HALO, z: 3 },
       ],
       vfx: [
-        { kind: "hallow-score", at: 0, until: 1, layer: "front", seed: 19, params: { mode: "score", x0: LINE.x0, x1: 1400, y: LINE.y, trail: 100 } },
+        { kind: "hallow-score", at: 0, until: 1, layer: "front", seed: 19, params: { mode: "score", x0: 60, x1: 1500, y: 820, trail: 60, walk: 1.05 } },
       ],
       sound: [
         { at: 0.02, sfx: "hallow-scrape" },
         { at: 0.34, sfx: "hallow-motif-b" },
       ],
       text: [
-        { kind: "name", at: 0.3, until: 1, text: "$name", x: 0.06, y: 0.58 },
-        { kind: "epithet", at: 0.4, until: 1, text: "$epithet", x: 0.06, y: 0.68 },
+        { kind: "name", at: 0.3, until: 1, text: "$name", x: 0.06, y: 0.14 },
+        { kind: "epithet", at: 0.4, until: 1, text: "$epithet", x: 0.06, y: 0.24 },
       ],
       markers: [
         { at: 0.3, label: "title" },
@@ -167,24 +167,24 @@ export const hallowedGround: Cinematic = {
     /* 3 · DOWN THE LINE — the quiet: the groove to its end, the Sanctifier coiled over it. */
     {
       id: "coil",
-      kind: "extreme-close-up",
+      kind: "dutch",
       purpose:
         "The quiet. Down on the stone at the near end of the score, looking along it: the groove runs away from the lens to where the Sanctifier stands coiled over its end, weight back, the foot of the standard drawn back into the groove. The embers in it go out from the near end towards the foot; the ash in the air hangs still. Nothing else moves.",
       space: "cinematic",
       ms: 600,
       fastMs: 380,
       camera: {
-        from: { x: 690, y: 610, zoom: 1.4, rotate: 5 },
-        to: { x: 692, y: 612, zoom: 1.43, rotate: 5 },
+        from: { x: 700, y: 668, zoom: 1.75, rotate: 5 },
+        to: { x: 702, y: 669, zoom: 1.78, rotate: 5 },
         ease: "linear",
       },
       background: "hallow-foundry",
       lighting: { exposure: 0.42, under: ["#ffb070", 0.28], rim: [HALO, 0.35, 1], vignette: 0.74, letterbox: 0.13 },
       toLighting: { exposure: 0.22, under: ["#ffb070", 0.12], rim: [HALO, 0.25, 1], vignette: 0.86, letterbox: 0.14 },
-      actors: [{ role: "caster", at: [720, 800], size: 440, clip: "ult:hallow-coil", then: "ult:hallow-coil", look: "lit", rim: HALO }],
+      actors: [{ role: "caster", at: [760, 780], size: 290, clip: "ult:hallow-coil", then: "ult:hallow-coil", look: "lit", rim: HALO }],
       vfx: [
-        { kind: "hallow-score", at: 0, until: 1, layer: "back", seed: 19, params: { mode: "quiet", nx: 200, ny: 1060, fx: 676, fy: 800, nw: 90, fw: 9, glow: 150 } },
-        { kind: "hallow-soot", at: 0, until: 1, layer: "front", seed: 11, params: { mode: "hang", cx: 690, cy: 610, w: 1000, h: 560, count: 22, fall: 3 } },
+        { kind: "hallow-score", at: 0, until: 1, layer: "back", seed: 19, params: { mode: "quiet", nx: 250, ny: 880, fx: 731, fy: 780, nw: 36, fw: 5, glow: 110 } },
+        { kind: "hallow-soot", at: 0, until: 1, layer: "front", seed: 11, params: { mode: "hang", cx: 700, cy: 668, w: 960, h: 540, count: 22, fall: 3 } },
       ],
       duck: [{ at: 0, level: 0.03, ms: 600 }],
       sound: [{ at: 0.06, sfx: "hallow-ember" }],
@@ -201,8 +201,8 @@ export const hallowedGround: Cinematic = {
       ms: IMPACT_MS,
       fastMs: 700,
       camera: {
-        from: { x: 800, y: 596, zoom: 1.5, rotate: -2 },
-        to: { x: 790, y: 586, zoom: 1.34, rotate: 0 },
+        from: { x: 900, y: 632, zoom: 1.42, rotate: -2 },
+        to: { x: 870, y: 620, zoom: 1.28, rotate: 0 },
         ease: "out",
       },
       background: "hallow-foundry",
@@ -213,18 +213,18 @@ export const hallowedGround: Cinematic = {
           role: "allies",
           at: GROUND.allies,
           spread: GROUND.spread,
-          size: 330,
+          size: 300,
           look: "lit",
           z: 1,
           clip: "ult:hallow-still",
           then: "ult:hallow-still",
         },
-        { role: "caster", at: GROUND.caster, size: 410, clip: "ult:hallow-stroke", then: "ult:hallow-held", look: "lit", rim: HALO, z: 3 },
+        { role: "caster", at: GROUND.caster, size: 390, clip: "ult:hallow-stroke", then: "ult:hallow-held", look: "lit", rim: HALO, z: 3 },
       ],
       vfx: [
-        { kind: "hallow-soot", at: 0, until: 1, layer: "back", seed: 23, params: { mode: "blow", x0: LINE.x0, x1: LINE.end, y: LINE.y, depth: 260, taper: 80, at: CONTACT, count: 150, rise: 280, life: 0.6 } },
+        { kind: "hallow-soot", at: 0, until: 1, layer: "back", seed: 23, params: { mode: "blow", x0: LINE.x0, x1: LINE.end + 130, y: LINE.y, depth: 260, taper: 60, at: CONTACT, count: 150, rise: 280, life: 0.6 } },
         { kind: "hallow-score", at: 0, until: 1, layer: "front", seed: 19, params: { mode: "burn", x0: LINE.x0, x1: LINE.end, head: LINE.end, y: LINE.y, ignite: CONTACT, shotMs: IMPACT_MS, depth: 260, taper: 80 } },
-        { kind: "dust", at: CONTACT, until: 0.6, x: LINE.end, y: LINE.y, scale: 1.4, color: "#5c5a58", seed: 5, layer: "front" },
+        { kind: "dust", at: CONTACT, until: 0.5, x: LINE.end, y: LINE.y, scale: 0.9, color: "#2c2a28", seed: 5, layer: "front" },
       ],
       // The accents end before contact: the hit-stop holds presentation time,
       // so anything on the lens at contact would be held with it. The frame

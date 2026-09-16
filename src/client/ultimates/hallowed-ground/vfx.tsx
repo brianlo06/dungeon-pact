@@ -174,8 +174,8 @@ const score: Frame = (el, p, age, ctx) => {
     const wedge = (k: number) =>
       `M${f1(nx - uy * nw * k)} ${f1(ny + ux * nw * k)} L${f1(fx - uy * fw * k)} ${f1(fy + ux * fw * k)} L${f1(fx + uy * fw * k)} ${f1(fy - ux * fw * k)} L${f1(nx + uy * nw * k)} ${f1(ny - ux * nw * k)} Z`;
     setAttr(edge, "d", wedge(1));
-    setAttr(groove, "d", wedge(0.62));
-    setAttr(core, "d", wedge(0.2));
+    setAttr(groove, "d", wedge(0.72));
+    setAttr(core, "d", wedge(0.22));
     const cool = ease("out", p);
     setOpacity(core, lerp(0.55, 0.18, cool));
     // The warm stretch just behind the foot.
@@ -221,8 +221,8 @@ const score: Frame = (el, p, age, ctx) => {
 
   if (mode === "score") {
     // A dull ember light along what has been cut, hot just behind the foot.
-    setOpacity(core, 0.5);
-    setAttr(hot, "d", `M${f1(Math.max(x0, head - 170))} ${f1(y)} L${f1(head)} ${f1(y)}`);
+    setOpacity(core, 0.7);
+    setAttr(hot, "d", `M${f1(Math.max(x0, head - 220))} ${f1(y)} L${f1(head)} ${f1(y)}`);
     setOpacity(hot, 0.95);
     setOpacity(halo, 0);
     setOpacity(throw_, 0);
@@ -312,7 +312,7 @@ const score: Frame = (el, p, age, ctx) => {
     }
     const sd = s.dataset;
     const k = clamp((since + 40) / 460);
-    const a = ((-8 - Number(sd.a) * 62) * Math.PI) / 180; // forward, from flat to steep
+    const a = ((-4 - Number(sd.a) * 48) * Math.PI) / 180; // forward, from along the floor to steep
     const speed = 380 + Number(sd.v) * 520;
     const dist = speed * ease("out", k) * 0.9;
     const ux = Math.cos(a) * dir;
