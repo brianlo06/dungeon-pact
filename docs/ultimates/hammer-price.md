@@ -132,7 +132,7 @@ the real target, and a paddle lowered in front of every other enemy).
 The quiet is the room at its darkest, and the loudest shot is lit only by the
 hammer.
 
-## Shots — FULL 4740ms, FAST 2960ms (62%)
+## Shots — FULL 4700ms, FAST 3160ms (67%)
 
 | # | Shot | ms (FAST) | Camera | Pose | Background / light | VFX | Audio | Target | Transition in | Purpose |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -140,25 +140,27 @@ hammer.
 | 1 | The nod · face close-up | 620 (400) | on the face with the hammer's head standing beside the cap, Dutch −6° → −3°, pushing in | `ult:hammer-nod` (`root: false`) — the balance gone from the fist and the sale hammer in it; lids up, brows lift a hair, one slow nod (head 9°, lids to 0.36), the mouth set closed and wide | the saleroom; the paddles behind drawn soft (no ink, dimmer, more light — not blurred) | the nearest paddles behind the head go out at the nod (`hammer-paddles`, `soft`) | the nod (`hammer-nod`): the murmur, and a low wooden tock on the nod (separate FULL/FAST cues, since a clip plays at one rate) | no | black 60ms | identity: the biggest bid in the film is a nod |
 | 2 | The room · wide | 1000 (520) | wide, level, a slow push and a rise | `ult:hammer-outbid` — the hammer held up like a bid; at each wave a little lift, and its head swells (1 → 1.24 → 1.44 → 1.62, fattening) | the saleroom lit only by paddles; exposure 0.9 → 0.45 as they go | **every rival outbid** in three waves, from the Magnate's place outward (`hammer-paddles`: 7% → 33% → 64% → 95% of the room); the real target on the sale block (`hammer-block`) | **the motif** (`hammer-motif`); three waves of paddle slaps (`hammer-slaps`, `-fast`) | **yes** — real figure on the block, `anticipate` | whip 110ms | stakes and escalation: everyone outbid; the price as weight; title |
 | 3 | Going twice · Dutch | 540 (340) | medium, the Magnate low left, Dutch 7° → 10°, pushing in | `ult:hammer-hoist` (held with `then`) — the hammer hoisted straight up at its full price, the body leaning back under it, brows down on the rims, lips pressed | near dark; Tyrian rim | the last paddles at the back of the room go out (`hammer-paddles` 95% → 99%) | the hoist (`hammer-hoist`): a creak of weight and a low note swelling | **yes** — the lot in the foreground, rim-lit, cowering (`block`) | cut | anticipation: the price, raised |
-| 4 | The last paddle · extreme close-up | 560 (380) | on one paddle in the black, dead level, still | — | black; the paddle's own light (a gradient); exposure 0.2 → 0.08; bars 13% | one round card paddle in a gloved hand, trembling on the frame clock, then the hand gives and it goes down out of frame (`hammer-last`) | **music to 4%**; its handle rattling (`hammer-tremble`, once in FAST); then nothing | no | cut | the quiet: nobody else |
-| 5 | Gone · impact | 800 (560) | medium two-shot, Dutch −6° → −2°, easing out | `ult:hammer-knock` (contact 125ms, 0.164) — cocked back, then over the cap and down with the whole body, the handle lying forward and the head on the lot; a shout; the head squashes and springs back | lit by the hammer: Tyrian back light and a pool behind the lot and the head (`hammer-glow`) so the drawn frame cuts both silhouettes | **Tyrian-and-ink two-tone** (70ms) at 0.175; the knock round the head — ragged end-grain rings laid flat, black lacquer wedges driven out sideways, the struck spot and the split running down through the lot (`hammer-knock`, back and front halves); the sale block split and its halves tipped apart, the inside Tyrian (`hammer-block`, `split`); lacquer splinters (`hammer-splinters`) | the swing (`hammer-swing`) into the layered impact (`hammer-impact`); **150ms stop**, heavy shake | **yes** — `hurt`, driven down and tilted | cut | impact: sold, and broken; damage on the held frame; "Sold!" |
+| 4 | The last paddle · extreme close-up | 560 (380) | on one paddle in the black, dead level, still | — | black; the paddle's own light (a gradient); exposure 0.2 → 0.08; bars 13% | one bidding paddle — a round board with its bidder's number, **27**, painted on it, a painted border, the board's edge, on a plain wooden handle — held up out of a gloved hand, trembling on the frame clock, then the hand gives and it goes down out of frame (`hammer-last`) | **music to 4%**; its handle rattling (`hammer-tremble`, once in FAST); then nothing | no | cut | the quiet: the last rival gives up |
+| 5 | Gone · impact | 760 (760) | medium, low, Dutch −5° → −2°, easing out, the lot small and low in the frame under the Magnate | `ult:hammer-knock` (contact 125ms) — cocked back, then the whole round body thrown forward and down over the blow (root lean 15°); the arm driven forward, the handle lengthened through the swing (`shaft`, ×1.2) and brought down at 128°, the head's face on the lot's back; the face screwed up in effort (brows crushed onto the rims, eyes shut, the mouth turned over into a grimace), and after the stop let go into a grin on "Sold!"; the head flattens against the lot and springs back | lit by the hammer: Tyrian back light and a pool behind the lot and the head (`hammer-glow`) so the drawn frame cuts both silhouettes | the swing drawn as a Tyrian arc from over the cap to the lot, growing with the swing and whole on the held frame (`hammer-smear`); **Tyrian-and-ink two-tone** (70ms) at 128ms; **the lot pressed flat** under the head — wider and lower, legs out from under it — and held (`hammer-crush`); the knock round the contact — end-grain rings laid flat, black lacquer wedges, the split down through the lot (`hammer-knock`, back and front halves); the sale block split and tipped apart (`hammer-block`, `split`); lacquer splinters (`hammer-splinters`) | the swing (`hammer-swing`) into the layered impact (`hammer-impact`); **150ms stop**, heavy shake | **yes** — `hurt`, crushed, shoved | cut | impact: sold, and broken; damage on the held frame; "Sold!" |
 | 6 | Knocked down · return | 820 (520) | battle camera | real Broker `ult:hammer-settle` — dusts its palms and tips the cap | real battlefield; black lifting; bars open | the split sale block under the real target (`hammer-block`, `board`); over every other real enemy standing a paddle held up and laid down at its feet (`hammer-outbid`, found on the stage, staggered) | paddles laid down and a low organ chord (`hammer-down`), tail | on board | flash 70ms | release: the lot broken, the room outbid |
 
 ### Boss and large framing
 
 A boss is not struck on the head, which a Broker cannot reach: in **Gone** the
-camera pulls back to hold the whole Collector on its block, the Broker stands
-further left, and the hammer lands on the boss's body with a smaller knock
-and a small shove — struck, not shrunk. In **Going twice** the Collector
+camera pulls back to hold the whole Collector on its block, standing low in the
+frame, and the head comes down on its chest with a smaller knock, a shove of 48
+units and a slight crush — struck, not shrunk. The Iron Bulwark stands low too,
+and takes the head on its back. In **Going twice** the Collector
 stands further back behind the hoisted hammer; the Iron Bulwark stands higher
 in the frame. The block, the glow and the knock are all sized from the
 target's drawn height.
 
 ### FAST
 
-Every shot survives, shorter; the room is cut to about half, its three waves
-closer (`hammer-slaps-fast`). The nod, the quiet (one rattle instead of two)
-and the two-tone frame are all in FAST.
+Every shot survives, shorter, except the impact, which keeps its full 760ms so
+the hit-stop lands on the swing's contact; the room is cut to about half, its
+three waves closer (`hammer-slaps-fast`). The nod, the quiet (one rattle
+instead of two) and the two-tone frame are all in FAST.
 
 ### Voice
 
@@ -181,18 +183,35 @@ it: no range, no plate, no arrow, no distance.
   drawn only inside a cinematic's copy (`CloseUpContext`) and is parked 1000
   units right of the fist, outside a clip, at rest, so every other Broker
   film, and every round, is unchanged. Each clip brings it home with `x: −10`.
-- **The swing is solved from the arm.** The handle's direction is the sum of
-  the arm's turn and the wrist's, clockwise from straight up; 90 lays the
-  handle forward with the head's face down. The first cut struck with the arm
-  down and the handle level at the hound's head, which read as a ram from the
-  side; the contact pose now lifts the arm (−40) and turns the wrist (120), and
-  the impact shot sizes the Broker up (720) against the hound (400), so the
-  head comes down *on* the lot's back.
+- **The blow was sent back once, and rebuilt.** On the first approved cut the
+  head arrived with the handle level, so the swollen head stood upright beside
+  the hound like a pillar, the hound mostly behind it and unhurt, and against
+  the Collector it stopped in front of the legs. Rebuilt from the review:
+  - the head is smaller at the blow (×1.25 against ×1.74 hoisted) and the
+    handle longer (`shaft`, a close-up-only part, stretched ×1.2 through the
+    swing), brought down at 128° from straight up, so the head arrives angled
+    from above and its lower face lands on the lot's back;
+  - the lot stands lower and smaller under the Magnate (330 against 700), so
+    its back is below the Broker's shoulder, which an overhead blow needs;
+  - the whole body leans in over it (root 15°, forward 0.075);
+  - the lot is **pressed flat** on the contact frame (`hammer-crush`: 1.22 wide,
+    0.7 high on a hound, held at 70%) — the engine gives an actor no squash, so
+    this scales the target's `.cine-look`, which nothing else in the film moves;
+  - the swing is drawn (`hammer-smear`), an arc from over the cap to the blow;
+  - the Collector and the Bulwark have their own actors: the head lands on the
+    Collector's chest and shoves it 48 units, and on the Bulwark's back.
+  Checked with the accent off on the held frame, and on the two-tone frame.
+- **Effort, then the sale.** The first cut smiled through the blow. The mouth is
+  a shallow curve, so a grimace is that curve turned over (`mouth` rotated
+  180°) and opened, with the brows crushed down and the eyes shut; it flattens
+  to a line before it turns back, so the turn never shows, and becomes a grin
+  on "Sold!".
 - **The contact is after the blend.** A film eases into each clip for 120ms,
   so a contact at 76ms landed at three quarters of its pose. The knock is at
-  125ms, keyed exactly, and the shot's reveal at 0.175 (140ms FULL, 98ms FAST)
-  sits inside the 40ms the contact test allows in both cuts. The hoist holds its
-  last pose through the quiet (`then`), so the knock starts from it.
+  125ms, keyed exactly, and the shot's hit at 128ms. The impact shot is the
+  same 760ms in FULL and FAST: a clip plays at one rate in both, and when FAST
+  was shorter its stop fell at 98ms and held the hammer in the air. The hoist
+  holds its last pose through the quiet (`then`), so the knock starts from it.
 - **The knock does not cover the blow.** The first knock was a star and wide
   rings drawn over the contact, and on the held frame they hid the hammer. It
   is now drawn in two halves — the far arcs behind the cast, the near arcs and
@@ -205,8 +224,10 @@ it: no range, no plate, no arrow, no distance.
   paddle going down sinks behind its chair back. The chairs were arches at
   first and read as headstones; they are posts, a crest rail and a cane panel.
 - **The last paddle** read as a mirror with a ring painted in it, then as an
-  egg; it is a plain round card on a turned neck, in a gloved hand whose
-  knuckles catch its light.
+  egg in a glove (its handle was lacquer black against a black room). It is a
+  bidding paddle now: a round board with a painted border and the bidder's
+  number, 27, a visible edge, on a plain walnut handle held up out of the
+  glove.
 - **Sounds were rendered offline and measured** (peak of three renders,
   `OfflineAudioContext` in the lab page): the impact 1.32 (Foreclosure's
   1.33, Compound Interest's 1.32, The Small Print's 1.44); the motif 0.15
@@ -247,6 +268,10 @@ moves `.cine-look`.
   wrapper had to be added to `Broker.tsx` (close-up only, invisible or
   unchanged at rest), because a vfx cannot ride a part of the drawing. The
   engine would need a named attachment point a folder effect could follow.
+- **An actor cue has no squash, and enemy rigs take no folder clips.** The lot
+  crushed under the head is `hammer-crush` scaling the target's `.cine-look`
+  from its feet. The engine would need `squash` on an actor cue (or a `react`
+  that can be an in-folder clip for any rig).
 - **A clip blends in over 120ms whatever its contact.** The knock's contact is
   keyed after the blend rather than earlier in the swing; the engine would
   need a per-cue blend length (`blend: 0`) to cut straight onto a pose.

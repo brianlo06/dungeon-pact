@@ -161,16 +161,40 @@
   fill: url(#hammer-last-light);
   opacity: 0.9;
 }
-.hammer-last-handle {
+.hammer-last-handle-ink {
   fill: none;
   stroke: #0b0709;
+  stroke-width: 58;
+  stroke-linecap: round;
+}
+.hammer-last-handle {
+  fill: none;
+  stroke: #7a5334;
   stroke-width: 40;
   stroke-linecap: round;
 }
 .hammer-last-grain {
   fill: none;
-  stroke: #2a1a1e;
-  stroke-width: 6;
+  stroke: #b08050;
+  stroke-width: 7;
+  opacity: 0.8;
+}
+.hammer-last-edge {
+  fill: #8a7c62;
+  stroke: #0b0709;
+  stroke-width: 14;
+}
+.hammer-last-border {
+  fill: none;
+  stroke: #1b1014;
+  stroke-width: 10;
+}
+.hammer-last-number {
+  fill: #1b1014;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  font-size: 190px;
+  letter-spacing: -6px;
 }
 .hammer-last-face {
   fill: #efe5cf;
@@ -183,7 +207,7 @@
   stroke-width: 12;
 }
 .hammer-last-neck {
-  fill: #2a1a1e;
+  fill: #5a3b25;
   stroke: #0b0709;
   stroke-width: 10;
   stroke-linejoin: round;
@@ -359,4 +383,19 @@
   fill: none;
   stroke: #e05bd8;
   stroke-width: 3;
+}
+
+/* ---- the swing ---- */
+.hammer-smear-body {
+  fill: #ffd6f6;
+  stroke: #e05bd8;
+  stroke-width: 6;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+.hammer-smear-lines {
+  fill: none;
+  stroke: #e05bd8;
+  stroke-width: 4;
+  stroke-linecap: round;
 }

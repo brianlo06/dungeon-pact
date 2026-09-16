@@ -43,11 +43,12 @@ const PARTS = [
  * Moved only in an Ultimate close-up (see `CloseUpContext`): the face, and
  * for Hammer Price the balance taken out of the fist (`balance`, the post and
  * the pans together) and the sale hammer the Magnate holds up in its place
- * (`gavel`, with its head, `mallet`, which swells). The hammer is parked
+ * (`gavel`, with its handle, `shaft`, which a swing lengthens, and its head,
+ * `mallet`, which swells). The hammer is parked
  * outside a clip at rest, so a copy of the figure that no clip drives shows
  * none of it, and the balance at rest is the balance as drawn.
  */
-const FACE_PARTS = ["brow", "eyes", "mouth", "balance", "gavel", "mallet"] as const;
+const FACE_PARTS = ["brow", "eyes", "mouth", "balance", "gavel", "shaft", "mallet"] as const;
 /**
  * Where the parked hammer waits, in drawing units right of the fist and
  * outside its clip. A clip brings it home with `x: -GAVEL_PARK / 100`
@@ -434,14 +435,17 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
             <g transform={`translate(${GAVEL_PARK} 0)`}>
               {/* the sale hammer, pivoting in the fist; its handle hides the balance's post */}
               <g ref={facePart("gavel")} style={at(71.5, 52.5)}>
-                <path
-                  d="M72 62 L71.8 26 Q73.5 24.6 75.2 26 L75 62 Z"
-                  fill="#2a1418"
-                  stroke={INK}
-                  strokeWidth={DETAIL}
-                  strokeLinejoin="round"
-                />
-                <path d="M72.9 58 L72.8 28" stroke="#6a3444" strokeWidth={0.8} />
+                {/* the handle, which a swing can lengthen from the butt (`shaft`) */}
+                <g ref={facePart("shaft")} style={at(73.5, 62)}>
+                  <path
+                    d="M72 62 L71.8 26 Q73.5 24.6 75.2 26 L75 62 Z"
+                    fill="#2a1418"
+                    stroke={INK}
+                    strokeWidth={DETAIL}
+                    strokeLinejoin="round"
+                  />
+                  <path d="M72.9 58 L72.8 28" stroke="#6a3444" strokeWidth={0.8} />
+                </g>
                 {/* a turned collar over the balance's ring, and a knob at the butt */}
                 <rect x={69.6} y={41.4} width={7.8} height={3.4} rx={1.2} fill="#3b1a22" stroke={INK} strokeWidth={DETAIL} />
                 <ellipse cx={73.5} cy={62.6} rx={2.8} ry={2} fill="#3b1a22" stroke={INK} strokeWidth={DETAIL} />

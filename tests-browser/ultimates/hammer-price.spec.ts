@@ -83,6 +83,8 @@ test("the room is outbid: paddles go out while the hammer's head swells", async 
 test("the quiet is one paddle in the dark, and nobody in the cast", async ({ page }) => {
   await hold(page, { shot: 4, at: 0.3 }, "last");
   await expect(page.locator(".fx-hammer-last-wrap")).toHaveCount(1);
+  // A bidding paddle, plainly: its bidder's number painted on the board.
+  await expect(page.locator(".hammer-last-number")).toHaveText("27");
   await expect(page.locator(".cine-actor:visible")).toHaveCount(0);
   expect(await page.locator(".cine-accent, .fx-hammer-knock-wrap, .fx-hammer-paddles-wrap").count()).toBe(0);
 });
@@ -95,10 +97,19 @@ test("gone: the hammer is on the real target on the held frame, the knock drawn,
   await expect(target(page)).toHaveCount(1);
   const head = (await box(page, "mallet"))!;
   const lot = (await target(page).boundingBox())!;
-  // The head overlaps the target's drawing: the blow lands, it does not stop short.
+  // The head comes down on the target from above: it overlaps the target's
+  // drawing, and its top is above the target's.
   expect(head.x + head.width).toBeGreaterThan(lot.x);
   expect(head.x).toBeLessThan(lot.x + lot.width);
   expect(head.y + head.height).toBeGreaterThan(lot.y);
+  expect(head.y).toBeLessThan(lot.y);
+  // And the target is pressed flat under it.
+  const crushed = await target(page).locator(".cine-look").evaluate((el) => (el as HTMLElement).style.transform);
+  const [, sx, sy] = crushed.match(/scale\(([\d.]+), ([\d.]+)\)/) ?? [];
+  expect(Number(sy)).toBeLessThan(0.85);
+  expect(Number(sx)).toBeGreaterThan(1.05);
+  // The swing is drawn from over the cap to the blow.
+  expect(await page.locator(".hammer-smear-body").getAttribute("d")).toMatch(/L/);
   await expect(page.locator(".fx-hammer-knock-wrap")).toHaveCount(2);
   expect(await page.locator(".hammer-knock.front .hammer-knock-grain.thick").getAttribute("d")).toMatch(/L/);
   expect(await page.locator(".hammer-block .hammer-block-split").getAttribute("d")).toMatch(/L/);

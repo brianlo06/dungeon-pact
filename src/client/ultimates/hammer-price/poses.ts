@@ -65,8 +65,10 @@ const NOD: Expression = { brow: 0.3, knit: -1, open: 0.36, mouth: 0.75, wide: 1.
 const SMUG: Expression = { brow: -0.3, knit: -4, open: 0.58, mouth: 1.35, wide: 1.38 };
 /** Going twice: the brows come down hard on the rims, lips pressed. */
 const HOIST: Expression = { brow: 2, knit: 10, open: 0.42, mouth: 0.5, wide: 1.25 };
-/** Gone. */
-const SOLD: Expression = { brow: 2.4, knit: 12, open: 1.15, mouth: 2.6, wide: 1.2 };
+/** The blow: brows crushed down on the rims, eyes screwed shut, the mouth turned over into a grimace. */
+const STRAIN: Expression = { brow: 2.6, knit: 14, open: 0.2, mouth: 3, wide: 1.75 };
+/** Sold: the grin of a man who got it cheap. */
+const SOLD: Expression = { brow: -0.6, knit: -5, open: 0.62, mouth: 2.3, wide: 1.45 };
 
 /**
  * On the board: the chin comes up and the ledger hand touches the cap's brim,
@@ -182,10 +184,12 @@ const hoist: Clip = {
 };
 
 /**
- * Gone. From hoisted, the hammer comes over the cap and down on the lot with
- * the whole body behind it by the contact frame — the handle lying forward,
- * the head's face on the lot — and stays there, pressed down, while the
- * Magnate shouts the sale.
+ * Gone. From hoisted, the Magnate cocks back once more, then throws the whole
+ * round body forward and down over the blow: the arm is driven down past the
+ * belly, the handle lengthens through the swing and lies forward and down,
+ * and the head's face comes down on the lot's back from above. It stays
+ * pressed there while the Magnate strains on it, and only after the stop does
+ * the face let go into the smile of a sale.
  */
 /**
  * When the hammer lands: 125ms into the knock, just after the 120ms the film
@@ -193,29 +197,63 @@ const hoist: Clip = {
  */
 const CONTACT = 125 / 760;
 
+/** How much longer the handle is at the blow than at rest. */
+const REACH = 1.2;
+/** The shaft stretched along its length only: x = s·q stays 1, y = s/q is the reach. */
+const stretch = (at: number, reach: number): Pose => ({ at, scale: Math.sqrt(reach), squash: 1 / Math.sqrt(reach) });
+/** The head carried out to the end of the stretched shaft (36 units of handle above the butt). */
+const outTo = (reach: number) => -((reach - 1) * 36) / 100;
+
+/** A mouth turned over: a curve that was pleased becomes a grimace. */
+const turned = (poses: Pose[], keys: [number, number][]) =>
+  poses.map((p) => ({ ...p, rotate: keys.find(([at]) => Math.abs(at - p.at) < 1e-6)?.[1] ?? 0 }));
+
+const knockFace = face(
+  [0, HOIST],
+  [0.07, { ...HOIST, open: 0.3, mouth: 0.25 }],
+  [CONTACT, STRAIN],
+  [0.3, STRAIN],
+  // Flattened to a line before it turns back over, so the turn never shows.
+  [0.36, { ...STRAIN, mouth: 0.25, wide: 1.2 }],
+  [0.42, SOLD],
+  [1, { ...SOLD, mouth: 1.8 }],
+);
+
 const knock: Clip = {
   duration: 760,
   markers: { contact: CONTACT },
   poses: [
-    { at: 0, x: -0.02, y: 0.012, rotate: -5, squash: 1.06 },
-    { at: 0.09, x: -0.026, y: 0.016, rotate: -7, squash: 1.08 },
-    { at: CONTACT, x: 0.05, y: 0.014, rotate: 8, squash: 0.9, scale: 1.03 },
-    { at: 0.3, x: 0.048, y: 0.012, rotate: 7, squash: 0.93, scale: 1.02 },
-    { at: 0.6, x: 0.046, y: 0.01, rotate: 6, squash: 0.96 },
-    { at: 1, x: 0.045, y: 0.01, rotate: 5.5, squash: 0.97 },
+    { at: 0, x: -0.024, y: 0.014, rotate: -6, squash: 1.07 },
+    { at: 0.09, x: -0.034, y: 0.018, rotate: -9, squash: 1.09 },
+    { at: CONTACT, x: 0.075, y: 0.03, rotate: 15, squash: 0.88, scale: 1.04 },
+    { at: 0.3, x: 0.072, y: 0.028, rotate: 14, squash: 0.9, scale: 1.03 },
+    { at: 0.5, x: 0.064, y: 0.02, rotate: 10, squash: 0.95, scale: 1.01 },
+    { at: 1, x: 0.06, y: 0.018, rotate: 9, squash: 0.97 },
   ],
   parts: {
-    // Cocked a little further back, then over and down in 55ms.
-    scales: turn([0, -108], [0.09, -116], [0.13, -86], [CONTACT, -40], [0.3, -38], [1, -37]),
-    gavel: hammer([0, 90], [0.09, 82], [0.13, 104], [CONTACT, 120], [0.3, 117], [1, 117]),
-    mallet: price([0, 1.74, 0.8], [CONTACT, 1.74, 0.8], [0.2, 1.62, 0.66], [0.3, 1.78, 0.82], [0.42, 1.74, 0.8], [1, 1.74, 0.8]),
+    // Cocked back and up, then over and down in 55ms: the arm ends driven
+    // down past the belly, and handle and arm together point forward and down.
+    scales: turn([0, -108], [0.09, -122], [0.13, -70], [CONTACT, -38], [0.3, -36], [0.5, -40], [1, -42]),
+    gavel: hammer([0, 90], [0.09, 84], [0.13, 112], [CONTACT, 151], [0.3, 150], [0.5, 150], [1, 150]),
+    shaft: [{ at: 0, scale: 1, squash: 1 }, stretch(0.09, 1.05), stretch(0.13, 1.12), stretch(CONTACT, REACH), stretch(1, REACH)],
+    mallet: [
+      { at: 0, scale: 1.74, squash: 0.8, y: 0 },
+      { at: 0.09, scale: 1.7, squash: 0.82, y: outTo(1.05) },
+      { at: 0.13, scale: 1.45, squash: 0.92, y: outTo(1.12) },
+      { at: CONTACT, scale: 1.25, squash: 1, y: outTo(REACH) },
+      // Flattened against the lot, and back.
+      { at: 0.2, scale: 1.2, squash: 1.14, y: outTo(REACH) },
+      { at: 0.32, scale: 1.27, squash: 0.97, y: outTo(REACH) },
+      { at: 1, scale: 1.25, squash: 1, y: outTo(REACH) },
+    ],
     balance: NO_BALANCE,
-    ledger: turn([0, 20], [0.09, 24], [CONTACT, -30], [0.4, -24], [1, -22]),
-    head: turn([0, -12], [0.09, -14], [CONTACT, 10], [0.3, 6], [1, 5]),
-    ...face([0, HOIST], [0.1, { ...HOIST, open: 0.3 }], [CONTACT, SOLD], [0.7, SOLD], [1, { ...SOLD, mouth: 2, open: 0.9 }]),
+    ledger: turn([0, 20], [0.09, 26], [CONTACT, -46], [0.4, -40], [1, -36]),
+    head: turn([0, -12], [0.09, -15], [CONTACT, 16], [0.3, 14], [0.5, 6], [1, 4]),
+    ...knockFace,
+    mouth: turned(knockFace.mouth, [[0.07, 0], [CONTACT, 180], [0.3, 180], [0.36, 180]]),
     purse: [
       { at: 0, rotate: 0, y: 0 },
-      { at: CONTACT, rotate: 24, y: -0.02 },
+      { at: CONTACT, rotate: 26, y: -0.02 },
       { at: 0.32, rotate: -14, y: 0 },
       { at: 0.55, rotate: 8 },
       { at: 0.8, rotate: -3 },
@@ -223,15 +261,15 @@ const knock: Clip = {
     ],
     legs: [
       { at: 0, squash: 1.06 },
-      { at: 0.09, squash: 1.08 },
-      { at: CONTACT, squash: 0.9 },
-      { at: 0.32, squash: 0.96 },
-      { at: 1, squash: 0.98 },
+      { at: 0.09, squash: 1.09 },
+      { at: CONTACT, squash: 0.88 },
+      { at: 0.32, squash: 0.92 },
+      { at: 1, squash: 0.97 },
     ],
     body: [
       { at: 0, squash: 1.04, y: 0 },
-      { at: CONTACT, squash: 0.92, y: 0.006 },
-      { at: 0.32, squash: 0.98, y: 0.003 },
+      { at: CONTACT, squash: 0.9, y: 0.008 },
+      { at: 0.32, squash: 0.95, y: 0.005 },
       { at: 1, squash: 0.99, y: 0.002 },
     ],
   },

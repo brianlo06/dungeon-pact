@@ -1,4 +1,4 @@
-import type { Cinematic } from "../../shared/cinematic";
+import type { Cinematic, VfxCue } from "../../shared/cinematic";
 
 /**
  * HAMMER PRICE — the Broker · Magnate's Ultimate.
@@ -40,10 +40,31 @@ const LACQUER = "#0b0709";
 const BARS = 0.1;
 const ROOM = "hammer-saleroom";
 /**
- * The knock, as a fraction of the impact shot: 140ms in FULL and 98ms in
- * FAST, either side of the hammer's contact 125ms into `ult:hammer-knock`.
+ * The knock, as a fraction of the impact shot: 128ms into it, 3ms after the
+ * hammer's contact 125ms into `ult:hammer-knock`. The impact shot is the same
+ * length in FULL and FAST, because the swing plays at one rate in both and a
+ * hit-stop that fell before the head arrived would hold the hammer in the air.
  */
-const HIT = 0.175;
+const IMPACT_MS = 760;
+const HIT = 128 / IMPACT_MS;
+
+/**
+ * The blow's effects, placed for the lot's size: the lot pressed down (`down`,
+ * `wide`), the swing's arc, the light behind the lot, the block split under
+ * it, the knock where the head's face meets it (`ox`, `oy`, in the lot's drawn
+ * heights from its feet) and the splinters.
+ */
+function blow(o: { ox: number; oy: number; size: number; down: number; wide: number; block: number; splinters: number }): VfxCue[] {
+  return [
+    { kind: "hammer-crush", at: 0, until: 1, layer: "back", params: { hit: HIT, down: o.down, wide: o.wide } },
+    { kind: "hammer-glow", at: 0, until: 1, follow: "target", layer: "back" },
+    { kind: "hammer-smear", at: 0, until: 0.6, layer: "back", params: { a0: -40, a1: 118, r: 61, from: 55, hit: 125 } },
+    { kind: "hammer-block", at: 0, until: 1, follow: "target", layer: "back", params: { mode: "split", hit: HIT, w: o.block } },
+    { kind: "hammer-knock", at: HIT, until: 0.75, follow: "target", layer: "back", params: { half: "back", ox: o.ox, oy: o.oy, size: o.size } },
+    { kind: "hammer-knock", at: HIT, until: 0.75, follow: "target", layer: "front", params: { half: "front", ox: o.ox, oy: o.oy, size: o.size } },
+    { kind: "hammer-splinters", at: HIT, until: 0.85, follow: "target", layer: "front", params: { count: o.splinters } },
+  ];
+}
 
 export const hammerPrice: Cinematic = {
   id: "hammer-price",
@@ -203,7 +224,7 @@ export const hammerPrice: Cinematic = {
       background: ROOM,
       lighting: { exposure: 0.2, vignette: 0.9, letterbox: 0.13 },
       toLighting: { exposure: 0.08, vignette: 0.94, letterbox: 0.14 },
-      vfx: [{ kind: "hammer-last", at: 0, until: 1, x: 800, y: 540, layer: "front", params: { give: 0.56 } }],
+      vfx: [{ kind: "hammer-last", at: 0, until: 1, x: 800, y: 500, layer: "front", params: { give: 0.56 } }],
       duck: [{ at: 0, level: 0.04, ms: 620 }],
       sound: [
         { at: 0.06, sfx: "hammer-tremble" },
@@ -219,28 +240,22 @@ export const hammerPrice: Cinematic = {
       purpose:
         "Impact: gone. The hammer comes over the cap and down on the lot with the whole body behind it; on a Tyrian-and-ink frame the knock is stamped round the head, the split runs down through the lot and the sale block breaks under it. The damage lands on the held frame. Sold.",
       space: "cinematic",
-      ms: 800,
-      fastMs: 560,
+      ms: IMPACT_MS,
+      fastMs: IMPACT_MS,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 820, y: 630, zoom: 1.34, rotate: -6 },
-        to: { x: 820, y: 640, zoom: 1.24, rotate: -2 },
+        from: { x: 820, y: 720, zoom: 1.12, rotate: -5 },
+        to: { x: 820, y: 730, zoom: 1.05, rotate: -2 },
         ease: "out",
       },
       background: ROOM,
       lighting: { exposure: 1, tint: [TYRIAN, 0.28], back: [TYRIAN, 0.9], rim: [HOT, 1, 1], vignette: 0.32, letterbox: BARS },
       toLighting: { exposure: 0.6, tint: [TYRIAN, 0], back: [TYRIAN, 0.26], rim: [TYRIAN, 0.7, 1], vignette: 0.44, letterbox: BARS },
       actors: [
-        { role: "caster", at: [560, 980], size: 720, clip: "ult:hammer-knock", then: "ult:hammer-knock", look: "rim", rim: TYRIAN, z: 3 },
-        { role: "target", at: [1000, 900], size: 400, face: -1, z: 1, react: [{ at: HIT, clip: "hurt" }], shove: { at: HIT, by: [16, 24] }, toTilt: 6 },
+        { role: "caster", at: [520, 980], size: 700, clip: "ult:hammer-knock", then: "ult:hammer-knock", look: "rim", rim: TYRIAN, z: 3 },
+        { role: "target", at: [920, 1060], size: 330, face: -1, z: 1, react: [{ at: HIT, clip: "hurt" }], shove: { at: HIT, by: [14, 10] }, toTilt: 4 },
       ],
-      vfx: [
-        { kind: "hammer-glow", at: 0, until: 1, follow: "target", layer: "back" },
-        { kind: "hammer-block", at: 0, until: 1, follow: "target", layer: "back", params: { mode: "split", hit: HIT, w: 0.72 } },
-        { kind: "hammer-knock", at: HIT, until: 0.75, follow: "target", layer: "back", params: { half: "back", ox: -0.06, oy: -0.62, size: 0.9 } },
-        { kind: "hammer-knock", at: HIT, until: 0.75, follow: "target", layer: "front", params: { half: "front", ox: -0.06, oy: -0.62, size: 0.9 } },
-        { kind: "hammer-splinters", at: HIT, until: 0.85, follow: "target", layer: "front", params: { count: 24 } },
-      ],
+      vfx: blow({ ox: 0.1, oy: -0.64, size: 0.6, down: 0.3, wide: 0.22, block: 0.72, splinters: 24 }),
       screen: [{ kind: "two-tone", at: HIT, ms: 70 }],
       stop: [{ at: HIT, ms: 150 }],
       sound: [
@@ -260,28 +275,27 @@ export const hammerPrice: Cinematic = {
       framing: {
         large: {
           camera: {
-            from: { x: 830, y: 610, zoom: 1.24, rotate: -5 },
-            to: { x: 830, y: 620, zoom: 1.16, rotate: -2 },
-            ease: "out",
-          },
-        },
-        boss: {
-          camera: {
-            from: { x: 850, y: 570, zoom: 1.14, rotate: -4 },
-            to: { x: 850, y: 580, zoom: 1.06, rotate: -1.5 },
+            from: { x: 820, y: 730, zoom: 1.08, rotate: -5 },
+            to: { x: 820, y: 740, zoom: 1.02, rotate: -2 },
             ease: "out",
           },
           actors: [
-            { role: "caster", at: [520, 980], size: 720, clip: "ult:hammer-knock", then: "ult:hammer-knock", look: "rim", rim: TYRIAN, z: 3 },
-            { role: "target", at: [1080, 940], size: 330, face: -1, z: 1, react: [{ at: HIT, clip: "hurt" }], shove: { at: HIT, by: [8, 8] }, toTilt: 2 },
+            { role: "caster", at: [520, 980], size: 700, clip: "ult:hammer-knock", then: "ult:hammer-knock", look: "rim", rim: TYRIAN, z: 3 },
+            { role: "target", at: [930, 1080], size: 300, face: -1, z: 1, react: [{ at: HIT, clip: "hurt" }], shove: { at: HIT, by: [22, 8] }, toTilt: 4 },
           ],
-          vfx: [
-            { kind: "hammer-glow", at: 0, until: 1, follow: "target", layer: "back" },
-            { kind: "hammer-block", at: 0, until: 1, follow: "target", layer: "back", params: { mode: "split", hit: HIT, w: 0.6 } },
-            { kind: "hammer-knock", at: HIT, until: 0.75, follow: "target", layer: "back", params: { half: "back", ox: -0.28, oy: -0.47, size: 0.6 } },
-            { kind: "hammer-knock", at: HIT, until: 0.75, follow: "target", layer: "front", params: { half: "front", ox: -0.28, oy: -0.47, size: 0.6 } },
-            { kind: "hammer-splinters", at: HIT, until: 0.85, follow: "target", layer: "front", params: { count: 28 } },
+          vfx: blow({ ox: 0, oy: -0.6, size: 0.55, down: 0.16, wide: 0.1, block: 0.66, splinters: 26 }),
+        },
+        boss: {
+          camera: {
+            from: { x: 820, y: 750, zoom: 1.0, rotate: -4 },
+            to: { x: 820, y: 760, zoom: 0.95, rotate: -1.5 },
+            ease: "out",
+          },
+          actors: [
+            { role: "caster", at: [500, 980], size: 700, clip: "ult:hammer-knock", then: "ult:hammer-knock", look: "rim", rim: TYRIAN, z: 3 },
+            { role: "target", at: [990, 1080], size: 300, face: -1, z: 1, react: [{ at: HIT, clip: "hurt" }], shove: { at: HIT, by: [48, 6] }, toTilt: 4 },
           ],
+          vfx: blow({ ox: -0.2, oy: -0.4, size: 0.45, down: 0.1, wide: 0.07, block: 0.55, splinters: 30 }),
         },
       },
     },

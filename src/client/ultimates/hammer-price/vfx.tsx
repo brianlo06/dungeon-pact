@@ -21,6 +21,8 @@ import "./style.css";
  *   hammer-knock      the drawn impact: the knock stamped flat where the
  *                     hammer lands, and the split it drives into the lot
  *   hammer-splinters  black lacquer thrown off the block
+ *   hammer-smear      the swing drawn as an arc from over the cap to the lot
+ *   hammer-crush      the lot pressed flat under the head on the contact frame
  *   hammer-glow       Tyrian light behind the lot, so the drawn frame cuts
  *                     both silhouettes against it
  *   hammer-outbid     on the board: a paddle lowered in front of every other
@@ -241,16 +243,23 @@ const Last = ({ cue }: VfxProps) => (
     {/* The chair it is held up from, its back just in the bottom of the frame. */}
     <path className="hammer-last-chair" d="M-330 520 L-330 290 Q-330 170 -180 170 L180 170 Q330 170 330 290 L330 520" />
     <path className="hammer-last-cane" d="M-280 520 L-280 300 Q-280 220 -180 220 L180 220 Q280 220 280 300 L280 520 Z" />
-    <g transform="translate(0 -40) scale(0.78)">
+    <g transform="translate(0 -60) scale(0.66)">
     <g className="hammer-last-paddle">
-      <path className="hammer-last-handle" d="M0 40 L0 520" />
-      <path className="hammer-last-grain" d="M-4 60 L-3 500" />
-      {/* A round card paddle on a turned wooden neck, and the light along one edge. */}
-      <ellipse className="hammer-last-face" cx="0" cy="-130" rx="165" ry="165" />
-      <path className="hammer-last-neck" d="M-26 30 L-16 70 L16 70 L26 30 Z" />
-      <path className="hammer-last-lit" d="M-120 -220 Q-150 -130 -110 -40" />
+      {/* A bidding paddle: a round board with its bidder's number painted on, on a plain wooden handle. */}
+      <path className="hammer-last-handle-ink" d="M0 20 L0 700" />
+      <path className="hammer-last-handle" d="M0 20 L0 700" />
+      <path className="hammer-last-grain" d="M-7 60 L-6 680" />
+      {/* The board's thickness, then its face, a painted border and the number. */}
+      <ellipse className="hammer-last-edge" cx="16" cy="-118" rx="170" ry="170" />
+      <ellipse className="hammer-last-face" cx="0" cy="-130" rx="170" ry="170" />
+      <ellipse className="hammer-last-border" cx="0" cy="-130" rx="140" ry="140" />
+      <text className="hammer-last-number" x="0" y="-130" textAnchor="middle" dominantBaseline="central">
+        27
+      </text>
+      <path className="hammer-last-neck" d="M-34 26 L-22 76 L22 76 L34 26 Z" />
+      <path className="hammer-last-lit" d="M-124 -226 Q-156 -130 -114 -36" />
       {/* A gloved hand round the handle, a sleeve and a shirt cuff under it. */}
-      <g transform="translate(0 -60)">
+      <g transform="translate(0 140)">
         <path className="hammer-last-sleeve" d="M-190 560 L-120 330 Q-60 300 40 330 L120 560 Z" />
         <path className="hammer-last-cuff" d="M-122 334 Q-40 296 44 330 L34 362 Q-40 334 -130 366 Z" />
         <path
@@ -565,6 +574,99 @@ const splinters: Frame = (el, p) => {
   setStyle(svg, "opacity", clamp((1 - p) * 2.2).toFixed(3));
 };
 
+/* ── The swing, and the lot crushed under it ───────────────────────────── */
+
+const Smear = ({ cue }: VfxProps) => (
+  <World cue={cue} className="hammer-smear">
+    <path className="hammer-smear-body" />
+    <path className="hammer-smear-lines" />
+  </World>
+);
+
+/**
+ * The swing, drawn: a crescent of Tyrian light swept round the Magnate's front
+ * shoulder from over the cap to where the head lands, thin where the swing
+ * began and full-bodied at the head, with speed lines inside it. It grows with
+ * the swing (`from`…`hit` ms into the cue), stands whole on the held frame,
+ * and thins away after it. Placed from the caster the stage drew, in world
+ * units; angles are clockwise from straight up, radius in drawing units.
+ */
+const smear: Frame = (el, _p, age, ctx) => {
+  const svg = el.querySelector("svg");
+  const caster = ctx.actor("caster");
+  if (!svg || !caster) return;
+  const o = params(el);
+  const scale = caster.h / 84;
+  const sx = caster.x + (pn(o, "sx", 62) - 50) * scale;
+  const sy = caster.y + (pn(o, "sy", 50) - 97) * scale;
+  const R = pn(o, "r", 60) * scale;
+  const a0 = pn(o, "a0", -30) * DEG;
+  const a1 = pn(o, "a1", 120) * DEG;
+  const from = pn(o, "from", 60);
+  const hit = pn(o, "hit", 125);
+  const grow = clamp((age - from) / Math.max(1, hit - from));
+  const fade = clamp(1 - (age - hit - 20) / 140);
+  if (grow <= 0 || fade <= 0) {
+    setD(svg.querySelector(".hammer-smear-body"), "");
+    setD(svg.querySelector(".hammer-smear-lines"), "");
+    return;
+  }
+  const end = lerp(a0, a1, ease("in", grow));
+  const start = lerp(a0, end, clamp(0.15 + (1 - fade) * 0.8));
+  const at = (a: number, r: number) => [sx + Math.sin(a) * r, sy - Math.cos(a) * r] as const;
+  const steps = 24;
+  const outer: string[] = [];
+  const inner: string[] = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const a = lerp(start, end, t);
+    const w = R * 0.34 * t ** 1.6 * (0.3 + 0.7 * fade);
+    const [ox, oy] = at(a, R + w * 0.5);
+    const [ix, iy] = at(a, R - w * 0.5);
+    outer.push(`${f1(ox)} ${f1(oy)}`);
+    inner.push(`${f1(ix)} ${f1(iy)}`);
+  }
+  setD(svg.querySelector(".hammer-smear-body"), `M${outer.join(" L")} L${inner.reverse().join(" L")} Z`);
+  let lines = "";
+  for (const k of [0.82, 1, 1.14]) {
+    const s0 = lerp(start, end, 0.35);
+    const [ax, ay] = at(s0, R * k);
+    lines += `M${f1(ax)} ${f1(ay)} `;
+    for (let i = 1; i <= 10; i++) {
+      const [bx, by] = at(lerp(s0, end, i / 10) - 0.06, R * k);
+      lines += `L${f1(bx)} ${f1(by)} `;
+    }
+  }
+  setD(svg.querySelector(".hammer-smear-lines"), lines);
+  setStyle(svg, "opacity", fade.toFixed(3));
+};
+
+/** Nothing drawn: this cue only presses the lot flat. */
+const Crush = ({ cue }: VfxProps) => <i className="hammer-crush" data-params={JSON.stringify(cue.params ?? {})} />;
+
+/**
+ * The lot crushed under the head. The engine gives an actor no squash, and
+ * the enemies' rigs are not this film's to add clips to, so on the contact
+ * frame this presses the target's drawing (`.cine-look`, which nothing else
+ * in this film moves) down from its feet — wider and lower, as if its legs
+ * went out from under it — and holds most of that through the shot. Every
+ * earlier frame writes it back to rest.
+ */
+const crush: Frame = (el, p) => {
+  const look = el.closest(".ult-cinematic")?.querySelector<HTMLElement>('.cine-actor[data-role="targets"] .cine-look');
+  if (!look) return;
+  const o = params(el);
+  const hit = pn(o, "hit", 0.175);
+  const since = p - hit;
+  let c = 0;
+  if (since >= 0) c = since < 0.12 ? 1 : lerp(1, pn(o, "hold", 0.7), ease("out", clamp((since - 0.12) / 0.3)));
+  const down = pn(o, "down", 0.3) * c;
+  const wide = pn(o, "wide", 0.22) * c;
+  if (look.style.transformOrigin !== "50% 96%") look.style.transformOrigin = "50% 96%";
+  const t = c ? `scale(${(1 + wide).toFixed(3)}, ${(1 - down).toFixed(3)})` : "";
+  if (look.style.transform !== t) look.style.transform = t;
+};
+
 /* ── Light, and the board ──────────────────────────────────────────────── */
 
 /** Tyrian behind the lot, so the drawn frame cuts both figures out against it. */
@@ -627,6 +729,8 @@ export const renderers: Record<string, (p: VfxProps) => ReactNode> = {
   "hammer-knock": Knock,
   "hammer-splinters": Splinters,
   "hammer-glow": Glow,
+  "hammer-smear": Smear,
+  "hammer-crush": Crush,
   "hammer-outbid": Outbid,
 };
 
@@ -636,5 +740,7 @@ export const frames: Record<string, Frame> = {
   "hammer-block": block,
   "hammer-knock": knock,
   "hammer-splinters": splinters,
+  "hammer-smear": smear,
+  "hammer-crush": crush,
   "hammer-outbid": outbid,
 };
