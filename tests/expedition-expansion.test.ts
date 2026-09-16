@@ -71,10 +71,11 @@ describe("expedition expansion", () => {
     prepareIntents(s);
     expect(boss.intent.ability.effects[0].kind).toBe("damage");
   });
-  it("validates 32 equipment items, five supplies and eight events", () => {
+  it("validates 32 equipment items, six supplies and nine events", () => {
     const count = validateContent();
-    expect(count.items).toBe(37);
-    expect(count.events).toBe(8);
+    // The Writ of Reprieve and the Reprieve Office came with boss pools.
+    expect(count.items).toBe(38);
+    expect(count.events).toBe(9);
     expect(count.presentationWarnings).toEqual([]);
   });
   for (const item of expeditionItems)

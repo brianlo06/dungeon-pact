@@ -95,6 +95,7 @@ export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
 );
 const abilitySchema = z.object({
   interruptible: z.boolean().optional(),
+  revive: z.boolean().optional(),
   id: z.string().min(1),
   name: z.string().min(1),
   description: z.string().min(1),

@@ -1,4 +1,5 @@
 import { GuildScene } from "./components/GuildScene";
+import { SceneTransition } from "./components/SceneTransition";
 import { useCombatExit } from "./battle/useCombatExit";
 import { ExpeditionGuide } from "./components/ExpeditionGuide";
 import { Onboarding } from "./components/Onboarding";
@@ -269,6 +270,7 @@ export default function App() {
             {s.phase === "REWARD" && <Reward {...props!} />}{" "}
             {s.phase === "COMPLETE" && <Results s={s} onLeave={leave} />}
           </main>
+          <SceneTransition s={s} reducedMotion={settings.reducedMotion} />
           <footer className="run-footer">
             <ExpeditionGuide {...props!} />
             <div className="pings">

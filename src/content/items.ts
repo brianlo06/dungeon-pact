@@ -46,6 +46,33 @@ const action = (
   cooldown: 0,
 });
 export const supplies: ItemDef[] = [
+  /**
+   * The only battlefield revival in a room with boss pools. Pact revival sold a
+   * life back for 90 gold, which every party could afford at every boss; a
+   * writ is found, never bought off a shelf, and there is one to a find.
+   */
+  {
+    ...supply(
+      "writ-of-reprieve",
+      "Writ of Reprieve",
+      "Epic",
+      ["Revival", "Supply"],
+      "Signed, sealed, and dated tomorrow.",
+      200,
+      {
+        ...action(
+          "use-writ-of-reprieve",
+          "Writ of Reprieve",
+          "Return a downed ally to the fight with 45 HP.",
+          "ally",
+          [{ kind: "heal", amount: 45 }],
+          6,
+        ),
+        revive: true,
+      },
+    ),
+    unsold: true,
+  },
   supply(
     "ward-iron",
     "Ward-iron Flask",

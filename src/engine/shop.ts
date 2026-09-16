@@ -37,7 +37,7 @@ export function enterShop(s: RunState) {
   const stock: string[] = [];
   for (const slot of SHELVES) {
     const catalogue = items.filter(
-      (i) => i.slot === slot && !stock.includes(i.id),
+      (i) => i.slot === slot && !stock.includes(i.id) && !i.unsold,
     );
     const fresh = catalogue.filter((i) => !owned.has(i.id));
     stock.push(pick(s, fresh.length ? fresh : catalogue).id);

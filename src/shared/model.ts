@@ -92,6 +92,8 @@ export type Effect =
   | { kind: "enemies"; effects: Effect[]; row?: boolean; others?: boolean };
 export interface Ability {
   reach?: "melee" | "reach" | "ranged";
+  /** Aimed only at a downed ally: a revival. The engine refuses anyone standing. */
+  revive?: boolean;
   /** How this action looks. Never how it resolves. */
   presentation?: AbilityPresentation;
   interruptible?: boolean;
@@ -179,6 +181,8 @@ export interface ItemDef {
   use?: Ability;
   target: "self" | "target";
   price: number;
+  /** Never stocked by a shop: found only where the content hands it out. */
+  unsold?: boolean;
 }
 export interface Status {
   sourceId?: string;

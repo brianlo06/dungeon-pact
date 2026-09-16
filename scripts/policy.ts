@@ -92,6 +92,7 @@ const usable = (s: RunState, p: Player) =>
     (a) =>
       a.cost <= p.resource &&
       !(p.cooldowns[a.id] > 0) &&
+      (a.id !== "revive" || s.bossVersion !== 1) &&
       (a.id === "revive" || price(a) <= s.gold),
   );
 const living = (s: RunState) => s.enemies.filter((e) => e.hp > 0);
@@ -388,8 +389,9 @@ export const attackPolicy: Policy = {
   },
   plan(s, p) {
     const target = living(s)[0];
+    // Standing allies only: a heal cannot stand a downed hero up any more.
     const ally = [...s.players]
-      .filter((x) => !x.fallen)
+      .filter((x) => !x.fallen && x.hp > 0)
       .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
     const options = usable(s, p);
     const a =
@@ -508,6 +510,17 @@ export const tacticalPolicy: Policy = {
     const choices = events.find((e) => e.id === s.eventId)!.choices;
     const heal = choices.find((c) => c.heal > 0);
     const purse = choices.find((c) => c.gold > 0);
+    // A writ is a life. Sign for it while the party can bear the price in
+    // blood, or buy it when the treasury can spare the fee.
+    const writ = choices.filter((c) => c.gift === "writ-of-reprieve");
+    const signed = writ.find((c) => c.heal < 0 && c.cost === 0);
+    if (
+      signed &&
+      s.players.every((p) => p.fallen || p.hp + signed.heal > p.maxHp * 0.45)
+    )
+      return signed.id;
+    const bought = writ.find((c) => c.cost > 0);
+    if (bought && s.gold - bought.cost >= reserve(s)) return bought.id;
     if (heal && s.gold - heal.cost >= reserve(s) && wounded(s) > 0.3)
       return heal.id;
     if (purse && s.players.every((p) => p.hp + purse.heal > p.maxHp * 0.25))
@@ -554,6 +567,11 @@ export const tacticalPolicy: Policy = {
       !claimed("revive", down.id)
     )
       return { ability: "revive", target: down.id };
+    // A found writ is spent on the first ally to go down: holding a life back
+    // for a later round is how a party loses the one it is in.
+    const writ = opts.find((a) => a.revive);
+    if (down && writ && !claimed(writ.id, down.id))
+      return { ability: writ.id, target: down.id };
 
     // 2. Recovery before it is wasted on a corpse.
     // Only abilities that can be aimed at a wounded ally count as recovery: a
@@ -563,6 +581,7 @@ export const tacticalPolicy: Policy = {
     const heals = opts.filter(
       (a) =>
         a.id !== "revive" &&
+        !a.revive &&
         a.target === "ally" &&
         a.effects.some((e) => e.kind === "heal" && !e.self),
     );

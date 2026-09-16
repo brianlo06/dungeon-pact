@@ -1,0 +1,114 @@
+/*
+ * Scene transitions: a card over the cut between two scenes of a run.
+ *
+ * Never interactive (pointer-events: none), so a click during a card reaches
+ * the screen below it. Transforms and opacity only; no filters.
+ */
+.scene-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.scene-transition[data-tone="boss"],
+.scene-transition[data-tone="descent"] {
+  animation-duration: 1500ms;
+}
+.scene-veil {
+  position: absolute;
+  inset: 0;
+  background: #0d0a12;
+  animation: scene-veil 1100ms ease-in-out both;
+}
+.scene-transition[data-tone="boss"] .scene-veil,
+.scene-transition[data-tone="descent"] .scene-veil {
+  animation-duration: 1500ms;
+}
+.scene-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 24px;
+  text-align: center;
+  animation: scene-card 1100ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.scene-transition[data-tone="boss"] .scene-card,
+.scene-transition[data-tone="descent"] .scene-card {
+  animation-duration: 1500ms;
+}
+.scene-eyebrow {
+  font: 9px var(--pixel);
+  letter-spacing: 0.18em;
+  color: #b89a6a;
+}
+.scene-title {
+  font: 28px var(--pixel);
+  color: #f3e3c3;
+  letter-spacing: 0.04em;
+  text-shadow: 0 3px 0 #000;
+}
+.scene-subtitle {
+  font-size: 14px;
+  font-style: italic;
+  color: #c9b79a;
+}
+.scene-rule {
+  width: 160px;
+  height: 2px;
+  margin-top: 4px;
+  background: linear-gradient(90deg, transparent, #c99a52, transparent);
+  transform-origin: center;
+  animation: scene-rule 1100ms ease-out both;
+}
+/* A fight is struck in ember, a boss in blood, a win in gold, the stairs in cold. */
+.scene-transition[data-tone="fight"] .scene-eyebrow { color: #e0855a; }
+.scene-transition[data-tone="boss"] .scene-eyebrow { color: #ff6a4a; }
+.scene-transition[data-tone="boss"] .scene-title { font-size: 34px; color: #ffd9c2; }
+.scene-transition[data-tone="boss"] .scene-rule { background: linear-gradient(90deg, transparent, #b3302a, transparent); }
+.scene-transition[data-tone="victory"] .scene-title { color: #ffd27a; }
+.scene-transition[data-tone="defeat"] .scene-title { color: #c9a3a3; }
+.scene-transition[data-tone="descent"] .scene-eyebrow { color: #8fb4d9; }
+.scene-transition[data-tone="descent"] .scene-rule { background: linear-gradient(90deg, transparent, #6f93c0, transparent); }
+
+/* The veil comes down fast, holds under the card, and lifts off the new scene. */
+@keyframes scene-veil {
+  0% { opacity: 0; }
+  16% { opacity: 1; }
+  62% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes scene-card {
+  0% { opacity: 0; transform: translateY(10px) scale(0.98); }
+  22% { opacity: 1; transform: none; }
+  64% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+@keyframes scene-rule {
+  0%, 18% { transform: scaleX(0); }
+  46% { transform: scaleX(1); }
+  100% { transform: scaleX(1); }
+}
+
+/* Reduced motion: the same card, faded, with nothing sliding or growing. */
+.scene-transition[data-motion="reduced"],
+.scene-transition[data-motion="reduced"] .scene-veil,
+.scene-transition[data-motion="reduced"] .scene-card,
+.scene-transition[data-motion="reduced"] .scene-rule {
+  animation-duration: 700ms;
+}
+.scene-transition[data-motion="reduced"] .scene-card {
+  animation-name: scene-fade;
+}
+.scene-transition[data-motion="reduced"] .scene-rule {
+  animation: none;
+}
+@keyframes scene-fade {
+  0% { opacity: 0; }
+  25% { opacity: 1; }
+  65% { opacity: 1; }
+  100% { opacity: 0; }
+}

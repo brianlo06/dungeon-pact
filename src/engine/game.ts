@@ -216,7 +216,11 @@ function finishVote(s: RunState, result: string) {
     else if (n.type === "forge") enterForge(s);
     else if (n.type === "auction" || n.type === "mystery") enterShop(s);
     else if (n.type === "event") {
-      s.eventId = pick(s, events).id;
+      // An event added with boss pools is only drawn in a room that has them.
+      s.eventId = pick(
+        s,
+        events.filter((e) => !e.bossVersion || s.bossVersion === 1),
+      ).id;
       s.phase = "EVENT";
     } else if (n.type === "mentor") {
       const teaching = mentors[nodeMentorTier(s, n) - 1];
@@ -242,6 +246,15 @@ function finishVote(s: RunState, result: string) {
       if (p.hp > 0) p.hp = Math.max(1, Math.min(p.maxHp, p.hp + c.heal));
       if (c.cleanse) p.statuses = [];
       if (c.supply) p.items.push(c.supply);
+    }
+    if (c.gift) {
+      const bearer = [...s.players]
+        .filter((p) => p.hp > 0 && !p.fallen)
+        .sort((a, b) => b.hp - a.hp || a.id.localeCompare(b.id))[0];
+      if (bearer) {
+        bearer.items.push(c.gift);
+        log(s, `${bearer.name} carries the ${items.find((i) => i.id === c.gift)?.name ?? c.gift}.`);
+      }
     }
     log(s, `The party chose ${c.name}.`);
     s.phase = "MAP";

@@ -209,13 +209,14 @@ export function Combat({
   }, [trace, stagehand, animators, unitIds]);
   const b = replay.beat;
 
+  // A room with boss pools sells no lives, so Pact revival is not offered.
   const list = abilities(
     me.heroId,
     s.combatVersion,
     me.upgrades,
     me.evolution,
     me.items,
-  );
+  ).filter((a) => a.id !== "revive" || s.bossVersion !== 1);
   const [ability, setAbility] = useState(list[0].id);
   const [target, setTarget] = useState("");
   /**
@@ -274,7 +275,8 @@ export function Combat({
       ids.add(me.id);
     } else if (chosen.target === "ally" || chosen.target === "allyRow") {
       for (const p of s.players) {
-        if (p.fallen || (chosen.id === "revive" ? p.hp > 0 : p.hp <= 0))
+        const revives = chosen.id === "revive" || !!chosen.revive;
+        if (p.fallen || (revives ? p.hp > 0 : p.hp <= 0))
           continue;
         if (chosen.effects.some((e) => e.kind === "protect") && p.id === me.id)
           continue;
@@ -438,7 +440,7 @@ export function Combat({
       ability: a,
       blocked: why(a),
       common: COMMON.has(a.id),
-      urgent: a.id === "revive" && someoneDown,
+      urgent: (a.id === "revive" || !!a.revive) && someoneDown,
       cost: cost(a),
     }))
     // Signature abilities sit nearest the hero; shared ones cascade further
@@ -630,7 +632,9 @@ export function Combat({
         {me.hp <= 0 ? (
           <div className="control-note">
             Your pact still holds. Ping priorities and help choose the route.
-            Allies can revive you; the camp restores fallen heroes.
+            {s.bossVersion === 1
+              ? "A Writ of Reprieve can return you; the camp restores fallen heroes."
+              : "Allies can revive you; the camp restores fallen heroes."}
             <p>
               Spirit aid: once per round, give a standing ally 4 Barrier or 1
               class resource. The party can continue without waiting for you.

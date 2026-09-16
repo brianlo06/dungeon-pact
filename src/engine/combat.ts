@@ -369,8 +369,21 @@ export function validatePlan(
     if (blocked) throw Error(blocked);
   }
   aim(s, p, a.target, targetId);
+  // A room with boss pools sells no lives: its only revival is a found writ.
+  if (a.id === "revive" && s.bossVersion === 1)
+    throw Error("Revival takes a Writ of Reprieve");
   if (a.id === "revive" && (target.hp > 0 || s.gold < reviveCost(s)))
     throw Error(`Revival requires a downed ally and ${reviveCost(s)} gold`);
+  if (a.revive && target.hp > 0) throw Error("Choose a downed ally");
+  // A heal aimed at a downed ally would stand them up for the price of a
+  // dressing. With boss pools, only a revival reaches the downed.
+  if (
+    s.bossVersion === 1 &&
+    !a.revive &&
+    isPlayer(target) &&
+    target.hp <= 0
+  )
+    throw Error("Only a revival reaches a downed ally");
   // An ability billed to the treasury must actually be affordable, or it would
   // quietly resolve at a discount when the purse is short.
   const price = a.effects.reduce(

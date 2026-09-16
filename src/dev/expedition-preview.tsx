@@ -17,6 +17,7 @@ import { generateMap } from "../engine/map";
 import { mentors } from "../content/evolutions";
 import { enterShop } from "../engine/shop";
 import { Onboarding } from "../client/components/Onboarding";
+import { SceneTransition } from "../client/components/SceneTransition";
 import type { Intent } from "../shared/protocol";
 import "../client/style.css";
 function Lab() {
@@ -105,6 +106,8 @@ function Lab() {
       ) : (
         <ExpeditionGuide s={snap} send={send} disabled={false} />
       )}
+      {/* The card between scenes, as the game lays it over a change of phase. */}
+      <SceneTransition s={snap} reducedMotion={false} />
       {new URLSearchParams(location.search).has("tutorial") && (
         <Onboarding phase={s.phase} />
       )}
