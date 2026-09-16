@@ -66,8 +66,9 @@ const bowedRow = (at: [number, number], size: number, spread: [number, number], 
     { at: 0.1, clip: "hurt" },
   ],
   shove: { at: 0.1, by: [-8, sink] },
+  // The bow itself is the film's own (`bowed-blight` bends each figure on the contact); this is only the drift after.
   tilt: 0,
-  toTilt: -bow,
+  toTilt: -bow * 0.25,
 });
 
 const stooping = (at: [number, number], size: number): ActorCue => ({

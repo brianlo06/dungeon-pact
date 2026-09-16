@@ -45,6 +45,23 @@ const FAR = Array.from({ length: 140 }, () => {
   };
 }).sort((a, b) => a.y - b.y);
 
+/** The far field as two paths: stalks as thin wedges, heads as tilted ellipses. */
+const FAR_STALKS = FAR.map((f) => {
+  const w = 0.5 + f.r * 0.12;
+  const tx = f.x + f.lean * f.h * 0.4;
+  return `M${(f.x - w).toFixed(0)} ${f.y.toFixed(0)}L${tx.toFixed(1)} ${(f.y - f.h).toFixed(1)}L${(f.x + w).toFixed(0)} ${f.y.toFixed(0)}Z`;
+}).join("");
+const FAR_HEADS = FAR.map((f) => {
+  const cx = f.x + f.lean * f.h * 0.4;
+  const cy = f.y - f.h - f.r * 0.6;
+  const a = (f.lean * 40 * Math.PI) / 180;
+  const rx = f.r * 0.7;
+  const ux = Math.cos(a) * rx;
+  const uy = Math.sin(a) * rx;
+  const deg = (f.lean * 40).toFixed(0);
+  return `M${(cx + ux).toFixed(1)} ${(cy + uy).toFixed(1)}A${rx.toFixed(1)} ${f.r.toFixed(1)} ${deg} 1 0 ${(cx - ux).toFixed(1)} ${(cy - uy).toFixed(1)}A${rx.toFixed(1)} ${f.r.toFixed(1)} ${deg} 1 0 ${(cx + ux).toFixed(1)} ${(cy + uy).toFixed(1)}Z`;
+}).join("");
+
 /** The furrows, from the near edge of the world to the vanishing point. */
 const FURROWS = Array.from({ length: 29 }, (_, i) => -2600 + i * 220);
 
@@ -83,28 +100,23 @@ function Late() {
         </linearGradient>
       </defs>
       <rect x="-800" y="-450" width="3200" height={HORIZON + 450 + 4} fill="url(#bowed-sky)" />
-      <g className="bowed-clouds">
-        {CLOUDS.map((c, i) => (
-          <path key={i} d={cloudPath(c)} opacity={c.o.toFixed(2)} />
-        ))}
-      </g>
+      {/* Low cloud in two tones, each one path: a background is re-rastered whenever the camera moves. */}
+      <path className="bowed-clouds" d={CLOUDS.filter((c) => c.o < 0.55).map(cloudPath).join("")} opacity="0.4" />
+      <path className="bowed-clouds" d={CLOUDS.filter((c) => c.o >= 0.55).map(cloudPath).join("")} opacity="0.68" />
       {/* the soil, and the furrows running off to the horizon */}
       <rect x="-800" y={HORIZON} width="3200" height={1350 - HORIZON} fill="url(#bowed-soil)" />
-      <g className="bowed-furrows">
-        {FURROWS.map((x, i) => (
-          <path key={i} d={`M${VANISH.x} ${VANISH.y} L${x} 1350`} strokeWidth={i % 2 ? 26 : 12} />
-        ))}
-      </g>
+      {/* Furrows narrow to the horizon: each a thin wedge, all one path. */}
+      <path
+        className="bowed-furrows"
+        d={FURROWS.map((x, i) => {
+          const w = i % 2 ? 13 : 6;
+          return `M${VANISH.x} ${VANISH.y}L${x - w} 1350L${x + w} 1350Z`;
+        }).join("")}
+      />
       {/* the far field: a black mass of heads against the rust band */}
       <path className="bowed-far-mass" d={`M-800 ${HORIZON + 6} Q800 ${HORIZON - 26} 2400 ${HORIZON + 6} L2400 ${HORIZON + 90} L-800 ${HORIZON + 90} Z`} />
-      <g className="bowed-far">
-        {FAR.map((f, i) => (
-          <g key={i} transform={`translate(${f.x.toFixed(0)} ${f.y.toFixed(0)})`}>
-            <path className="stalk" d={`M0 0 L${(f.lean * f.h * 0.4).toFixed(1)} ${(-f.h).toFixed(1)}`} strokeWidth={(1 + f.r * 0.25).toFixed(1)} />
-            <ellipse className="head" cx={(f.lean * f.h * 0.4).toFixed(1)} cy={(-f.h - f.r * 0.6).toFixed(1)} rx={(f.r * 0.7).toFixed(1)} ry={f.r.toFixed(1)} transform={`rotate(${(f.lean * 40).toFixed(0)} ${(f.lean * f.h * 0.4).toFixed(1)} ${(-f.h - f.r * 0.6).toFixed(1)})`} />
-          </g>
-        ))}
-      </g>
+      <path className="bowed-far-stalks" d={FAR_STALKS} />
+      <path className="bowed-far-heads" d={FAR_HEADS} />
     </svg>
   );
 }

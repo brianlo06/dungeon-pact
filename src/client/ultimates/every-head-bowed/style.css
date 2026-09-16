@@ -6,23 +6,20 @@
  */
 
 /* ---- the late field (background) ---- */
-.bowed-clouds path {
+.bowed-clouds {
   fill: #0b0a08;
 }
-.bowed-furrows path {
-  fill: none;
-  stroke: #0a0806;
+.bowed-furrows {
+  fill: #0a0806;
   opacity: 0.55;
 }
 .bowed-far-mass {
   fill: #0c0a07;
 }
-.bowed-far .stalk {
-  fill: none;
-  stroke: #0c0a07;
-  stroke-linecap: round;
+.bowed-far-stalks {
+  fill: #0c0a07;
 }
-.bowed-far .head {
+.bowed-far-heads {
   fill: #120f0a;
 }
 
@@ -80,18 +77,13 @@
   stroke: #0b0906;
 }
 .bowed-whorl {
-  fill: none;
-  stroke: #5e3a1a;
+  fill: #54341a;
 }
 .bowed-eye {
   fill: #20140a;
 }
 .bowed-shade {
   fill: #07060a;
-  opacity: 0.8;
-}
-.bowed-rot {
-  opacity: 0;
 }
 .bowed-rot-black {
   fill: #110d09;
@@ -108,7 +100,6 @@
 }
 .bowed-rot-specks {
   fill: #a8a290;
-  opacity: 0;
 }
 /* The field's back band sits further off: a little less contrast. */
 .bowed-field[data-band="back"] .bowed-petals {
@@ -316,4 +307,12 @@
   transform-box: fill-box;
   transform-origin: center;
   transform: scale(1.7);
+}
+
+/* The board's lantern box and cross stand down for the film's own drawing of it (`bowed-lamp-detail`). */
+.ult-cinematic[data-cinematic="every-head-bowed"] .cine-actor[data-role="caster"] :is([data-part="lantern"], .bowed-kit-swing > g):has(> .bowed-lamp-detail) > path:nth-of-type(2),
+.ult-cinematic[data-cinematic="every-head-bowed"] .cine-actor[data-role="caster"] :is([data-part="lantern"], .bowed-kit-swing > g):has(> .bowed-lamp-detail) > path:nth-of-type(3),
+.ult-cinematic[data-cinematic="every-head-bowed"] .cine-actor[data-role="caster"] :is([data-part="lantern"], .bowed-kit-swing > g):has(> .bowed-lamp-detail) > circle.ph-wdn-lamp:not(.ph-glow) {
+  opacity: 0;
+  animation: none;
 }

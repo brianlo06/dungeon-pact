@@ -12,12 +12,27 @@ async function hold(page: Page, params: Record<string, string | number>, shot: s
 }
 
 const caster = (page: Page) => page.locator('.cine-actor[data-role="caster"]');
-/** The first plant's head rotation, degrees. */
-const headAngle = (page: Page) =>
-  page
-    .locator(".bowed-field .bowed-plant .bowed-head")
-    .first()
-    .evaluate((g) => Number(/rotate\((-?[\d.]+)\)/.exec(g.getAttribute("transform") ?? "")?.[1] ?? NaN));
+/** Every band's painted path of one colour, joined: the field is drawn as a few paths, one per colour. */
+const painted = (page: Page, name: string) =>
+  page.locator(`.bowed-field [data-p="${name}"]`).evaluateAll((els) => els.map((e) => e.getAttribute("d") ?? "").join("|"));
+const EMPTY = /^(M0 0\|?)+$/;
+
+/** How far each target copy's drawing is pitched and hunched, and its head part dropped. */
+const bows = (page: Page) =>
+  page.locator('.cine-actor[data-role="targets"]').evaluateAll((els) =>
+    els
+      .filter((a) => (a as HTMLElement).style.display !== "none")
+      .map((a) => {
+        const look = a.querySelector<HTMLElement>(".cine-look")!;
+        const t = look.style.transform;
+        const head = a.querySelector<SVGGElement>('.cine-look > svg [data-part="head"], .cine-look > svg [data-part="visor"], .cine-look > svg [data-part="snout"]');
+        return {
+          pitch: Number(/rotate\((-?[\d.]+)deg\)/.exec(t)?.[1] ?? 0),
+          squash: Number(/scale\([\d.]+, ([\d.]+)\)/.exec(t)?.[1] ?? 1),
+          head: Number(/(-?[\d.]+)deg/.exec(head?.style.rotate ?? "")?.[1] ?? 0),
+        };
+      }),
+  );
 
 test("it is the Blightcaller's own film: the late field, the real row standing in it, and the heads following the real lantern", async ({ page }) => {
   await hold(page, { enemy: "sniper", shot: 2, at: 0.3 }, "field");
@@ -25,14 +40,17 @@ test("it is the Blightcaller's own film: the late field, the real row standing i
   await expect(page.locator(".bowed-late")).toBeAttached();
   // The sniper's row is the sniper and the mender behind the line.
   await expect(page.locator('.cine-actor[data-role="targets"]')).toHaveCount(2);
-  expect(await page.locator(".bowed-field .bowed-plant").count()).toBeGreaterThan(40);
-  const back = await headAngle(page);
+  const plants = await page
+    .locator(".bowed-field-plants")
+    .evaluateAll((els) => els.reduce((n, e) => n + JSON.parse((e as HTMLElement).dataset.plants ?? "[]").length, 0));
+  expect(plants).toBeGreaterThan(40);
+  const back = await painted(page, "petals");
   await hold(page, { enemy: "sniper", shot: 2, at: 0.66 }, "field");
-  const out = await headAngle(page);
-  // The lantern was swung, and the head turned with it.
-  expect(Math.abs(out - back)).toBeGreaterThan(3);
-  // Nothing has rotted yet.
-  await expect(page.locator(".bowed-field .bowed-rot").first()).toHaveCSS("opacity", "0");
+  // The lantern was swung, and the heads turned with it.
+  expect(await painted(page, "petals")).not.toBe(back);
+  // Nothing has rotted yet, and nobody is bowed.
+  expect(await painted(page, "black")).toMatch(EMPTY);
+  for (const b of await bows(page)) expect(b.pitch).toBe(0);
 });
 
 test("the quiet close-up acts with the face, and the light goes down off it with nothing loud", async ({ page }) => {
@@ -53,14 +71,17 @@ test("the quiet close-up acts with the face, and the light goes down off it with
 test("the bow is drawn: every head down and rotted on the contact, the row blighted on its own silhouette, the damage revealed", async ({ page }) => {
   await hold(page, { enemy: "sniper", shot: 4, at: 0.3 }, "bow");
   await expect(page.locator('.cine-accent[data-screen="two-tone"]')).toBeAttached();
-  const rotted = await page.locator(".bowed-field .bowed-rot").evaluateAll((els) => els.filter((e) => getComputedStyle(e).opacity === "1").length);
-  const all = await page.locator(".bowed-field .bowed-rot").count();
-  expect(rotted).toBe(all);
-  // Every head hangs: pointing down, not up at a light.
-  const angles = await page
-    .locator(".bowed-field .bowed-head")
-    .evaluateAll((els) => els.map((g) => Number(/rotate\((-?[\d.]+)\)/.exec(g.getAttribute("transform") ?? "")?.[1] ?? NaN)));
-  for (const a of angles) expect(Math.sin((a * Math.PI) / 180)).toBeGreaterThan(0.4);
+  // Every head in the field has gone over: no petals left, all of them black.
+  expect(await painted(page, "petals")).toMatch(EMPTY);
+  expect(await painted(page, "black")).not.toMatch(EMPTY);
+  // And the row bowed with it: each target pitched forward, hunched, its head dropped.
+  const held = await bows(page);
+  expect(held.length).toBe(2);
+  for (const b of held) {
+    expect(b.pitch).toBeLessThan(-10);
+    expect(b.squash).toBeLessThan(0.93);
+    expect(b.head).toBeLessThan(-15);
+  }
   // The blight is inside each target copy, clipped to a flattened copy of its drawing.
   await expect(page.locator('.cine-actor[data-role="targets"] .bowed-rot-fig')).toHaveCount(2);
   expect(await page.locator(".bowed-rot-fig clipPath > g").count()).toBe(0);
@@ -72,6 +93,19 @@ test("the bow is drawn: every head down and rotted on the contact, the row bligh
     const [hp, max] = t.split("/").map((x) => Number(x.trim().replace(/\D.*$/, "")));
     return hp < max;
   })).toBe(true);
+});
+
+test("the row is still bowed on the late frame, and a boss bows less but visibly", async ({ page }) => {
+  await hold(page, { enemy: "sniper", shot: 4, at: 0.65 }, "bow");
+  for (const b of await bows(page)) {
+    expect(b.pitch).toBeLessThan(-10);
+    expect(b.head).toBeLessThan(-15);
+  }
+  await hold(page, { enemy: "collector", shot: 4, at: 0.3 }, "bow");
+  const [boss] = await bows(page);
+  expect(boss.pitch).toBeLessThan(-7);
+  expect(boss.pitch).toBeGreaterThan(-15);
+  expect(boss.head).toBeLessThan(-10);
 });
 
 test("the return marks every real target, a boss is framed, FAST keeps the quiet and the bow, and skipping leaves nothing", async ({ page }) => {

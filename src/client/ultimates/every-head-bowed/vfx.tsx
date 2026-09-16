@@ -155,9 +155,39 @@ function lanternAt(el: HTMLElement): [number, number] | null {
   return at;
 }
 
+/**
+ * The lantern, drawn for a film. The board's lantern is a thick ink box and a
+ * cross, which is right at 120px and an icon at a full screen's height. In
+ * this film's copy only, the box and cross stand down (`style.css`) and this
+ * is drawn in their place, in the same drawing units: a cap and ring, a thin
+ * iron frame, amber glass with a highlight, and the flame inside it.
+ */
+const LAMP_DETAIL = `
+  <g class="bowed-lamp-detail">
+    <circle cx="16.5" cy="21.9" r="0.85" fill="none" stroke="#2a1f14" stroke-width="0.45"/>
+    <path d="M13.5 24.7 L16.5 22.6 L19.5 24.7 Z" fill="#3a2a18" stroke="#171420" stroke-width="0.35" stroke-linejoin="round"/>
+    <rect x="13.5" y="24.8" width="6" height="9.6" rx="0.5" fill="#ffcf7a" fill-opacity="0.5"/>
+    <circle cx="16.5" cy="30.4" r="2.9" fill="#ffb347" opacity="0.55"/>
+    <path d="M16.5 27.2 C17.8 28.7 18.1 30.2 17.45 31.45 C17.05 32.2 15.95 32.2 15.55 31.45 C14.9 30.2 15.2 28.7 16.5 27.2 Z" fill="#fff1c2" stroke="#ff9a42" stroke-width="0.3"/>
+    <path d="M16.5 28.9 C17 29.7 17.1 30.5 16.8 31.1 C16.6 31.4 16.4 31.4 16.2 31.1 C15.9 30.5 16 29.7 16.5 28.9 Z" fill="#fffbe8"/>
+    <path d="M16.5 31.7 V32.7" stroke="#3a2410" stroke-width="0.35"/>
+    <path d="M14.25 25.9 V32.9" stroke="#fff6dc" stroke-width="0.4" stroke-linecap="round" opacity="0.75"/>
+    <rect x="13.5" y="24.8" width="6" height="9.6" rx="0.5" fill="none" stroke="#2a1f14" stroke-width="0.55"/>
+    <path d="M15.5 24.9 V34.3 M17.5 24.9 V34.3" stroke="#2a1f14" stroke-width="0.28"/>
+    <path d="M13.2 34.3 H19.8 L19.1 35.6 H13.9 Z" fill="#3a2a18" stroke="#171420" stroke-width="0.35" stroke-linejoin="round"/>
+  </g>`;
+
+function detailLanterns(node: HTMLElement) {
+  for (const g of node.querySelectorAll<SVGGElement>('[data-part="lantern"], .bowed-kit-swing > g')) {
+    if (g.querySelector(":scope > .bowed-lamp-detail")) continue;
+    g.insertAdjacentHTML("beforeend", LAMP_DETAIL);
+  }
+}
+
 function readLantern(root: HTMLElement): [number, number] | null {
   const node = root.querySelector<HTMLElement>('.cine-actor[data-role="caster"]');
   if (!node || node.style.display === "none") return null;
+  detailLanterns(node);
   const flame = kitLantern(node) ?? node.querySelector<SVGElement>('[data-part="lantern"] circle.ph-wdn-lamp:not(.ph-glow)');
   const r = flame?.getBoundingClientRect();
   if (!r || (!r.width && !r.height)) return null;
@@ -312,6 +342,129 @@ function blob(rx: number, ry: number, seed: number, n = 9) {
 
 const FIELD_FRAME: [number, number, number, number] = [0, 0, 1600, 900];
 
+/*
+ * The field is painted, not assembled. A plant used to be a dozen nodes whose
+ * transforms were written every frame, and then a box per head; either way
+ * the frame paid for seventy of everything. Now each band is a handful of
+ * paths — one per colour — rebuilt as strings once a frame: every head's
+ * shapes are kept in its own units and pushed through its transform
+ * (quadratic curves and arcs survive an affine map exactly), and the heads'
+ * shading is bucketed into a few paths of different opacity.
+ */
+
+type Cmd = ["M" | "L", number, number] | ["Q", number, number, number, number] | ["Z"];
+
+/** A shape in a head's own units: facing +x, centred on the head. */
+function ringCmds(r: number, scale = 1): Cmd[] {
+  const n = 22;
+  const rx = r * 0.42 * scale;
+  const ry = r * 0.86 * scale;
+  const out: Cmd[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    const b = ((i + 0.5) / n) * Math.PI * 2;
+    const c = ((i + 1) / n) * Math.PI * 2;
+    const len = r * scale * (0.32 + ((i * 7) % 5) * 0.03);
+    const tip = [Math.cos(b) * (rx + len * 0.55), Math.sin(b) * (ry + len)];
+    out.push(["M", Math.cos(a) * rx, Math.sin(a) * ry], ["Q", tip[0] * 0.9, tip[1] * 0.9, tip[0], tip[1]], ["Q", tip[0] * 0.9, tip[1] * 0.9, Math.cos(c) * rx, Math.sin(c) * ry], ["Z"]);
+  }
+  return out;
+}
+
+function blobCmds(rx: number, ry: number, seed: number, n = 9, ox = 0, oy = 0): Cmd[] {
+  const rand = seeded(seed);
+  const pts = Array.from({ length: n }, (_, i) => {
+    const a = (i / n) * Math.PI * 2;
+    const k = 0.62 + rand() * 0.55;
+    return [ox + Math.cos(a) * rx * k, oy + Math.sin(a) * ry * k];
+  });
+  const out: Cmd[] = [];
+  for (let i = 0; i < n; i++) {
+    const [x, y] = pts[i];
+    const [nx, ny] = pts[(i + 1) % n];
+    if (!i) {
+      const [px, py] = pts[n - 1];
+      out.push(["M", (px + x) / 2, (py + y) / 2]);
+    }
+    out.push(["Q", x, y, (x + nx) / 2, (y + ny) / 2]);
+  }
+  out.push(["Z"]);
+  return out;
+}
+
+function specksCmds(r: number, seed: number): Cmd[] {
+  const rand = seeded(seed);
+  const out: Cmd[] = [];
+  for (let i = 0; i < 6; i++) {
+    const a = rand() * Math.PI * 2;
+    const k = 0.55 + rand() * 0.4;
+    out.push(...blobCmds(r * (0.025 + rand() * 0.03), r * 0.04, i + seed, 5, Math.cos(a) * r * 0.36 * k, Math.sin(a) * r * 0.72 * k));
+  }
+  return out;
+}
+
+/** A head's place this frame: where its centre is, which way it faces, how far it has turned to the lens. */
+interface Pose2 {
+  cx: number;
+  cy: number;
+  cos: number;
+  sin: number;
+  sx: number;
+  deg: number;
+}
+
+function paint(cmds: Cmd[], t: Pose2): string {
+  let d = "";
+  const X = (x: number, y: number) => t.cx + t.cos * t.sx * x - t.sin * y;
+  const Y = (x: number, y: number) => t.cy + t.sin * t.sx * x + t.cos * y;
+  for (const c of cmds) {
+    if (c[0] === "Z") d += "Z";
+    else if (c[0] === "Q") d += `Q${f1(X(c[1], c[2]))} ${f1(Y(c[1], c[2]))} ${f1(X(c[3], c[4]))} ${f1(Y(c[3], c[4]))}`;
+    else d += `${c[0]}${f1(X(c[1], c[2]))} ${f1(Y(c[1], c[2]))}`;
+  }
+  return d;
+}
+
+/** An ellipse in a head's units (centre `ex` along its facing, radii `rx`, `ry`), through its transform: two arcs. */
+function ellipse(ex: number, rx: number, ry: number, t: Pose2): string {
+  const cx = t.cx + t.cos * t.sx * ex;
+  const cy = t.cy + t.sin * t.sx * ex;
+  const a = rx * t.sx;
+  const ux = t.cos * a;
+  const uy = t.sin * a;
+  return `M${f1(cx + ux)} ${f1(cy + uy)}A${f1(a)} ${f1(ry)} ${f1(t.deg)} 1 0 ${f1(cx - ux)} ${f1(cy - uy)}A${f1(a)} ${f1(ry)} ${f1(t.deg)} 1 0 ${f1(cx + ux)} ${f1(cy + uy)}Z`;
+}
+
+/** Shade levels: a head's darkness is rounded to one of these, and each is one path. */
+const SHADES = [0, 0.14, 0.28, 0.42, 0.56, 0.7, 0.82];
+/** Stalk widths, per band: thin, middling, thick. */
+const WIDTHS = 3;
+
+interface Live {
+  x: number;
+  y: number;
+  h: number;
+  r: number;
+  lean: number;
+  off: number;
+  tau: number;
+  width: number;
+  petals: Cmd[];
+  dry: Cmd[];
+  black: Cmd[];
+  specks: Cmd[];
+  angle: number;
+}
+
+interface FieldState {
+  age: number;
+  plants: Live[];
+  paths: Record<string, SVGPathElement>;
+  shades: SVGPathElement[];
+  stalkInk: SVGPathElement[];
+  stalks: SVGPathElement[];
+}
+
 const Field = ({ cue }: VfxProps): ReactNode => {
   const set = String(cue.params?.set ?? "wide");
   const band = String(cue.params?.band ?? "back");
@@ -319,60 +472,49 @@ const Field = ({ cue }: VfxProps): ReactNode => {
     ? (String(cue.params?.frame).split(",").map(Number) as [number, number, number, number])
     : FIELD_FRAME;
   const plants = layout(set, band, frame);
+  const rs = plants.map((pl) => pl.r).sort((a, b) => a - b);
+  const cut = (k: number) => rs[Math.min(rs.length - 1, Math.floor((rs.length * k) / WIDTHS))] ?? 1;
+  const widths = Array.from({ length: WIDTHS }, (_, k) => Math.max(2, cut(k + 0.5) * 0.2));
+  const leaves = plants
+    .map((pl) => {
+      const leafY = pl.y - pl.h * pl.leaf;
+      const leafX = pl.x + pl.lean * pl.h * pl.leaf;
+      const L = pl.r * 2.1;
+      return [1, -1]
+        .map((side) => `M${f1(leafX)} ${f1(leafY + (side > 0 ? 0 : pl.h * 0.12))} q${f1(side * pl.flip * L * 0.5)} ${f1(-L * 0.28)} ${f1(side * pl.flip * L)} ${f1(L * 0.22)} q${f1(-side * pl.flip * L * 0.55)} ${f1(L * 0.12)} ${f1(-side * pl.flip * L)} ${f1(-L * 0.22)} Z`)
+        .join("");
+    })
+    .join("");
+  const mid = rs[Math.floor(rs.length / 2)] ?? 20;
   return (
     <div className="bowed-field" data-band={band}>
       <Params cue={cue} />
+      <i hidden className="bowed-field-plants" data-plants={JSON.stringify(plants.map((pl) => [pl.x, pl.y, pl.h, pl.r, pl.lean, pl.off, pl.tau].map((n) => Number(n.toFixed(3)))))} data-cuts={JSON.stringify(Array.from({ length: WIDTHS - 1 }, (_, k) => cut(k + 1)))} />
       <svg className="bowed-field-svg" viewBox="0 0 1600 900">
-        {plants.map((pl, i) => {
-          const w = Math.max(2, pl.r * 0.2);
-          const leafY = pl.y - pl.h * pl.leaf;
-          const leafX = pl.x + pl.lean * pl.h * pl.leaf;
-          const L = pl.r * 2.1;
-          return (
-            <g
-              key={i}
-              className="bowed-plant"
-              data-i={i}
-              data-x={f1(pl.x)}
-              data-y={f1(pl.y)}
-              data-h={f1(pl.h)}
-              data-r={f1(pl.r)}
-              data-lean={pl.lean.toFixed(3)}
-              data-off={f1(pl.off)}
-              data-tau={f1(pl.tau)}
-            >
-              <path className="bowed-stalk-ink" strokeWidth={f1(w + 3)} />
-              <path className="bowed-stalk" strokeWidth={f1(w)} />
-              {[1, -1].map((side) => (
-                <path
-                  key={side}
-                  className="bowed-leaf"
-                  d={`M${f1(leafX)} ${f1(leafY + (side > 0 ? 0 : pl.h * 0.12))} q${f1(side * pl.flip * L * 0.5)} ${f1(-L * 0.28)} ${f1(side * pl.flip * L)} ${f1(L * 0.22)} q${f1(-side * pl.flip * L * 0.55)} ${f1(L * 0.12)} ${f1(-side * pl.flip * L)} ${f1(-L * 0.22)} Z`}
-                  strokeWidth={f1(Math.max(1.5, pl.r * 0.05))}
-                />
-              ))}
-              <g className="bowed-head">
-                <ellipse className="bowed-calyx" cx={f1(-pl.r * 0.2)} rx={f1(pl.r * 0.36)} ry={f1(pl.r * 0.78)} strokeWidth={f1(Math.max(1.5, pl.r * 0.06))} />
-                <path className="bowed-petals" d={petalRing(pl.r)} strokeWidth={f1(Math.max(1, pl.r * 0.035))} />
-                <ellipse className="bowed-disc" rx={f1(pl.r * 0.42)} ry={f1(pl.r * 0.86)} strokeWidth={f1(Math.max(1.5, pl.r * 0.06))} />
-                <ellipse className="bowed-whorl" rx={f1(pl.r * 0.28)} ry={f1(pl.r * 0.58)} strokeWidth={f1(Math.max(1, pl.r * 0.1))} strokeDasharray={`${f1(pl.r * 0.05)} ${f1(pl.r * 0.07)}`} />
-                <ellipse className="bowed-shade" rx={f1(pl.r * 0.8)} ry={f1(pl.r * 1.2)} />
-                <g className="bowed-rot">
-                  <path className="bowed-dry" d={petalRing(pl.r * 0.78)} strokeWidth={f1(Math.max(1, pl.r * 0.035))} />
-                  <path className="bowed-rot-black" d={blob(pl.r * 0.5, pl.r * 0.95, i * 7 + 3, 11)} strokeWidth={f1(Math.max(1.5, pl.r * 0.06))} />
-                  <path className="bowed-rot-specks" d={mouldSpecks(pl.r, i * 13 + 5)} />
-                </g>
-              </g>
-            </g>
-          );
-        })}
+        <path className="bowed-leaf" d={leaves} strokeWidth={f1(Math.max(1.5, mid * 0.05))} />
+        {widths.map((w, k) => (
+          <path key={`i${k}`} className="bowed-stalk-ink" data-w={k} strokeWidth={f1(w + 3)} />
+        ))}
+        {widths.map((w, k) => (
+          <path key={`s${k}`} className="bowed-stalk" data-w={k} strokeWidth={f1(w)} />
+        ))}
+        <path className="bowed-calyx" data-p="calyx" strokeWidth={f1(Math.max(1.5, mid * 0.06))} />
+        <path className="bowed-petals" data-p="petals" strokeWidth={f1(Math.max(1, mid * 0.035))} />
+        <path className="bowed-disc" data-p="disc" strokeWidth={f1(Math.max(1.5, mid * 0.06))} />
+        <path className="bowed-whorl" data-p="whorl" />
+        {SHADES.slice(1).map((o, k) => (
+          <path key={k} className="bowed-shade" data-shade={k + 1} style={{ opacity: o }} />
+        ))}
+        <path className="bowed-dry" data-p="dry" strokeWidth={f1(Math.max(1, mid * 0.035))} />
+        <path className="bowed-rot-black" data-p="black" strokeWidth={f1(Math.max(1.5, mid * 0.06))} />
+        <path className="bowed-rot-specks" data-p="specks" />
       </svg>
     </div>
   );
 };
 
-/** Per-plant state, so a head follows the light with its own lag. */
-const FOLLOW = new WeakMap<HTMLElement, { age: number; angle: Float32Array }>();
+/** Per-field state: the plants, and when it last ran, so a head follows the light with its own lag. */
+const FOLLOW = new WeakMap<HTMLElement, FieldState>();
 
 /** The shorter way from `a` to `b`, degrees. */
 const turnTo = (a: number, b: number) => {
@@ -383,76 +525,118 @@ const turnTo = (a: number, b: number) => {
 
 const field: Frame = (el, p, age) => {
   const d = params(el);
-  const plants = [...el.querySelectorAll<SVGGElement>(".bowed-plant")];
-  if (!plants.length) return;
+  let state = FOLLOW.get(el);
+  if (!state) {
+    const data = el.querySelector<HTMLElement>(".bowed-field-plants");
+    const svg = el.querySelector<SVGSVGElement>(".bowed-field-svg");
+    if (!data || !svg) return;
+    const cuts = JSON.parse(data.dataset.cuts ?? "[]") as number[];
+    const raw = JSON.parse(data.dataset.plants ?? "[]") as number[][];
+    const plants = raw.map(([x, y, h, r, lean, off, tau], i): Live => ({
+      x, y, h, r, lean, off, tau,
+      width: cuts.filter((c) => r >= c).length,
+      petals: ringCmds(r),
+      dry: ringCmds(r, 0.78),
+      black: blobCmds(r * 0.5, r * 0.95, i * 7 + 3, 11),
+      specks: specksCmds(r, i * 13 + 5),
+      angle: NaN,
+    }));
+    const paths: Record<string, SVGPathElement> = {};
+    svg.querySelectorAll<SVGPathElement>("[data-p]").forEach((n) => (paths[n.dataset.p!] = n));
+    state = {
+      age: -1e9,
+      plants,
+      paths,
+      shades: [...svg.querySelectorAll<SVGPathElement>("[data-shade]")],
+      stalkInk: [...svg.querySelectorAll<SVGPathElement>(".bowed-stalk-ink")],
+      stalks: [...svg.querySelectorAll<SVGPathElement>(".bowed-stalk")],
+    };
+    FOLLOW.set(el, state);
+  }
+  if (!state.plants.length) return;
   const lamp = lanternAt(el) ?? pair(d, "lamp") ?? [300, 300];
   const radius = num(d, "radius", 900);
   const bowAt = num(d, "bowAt", -1);
   // The fall: accelerating down onto the contact, fully hung on it, then a settle.
   const fall = bowAt >= 0 ? ease("in", span(p, bowAt - 0.045, bowAt)) : 0;
-  const settle = bowAt >= 0 ? span(p, bowAt, bowAt + 0.35) : 0;
+  // A short bounce after the fall, then still: a field that keeps moving repaints every frame.
+  const settle = bowAt >= 0 ? span(p, bowAt, bowAt + 0.08) : 0;
   const rot = bowAt >= 0 ? (p >= bowAt - 0.004 ? 1 : 0) : num(d, "rot", 0);
   const bloom = bowAt >= 0 ? ease("out", span(p, bowAt + 0.02, bowAt + 0.5)) : num(d, "rot", 0);
-  // Already bowed (a shot after the fall): hung from the start.
   const bowed = num(d, "bowed", 0);
-
-  let state = FOLLOW.get(el);
-  const jump = !state || age < state.age || age - state.age > 250;
-  if (!state || state.angle.length !== plants.length) {
-    state = { age, angle: new Float32Array(plants.length) };
-    FOLLOW.set(el, state);
-  }
+  const jump = age < state.age || age - state.age > 250;
   const dt = jump ? 0 : age - state.age;
   state.age = age;
+  const down = Math.max(fall, bowed);
+  const rotted = Math.max(rot, bowed) > 0;
+  const b = Math.max(bloom, bowed);
 
-  plants.forEach((g, i) => {
-    const pd = g.dataset;
-    const x = Number(pd.x);
-    const y = Number(pd.y);
-    const h = Number(pd.h);
-    const r = Number(pd.r);
-    const lean = Number(pd.lean);
-    const off = Number(pd.off);
-    const nx = x + lean * h;
-    const ny = y - h;
+  const stalks: string[] = Array(WIDTHS).fill("");
+  let calyx = "";
+  let petals = "";
+  let disc = "";
+  let whorl = "";
+  let dry = "";
+  let black = "";
+  let specks = "";
+  const shades: string[] = Array(SHADES.length).fill("");
+
+  for (const pl of state.plants) {
+    const nx = pl.x + pl.lean * pl.h;
+    const ny = pl.y - pl.h;
     // Where it wants to look: at the light.
-    const want = (Math.atan2(lamp[1] - ny, lamp[0] - nx) * 180) / Math.PI + off;
-    const cur = state!.angle[i];
-    const next = jump ? want : cur + turnTo(cur, want) * (1 - Math.exp(-dt / Number(pd.tau)));
-    state!.angle[i] = next;
-    // Hung: straight down, a little towards where the light went.
+    const want = (Math.atan2(lamp[1] - ny, lamp[0] - nx) * 180) / Math.PI + pl.off;
+    const next = jump || Number.isNaN(pl.angle) ? want : pl.angle + turnTo(pl.angle, want) * (1 - Math.exp(-dt / pl.tau));
+    pl.angle = next;
+    // Hung: straight down, towards where the light went.
     const side = lamp[0] < nx ? 1 : -1;
-    const hung = 90 + side * (38 + (off % 9)) - side * 8 * ease("back", settle);
-    const down = Math.max(fall, bowed);
+    const hung = 90 + side * (38 + (pl.off % 9)) - side * 8 * ease("back", settle);
     const angle = next + turnTo(next, hung) * down;
     const rad = (angle * Math.PI) / 180;
     // The neck arches over as it gives up, and the head hangs off the arch.
     const sx = Math.cos(rad) < 0 ? -1 : 1;
-    const topX = nx + sx * r * 0.75 * down;
-    const topY = ny - r * 0.5 * down;
+    const topX = nx + sx * pl.r * 0.75 * down;
+    const topY = ny - pl.r * 0.5 * down;
     const reach = 0.42 + 0.4 * down;
-    const cx = topX + Math.cos(rad) * r * reach;
-    const cy = topY + Math.sin(rad) * r * reach;
-    const stalk = `M${f1(x)} ${f1(y)} Q${f1(x + lean * h * 0.2)} ${f1(y - h * 0.62)} ${f1(nx)} ${f1(ny + r * 0.2)} Q${f1(nx + sx * r * 0.1 * down)} ${f1(topY - r * 0.45 * down)} ${f1(topX)} ${f1(topY)}`;
-    const kids = g.children;
-    setAttr(kids[0], "d", stalk);
-    setAttr(kids[1], "d", stalk);
-    const head = kids[kids.length - 1] as SVGGElement;
-    // A hung head turns partly to the lens as it falls, so it reads as a face and not a cap.
-    setAttr(head, "transform", `translate(${f1(cx)} ${f1(cy)}) rotate(${f1(angle)}) scale(${f2(1 + 0.55 * down)} 1)`);
-    // Lit by how near the lantern is.
-    const dist = Math.hypot(lamp[0] - cx, lamp[1] - cy);
-    const lit = clamp(1 - dist / radius);
-    const hc = head.children;
-    setStyle(hc[4] as SVGElement, "opacity", f2(0.82 * Math.pow(1 - lit, 1.4)));
-    const rotted = Math.max(rot, bowed);
-    setStyle(hc[5] as SVGElement, "opacity", rotted ? "1" : "0");
-    const bl = (hc[5] as SVGGElement).children;
-    const b = Math.max(bloom, bowed);
-    setStyle(bl[2] as SVGElement, "opacity", f2(b * (0.4 + 0.6 * lit)));
-    // The petals go with the rot.
-    setStyle(hc[1] as SVGElement, "opacity", rotted ? "0" : "1");
-  });
+    const t: Pose2 = {
+      cx: topX + Math.cos(rad) * pl.r * reach,
+      cy: topY + Math.sin(rad) * pl.r * reach,
+      cos: Math.cos(rad),
+      sin: Math.sin(rad),
+      // A hung head turns partly to the lens as it falls, so it reads as a face and not a cap.
+      sx: 1 + 0.55 * down,
+      deg: angle,
+    };
+    stalks[pl.width] += `M${f1(pl.x)} ${f1(pl.y)}Q${f1(pl.x + pl.lean * pl.h * 0.2)} ${f1(pl.y - pl.h * 0.62)} ${f1(nx)} ${f1(ny + pl.r * 0.2)}Q${f1(nx + sx * pl.r * 0.1 * down)} ${f1(topY - pl.r * 0.45 * down)} ${f1(topX)} ${f1(topY)}`;
+    calyx += ellipse(-pl.r * 0.2, pl.r * 0.36, pl.r * 0.78, t);
+    if (rotted) {
+      dry += paint(pl.dry, t);
+      black += paint(pl.black, t);
+      specks += paint(pl.specks, t);
+    } else {
+      petals += paint(pl.petals, t);
+      disc += ellipse(0, pl.r * 0.42, pl.r * 0.86, t);
+      whorl += ellipse(0, pl.r * 0.28, pl.r * 0.58, t);
+    }
+    // Lit by how near the lantern is, to the nearest shade level.
+    const lit = clamp(1 - Math.hypot(lamp[0] - t.cx, lamp[1] - t.cy) / radius);
+    const dark = 0.82 * Math.pow(1 - lit, 1.4);
+    let level = 0;
+    for (let k = 1; k < SHADES.length; k++) if (Math.abs(SHADES[k] - dark) < Math.abs(SHADES[level] - dark)) level = k;
+    if (level) shades[level] += ellipse(0, pl.r * 0.8, pl.r * 1.2, t);
+  }
+  state.stalkInk.forEach((n, k) => setAttr(n, "d", stalks[k] || "M0 0"));
+  state.stalks.forEach((n, k) => setAttr(n, "d", stalks[k] || "M0 0"));
+  const P = state.paths;
+  setAttr(P.calyx, "d", calyx || "M0 0");
+  setAttr(P.petals, "d", petals || "M0 0");
+  setAttr(P.disc, "d", disc || "M0 0");
+  setAttr(P.whorl, "d", whorl || "M0 0");
+  setAttr(P.dry, "d", dry || "M0 0");
+  setAttr(P.black, "d", black || "M0 0");
+  setAttr(P.specks, "d", specks || "M0 0");
+  setStyle(P.specks, "opacity", b > 0 ? "0.85" : "0");
+  state.shades.forEach((n, k) => setAttr(n, "d", shades[k + 1] || "M0 0"));
 };
 
 /* ── The lantern's light ───────────────────────────────────────────────── */
@@ -634,6 +818,39 @@ const Blight = ({ cue }: VfxProps): ReactNode => (
 /** Overlays this effect has put inside the target copies, so they go when it does. */
 const ROTS = new WeakMap<HTMLElement, SVGSVGElement[]>();
 
+/** The part of a creature that is its head, and the part it leads with, by the names the drawings use. */
+const HEADS = ["head", "visor", "snout"];
+const FRONTS = ["gun", "ram", "key", "arm", "jaw", "hand", "bellows", "shield"];
+
+/**
+ * The row bows with the field. The engine gives a target no clip of this
+ * film's (folder poses reach heroes only), so on the contact this bends each
+ * target copy itself: its drawing (`.cine-look`, which nothing else in the
+ * film moves) pitches forward from its feet towards the lantern, hunches and
+ * sinks at the knees; its head part drops and the part it leads with sags —
+ * written with the individual `rotate` and `translate` properties, which
+ * compose with the transform the animator writes on the part, so a `hurt`
+ * still plays through it. Staggered down the row like the heads, and held.
+ * A boss bends less: it slumps and hangs its head.
+ */
+function bend(actor: HTMLElement, k: number, boss: boolean) {
+  const look = actor.querySelector<HTMLElement>(".cine-look");
+  if (!look) return;
+  const s = boss ? 0.62 : 1;
+  const pitch = 19 * s * k;
+  const hunch = 0.15 * s * k;
+  if (look.style.transformOrigin !== "50% 96%") look.style.transformOrigin = "50% 96%";
+  setStyle(look, "transform", k ? `translate(0px, ${f1(4 * s * k)}px) rotate(${f1(-pitch)}deg) scale(${f2(1 + hunch * 0.4)}, ${f2(1 - hunch)})` : "");
+  const svg = look.querySelector<SVGSVGElement>(":scope > svg:not(.bowed-rot-fig)");
+  const part = (names: string[]) => names.map((n) => svg?.querySelector<SVGGElement>(`[data-part="${n}"]`)).find(Boolean);
+  const head = part(HEADS);
+  const front = part(FRONTS.filter((n) => head?.dataset.part !== n));
+  setStyle(head, "rotate", k ? `${f1(-32 * s * k)}deg` : "");
+  setStyle(head, "translate", k ? `0px ${f1(5 * s * k)}px` : "");
+  setStyle(front, "rotate", k ? `${f1(-12 * s * k)}deg` : "");
+  setStyle(front, "translate", k ? `0px ${f1(4 * s * k)}px` : "");
+}
+
 const blight: Frame = (el, p) => {
   const d = params(el);
   const root = rootOf(el);
@@ -655,6 +872,7 @@ const blight: Frame = (el, p) => {
     const watch = new MutationObserver(() => {
       if (!anchor?.isConnected) {
         rots?.forEach((r) => r.remove());
+        root.querySelectorAll<HTMLElement>('.cine-actor[data-role="targets"]').forEach((a) => bend(a, 0, false));
         watch.disconnect();
       }
     });
@@ -665,6 +883,18 @@ const blight: Frame = (el, p) => {
   const coat = p >= at ? 0.65 + 0.35 * ease("out", span(p, at, at + 0.2)) : 0;
   // A first bloom of it is on the figure the instant the heads come down.
   rots.forEach((r, i) => drawRot(r, p >= at ? 0.3 + 0.7 * span(k, i * 0.06, 1) : 0, coat));
+  // And the row goes down with the heads: the first on the contact, the rest a beat behind, held.
+  const boss = root.dataset.framing === "boss";
+  root.querySelectorAll<HTMLElement>('.cine-actor[data-role="targets"]').forEach((actor, i) => {
+    if (actor.style.display === "none") return;
+    let b = 0;
+    if (p >= at) {
+      const lag = i * 0.025;
+      const onset = i ? 0.7 + 0.3 * ease("out", span(p, at, at + lag)) : 1;
+      b = onset * (1 - 0.12 * ease("inOut", span(p, at + 0.15, 0.7)));
+    }
+    bend(actor, b, boss);
+  });
 };
 
 /* ── Seed shaken out of the heads ─────────────────────────────────────── */
