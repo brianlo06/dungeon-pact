@@ -8,13 +8,35 @@ import type { Cinematic } from "../../shared/cinematic";
  * outbids goes out and adds its weight to the Magnate's hammer — so when the
  * room is dark and the hammer comes down, the hammer price falls on the lot.
  *
- * Storyboard: `docs/ultimates/hammer-price.md`.
+ * Only the Magnate could have it: its Hostile bid is the one Broker ability
+ * that pays gold to hit, so it is the one Broker that buys, and an auction is
+ * the one place where buying is a fight. The drawing supplies the bidder — a
+ * bid is a nod, and the Broker's face is a cap, spectacles and a pleased
+ * mouth — and the balance is gone from its fist: the Magnate does not weigh.
+ *
+ * Rhythm: identity (the nod, and the nearest paddles going out behind it) →
+ * stakes and escalation (the saleroom outbid row by row, the room going dark,
+ * the hammer swelling; the real target on the sale block; title) →
+ * anticipation (going twice: the hammer hoisted over the lot, which cowers) →
+ * the quiet (the last paddle, shaking in a gloved hand, and going down; music
+ * to 4%) → impact (gone: the hammer on the lot, the knock stamped round it,
+ * the block split; Tyrian-and-ink frame) → release (on the real board, the
+ * split block under the target and a paddle laid down at every other enemy).
+ *
+ * Gameplay it shows, each where it happens: the WINDUP bought and 36 through
+ * armour (the hammer, and the damage on the held frame), Vulnerable (the
+ * block left split under the real target), every other enemy Weak (a paddle
+ * lowered at each of them on the board). The gold spent has no beat: the
+ * room going dark is the price being paid.
+ *
+ * It shares nothing with Foreclosure, Compound Interest or The Small Print:
+ * no coin, no balance, no ledger blow, no copper, no paper, no brass, no
+ * counting house, sink or page. Storyboard: `docs/ultimates/hammer-price.md`.
  */
 
 const TYRIAN = "#e05bd8";
 const HOT = "#ffd6f6";
 const LACQUER = "#0b0709";
-const IVORY = "#efe5cf";
 const BARS = 0.1;
 const ROOM = "hammer-saleroom";
 /**
@@ -56,7 +78,8 @@ export const hammerPrice: Cinematic = {
     {
       id: "nod",
       kind: "face-close-up",
-      purpose: "Identity. The Magnate bids with its chin.",
+      purpose:
+        "Identity. Face and sale hammer, the balance gone from the fist: the eyes open to the lot, the brows come up a hair, and the Magnate bids the way the rich bid — one slow nod. Behind it, the nearest paddles in the room go out.",
       space: "cinematic",
       ms: 620,
       fastMs: 400,
@@ -86,7 +109,8 @@ export const hammerPrice: Cinematic = {
     {
       id: "room",
       kind: "wide-hero",
-      purpose: "Stakes and escalation: every rival outbid, row by row; the hammer swells; the lot braces. Title.",
+      purpose:
+        "Stakes and escalation. The saleroom, lit only by rival paddles; the real target stands on the sale block. In three waves every rival is outbid and its paddle goes out, the room darkening, and with each wave the hammer's head swells: the price, as weight. The lot looks round and braces. Title.",
       space: "cinematic",
       ms: 1000,
       fastMs: 520,
@@ -123,7 +147,8 @@ export const hammerPrice: Cinematic = {
     {
       id: "hoist",
       kind: "dutch",
-      purpose: "Anticipation: the hammer hoisted at its full price over the lot, which cowers.",
+      purpose:
+        "Anticipation: going twice. On a Dutch angle the hammer is hoisted straight up at its full price, the round body leaning back under it, the brows down on the rims; the lot in the foreground cowers. The last few paddles at the back of the room go out.",
       space: "cinematic",
       ms: 540,
       fastMs: 340,
@@ -168,7 +193,8 @@ export const hammerPrice: Cinematic = {
     {
       id: "last",
       kind: "extreme-close-up",
-      purpose: "The quiet: one paddle left up in the black, trembling, and lowered. Nobody else.",
+      purpose:
+        "The quiet. One paddle left up in the black, in a gloved hand that cannot hold it still, its light the only light in the room; the music gone. Then the hand gives and it goes down out of the frame. Nobody else.",
       space: "cinematic",
       ms: 560,
       fastMs: 380,
@@ -190,7 +216,8 @@ export const hammerPrice: Cinematic = {
     {
       id: "gone",
       kind: "impact",
-      purpose: "Impact: the hammer on the lot, the block split under it. Sold.",
+      purpose:
+        "Impact: gone. The hammer comes over the cap and down on the lot with the whole body behind it; on a Tyrian-and-ink frame the knock is stamped round the head, the split runs down through the lot and the sale block breaks under it. The damage lands on the held frame. Sold.",
       space: "cinematic",
       ms: 800,
       fastMs: 560,
@@ -263,7 +290,8 @@ export const hammerPrice: Cinematic = {
     {
       id: "knocked-down",
       kind: "return",
-      purpose: "Release: the split block under the real target, and every other real enemy outbid.",
+      purpose:
+        "Release, over the real battlefield: the split sale block under the real target, which stays open (Vulnerable), and over every other real enemy a paddle held up and laid down at its feet (outbid: Weak this round). The Broker dusts its palms and tips its cap.",
       space: "battlefield",
       ms: 820,
       fastMs: 520,
@@ -286,5 +314,3 @@ export const hammerPrice: Cinematic = {
     },
   ],
 };
-
-void IVORY;
