@@ -276,11 +276,11 @@ export const heroes: HeroDef[] = [
       a(
         "mend",
         "Mending roots",
-        "Restore 32 HP and apply Regeneration. Once every other round.",
+        "Restore 28 HP and apply Regeneration. Once every other round.",
         "ally",
         [
-          { kind: "heal", amount: 32 },
-          { kind: "status", status: "regen", stacks: 4, duration: 3 },
+          { kind: "heal", amount: 28 },
+          { kind: "status", status: "regen", stacks: 3, duration: 3 },
         ],
         2,
         3,
@@ -433,26 +433,27 @@ export const heroes: HeroDef[] = [
     description:
       "Pays in blood for damage nobody else can reach. Drags enemies out of hiding.",
     glyph: "⚔",
-    hp: 105,
+    hp: 118,
     power: 5,
-    guard: 1,
+    guard: 2,
     speed: 6,
     resource: "Fury",
     maxResource: 6,
     // Earned in blood, spent or taken.
     chargeAffinity: { sacrifice: 2, hurt: 1.8 },
     abilities: [
-      a("rend", "Rend", "Deal 18. Gain 2 Fury.", "enemy", [
+      a("rend", "Rend", "Deal 18, gain 2 Fury and heal yourself 6.", "enemy", [
         { kind: "damage", amount: 18 },
         { kind: "resource", amount: 2 },
+        { kind: "heal", amount: 6, self: true },
       ]),
       a(
         "bloodprice",
         "Blood price",
-        "Lose 12 HP to deal 38 that ignores armour.",
+        "Lose 8 HP to deal 38 that ignores armour.",
         "enemy",
         [
-          { kind: "damage", amount: 12, self: true },
+          { kind: "damage", amount: 8, self: true },
           { kind: "damage", amount: 38, pierce: true },
         ],
         0,
@@ -462,10 +463,10 @@ export const heroes: HeroDef[] = [
       a(
         "frenzy",
         "Frenzy",
-        "Lose 8 HP and hit an enemy row for 17.",
+        "Lose 5 HP and hit an enemy row for 17.",
         "enemyRow",
         [
-          { kind: "damage", amount: 8, self: true },
+          { kind: "damage", amount: 5, self: true },
           { kind: "damage", amount: 17 },
         ],
         3,

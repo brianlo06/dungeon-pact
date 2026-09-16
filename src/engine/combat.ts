@@ -71,18 +71,25 @@ export function reviveCost(s: RunState) {
   return s.combatVersion === 2 ? REVIVAL + 60 * (s.revivals ?? 0) : REVIVAL;
 }
 /**
- * How much harder every enemy hits in a three-floor room, as a multiplier on
- * each damage effect it announces, scoped ones included. A room from before
- * boss pools keeps the old numbers. Mutable so the simulator can sweep it
- * (`--hit=`); the game never writes it.
+ * How much harder every enemy hits in a three-floor room, by party size, as a
+ * multiplier on each damage effect it announces, scoped ones included. A room
+ * from before boss pools keeps the old numbers. `TUNING.enemyHit`, when not
+ * 1, overrides it for every size so the simulator can sweep (`--hit=`); the
+ * game never writes it.
  *
- * 1.3 after a playtest note that wins came too easily and asked too little
- * strategy. Measured on every 4th composition, 6 seeds, tactical bot: all
- * 91% → 70% (duos 59, trios 72, quartets 70), with the bot that only attacks
- * falling to single digits, so reading intents is what wins. See BOSSES.md.
+ * Raised after a playtest note that wins came too easily and asked too little
+ * strategy. A duo is lighter: it has no spare action to answer an objective
+ * with, and at ×1.4 duos fell to 48% while larger parties sat near 73%. See
+ * docs/BOSSES.md for the measurements.
  */
-export const ENEMY_HIT = 1.3;
-export const TUNING = { enemyHit: ENEMY_HIT };
+export const ENEMY_HIT: Record<number, number> = { 2: 1.3, 3: 1.4, 4: 1.4 };
+export const TUNING = { enemyHit: 1 };
+/** The multiplier a room's enemies hit with. */
+export function enemyHit(s: RunState) {
+  if (s.bossVersion !== 1) return 1;
+  if (TUNING.enemyHit !== 1) return TUNING.enemyHit;
+  return ENEMY_HIT[s.players.length] ?? 1.4;
+}
 /** Every damage effect in a list, however deeply scoped. */
 function damageIn(list: Effect[]): Extract<Effect, { kind: "damage" }>[] {
   return list.flatMap((e) =>
@@ -127,9 +134,10 @@ export function prepareIntents(s: RunState) {
       ability = structuredClone(left > 0 ? def.clock.waiting : def.clock.due);
       if (left > 0) ability.name = `${ability.name} ${left}`;
     }
-    if (s.bossVersion === 1 && TUNING.enemyHit !== 1)
+    const hit = enemyHit(s);
+    if (hit !== 1)
       for (const effect of damageIn(ability.effects))
-        effect.amount = Math.round(effect.amount * TUNING.enemyHit);
+        effect.amount = Math.round(effect.amount * hit);
     if (e.phase === 2 && !authoredPhase)
       for (const effect of ability.effects)
         if (effect.kind === "damage") effect.amount += 7;

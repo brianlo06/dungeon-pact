@@ -90,6 +90,53 @@ pays health for damage, is worth less. The handoff already named the Reaver
 as the outlier on two floors (84% against 95%); ×1.3 more than doubles that
 gap.
 
+## Class balance under the harder hit
+
+The harder hit widened the class spread, so the Reaver and the Warden were
+rebalanced. Win rates are "parties with the class" against "parties without",
+every 2nd composition, 8 seeds, tactical bot.
+
+**A measurement bug first.** The tactical bot counted the Reaver's own blood
+price as damage to the target, and paid it at any health. Fixed in
+`scripts/policy.ts`: a self-inflicted hit is not damage dealt, and a price is
+only paid while the caster keeps a quarter of its health after the round's
+incoming damage. That alone moved the Reaver from −27 to −16.
+
+**Reaver** (−16 → −1): 118 HP (105), Guard 2 (1); Blood price costs 8 HP (12);
+Frenzy costs 5 (8); Rend heals the Reaver 6. Health and guard alone reached −10,
+cheaper prices −6, and the heal on Rend closed it — the class earns back what
+it bleeds. Paths and upgrades keep their own numbers; the Butcher's Butchery
+still costs 8 and the Guarded Frenzy 4, now less of a discount.
+
+**Warden** (+34 → +29): Mending roots heals 28 (32) with 3 Regeneration (4);
+Green Reckoning heals 12 (18) with 2 Regeneration (3). The Warden's lead barely
+answers its own numbers: halving Mend's Regeneration, or making Mend wait two
+rounds, each moved it by a point or two. A party without a Warden wins about
+the same whatever the Warden does, so the lead is the value of having a healer
+at all, and the next lever is sustain for the classes without one, not a
+harder Warden nerf.
+
+**Difficulty by party size.** The Reaver's buff raised the overall rate, and
+×1.4 for everyone brought it back but dropped duos to 48%. Enemies now hit
+×1.3 against duos and ×1.4 against trios and quartets (`ENEMY_HIT`).
+
+| | 2p | 3p | 4p | all | attack bot |
+| --- | --- | --- | --- | --- | --- |
+| shipped | 64% | 75% | 72% | **72%** | 6% |
+
+| Class | with | without | gap |
+| --- | --- | --- | --- |
+| Warden | 91% | 62% | +29 |
+| Vanguard | 86% | 65% | +21 |
+| Beguiler | 81% | 67% | +14 |
+| Broker | 70% | 73% | −3 |
+| Reaver | 71% | 72% | −1 |
+| Arcanist | 68% | 74% | −6 |
+| Ranger | 67% | 75% | −8 |
+| Herald | 61% | 78% | **−17** |
+
+The Herald is now the weakest class, and the next one to look at.
+
 ## The Notary — Ledger Archive
 
 **Two words: witness, enforce.** The Notary presses its seal into the room.

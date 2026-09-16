@@ -7,7 +7,7 @@
 import { expect, it } from "vitest";
 import { addPlayer, createRun, reduce } from "../src/engine/game";
 import {
-  ENEMY_HIT,
+  enemyHit,
   enterCombat,
   resolveRound,
   combatants,
@@ -75,7 +75,7 @@ it("enforces every standing seal on every hero, then the seals are spent, not br
   idle(s); // round 5: three seals come due
   s.players.forEach((p, i) =>
     expect(before[i] - p.hp).toBe(
-      3 * Math.max(1, Math.round(12 * ENEMY_HIT) + power - p.guard),
+      3 * Math.max(1, Math.round(12 * enemyHit(s)) + power - p.guard),
     ),
   );
   expect(seals(s).every((x) => x.hp === 0 && x.spent)).toBe(true);

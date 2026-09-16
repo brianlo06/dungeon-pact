@@ -112,8 +112,9 @@ function hitAmount(source: Unit, victim: Unit, base: number, precise = false) {
 
 function abilityDamage(p: Player, a: Ability, target: Unit) {
   let total = 0;
+  // A price paid in the caster's own blood is not damage to the target.
   for (const e of a.effects)
-    if (e.kind === "damage")
+    if (e.kind === "damage" && !e.self)
       total += hitAmount(p, target, e.amount, e.precision);
   if (total > 0)
     for (const id of p.items) {
@@ -616,10 +617,21 @@ export const tacticalPolicy: Policy = {
         return { ability: protect.id, target: ward.x.id };
     }
 
+    // An attack paid for in blood is only on the table while the caster can
+    // afford the price on top of what is already coming at it this round.
+    const bleed = (a: Ability) =>
+      a.effects.reduce(
+        (n, e) => n + (e.kind === "damage" && e.self ? e.amount : 0),
+        0,
+      );
+    const affordable = (a: Ability) =>
+      !bleed(a) ||
+      p.hp - bleed(a) - (t.perHero.get(p.id) ?? 0) > p.maxHp * 0.25;
     const attacks = opts.filter(
       (a) =>
         (a.target === "enemy" || a.target === "enemyRow") &&
-        a.effects.some((e) => e.kind === "damage"),
+        a.effects.some((e) => e.kind === "damage" && !e.self) &&
+        affordable(a),
     );
 
     // 5. Secure a kill; removing an actor removes its whole intention.
