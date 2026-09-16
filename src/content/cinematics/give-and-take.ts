@@ -139,6 +139,19 @@ export const giveAndTake: Cinematic = {
         { kind: "epithet", at: 0.32, until: 1, text: "$epithet", x: 0.6, y: 0.28 },
       ],
       markers: [{ at: 0.22, label: "title" }],
+      framing: {
+        boss: {
+          camera: {
+            from: { x: 820, y: 520, zoom: 1.05 },
+            to: { x: 850, y: 526, zoom: 1.12, rotate: 1 },
+            ease: "inOut",
+          },
+          actors: [
+            { role: "caster", at: [240, 1060], to: [256, 1060], size: 800, clip: "ult:give-hold", then: "ult:give-hold", look: "rim", rim: STAR, z: 3 },
+            { role: "target", at: [1250, 700], size: 220, face: -1, look: "lit", z: 1, react: [{ at: 0.55, clip: "anticipate", then: "idle" }] },
+          ],
+        },
+      },
     },
 
     /* 3 · UNDER THE BLADE — the quiet: the real enemy, and a bead on the edge over it. */
@@ -152,8 +165,8 @@ export const giveAndTake: Cinematic = {
       fastMs: 340,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 960, y: 540, zoom: 1.6 },
-        to: { x: 960, y: 540, zoom: 1.62 },
+        from: { x: 880, y: 540, zoom: 1.6 },
+        to: { x: 880, y: 540, zoom: 1.62 },
         ease: "linear",
       },
       background: "give-crossroads",
@@ -227,6 +240,28 @@ export const giveAndTake: Cinematic = {
         { at: 0.04, label: "given" },
         { at: 0.3, label: "run down" },
       ],
+      framing: {
+        boss: {
+          camera: {
+            from: { x: 900, y: 540, zoom: 1.12, rotate: 5 },
+            to: { x: 916, y: 536, zoom: 1.04, rotate: 2 },
+            ease: "out",
+          },
+          actors: [
+            {
+              role: "target",
+              at: [1090, 845],
+              size: 400,
+              face: -1,
+              z: 1,
+              react: [{ at: 0.04, clip: "hurt" }],
+              shove: { at: 0.04, by: [22, 0] },
+              toTilt: 2,
+            },
+            { role: "caster", at: [700, 856], to: [716, 856], ease: "out", size: 470, clip: "ult:give-strike", then: "ult:give-strike", look: "lit", z: 2 },
+          ],
+        },
+      },
     },
 
     /* 5 · TAKE — face close-up: the enemy's blood coming up the blade into the palm. */

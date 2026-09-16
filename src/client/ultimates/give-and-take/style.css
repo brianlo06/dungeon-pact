@@ -103,6 +103,22 @@
   clip-path: inset(0);
 }
 
+/*
+ * ---- the runs on a worn weapon ----
+ * The runs are clipped to the base cleaver's blade. When a worn weapon
+ * replaces the cleaver its base is hidden, and the clip (a later sibling in
+ * the Reaver's drawing) swaps the blade for a band along the same axis.
+ */
+.give-run-worn {
+  display: none;
+}
+[data-base-weapon][style*="none"] ~ .give-run-clip .give-run-base {
+  display: none;
+}
+[data-base-weapon][style*="none"] ~ .give-run-clip .give-run-worn {
+  display: inline;
+}
+
 /* ---- the glare behind the blow ---- */
 .cine-vfx > .give-glare {
   position: absolute;

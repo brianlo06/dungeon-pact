@@ -145,15 +145,12 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
             <clipPath id={g.id("entry")}>
               <path d={ENTRY_STROKE} />
             </clipPath>
-            {/* Give and Take: the hand's window, and the blade's outline for the runs. */}
+            {/* Give and Take: the bandage's window and the open hand's. */}
             <clipPath id={g.id("hand")}>
               <circle cx={71} cy={51} r={24} />
             </clipPath>
             <clipPath id={g.id("palm-window")}>
               <rect x={-60} y={-60} width={220} height={150} />
-            </clipPath>
-            <clipPath id={g.id("blade-run")}>
-              <path d={BLADE} />
             </clipPath>
           </>
         )}
@@ -515,24 +512,6 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
               strokeLinecap="round"
               opacity={0.85}
             />
-            {closeUp && (
-              <g clipPath={`url(#${g.id("blade-run")})`}>
-                {/* Out: the Reaver's scarlet, from the grip to the point. */}
-                <g transform={`translate(${-RUN_REST} 0)`}>
-                  <g ref={facePart("runOut")}>
-                    <path d={RUN_OUT} fill="#e8243c" stroke="#5c0a18" strokeWidth={0.7} strokeLinejoin="round" />
-                    <path d="M-60 5.7 L-3 5.1 C-1.4 4.6 0 4.8 0.8 5.6" stroke="#ffb3bd" strokeWidth={0.7} fill="none" strokeLinecap="round" />
-                  </g>
-                </g>
-                {/* Back: the enemy's garnet, from the point to the grip. */}
-                <g transform={`translate(${RUN_REST} 0)`}>
-                  <g ref={facePart("runBack")}>
-                    <path d={RUN_BACK} fill="#7a1030" stroke="#2a0510" strokeWidth={0.7} strokeLinejoin="round" />
-                    <path d="M60 5.7 L3 5.1 C1.4 4.6 0 4.8 -0.8 5.6" stroke="#ff8fb0" strokeWidth={0.7} fill="none" strokeLinecap="round" />
-                  </g>
-                </g>
-              </g>
-            )}
           </g>
         </BaseWeapon>
         <GearMount
@@ -543,6 +522,36 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
           rotation={-128}
           scale={0.82}
         />
+        {closeUp && (
+          <>
+            {/*
+              Give and Take: blood running along the blade, both ways. Over
+              the base cleaver it is clipped to the blade; when a worn weapon
+              replaces the cleaver (the base is hidden, and this clip is its
+              later sibling) it runs in a band along the same axis instead.
+            */}
+            <clipPath id={g.id("blade-run")} className="give-run-clip">
+              <path d={BLADE} className="give-run-base" />
+              <rect x={9} y={3.4} width={26} height={6} rx={2} className="give-run-worn" />
+            </clipPath>
+            <g transform="translate(31 67) rotate(142)" clipPath={`url(#${g.id("blade-run")})`}>
+              {/* Out: the Reaver's scarlet, from the grip to the point. */}
+              <g transform={`translate(${-RUN_REST} 0)`}>
+                <g ref={facePart("runOut")}>
+                  <path d={RUN_OUT} fill="#e8243c" stroke="#5c0a18" strokeWidth={0.7} strokeLinejoin="round" />
+                  <path d="M-60 5.7 L-3 5.1 C-1.4 4.6 0 4.8 0.8 5.6" stroke="#ffb3bd" strokeWidth={0.7} fill="none" strokeLinecap="round" />
+                </g>
+              </g>
+              {/* Back: the enemy's garnet, from the point to the grip. */}
+              <g transform={`translate(${RUN_REST} 0)`}>
+                <g ref={facePart("runBack")}>
+                  <path d={RUN_BACK} fill="#7a1030" stroke="#2a0510" strokeWidth={0.7} strokeLinejoin="round" />
+                  <path d="M60 5.7 L3 5.1 C1.4 4.6 0 4.8 -0.8 5.6" stroke="#ff8fb0" strokeWidth={0.7} fill="none" strokeLinecap="round" />
+                </g>
+              </g>
+            </g>
+          </>
+        )}
         <Limb
           d={`M${bx} ${by} Q${bx - 5} 60 31.5 66`}
           fill={RAMP.skinPallid[1]}

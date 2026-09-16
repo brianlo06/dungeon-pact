@@ -173,9 +173,9 @@ const raise: Clip = {
   ],
   parts: {
     cleaver: turn([0, -142], [0.5, -141.6], [1, -141.8]),
-    fist: turn([0, -30], [1, -32]),
+    // The open hand down at the side, out of the picture: the blade is what this shot is for.
+    fist: turn([0, 40], [1, 42]),
     knuckles: [hold(0, OPENED), hold(1, OPENED)],
-    palm: [hand(0, 2, -6.4, -30), hand(1, 2, -6.6, -32)],
     runOut: [out(0, 36), out(1, 36)],
     head: turn([0, -6], [1, -6]),
   },
