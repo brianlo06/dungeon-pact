@@ -108,7 +108,7 @@ lasting ward and the Verse for Sanctuary — the team play — whole. Tests:
   Breaker's breach forge (a forge wall in heat, a vault gate, red, embers):
   this foundry is cold, blue-black and silent, and the only fire in it is the
   one the Sanctifier scores into the floor. Not the Elegy's burying ground,
-  the Hundredth Mark's hound run behind these same works (outdoors, peat, a
+  False Footing's hound run behind these same works (outdoors, peat, a
   dusk sky), or Proof Shot's proving range (an overcast lane of cinder with
   plates hung on frames).
 - **Palette:** soot black-brown (`#100e0d`) and cold iron blue-grey
