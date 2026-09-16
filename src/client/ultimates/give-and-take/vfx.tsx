@@ -14,8 +14,6 @@ import "./style.css";
  * a tail. On the blade itself it is a part of the Reaver's drawing (`runOut`,
  * `runBack`); here it is drawn at the size of the screen and on the board.
  *
- *   give-split   over the impact's drawn frame: the scarlet run laid across
- *                the whole frame along the blade, on an ink cut
  *   give-glare   chalk light laid behind the figures for the drawn frame
  *   give-bead    the quiet: one bead of scarlet swelling on the edge, and not
  *                falling
@@ -72,39 +70,10 @@ function Run({ len, w, fill, lip, shine }: { len: number; w: number; fill: strin
   );
 }
 
-/* ── The cut ─────────────────────────────────────────────────────────── */
-
-/**
- * The impact's drawn frame is the engine's two-tone, first as it is (the
- * figures ink on the accent) and then held inverted (the accent figures on
- * ink): the same picture both ways. Over both, in colour, this: the scarlet
- * run laid across the whole frame along the blade, on an ink cut.
- * `params`: the line through two points, in fractions of the frame.
- */
-const Split = ({ cue }: VfxProps) => {
-  const p = cue.params ?? {};
-  const x1 = Number(p.x1 ?? 0.3) * 1600;
-  const y1 = Number(p.y1 ?? 0.2) * 900;
-  const x2 = Number(p.x2 ?? 0.7) * 1600;
-  const y2 = Number(p.y2 ?? 0.8) * 900;
-  const len = Math.hypot(x2 - x1, y2 - y1) || 1;
-  const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
-  return (
-    <div className="give-split">
-      <svg className="give-split-cut" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-        <g transform={`translate(${x2.toFixed(0)} ${y2.toFixed(0)}) rotate(${angle.toFixed(2)})`}>
-          <path d={`M${(-len - 900).toFixed(0)} 0 L300 0`} stroke={INK} strokeWidth={34} strokeLinecap="round" />
-          <Run len={len + 900} w={24} fill={SCARLET} lip="#3a0610" shine="#ffb3bd" />
-        </g>
-      </svg>
-    </div>
-  );
-};
-
 /* ── The glare ─────────────────────────────────────────────────────────── */
 
 /**
- * A field of chalk light laid behind the figures on the blow. The split frame
+ * A field of chalk light laid behind the figures on the blow. The drawn frame
  * is two tones, and a night picture goes all to ink: with this behind them the
  * figures stay ink on chalk on one side of the cut and chalk on ink on the
  * other. It sinks back to the night within a few frames.
@@ -231,7 +200,6 @@ const Board = ({ cue }: VfxProps) => {
 };
 
 export const renderers: Record<string, (p: VfxProps) => ReactNode> = {
-  "give-split": Split,
   "give-glare": Glare,
   "give-bead": Bead,
   "give-notch": Notch,

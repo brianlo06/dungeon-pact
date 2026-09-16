@@ -47,12 +47,16 @@ test("the Bloodbound plays Give and Take on the real target and hands back to th
   expect(await page.locator("[class*='cine-'], [class*='give-']").count()).toBe(0);
 });
 
-test("the oath: the fist opens, the palm goes to the blade, and the blood runs out along it", async ({ page }) => {
+test("the oath: one front hand, a fist that opens on the blade, and the blood running out along it", async ({ page }) => {
   await hold(page, { shot: 1, at: 0.1 }, "oath");
-  const closed = await transformOf(page, "knuckles");
+  const curled = await transformOf(page, "fingers");
   const runAt = await shiftOf(page, "runOut");
+  // The drawing's own front arm is gone while the opened one plays: one hand, at the end of its arm.
+  const hidden = (el: Element) => new DOMMatrix(getComputedStyle(el).transform).a < 0.05;
+  expect(await caster(page).locator('[data-part="fist"]').first().evaluate(hidden)).toBe(true);
   await hold(page, { shot: 1, at: 0.9 }, "oath");
-  expect(await transformOf(page, "knuckles")).not.toBe(closed);
+  expect(await transformOf(page, "fingers")).not.toBe(curled);
+  expect(await caster(page).locator('[data-part="fist"]').first().evaluate(hidden)).toBe(true);
   expect(await transformOf(page, "palm")).not.toBe("none");
   // The run has moved out along the blade.
   expect(await shiftOf(page, "runOut")).toBeGreaterThan(runAt + 20);
@@ -63,28 +67,31 @@ test("the oath: the fist opens, the palm goes to the blade, and the blood runs o
 
 test("the quiet has nothing loud in it, and a bead on the edge over the real enemy", async ({ page }) => {
   await hold(page, { shot: 3, at: 0.5 }, "under");
-  expect(await page.locator(".cine-accent, .fx-give-notch-wrap, .fx-give-split-wrap, .cine-text-impact").count()).toBe(0);
+  expect(await page.locator(".cine-accent, .fx-give-notch-wrap, .cine-text-impact").count()).toBe(0);
   await expect(page.locator(".fx-give-bead-wrap")).toHaveCSS("visibility", "visible");
   await expect(page.locator('.cine-actor[data-role="targets"]:visible')).toHaveCount(1);
 });
 
 test("the impact is a drawn frame, both ways, with the real target, the number and the worn gear", async ({ page }) => {
-  await hold(page, { gear: "kit", shot: 4, at: 0.02 }, "give");
+  await hold(page, { gear: "kit", shot: 4, at: 0.095 }, "give");
   await expect(page.locator('.cine-accent[data-screen="two-tone"]')).toHaveCount(1);
   await expect(page.locator('.cine-accent[data-screen="invert"]')).toHaveCount(1);
   await expect(cinematic(page)).toHaveAttribute("data-two-tone", "");
-  await expect(page.locator(".fx-give-split-wrap")).toHaveCSS("visibility", "visible");
   await expect(page.locator('.cine-actor[data-role="targets"]:visible')).toHaveCount(1);
   expect(await caster(page).locator("[data-equipment]").count()).toBeGreaterThan(0);
 
   // Just after the frame, in colour: the blow, the number, nothing in front of the target.
-  await hold(page, { shot: 4, at: 0.2 }, "give");
+  await hold(page, { shot: 4, at: 0.25 }, "give");
   await expect(page.locator(".cine-text-impact")).toBeVisible();
   const target = await page.locator('.cine-actor[data-role="targets"] .cine-sprite').boundingBox();
   const frame = await cinematic(page).boundingBox();
   expect(target!.x).toBeGreaterThan(frame!.x);
   expect(target!.x + target!.width).toBeLessThan(frame!.x + frame!.width);
-  await expect(page.locator(".fx-give-split-wrap")).toHaveCSS("visibility", "hidden");
+  // The blade reaches into the enemy's figure, and the Reaver's legs stay clear of it.
+  const blade = await caster(page).locator("[data-base-weapon] path").first().boundingBox();
+  expect(blade!.x + blade!.width).toBeGreaterThan(target!.x);
+  const legs = await caster(page).locator('[data-part="legs"]').boundingBox();
+  expect(legs!.x + legs!.width).toBeLessThan(target!.x + target!.width * 0.35);
 });
 
 test("the take: a face that acts while the enemy's blood comes back up the blade", async ({ page }) => {

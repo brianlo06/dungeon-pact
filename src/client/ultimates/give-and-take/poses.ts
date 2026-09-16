@@ -7,21 +7,26 @@ import { face } from "../../battle/face";
  * The one time the Reaver's fist opens. Parts: `cleaver` (the back arm and
  * blade, from the back shoulder), `fist` (the front arm, from the front
  * shoulder), `head`, `hair`, `body`, `legs`, and only in a close-up `brow`,
- * `eyes`, `mouth`, and this film's own: `knuckles` (the fist as drawn, closed),
- * `palm` (the open hand), `unwrap` (the bandage coming off), `runOut` and
- * `runBack` (blood running along the blade). See `components/heroes/Reaver.tsx`.
+ * `eyes`, `mouth`, and this film's own: `palm` (the front arm drawn again over
+ * the cleaver, an open hand at its end), `fingers` (curled into a fist, or
+ * open), `unwrap` (the bandage coming off the hand), `runOut` and `runBack`
+ * (blood running along the blade). See `components/heroes/Reaver.tsx`.
  *
  * The Reaver faces right. A negative `cleaver` rotation brings the blade up in
  * front from where it drags; −120 lays it across the body with the edge
  * underneath, running through the fist. A positive rotation swings it up
  * behind and over; +262 is down and forward, in whatever stands there.
  *
- * Hidden-at-rest parts are slid in by their own keys: the palm sits 60 units
- * below its window (`hand()` lifts it) and the bandage 40 (`y: -0.4`), the runs
- * sit 60 units off the blade (`RUN_REST`): `runOut` x 0.68 puts its head at
- * the grip and 0.96 at the point; `runBack` x −0.24 puts its head at the
- * point and −0.52 at the grip. Every clip that shows the open hand keys
- * `knuckles` and `palm` itself, since a clip's unkeyed parts rest.
+ * Hidden-at-rest parts are slid in by their own keys. The open arm sits 60
+ * units below its window (`arm()` lifts it) and hangs from the front shoulder,
+ * so its hand is always at the end of it; while it plays, the arm the drawing
+ * already has is hidden (`fist` at scale 0), so there is only ever one front
+ * hand. `arm(at, rotate, length)`: −66° lays it along the blade when the
+ * cleaver is across the body; `length` stretches the forearm alone (the hand
+ * drawn along the blade towards the point). The runs sit 60 units off the
+ * blade (`RUN_REST`): `runOut` x 0.72 puts its head at the grip and 0.96 at
+ * the point; `runBack` x −0.22 puts its head at the point and −0.48 at the
+ * grip.
  *
  * The brow is a shelf of bone: it is lifted and lowered, never tilted more
  * than 4°.
@@ -37,16 +42,24 @@ const back = (at: number, head: number): Pose => ({ at, x: (head - 60) / 100 });
 const OUT_HIDDEN = 0;
 const BACK_HIDDEN = 0;
 
-/** The fist closed, as drawn; and gone, when the hand is open. */
-const CLOSED = { scale: 1 };
-const OPENED = { scale: 0.01 };
+/** The drawing's own front arm, hidden while the open one plays. */
+const GONE: Pose[] = [{ at: 0, scale: 0.01 }, { at: 1, scale: 0.01 }];
 /**
- * The open hand, placed in the drawing's units: its wrist moved by (dx, dy)
- * from where the fist rests, and turned (0 is fingers up). It is drawn over
- * the cleaver and placed on its own, not by the arm, because it lies on the
- * blade; it rests 60 units below its window, so every key lifts it back.
+ * The open front arm: turned from hanging straight down, stretched along its
+ * length alone (scale × squash keeps its width), lifted into its window.
  */
-const hand = (at: number, dx: number, dy: number, rotate: number): Pose => ({ at, x: dx / 100, y: dy / 100 - 0.6, rotate });
+const arm = (at: number, rotate: number, length = 1): Pose => ({
+  at,
+  y: -0.6,
+  rotate,
+  scale: Math.sqrt(length),
+  squash: 1 / Math.sqrt(length),
+});
+/** The fingers curled into a fist (short and a little wide), or open. */
+const CURLED = { scale: 0.64, squash: 1.55 };
+const OPEN = { scale: 1, squash: 1 };
+/** Along the blade when the cleaver lies across the body. */
+const ALONG = -66;
 
 /** Across the body: the edge under, running through the fist. */
 const ACROSS = -118;
@@ -90,29 +103,17 @@ const oath: Clip = {
   ],
   parts: {
     cleaver: turn([0, ACROSS], [0.3, ACROSS + 1], [0.5, ACROSS - 1.5], [1, ACROSS]),
-    fist: [
-      { at: 0, rotate: 2, x: 0, y: 0 },
-      { at: 0.2, rotate: 0, x: -0.01, y: -0.004 },
-      { at: 0.3, rotate: -1, x: -0.1, y: -0.035 },
-      { at: 0.62, rotate: -3, x: -0.01, y: 0.03 },
-      { at: 1, rotate: -3, x: -0.01, y: 0.03 },
-    ],
-    knuckles: [hold(0, CLOSED), hold(0.16, { scale: 1.08 }), hold(0.2, OPENED), hold(1, OPENED)],
-    palm: [
-      hold(0, { y: 0 }),
-      hold(0.199, { y: 0 }),
-      { ...hand(0.2, 0, -1, 30), scale: 0.9 },
-      { ...hand(0.3, -9.2, -3.3, 114), scale: 1 },
-      { ...hand(0.62, -1.9, -0.1, 114), scale: 1 },
-      { ...hand(1, -1.9, -0.1, 114), scale: 1 },
-    ],
+    // One front hand only: the drawing's own arm is hidden, and the open one
+    // starts as a bandaged fist on the blade and opens there.
+    fist: GONE,
+    palm: [arm(0, ALONG + 4, 0.92), arm(0.18, ALONG + 2, 0.94), arm(0.3, ALONG, 1), arm(0.62, ALONG - 2, 1.38), arm(1, ALONG - 2, 1.38)],
+    fingers: [hold(0, CURLED), hold(0.15, CURLED), hold(0.28, OPEN), hold(1, OPEN)],
     unwrap: [
-      hold(0, { y: 0 }),
-      hold(0.019, { y: 0 }),
-      hold(0.02, { y: -0.4, rotate: 0 }),
-      hold(0.2, { y: -0.36, rotate: 12 }),
-      hold(0.45, { y: -0.1, rotate: 40 }),
-      hold(1, { y: 0.1, rotate: 60 }),
+      hold(0, { y: 0, rotate: 0, scale: 1 }),
+      hold(0.1, { y: 0.02, rotate: 2, scale: 1 }),
+      hold(0.22, { y: 0.14, rotate: 24, scale: 0.9 }),
+      hold(0.26, { y: 0.2, rotate: 34, scale: 0.01 }),
+      hold(1, { y: 0.2, rotate: 34, scale: 0.01 }),
     ],
     runOut: [hold(0, { x: OUT_HIDDEN }), hold(0.27, { x: OUT_HIDDEN }), out(0.28, 12), out(0.6, 27), out(0.72, 36), out(1, 36)],
     head: turn([0, 4], [0.3, 8], [0.62, 6], [1, 5]),
@@ -145,12 +146,10 @@ const holdOut: Clip = {
   ],
   parts: {
     cleaver: turn([0, -120], [0.5, -123], [1, -121]),
-    fist: [
-      { at: 0, rotate: -2, x: -0.04, y: 0.01 },
-      { at: 1, rotate: -3, x: -0.04, y: 0.01 },
-    ],
-    knuckles: [hold(0, OPENED), hold(1, OPENED)],
-    palm: [hand(0, -5, -2, 111), hand(1, -5, -2.4, 112)],
+    fist: GONE,
+    palm: [arm(0, ALONG + 1, 1.3), arm(1, ALONG, 1.32)],
+    fingers: [hold(0, OPEN), hold(1, OPEN)],
+    unwrap: [hold(0, { scale: 0.01 }), hold(1, { scale: 0.01 })],
     runOut: [out(0, 36), out(1, 36)],
     head: turn([0, 6], [1, 8]),
     hair: turn([0, 0], [0.4, -8], [0.7, -4], [1, -9]),
@@ -175,7 +174,6 @@ const raise: Clip = {
     cleaver: turn([0, -142], [0.5, -141.6], [1, -141.8]),
     // The open hand down at the side, out of the picture: the blade is what this shot is for.
     fist: turn([0, 40], [1, 42]),
-    knuckles: [hold(0, OPENED), hold(1, OPENED)],
     runOut: [out(0, 36), out(1, 36)],
     head: turn([0, -6], [1, -6]),
   },
@@ -188,42 +186,40 @@ const raise: Clip = {
  */
 const strike: Clip = {
   duration: 780,
-  markers: { contact: 0.04 },
+  markers: { contact: 0.09 },
   poses: [
     { at: 0, x: -0.02, y: 0.004, rotate: -5, squash: 1.04, scale: 1 },
-    { at: 0.04, x: 0.09, y: 0.012, rotate: 12, squash: 0.87, scale: 1.04 },
-    { at: 0.22, x: 0.1, y: 0.014, rotate: 13, squash: 0.89, scale: 1.03 },
-    { at: 0.6, x: 0.08, y: 0.01, rotate: 9, squash: 0.95, scale: 1.02 },
-    { at: 1, x: 0.07, y: 0.008, rotate: 8, squash: 0.97, scale: 1.01 },
+    { at: 0.09, x: 0.13, y: -0.05, rotate: 12, squash: 0.9, scale: 1.04 },
+    { at: 0.22, x: 0.14, y: -0.04, rotate: 13, squash: 0.92, scale: 1.03 },
+    { at: 0.6, x: 0.13, y: -0.02, rotate: 11, squash: 0.95, scale: 1.02 },
+    { at: 1, x: 0.12, y: 0, rotate: 10, squash: 0.97, scale: 1.01 },
   ],
   parts: {
-    cleaver: turn([0, 186], [0.04, 256], [0.22, 262], [0.6, 260], [1, 259]),
+    cleaver: turn([0, 200], [0.09, 234], [0.22, 236], [0.6, 235], [1, 234]),
     fist: [
-      { at: 0, rotate: -40, x: 0, y: 0 },
-      { at: 0.04, rotate: 44, x: -0.06, y: 0 },
-      { at: 0.4, rotate: 34, x: -0.05, y: 0 },
-      { at: 1, rotate: 28, x: -0.04, y: 0 },
+      { at: 0, rotate: 20, x: 0, y: 0 },
+      { at: 0.09, rotate: 105, x: -0.08, y: 0 },
+      { at: 0.4, rotate: 98, x: -0.07, y: 0 },
+      { at: 1, rotate: 92, x: -0.06, y: 0 },
     ],
-    knuckles: [hold(0, OPENED), hold(1, OPENED)],
-    palm: [hand(0, 1.9, -8.7, -60), hand(0.04, -14, 5.7, 4), hand(0.4, -10.8, 5, 4), hand(1, -10, 5, 0)],
-    runOut: [hold(0, { x: OUT_HIDDEN }), hold(0.049, { x: OUT_HIDDEN }), out(0.05, 9), out(0.3, 36), out(1, 36)],
-    head: turn([0, 6], [0.04, 14], [0.3, 10], [1, 8]),
-    hair: turn([0, -10], [0.05, 18], [0.22, -8], [0.5, 4], [1, 0]),
+    runOut: [hold(0, { x: OUT_HIDDEN }), hold(0.099, { x: OUT_HIDDEN }), out(0.1, 9), out(0.3, 36), out(1, 36)],
+    head: turn([0, 6], [0.09, 14], [0.3, 10], [1, 8]),
+    hair: turn([0, -10], [0.1, 18], [0.22, -8], [0.5, 4], [1, 0]),
     body: [
       { at: 0, squash: 1.03 },
-      { at: 0.04, squash: 0.92 },
+      { at: 0.09, squash: 0.92 },
       { at: 0.4, squash: 0.97 },
       { at: 1, squash: 0.99 },
     ],
     legs: [
       { at: 0, squash: 1.06 },
-      { at: 0.04, squash: 0.88 },
+      { at: 0.09, squash: 0.88 },
       { at: 0.3, squash: 0.92 },
       { at: 1, squash: 0.96 },
     ],
     ...face(
       [0, { brow: 1.2, knit: 3, open: 0.8, mouth: 1.1, wide: 1.1 }],
-      [0.04, { brow: -0.6, knit: 3, open: 1.2, mouth: 2.2, wide: 1.12 }],
+      [0.09, { brow: -0.6, knit: 3, open: 1.2, mouth: 2.2, wide: 1.12 }],
       [0.4, { brow: 0.4, knit: 3, open: 0.95, mouth: 1.6, wide: 1.15 }],
       [1, { brow: 0.6, knit: 3, open: 0.9, mouth: 1.3, wide: 1.2 }],
     ),
@@ -244,17 +240,15 @@ const take: Clip = {
     { at: 1, x: 0.05, y: 0.004, rotate: 4, squash: 1 },
   ],
   parts: {
-    cleaver: turn([0, 259], [0.16, 240], [1, 239]),
-    fist: [
-      { at: 0, rotate: 24, x: 0, y: 0 },
-      { at: 0.16, rotate: 2, x: -0.08, y: 0.01 },
-      { at: 1, rotate: 2, x: -0.08, y: 0.01 },
-    ],
-    knuckles: [hold(0, OPENED), hold(1, OPENED)],
-    palm: [hand(0, -10, 5, 0), hand(0.16, 5.5, -10.7, 202), hand(1, 5.5, -10.7, 202)],
+    cleaver: turn([0, 234], [0.16, 232], [1, 232]),
+    fist: GONE,
+    // The open hand comes down onto the blade's flat and stays there.
+    palm: [arm(0, -28, 0.8), arm(0.16, -60, 0.84), arm(1, -60, 0.84)],
+    fingers: [hold(0, OPEN), hold(1, OPEN)],
+    unwrap: [hold(0, { scale: 0.01 }), hold(1, { scale: 0.01 })],
     // The Reaver's own blood has gone into the enemy; the blade is steel again until the enemy's comes back up it.
     runOut: [hold(0, { x: OUT_HIDDEN }), hold(1, { x: OUT_HIDDEN })],
-    runBack: [hold(0, { x: BACK_HIDDEN }), hold(0.179, { x: BACK_HIDDEN }), back(0.18, 38), back(0.62, 12), back(1, 12)],
+    runBack: [hold(0, { x: BACK_HIDDEN }), hold(0.179, { x: BACK_HIDDEN }), back(0.18, 38), back(0.62, 17), back(1, 17)],
     head: turn([0, 0], [0.2, 2], [0.5, -10], [0.72, -8], [1, -4]),
     hair: turn([0, 0], [0.5, -6], [0.8, 3], [1, 0]),
     body: [

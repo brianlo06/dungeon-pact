@@ -42,6 +42,12 @@ const STAR = "#b9c6d8";
 const ROSE = "#ff8fb0";
 const NIGHT = "#0b0d16";
 const BARS = 0.11;
+/**
+ * The impact's staging, probed in the lab: where the Reaver and the enemy
+ * stand, and where the cleaver's edge enters the enemy on the held frame.
+ */
+const GIVE = { caster: [430, 880] as [number, number], target: [845, 720] as [number, number], entry: [770, 670] };
+const GIVE_BOSS = { caster: [380, 880] as [number, number], target: [985, 930] as [number, number], entry: [790, 700] };
 
 export const giveAndTake: Cinematic = {
   id: "give-and-take",
@@ -75,14 +81,14 @@ export const giveAndTake: Cinematic = {
       id: "oath",
       kind: "extreme-close-up",
       purpose:
-        "Identity, and the price. Close on the blade across the chest: the bandage comes off, the fist opens for the first time, and the bare palm is laid along the edge and drawn down it towards the point; the scarlet runs out along the blade ahead of it.",
+        "Identity, and the price. Close on the blade and the one arm laid along it from the frame's edge: the bandaged fist on the steel, the bandage slipping off it, the fist opening for the first time, and the bare palm drawn along the blade towards the point; the scarlet runs out along the blade ahead of it.",
       space: "cinematic",
       ms: 700,
       fastMs: 440,
       transition: { kind: "black", ms: 70 },
       camera: {
-        from: { x: 960, y: 860, zoom: 1.9, rotate: -8 },
-        to: { x: 1000, y: 876, zoom: 2.05, rotate: -5 },
+        from: { x: 1150, y: 890, zoom: 2.7, rotate: -8 },
+        to: { x: 1175, y: 900, zoom: 2.85, rotate: -5 },
         ease: "out",
       },
       background: "give-crossroads",
@@ -187,78 +193,89 @@ export const giveAndTake: Cinematic = {
       id: "give",
       kind: "impact",
       purpose:
-        "Impact. A drawn frame both ways, the two figures ink on the accent and then held inverted, with the scarlet run cut across it along the blade; then in colour the cleaver buried through the enemy's guard with the whole body after it, the run going down the blade into the wound, the enemy thrown back.",
+        "Impact. Side-on, with a gap between them: a drawn frame both ways, two silhouettes ink on the accent with the blade between them, then held inverted; then in colour the cleaver's edge in the enemy's shoulder with the Reaver's whole body behind the arm, the notched burst round the wound from behind, the enemy's head thrown back as it recoils, and the run going down the blade into it.",
       space: "cinematic",
       ms: 840,
       fastMs: 600,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 880, y: 620, zoom: 1.36, rotate: 7 },
-        to: { x: 900, y: 612, zoom: 1.24, rotate: 3 },
+        from: { x: 720, y: 640, zoom: 1.4, rotate: 4 },
+        to: { x: 736, y: 634, zoom: 1.3, rotate: 1.5 },
         ease: "out",
       },
       background: "give-crossroads",
       lighting: { exposure: 0.95, rim: [STAR, 0.5, 1], vignette: 0.3, letterbox: BARS },
       toLighting: { exposure: 0.74, rim: [STAR, 0.45, 1], vignette: 0.42, letterbox: BARS },
+      // Side-on with daylight between them: the Reaver's arm and the cleaver
+      // cross the gap, and the enemy is drawn over the blade, so the edge is
+      // seen going *into* its shoulder rather than lying across it.
       actors: [
+        { role: "caster", at: GIVE.caster, to: [GIVE.caster[0] + 14, GIVE.caster[1]], ease: "out", size: 560, clip: "ult:give-strike", then: "ult:give-strike", look: "lit", z: 2 },
         {
           role: "target",
-          at: [1010, 830],
-          size: 380,
-          face: -1,
-          z: 1,
-          react: [{ at: 0.04, clip: "hurt" }],
-          shove: { at: 0.04, by: [60, -4] },
-          toTilt: 8,
+          at: GIVE.target,
+          size: 300,
+          face: 1,
+          z: 3,
+          react: [{ at: 0.09, clip: "hurt" }],
+          shove: { at: 0.09, by: [12, -6] },
+          tilt: -3,
+          toTilt: -11,
         },
-        { role: "caster", at: [690, 834], to: [706, 834], ease: "out", size: 450, clip: "ult:give-strike", then: "ult:give-strike", look: "lit", z: 2 },
       ],
       vfx: [
-        { kind: "give-glare", at: 0, until: 0.1, layer: "back", params: { x: 880, y: 620, flat: true } },
-        { kind: "give-notch", at: 0.04, until: 0.4, x: 850, y: 690, layer: "front", seed: 9, params: { size: 380 } },
-        { kind: "give-split", at: 0, until: 0.09, layer: "screen", params: { x1: 0.42, y1: 0.1, x2: 0.51, y2: 0.9 } },
+        { kind: "give-glare", at: 0.05, until: 0.16, layer: "back", params: { x: 720, y: 640, flat: true } },
+        // The notched burst behind both figures, round the entry: never over it.
+        { kind: "give-notch", at: 0.11, until: 0.4, x: GIVE.entry[0], y: GIVE.entry[1], layer: "back", seed: 9, params: { size: 420 } },
       ],
       screen: [
-        { kind: "two-tone", at: 0, ms: 70 },
-        { kind: "invert", at: 0.04, ms: 36 },
+        { kind: "two-tone", at: 0.06, ms: 70 },
+        { kind: "invert", at: 0.09, ms: 36 },
       ],
-      stop: [{ at: 0.04, ms: 150 }],
+      stop: [{ at: 0.09, ms: 150 }],
       shake: [
-        { at: 0.04, amount: 0.04 },
+        { at: 0.09, amount: 0.04 },
         { at: 0.26, amount: 0.012 },
       ],
       sound: [
-        { at: 0.03, sfx: "give-impact" },
-        { at: 0.05, sfx: "ult-boom" },
+        { at: 0.08, sfx: "give-impact" },
+        { at: 0.1, sfx: "ult-boom" },
       ],
-      reveal: [{ at: 0.04, reveal: "impact" }],
+      reveal: [{ at: 0.09, reveal: "impact" }],
       text: [
-        { kind: "impact", at: 0.04, until: 0.9, text: "$damage", x: 0.66, y: 0.22, rotate: 4 },
+        { kind: "impact", at: 0.09, until: 0.9, text: "$damage", x: 0.62, y: 0.2, rotate: 4 },
         { kind: "voice", at: 0.4, until: 1, text: "$voice.impact" },
       ],
       markers: [
-        { at: 0.04, label: "given" },
+        { at: 0.09, label: "given" },
         { at: 0.3, label: "run down" },
       ],
       framing: {
         boss: {
           camera: {
-            from: { x: 900, y: 540, zoom: 1.12, rotate: 5 },
-            to: { x: 916, y: 536, zoom: 1.04, rotate: 2 },
+            from: { x: 760, y: 560, zoom: 1.1, rotate: 3 },
+            to: { x: 776, y: 556, zoom: 1.02, rotate: 1 },
             ease: "out",
           },
+          // The Collector turned side-on, its staff on the far side, so the
+          // blade goes into its robe clear of the staff.
           actors: [
+            { role: "caster", at: GIVE_BOSS.caster, to: [GIVE_BOSS.caster[0] + 14, GIVE_BOSS.caster[1]], ease: "out", size: 620, clip: "ult:give-strike", then: "ult:give-strike", look: "lit", z: 2 },
             {
               role: "target",
-              at: [1090, 845],
-              size: 400,
-              face: -1,
-              z: 1,
-              react: [{ at: 0.04, clip: "hurt" }],
-              shove: { at: 0.04, by: [22, 0] },
-              toTilt: 2,
+              at: GIVE_BOSS.target,
+              size: 380,
+              face: 1,
+              z: 3,
+              react: [{ at: 0.09, clip: "hurt" }],
+              shove: { at: 0.09, by: [30, -2] },
+              tilt: 2,
+              toTilt: 6,
             },
-            { role: "caster", at: [700, 856], to: [716, 856], ease: "out", size: 470, clip: "ult:give-strike", then: "ult:give-strike", look: "lit", z: 2 },
+          ],
+          vfx: [
+            { kind: "give-glare", at: 0.05, until: 0.16, layer: "back", params: { x: 760, y: 560, flat: true } },
+            { kind: "give-notch", at: 0.04, until: 0.4, x: GIVE_BOSS.entry[0], y: GIVE_BOSS.entry[1], layer: "back", seed: 9, params: { size: 560 } },
           ],
         },
       },
@@ -275,8 +292,8 @@ export const giveAndTake: Cinematic = {
       fastMs: 460,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 900, y: 830, zoom: 1.45 },
-        to: { x: 904, y: 826, zoom: 1.5 },
+        from: { x: 930, y: 900, zoom: 1.28 },
+        to: { x: 934, y: 896, zoom: 1.32 },
         ease: "linear",
       },
       background: "give-crossroads",
