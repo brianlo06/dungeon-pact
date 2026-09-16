@@ -36,8 +36,27 @@ const PARTS = ["legs", "body", "head", "hair", "fist", "cleaver"] as const;
  * and for Red Ledger the bandage soaking through (`stain`) and the stroke the
  * fist wipes across the chest (`entry`). Both of those are drawn outside a
  * clip at rest, so a copy of the figure that no clip drives shows neither.
+ * For Give and Take, the one time the fist opens: `knuckles` (the fist as
+ * drawn, closed), `palm` (the open hand) and `unwrap` (the bandage coming off
+ * it), and on the cleaver `runOut` and `runBack`, blood running along the
+ * blade from the hand to the edge and back. The last four are hidden the same
+ * way; see `ultimates/give-and-take/poses.ts`.
  */
-const FACE_PARTS = ["brow", "eyes", "mouth", "stain", "entry"] as const;
+const FACE_PARTS = [
+  "brow",
+  "eyes",
+  "mouth",
+  "stain",
+  "entry",
+  // Give and Take: the fist's knuckles (drawn as at rest), the open hand and
+  // the bandage coming off it, and the blood running along the blade both
+  // ways. The last four are drawn outside a clip at rest.
+  "knuckles",
+  "palm",
+  "unwrap",
+  "runOut",
+  "runBack",
+] as const;
 /**
  * The chest stroke's axis: where the fist lands under the front shoulder,
  * down across the scar and the strap to the sash. Solved from the fist's arc
@@ -58,6 +77,27 @@ export const ENTRY_STROKE = [
   "M4.2 2.9 C4.2 3.6 4 4.3 4 4.8 C4 5.45 4.4 5.8 4.8 5.8 C5.2 5.8 5.6 5.45 5.6 4.8 C5.6 4.3 5.4 3.6 5.4 2.9 Z",
   "M22.9 0.2 a0.45 0.45 0 1 0 0.9 0 a0.45 0.45 0 1 0 -0.9 0 Z",
 ].join(" ");
+
+/**
+ * Give and Take's paint on the cleaver, in the blade's own units (x along the
+ * blade from the grip, 8 … 37 at the point; y across it, the spine at −4 and
+ * the notched edge at +6 … +11). A run is a glossy ribbon with a swollen head
+ * and a highlight, and slides along the blade inside the blade's outline.
+ * `RUN_OUT` has its head at x 0 and its body behind it (towards the grip);
+ * `RUN_BACK` has its head at x 0 and its body ahead of it (towards the point).
+ * At rest both sit well outside the blade (`RUN_REST`), so nothing shows.
+ */
+export const RUN_REST = 60;
+/** The cleaver's blade: a slab, notched along the edge. */
+const BLADE =
+  "M8 -3 L35 -4.5 L37 3 L36 7.5 L33.5 6 L31 9 L28 7 L25 10 L22 8 L19 11 L16 9 L13 11 L8 9.5 Z";
+const RUN_OUT =
+  "M-60 3.2 L-2.6 2.6 C-0.4 2.4 1.6 3.4 2.2 5.2 C2.8 7.2 1.2 9 -1 9.1 C-2.4 9.2 -3.6 8.4 -4.6 7.8 L-60 8.6 Z";
+const RUN_BACK =
+  "M60 3.4 L2.6 2.6 C0.4 2.4 -1.6 3.4 -2.2 5.2 C-2.8 7.2 -1.2 9 1 9.1 C2.4 9.2 3.6 8.4 4.6 7.8 L60 8.8 Z";
+/** The open hand, in the drawing's units: the wrist at the fist's centre, fingers up the forearm's line. */
+const PALM =
+  "M67.6 57.6 C66.8 54.4 66.9 51 67.8 48.4 L67.2 42.6 C67.1 41.5 68.6 41.3 68.9 42.4 L70 47.2 L70.2 40.4 C70.2 39.2 71.9 39.2 72 40.4 L72.4 47 L73.8 41 C74.1 39.9 75.6 40.2 75.4 41.4 L74.6 47.6 L76.6 43.6 C77.1 42.6 78.4 43.1 78.1 44.2 L76.4 50.6 L79 49.2 C80 48.7 80.8 49.8 80 50.6 L75.6 55.6 C75.2 56.6 74.8 57.4 74.6 58 Z";
 
 /**
  * The broadest face in the party: a low forehead, a brow that sticks out past
@@ -104,6 +144,13 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
             {/* One stroke of blood: heavy where the fist lands, dry-brushed thin where it leaves. */}
             <clipPath id={g.id("entry")}>
               <path d={ENTRY_STROKE} />
+            </clipPath>
+            {/* Give and Take: the hand's window, and the blade's outline for the runs. */}
+            <clipPath id={g.id("hand")}>
+              <circle cx={71} cy={51} r={24} />
+            </clipPath>
+            <clipPath id={g.id("blade-run")}>
+              <path d={BLADE} />
             </clipPath>
           </>
         )}
@@ -371,20 +418,50 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
           stroke={wrap}
           strokeWidth={2}
         />
-        <circle
-          cx={71}
-          cy={53}
-          r={5}
-          fill={wrap}
-          stroke={INK}
-          strokeWidth={LINE}
-        />
-        <path
-          d="M68 51.5 H74 M67.5 54.5 H74.5"
-          stroke={RAMP.bone[2]}
-          strokeWidth={0.9}
-        />
-        <circle cx={73} cy={55} r={1} fill={RAMP.crimson[1]} />
+        <g ref={facePart("knuckles")} style={at(71, 55)}>
+          <circle
+            cx={71}
+            cy={53}
+            r={5}
+            fill={wrap}
+            stroke={INK}
+            strokeWidth={LINE}
+          />
+          <path
+            d="M68 51.5 H74 M67.5 54.5 H74.5"
+            stroke={RAMP.bone[2]}
+            strokeWidth={0.9}
+          />
+          <circle cx={73} cy={55} r={1} fill={RAMP.crimson[1]} />
+        </g>
+        {closeUp && (
+          <g clipPath={`url(#${g.id("hand")})`}>
+            {/* The fist, opened: out of the window at rest, slid in by a clip. */}
+            <g transform="translate(0 40)">
+              <g ref={facePart("palm")} style={at(71, 57)}>
+                <path d={PALM} fill={g.url("skin")} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+                <path d="M69 50.6 C71 49.8 73.2 50 75 51.2" stroke={RAMP.skinPallid[2]} strokeWidth={0.7} fill="none" strokeLinecap="round" />
+                {/* The cut the edge leaves across the palm. */}
+                <path d="M67.8 53.6 L75.4 51.4" stroke="#e8243c" strokeWidth={1.1} strokeLinecap="round" />
+                {/* What is left of the wrap, at the wrist. */}
+                <path d="M67.2 56.4 L74.9 56 L74.6 58.6 L67.6 58.8 Z" fill={wrap} stroke={INK} strokeWidth={0.8} />
+              </g>
+            </g>
+            {/* The bandage coming off: a loose linen strip, below the window at rest. */}
+            <g transform="translate(0 40)">
+              <g ref={facePart("unwrap")} style={at(71, 56)}>
+                <path
+                  d="M67 55 C68.5 58 73 58.4 75 56.4 C76 60 74 63 72.4 66.5 C71.2 69.4 72.6 72.6 74.6 75.2 L72 76.4 C69.6 73.4 68.4 69.6 69.8 66 C71 63 72.4 60.8 71.8 59.4 C70.2 59.8 68 58.6 67 55 Z"
+                  fill={wrap}
+                  stroke={INK}
+                  strokeWidth={0.9}
+                  strokeLinejoin="round"
+                />
+                <path d="M72 61 L70.6 64.6 M71.4 69 L73 72.6" stroke="#b3172f" strokeWidth={0.8} strokeLinecap="round" opacity={0.8} />
+              </g>
+            </g>
+          </g>
+        )}
         {closeUp && (
           <g clipPath={`url(#${g.id("wrap")})`}>
             {/* The bandage soaking through from underneath: below the wrap at rest. */}
@@ -419,7 +496,7 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
             />
             {/* the blade: a slab, notched along the edge, rust at the spine */}
             <path
-              d="M8 -3 L35 -4.5 L37 3 L36 7.5 L33.5 6 L31 9 L28 7 L25 10 L22 8 L19 11 L16 9 L13 11 L8 9.5 Z"
+              d={BLADE}
               fill={g.url("blade")}
               stroke={INK}
               strokeWidth={LINE}
@@ -446,6 +523,24 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
               strokeLinecap="round"
               opacity={0.85}
             />
+            {closeUp && (
+              <g clipPath={`url(#${g.id("blade-run")})`}>
+                {/* Out: the Reaver's scarlet, from the grip to the point. */}
+                <g transform={`translate(${-RUN_REST} 0)`}>
+                  <g ref={facePart("runOut")}>
+                    <path d={RUN_OUT} fill="#e8243c" stroke="#5c0a18" strokeWidth={0.7} strokeLinejoin="round" />
+                    <path d="M-60 4.4 L-3 3.8 C-1 3.7 0.4 4.2 0.9 5" stroke="#ffb3bd" strokeWidth={0.8} fill="none" strokeLinecap="round" />
+                  </g>
+                </g>
+                {/* Back: the enemy's garnet, from the point to the grip. */}
+                <g transform={`translate(${RUN_REST} 0)`}>
+                  <g ref={facePart("runBack")}>
+                    <path d={RUN_BACK} fill="#7a1030" stroke="#2a0510" strokeWidth={0.7} strokeLinejoin="round" />
+                    <path d="M60 4.6 L3 3.8 C1 3.7 -0.4 4.2 -0.9 5" stroke="#ff8fb0" strokeWidth={0.8} fill="none" strokeLinecap="round" />
+                  </g>
+                </g>
+              </g>
+            )}
           </g>
         </BaseWeapon>
         <GearMount

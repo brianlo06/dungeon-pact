@@ -1,0 +1,108 @@
+/*
+ * Give and Take — effects and space.
+ *
+ * No filters, no blurs and no keyframes: runs grow on `--p`, the wind moves on
+ * `--p`, the notch boils on `--f`, and the bead trembles in a frame function
+ * (see `vfx.tsx`). The split frame is a white half laid over the picture with
+ * `difference`, on screen only while the hit-stop holds it.
+ */
+
+/* ---- the split frame ---- */
+.cine-screen > .cine-vfx > .give-split {
+  overflow: hidden;
+}
+.give-split svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.give-split-invert {
+  mix-blend-mode: difference;
+}
+.give-split-cut g {
+  transform-box: view-box;
+}
+
+/* ---- the bead ---- */
+.cine-vfx > .give-bead {
+  width: var(--size);
+  height: calc(var(--size) * 1.2);
+  overflow: visible;
+  /* Hung from its top edge: the wrapper's point is where the edge is. */
+  transform: translate(-50%, -16.7%) rotate(var(--rot)) scale(var(--s));
+}
+
+/* ---- the notch ---- */
+.cine-vfx > .give-notch {
+  width: var(--size);
+  height: var(--size);
+  overflow: visible;
+}
+.give-notch-frame {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  --k: clamp(0, calc(var(--p) / 0.3), 1);
+  transform: scale(calc(0.55 + var(--k) * 0.6));
+  opacity: 0;
+}
+.give-notch-frame[data-f="0"] {
+  opacity: calc(clamp(0, 1 - var(--f), 1) * (1 - clamp(0, (var(--p) - 0.28) * 5, 1)));
+}
+.give-notch-frame[data-f="1"] {
+  opacity: calc(clamp(0, max(var(--f) * (2 - var(--f)), (var(--f) - 2) * (4 - var(--f))), 1) * (1 - clamp(0, (var(--p) - 0.28) * 5, 1)));
+}
+.give-notch-frame[data-f="2"] {
+  opacity: calc(clamp(0, (var(--f) - 1) * (3 - var(--f)), 1) * (1 - clamp(0, (var(--p) - 0.28) * 5, 1)));
+}
+
+/* ---- wind ---- */
+.cine-screen > .cine-vfx > .give-wind {
+  overflow: hidden;
+}
+.give-streak {
+  position: absolute;
+  left: 0;
+  top: var(--y);
+  width: var(--len);
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(217, 211, 196, 0), rgba(217, 211, 196, var(--a)) 50%, rgba(217, 211, 196, 0));
+  transform: translateX(calc(var(--x0) + var(--p) * var(--speed) * 60vw));
+}
+.give-grit {
+  position: absolute;
+  left: 0;
+  top: var(--y);
+  width: var(--sz);
+  height: calc(var(--sz) * 0.7);
+  border-radius: 40%;
+  background: #cfc8b8;
+  opacity: 0.55;
+  transform: translate(calc(var(--x0) + var(--p) * var(--speed) * 50vw), calc(sin(var(--p) * 9rad) * var(--bob)));
+}
+
+/* ---- on the board ---- */
+.cine-anchored > .give-board {
+  width: calc(var(--unit-w) * 0.22);
+  height: calc(var(--unit-h) * 0.9);
+  left: 0;
+  top: calc(var(--unit-h) * -0.5);
+}
+.give-board svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.give-board-run {
+  --k: clamp(0, calc(var(--p) / 0.45), 1);
+  opacity: calc(clamp(0, var(--p) * 20, 1) * (1 - clamp(0, (var(--p) - 0.85) * 5, 0.6)));
+}
+.give-board-run > g {
+  transform-box: view-box;
+  /* The run's head leads: its whole body slides out along its own line. */
+  transform: translateX(calc((1 - var(--k)) * -150px));
+}
+.give-board svg {
+  clip-path: inset(0);
+}
