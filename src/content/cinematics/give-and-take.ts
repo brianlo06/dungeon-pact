@@ -118,7 +118,7 @@ export const giveAndTake: Cinematic = {
       lighting: { exposure: 0.8, rim: [STAR, 0.5, 1], vignette: 0.45, letterbox: BARS },
       toLighting: { exposure: 0.84, rim: [STAR, 0.55, 1], vignette: 0.42, letterbox: BARS },
       actors: [
-        { role: "caster", at: [360, 1180], to: [380, 1180], size: 820, clip: "ult:give-hold", then: "ult:give-hold", look: "rim", rim: STAR, z: 3 },
+        { role: "caster", at: [330, 1080], to: [346, 1080], size: 880, clip: "ult:give-hold", then: "ult:give-hold", look: "rim", rim: STAR, z: 3 },
         {
           role: "target",
           at: [1150, 670],
@@ -152,18 +152,18 @@ export const giveAndTake: Cinematic = {
       fastMs: 340,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 900, y: 600, zoom: 1.7 },
-        to: { x: 900, y: 600, zoom: 1.72 },
+        from: { x: 960, y: 540, zoom: 1.6 },
+        to: { x: 960, y: 540, zoom: 1.62 },
         ease: "linear",
       },
       background: "give-crossroads",
       lighting: { exposure: 0.14, back: [STAR, 0], vignette: 0.9, letterbox: 0.14 },
       toLighting: { exposure: 0.12, back: [STAR, 0], vignette: 0.92, letterbox: 0.14 },
       actors: [
-        { role: "caster", at: [520, 760], size: 900, clip: "ult:give-raise", then: "ult:give-raise", look: "rim", rim: STAR, z: 2 },
-        { role: "target", at: [960, 760], size: 380, face: -1, look: "rim", rim: STAR, z: 1, react: [{ at: 0, clip: "idle" }] },
+        { role: "caster", at: [1560, 1050], size: 1300, face: -1, clip: "ult:give-raise", then: "ult:give-raise", look: "rim", rim: STAR, z: 2 },
+        { role: "target", at: [980, 820], size: 420, face: -1, look: "rim", rim: STAR, z: 1, react: [{ at: 0, clip: "idle" }] },
       ],
-      vfx: [{ kind: "give-bead", at: 0, until: 1, x: 900, y: 420, layer: "front", params: { size: 60 } }],
+      vfx: [{ kind: "give-bead", at: 0, until: 1, x: 1110, y: 405, layer: "front", params: { size: 60 } }],
       duck: [{ at: 0, level: 0.03, ms: 520 }],
       sound: [{ at: 0.02, sfx: "give-hush" }],
       markers: [{ at: 0.9, label: "held" }],
@@ -190,7 +190,7 @@ export const giveAndTake: Cinematic = {
       actors: [
         {
           role: "target",
-          at: [980, 830],
+          at: [990, 830],
           size: 380,
           face: -1,
           z: 1,
@@ -198,15 +198,16 @@ export const giveAndTake: Cinematic = {
           shove: { at: 0.04, by: [60, -4] },
           toTilt: 8,
         },
-        { role: "caster", at: [700, 834], to: [716, 834], ease: "out", size: 450, clip: "ult:give-strike", then: "ult:give-strike", look: "lit", z: 2 },
+        { role: "caster", at: [690, 834], to: [706, 834], ease: "out", size: 450, clip: "ult:give-strike", then: "ult:give-strike", look: "lit", z: 2 },
       ],
       vfx: [
-        { kind: "give-notch", at: 0.04, until: 0.4, follow: "target", x: -20, y: -190, layer: "front", seed: 9, params: { size: 380 } },
-        { kind: "give-split", at: 0, until: 0.1, layer: "screen", params: { x1: 0.36, y1: 0.24, x2: 0.62, y2: 0.7, side: 1 } },
+        { kind: "give-glare", at: 0, until: 0.1, layer: "back", params: { x: 880, y: 620, flat: true } },
+        { kind: "give-notch", at: 0.04, until: 0.4, x: 850, y: 690, layer: "front", seed: 9, params: { size: 380 } },
+        { kind: "give-split", at: 0, until: 0.09, layer: "screen", params: { x1: 0.42, y1: 0.1, x2: 0.51, y2: 0.9 } },
       ],
       screen: [
-        { kind: "two-tone", at: 0, ms: 70, mode: "full" },
-        { kind: "two-tone", at: 0, ms: 50, mode: "fast" },
+        { kind: "two-tone", at: 0, ms: 70 },
+        { kind: "invert", at: 0.04, ms: 36 },
       ],
       stop: [{ at: 0.04, ms: 150 }],
       shake: [
@@ -239,8 +240,8 @@ export const giveAndTake: Cinematic = {
       fastMs: 460,
       transition: { kind: "cut" },
       camera: {
-        from: { x: 900, y: 760, zoom: 1.6 },
-        to: { x: 904, y: 756, zoom: 1.65 },
+        from: { x: 900, y: 830, zoom: 1.45 },
+        to: { x: 904, y: 826, zoom: 1.5 },
         ease: "linear",
       },
       background: "give-crossroads",

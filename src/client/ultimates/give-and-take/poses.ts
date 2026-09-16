@@ -16,8 +16,8 @@ import { face } from "../../battle/face";
  * underneath, running through the fist. A positive rotation swings it up
  * behind and over; +262 is down and forward, in whatever stands there.
  *
- * Hidden-at-rest parts are slid in by their own keys: the palm and the
- * bandage sit 40 units below their window (`y: -0.4` brings them in), the runs
+ * Hidden-at-rest parts are slid in by their own keys: the palm sits 60 units
+ * below its window (`hand()` lifts it) and the bandage 40 (`y: -0.4`), the runs
  * sit 60 units off the blade (`RUN_REST`): `runOut` x 0.68 puts its head at
  * the grip and 0.96 at the point; `runBack` x −0.24 puts its head at the
  * point and −0.52 at the grip. Every clip that shows the open hand keys
@@ -40,8 +40,13 @@ const BACK_HIDDEN = 0;
 /** The fist closed, as drawn; and gone, when the hand is open. */
 const CLOSED = { scale: 1 };
 const OPENED = { scale: 0.01 };
-/** The palm slid into its window. */
-const PALM_IN = { y: -0.4 };
+/**
+ * The open hand, placed in the drawing's units: its wrist moved by (dx, dy)
+ * from where the fist rests, and turned (0 is fingers up). It is drawn over
+ * the cleaver and placed on its own, not by the arm, because it lies on the
+ * blade; it rests 60 units below its window, so every key lifts it back.
+ */
+const hand = (at: number, dx: number, dy: number, rotate: number): Pose => ({ at, x: dx / 100, y: dy / 100 - 0.6, rotate });
 
 /** Across the body: the edge under, running through the fist. */
 const ACROSS = -118;
@@ -79,7 +84,6 @@ const call: Clip = {
  */
 const oath: Clip = {
   duration: 600,
-  markers: { opened: 0.2, drawn: 0.5 },
   poses: [
     { at: 0, y: 0, rotate: 1, squash: 1 },
     { at: 1, y: 0.004, rotate: 2, squash: 1.01 },
@@ -89,17 +93,18 @@ const oath: Clip = {
     fist: [
       { at: 0, rotate: 2, x: 0, y: 0 },
       { at: 0.2, rotate: 0, x: -0.01, y: -0.004 },
-      { at: 0.3, rotate: -1, x: 0.02, y: 0.008 },
-      { at: 0.62, rotate: -4, x: 0.1, y: 0.04 },
-      { at: 1, rotate: -4, x: 0.1, y: 0.04 },
+      { at: 0.3, rotate: -1, x: -0.1, y: -0.035 },
+      { at: 0.62, rotate: -3, x: -0.01, y: 0.03 },
+      { at: 1, rotate: -3, x: -0.01, y: 0.03 },
     ],
     knuckles: [hold(0, CLOSED), hold(0.16, { scale: 1.08 }), hold(0.2, OPENED), hold(1, OPENED)],
     palm: [
-      hold(0, { y: 0, rotate: 60 }),
-      hold(0.199, { y: 0, rotate: 60 }),
-      hold(0.2, { ...PALM_IN, rotate: 70, scale: 0.9 }),
-      hold(0.3, { ...PALM_IN, rotate: 112, scale: 1 }),
-      hold(1, { ...PALM_IN, rotate: 112, scale: 1 }),
+      hold(0, { y: 0 }),
+      hold(0.199, { y: 0 }),
+      { ...hand(0.2, 0, -1, 30), scale: 0.9 },
+      { ...hand(0.3, -9.2, -3.3, 114), scale: 1 },
+      { ...hand(0.62, -1.9, -0.1, 114), scale: 1 },
+      { ...hand(1, -1.9, -0.1, 114), scale: 1 },
     ],
     unwrap: [
       hold(0, { y: 0 }),
@@ -139,13 +144,13 @@ const holdOut: Clip = {
     { at: 1, y: 0.002, rotate: 4, squash: 1.01 },
   ],
   parts: {
-    cleaver: turn([0, -96], [0.5, -99], [1, -97]),
+    cleaver: turn([0, -120], [0.5, -123], [1, -121]),
     fist: [
-      { at: 0, rotate: -8, x: 0.02, y: 0.01 },
-      { at: 1, rotate: -10, x: 0.02, y: 0.01 },
+      { at: 0, rotate: -2, x: -0.04, y: 0.01 },
+      { at: 1, rotate: -3, x: -0.04, y: 0.01 },
     ],
     knuckles: [hold(0, OPENED), hold(1, OPENED)],
-    palm: [hold(0, { ...PALM_IN, rotate: 40 }), hold(1, { ...PALM_IN, rotate: 44 })],
+    palm: [hand(0, -5, -2, 111), hand(1, -5, -2.4, 112)],
     runOut: [out(0, 36), out(1, 36)],
     head: turn([0, 6], [1, 8]),
     hair: turn([0, 0], [0.4, -8], [0.7, -4], [1, -9]),
@@ -167,10 +172,10 @@ const raise: Clip = {
     { at: 1, y: 0, rotate: -2, squash: 1 },
   ],
   parts: {
-    cleaver: turn([0, 200], [0.5, 200.6], [1, 200.2]),
+    cleaver: turn([0, -142], [0.5, -141.6], [1, -141.8]),
     fist: turn([0, -30], [1, -32]),
     knuckles: [hold(0, OPENED), hold(1, OPENED)],
-    palm: [hold(0, { ...PALM_IN, rotate: -10 }), hold(1, { ...PALM_IN, rotate: -12 })],
+    palm: [hand(0, 2, -6.4, -30), hand(1, 2, -6.6, -32)],
     runOut: [out(0, 36), out(1, 36)],
     head: turn([0, -6], [1, -6]),
   },
@@ -200,7 +205,7 @@ const strike: Clip = {
       { at: 1, rotate: 28, x: -0.04, y: 0 },
     ],
     knuckles: [hold(0, OPENED), hold(1, OPENED)],
-    palm: [hold(0, { ...PALM_IN, rotate: -20 }), hold(0.04, { ...PALM_IN, rotate: -40 }), hold(1, { ...PALM_IN, rotate: -30 })],
+    palm: [hand(0, 1.9, -8.7, -60), hand(0.04, -14, 5.7, 4), hand(0.4, -10.8, 5, 4), hand(1, -10, 5, 0)],
     runOut: [hold(0, { x: OUT_HIDDEN }), hold(0.049, { x: OUT_HIDDEN }), out(0.05, 9), out(0.3, 36), out(1, 36)],
     head: turn([0, 6], [0.04, 14], [0.3, 10], [1, 8]),
     hair: turn([0, -10], [0.05, 18], [0.22, -8], [0.5, 4], [1, 0]),
@@ -234,22 +239,22 @@ const strike: Clip = {
  */
 const take: Clip = {
   duration: 640,
-  markers: { home: 0.62 },
   poses: [
     { at: 0, x: 0.07, y: 0.008, rotate: 8, squash: 0.97 },
     { at: 1, x: 0.05, y: 0.004, rotate: 4, squash: 1 },
   ],
   parts: {
-    cleaver: turn([0, 259], [1, 257]),
+    cleaver: turn([0, 259], [0.16, 240], [1, 239]),
     fist: [
       { at: 0, rotate: 24, x: 0, y: 0 },
-      { at: 0.16, rotate: 36, x: -0.02, y: 0.03 },
-      { at: 1, rotate: 36, x: -0.02, y: 0.03 },
+      { at: 0.16, rotate: 2, x: -0.08, y: 0.01 },
+      { at: 1, rotate: 2, x: -0.08, y: 0.01 },
     ],
     knuckles: [hold(0, OPENED), hold(1, OPENED)],
-    palm: [hold(0, { ...PALM_IN, rotate: 60 }), hold(0.16, { ...PALM_IN, rotate: 128 }), hold(1, { ...PALM_IN, rotate: 128 })],
-    runOut: [out(0, 36), out(1, 36)],
-    runBack: [hold(0, { x: BACK_HIDDEN }), hold(0.099, { x: BACK_HIDDEN }), back(0.1, 38), back(0.62, 8), back(1, 8)],
+    palm: [hand(0, -10, 5, 0), hand(0.16, 5.5, -10.7, 202), hand(1, 5.5, -10.7, 202)],
+    // The Reaver's own blood has gone into the enemy; the blade is steel again until the enemy's comes back up it.
+    runOut: [hold(0, { x: OUT_HIDDEN }), hold(1, { x: OUT_HIDDEN })],
+    runBack: [hold(0, { x: BACK_HIDDEN }), hold(0.179, { x: BACK_HIDDEN }), back(0.18, 38), back(0.62, 12), back(1, 12)],
     head: turn([0, 0], [0.2, 2], [0.5, -10], [0.72, -8], [1, -4]),
     hair: turn([0, 0], [0.5, -6], [0.8, 3], [1, 0]),
     body: [

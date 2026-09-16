@@ -92,9 +92,9 @@ export const RUN_REST = 60;
 const BLADE =
   "M8 -3 L35 -4.5 L37 3 L36 7.5 L33.5 6 L31 9 L28 7 L25 10 L22 8 L19 11 L16 9 L13 11 L8 9.5 Z";
 const RUN_OUT =
-  "M-60 3.2 L-2.6 2.6 C-0.4 2.4 1.6 3.4 2.2 5.2 C2.8 7.2 1.2 9 -1 9.1 C-2.4 9.2 -3.6 8.4 -4.6 7.8 L-60 8.6 Z";
+  "M-60 5 L-3 4.4 C-1 3.6 1.4 3.8 2.2 5.6 C2.9 7.4 1.4 9 -0.8 9 C-2.2 9 -3.2 8.6 -4.4 8.2 L-60 7.8 Z";
 const RUN_BACK =
-  "M60 3.4 L2.6 2.6 C0.4 2.4 -1.6 3.4 -2.2 5.2 C-2.8 7.2 -1.2 9 1 9.1 C2.4 9.2 3.6 8.4 4.6 7.8 L60 8.8 Z";
+  "M60 5 L3 4.4 C1 3.6 -1.4 3.8 -2.2 5.6 C-2.9 7.4 -1.4 9 0.8 9 C2.2 9 3.2 8.6 4.4 8.2 L60 7.8 Z";
 /** The open hand, in the drawing's units: the wrist at the fist's centre, fingers up the forearm's line. */
 const PALM =
   "M67.6 57.6 C66.8 54.4 66.9 51 67.8 48.4 L67.2 42.6 C67.1 41.5 68.6 41.3 68.9 42.4 L70 47.2 L70.2 40.4 C70.2 39.2 71.9 39.2 72 40.4 L72.4 47 L73.8 41 C74.1 39.9 75.6 40.2 75.4 41.4 L74.6 47.6 L76.6 43.6 C77.1 42.6 78.4 43.1 78.1 44.2 L76.4 50.6 L79 49.2 C80 48.7 80.8 49.8 80 50.6 L75.6 55.6 C75.2 56.6 74.8 57.4 74.6 58 Z";
@@ -148,6 +148,9 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
             {/* Give and Take: the hand's window, and the blade's outline for the runs. */}
             <clipPath id={g.id("hand")}>
               <circle cx={71} cy={51} r={24} />
+            </clipPath>
+            <clipPath id={g.id("palm-window")}>
+              <rect x={-60} y={-60} width={220} height={150} />
             </clipPath>
             <clipPath id={g.id("blade-run")}>
               <path d={BLADE} />
@@ -436,17 +439,6 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
         </g>
         {closeUp && (
           <g clipPath={`url(#${g.id("hand")})`}>
-            {/* The fist, opened: out of the window at rest, slid in by a clip. */}
-            <g transform="translate(0 40)">
-              <g ref={facePart("palm")} style={at(71, 57)}>
-                <path d={PALM} fill={g.url("skin")} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
-                <path d="M69 50.6 C71 49.8 73.2 50 75 51.2" stroke={RAMP.skinPallid[2]} strokeWidth={0.7} fill="none" strokeLinecap="round" />
-                {/* The cut the edge leaves across the palm. */}
-                <path d="M67.8 53.6 L75.4 51.4" stroke="#e8243c" strokeWidth={1.1} strokeLinecap="round" />
-                {/* What is left of the wrap, at the wrist. */}
-                <path d="M67.2 56.4 L74.9 56 L74.6 58.6 L67.6 58.8 Z" fill={wrap} stroke={INK} strokeWidth={0.8} />
-              </g>
-            </g>
             {/* The bandage coming off: a loose linen strip, below the window at rest. */}
             <g transform="translate(0 40)">
               <g ref={facePart("unwrap")} style={at(71, 56)}>
@@ -529,14 +521,14 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
                 <g transform={`translate(${-RUN_REST} 0)`}>
                   <g ref={facePart("runOut")}>
                     <path d={RUN_OUT} fill="#e8243c" stroke="#5c0a18" strokeWidth={0.7} strokeLinejoin="round" />
-                    <path d="M-60 4.4 L-3 3.8 C-1 3.7 0.4 4.2 0.9 5" stroke="#ffb3bd" strokeWidth={0.8} fill="none" strokeLinecap="round" />
+                    <path d="M-60 5.7 L-3 5.1 C-1.4 4.6 0 4.8 0.8 5.6" stroke="#ffb3bd" strokeWidth={0.7} fill="none" strokeLinecap="round" />
                   </g>
                 </g>
                 {/* Back: the enemy's garnet, from the point to the grip. */}
                 <g transform={`translate(${RUN_REST} 0)`}>
                   <g ref={facePart("runBack")}>
                     <path d={RUN_BACK} fill="#7a1030" stroke="#2a0510" strokeWidth={0.7} strokeLinejoin="round" />
-                    <path d="M60 4.6 L3 3.8 C1 3.7 -0.4 4.2 -0.9 5" stroke="#ff8fb0" strokeWidth={0.8} fill="none" strokeLinecap="round" />
+                    <path d="M60 5.7 L3 5.1 C1.4 4.6 0 4.8 -0.8 5.6" stroke="#ff8fb0" strokeWidth={0.7} fill="none" strokeLinecap="round" />
                   </g>
                 </g>
               </g>
@@ -570,6 +562,25 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={LINE}
         />
       </g>
+      {/*
+        Give and Take: the fist, opened. Drawn over the cleaver, because the
+        hand is laid on the blade; placed by its own keys in the drawing's
+        units, not by the arm's. Below its window at rest, so nothing shows.
+      */}
+      {closeUp && (
+        <g clipPath={`url(#${g.id("palm-window")})`}>
+          <g transform="translate(0 60)">
+            <g ref={facePart("palm")} style={at(71, 57)}>
+              <path d={PALM} fill={g.url("skin")} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+              <path d="M69 50.6 C71 49.8 73.2 50 75 51.2" stroke={RAMP.skinPallid[2]} strokeWidth={0.7} fill="none" strokeLinecap="round" />
+              {/* The cut the edge leaves across the palm. */}
+              <path d="M67.8 53.6 L75.4 51.4" stroke="#e8243c" strokeWidth={1.1} strokeLinecap="round" />
+              {/* What is left of the wrap, at the wrist. */}
+              <path d="M67.2 56.4 L74.9 56 L74.6 58.6 L67.6 58.8 Z" fill={wrap} stroke={INK} strokeWidth={0.8} />
+            </g>
+          </g>
+        </g>
+      )}
     </HeroFrame>
   );
 }

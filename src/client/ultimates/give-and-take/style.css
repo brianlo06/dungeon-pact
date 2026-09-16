@@ -3,8 +3,7 @@
  *
  * No filters, no blurs and no keyframes: runs grow on `--p`, the wind moves on
  * `--p`, the notch boils on `--f`, and the bead trembles in a frame function
- * (see `vfx.tsx`). The split frame is a white half laid over the picture with
- * `difference`, on screen only while the hit-stop holds it.
+ * (see `vfx.tsx`).
  */
 
 /* ---- the split frame ---- */
@@ -16,9 +15,6 @@
   inset: 0;
   width: 100%;
   height: 100%;
-}
-.give-split-invert {
-  mix-blend-mode: difference;
 }
 .give-split-cut g {
   transform-box: view-box;
@@ -105,4 +101,14 @@
 }
 .give-board svg {
   clip-path: inset(0);
+}
+
+/* ---- the glare behind the blow ---- */
+.cine-vfx > .give-glare {
+  position: absolute;
+  width: 1800px;
+  height: 1200px;
+  transform: translate(-50%, -50%) !important;
+  overflow: visible;
+  opacity: calc(1 - clamp(0, (var(--p) - 0.42) / 0.5, 1));
 }

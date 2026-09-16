@@ -14,8 +14,9 @@ import "./style.css";
  * a tail. On the blade itself it is a part of the Reaver's drawing (`runOut`,
  * `runBack`); here it is drawn at the size of the screen and on the board.
  *
- *   give-split   the impact's drawn frame: the picture cut in two along the
- *                blade, one half inverted, and the scarlet run down the cut
+ *   give-split   over the impact's drawn frame: the scarlet run laid across
+ *                the whole frame along the blade, on an ink cut
+ *   give-glare   chalk light laid behind the figures for the drawn frame
  *   give-bead    the quiet: one bead of scarlet swelling on the edge, and not
  *                falling
  *   give-notch   the blow drawn: hard wedges thrown off the contact, the
@@ -71,12 +72,14 @@ function Run({ len, w, fill, lip, shine }: { len: number; w: number; fill: strin
   );
 }
 
-/* ── The split frame ───────────────────────────────────────────────────── */
+/* ── The cut ─────────────────────────────────────────────────────────── */
 
 /**
- * `params`: the cut as two points in fractions of the frame (`x1,y1` where the
- * Reaver's hand is, `x2,y2` past the point), and `side` (1 inverts the half to
- * the right of the line looking from 1 to 2, −1 the other).
+ * The impact's drawn frame is the engine's two-tone, first as it is (the
+ * figures ink on the accent) and then held inverted (the accent figures on
+ * ink): the same picture both ways. Over both, in colour, this: the scarlet
+ * run laid across the whole frame along the blade, on an ink cut.
+ * `params`: the line through two points, in fractions of the frame.
  */
 const Split = ({ cue }: VfxProps) => {
   const p = cue.params ?? {};
@@ -84,35 +87,41 @@ const Split = ({ cue }: VfxProps) => {
   const y1 = Number(p.y1 ?? 0.2) * 900;
   const x2 = Number(p.x2 ?? 0.7) * 1600;
   const y2 = Number(p.y2 ?? 0.8) * 900;
-  const side = Number(p.side ?? 1);
-  // Extend the cut well past the frame both ways, and close the half on one side.
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const len = Math.hypot(dx, dy) || 1;
-  const ux = dx / len;
-  const uy = dy / len;
-  const far = 4000;
-  const ax = x1 - ux * far;
-  const ay = y1 - uy * far;
-  const bx = x2 + ux * far;
-  const by = y2 + uy * far;
-  // The normal to the right of the direction of travel.
-  const nx = -uy * side * far;
-  const ny = ux * side * far;
-  const half = `M${ax.toFixed(0)} ${ay.toFixed(0)} L${bx.toFixed(0)} ${by.toFixed(0)} L${(bx + nx).toFixed(0)} ${(by + ny).toFixed(0)} L${(ax + nx).toFixed(0)} ${(ay + ny).toFixed(0)} Z`;
-  const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+  const len = Math.hypot(x2 - x1, y2 - y1) || 1;
+  const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
   return (
     <div className="give-split">
-      <svg className="give-split-invert" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-        <path d={half} fill="#ffffff" />
-      </svg>
       <svg className="give-split-cut" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         <g transform={`translate(${x2.toFixed(0)} ${y2.toFixed(0)}) rotate(${angle.toFixed(2)})`}>
-          <path d={`M${(-len - 900).toFixed(0)} 0 L0 0`} stroke={INK} strokeWidth={30} strokeLinecap="round" />
-          <Run len={len + 900} w={26} fill={SCARLET} lip="#3a0610" shine="#ffb3bd" />
+          <path d={`M${(-len - 900).toFixed(0)} 0 L300 0`} stroke={INK} strokeWidth={34} strokeLinecap="round" />
+          <Run len={len + 900} w={24} fill={SCARLET} lip="#3a0610" shine="#ffb3bd" />
         </g>
       </svg>
     </div>
+  );
+};
+
+/* ── The glare ─────────────────────────────────────────────────────────── */
+
+/**
+ * A field of chalk light laid behind the figures on the blow. The split frame
+ * is two tones, and a night picture goes all to ink: with this behind them the
+ * figures stay ink on chalk on one side of the cut and chalk on ink on the
+ * other. It sinks back to the night within a few frames.
+ */
+const Glare = ({ cue }: VfxProps) => {
+  const p = cue.params ?? {};
+  return (
+    <svg className="give-glare" viewBox="-900 -600 1800 1200" aria-hidden="true" style={v({ left: `${Number(p.x ?? 800)}px`, top: `${Number(p.y ?? 500)}px` })}>
+      <defs>
+        <radialGradient id="give-glare-fade" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor={CHALK} stopOpacity="1" />
+          <stop offset="0.65" stopColor={CHALK} stopOpacity="0.8" />
+          <stop offset="1" stopColor={CHALK} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {p.flat ? <rect x={-900} y={-600} width={1800} height={1200} fill={CHALK} /> : <ellipse rx={880} ry={580} fill="url(#give-glare-fade)" />}
+    </svg>
   );
 };
 
@@ -223,6 +232,7 @@ const Board = ({ cue }: VfxProps) => {
 
 export const renderers: Record<string, (p: VfxProps) => ReactNode> = {
   "give-split": Split,
+  "give-glare": Glare,
   "give-bead": Bead,
   "give-notch": Notch,
   "give-wind": Wind,
