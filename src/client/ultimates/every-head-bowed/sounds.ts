@@ -64,8 +64,8 @@ function crickets(c: AudioContext, o: AudioNode, t: number, seconds: number, gai
 /** The lantern's chain: small links ticking, a creak of the hook. */
 function chain(c: AudioContext, o: AudioNode, t: number, gain = 1) {
   for (const [i, at] of [0, 0.05, 0.13, 0.2].entries())
-    crash(c, o, t + at, { seconds: 0.025, gain: 0.07 * gain, freq: 3800 + i * 500, q: 9 });
-  hit(c, o, t + 0.02, { type: "triangle", from: 520, to: 430, gain: 0.03 * gain, attack: 0.01, decay: 0.2 });
+    crash(c, o, t + at, { seconds: 0.025, gain: 0.14 * gain, freq: 3800 + i * 500, q: 9 });
+  hit(c, o, t + 0.02, { type: "triangle", from: 520, to: 430, gain: 0.06 * gain, attack: 0.01, decay: 0.2 });
 }
 
 export const voices: Record<string, Voice> = {
@@ -82,7 +82,7 @@ export const voices: Record<string, Voice> = {
   "bowed-turn": {
     bus: "sfx",
     render: (c, o, t) => {
-      rustle(c, o, t, 0.75, 0.09, 7);
+      rustle(c, o, t, 0.75, 0.18, 7);
       swell(c, o, t, { type: "sine", freq: hz(38), gain: 0.03, attack: 0.3, hold: 0.2, release: 0.4 });
     },
   },
@@ -90,23 +90,23 @@ export const voices: Record<string, Voice> = {
   "bowed-motif": {
     bus: "sfx",
     render: (c, o, t) => {
-      reed(c, o, t, 62, 0.16, 0.055);
-      reed(c, o, t + 0.22, 65, 0.14, 0.055);
-      reed(c, o, t + 0.42, 64, 0.12, 0.05);
-      reed(c, o, t + 0.62, 57, 0.62, 0.065);
-      reed(c, o, t + 0.64, 52, 0.58, 0.03);
+      reed(c, o, t, 62, 0.16, 0.07);
+      reed(c, o, t + 0.22, 65, 0.14, 0.07);
+      reed(c, o, t + 0.42, 64, 0.12, 0.064);
+      reed(c, o, t + 0.62, 57, 0.62, 0.082);
+      reed(c, o, t + 0.64, 52, 0.58, 0.038);
     },
   },
   /** Under the wide: dusk in a field. */
   "bowed-dusk": {
     bus: "sfx",
-    render: (c, o, t) => crickets(c, o, t, 1.0, 0.035),
+    render: (c, o, t) => crickets(c, o, t, 1.0, 0.2),
   },
   /** The quiet: the crickets stop mid-chirr; a breath goes out; the chain, once, as the lantern starts down. */
   "bowed-hush": {
     bus: "sfx",
     render: (c, o, t) => {
-      crickets(c, o, t, 0.26, 0.022, true);
+      crickets(c, o, t, 0.26, 0.12, true);
       crash(c, o, t + 0.3, { seconds: 0.42, gain: 0.04, type: "bandpass", freq: 900, sweepTo: 420, q: 0.7 });
       chain(c, o, t + 0.45, 0.45);
       swell(c, o, t, { type: "sine", freq: hz(45), gain: 0.012, attack: 0.25, hold: 0.25, release: 0.2 });
