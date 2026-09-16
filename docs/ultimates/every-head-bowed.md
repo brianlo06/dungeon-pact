@@ -177,12 +177,44 @@ Charge earned 220 → 239.
   `mourn-impact` 1.32 / 0.156; `bowed-motif` 0.19 / 0.045 against
   `green-motif` 0.20 / 0.036 and `mourn-motif` 0.19 / 0.047; the quiet's
   `bowed-hush` 0.04 / 0.007, the dusk crickets 0.03, on purpose.
-- **Profile** (`GPU=1 profile-ultimate.ts`, 1920×1080, dev build, load 24–32
-  on a shared machine): film p50 16.7 / p95 66.7 ms, 15 frames over 34 ms,
-  against the round after it p50 16.7 / p95 33.4, 10 over; a second run at
-  load 32, film p95 100 / round p95 50. Peak 1301 nodes (1243 SVG), 3 live
-  effects, no filtered elements. The field is the cost: ~70 plants in the
-  wide rewriting a transform and a stalk each frame.
+- **Lead review revision.**
+  - *The row did not bow.* Every flower went down and the enemies stood as
+    they were, only blotched. Folder poses reach heroes only, so
+    `bowed-blight` bends each target copy itself on the contact: its drawing
+    (`.cine-look`, from its feet) pitches 19° towards the lantern, hunches 15%
+    and sinks; its head part (`head`, `visor` or `snout`) drops 32° and the
+    part it leads with (`gun`, `ram`, `key`, `jaw`…) sags 12°, written with
+    the individual `rotate`/`translate` properties so they compose with the
+    animator's own transform and `hurt` still plays through. The first target
+    is fully bowed on the contact frame, the rest a beat behind; held at 88%
+    to the late frame. A boss bows at 62%: a slump and a hung head. The actor's
+    own `toTilt` is only a drift now.
+  - *Performance.* A per-head composited box was slower still (p50 33). Two
+    real costs, found by hiding one layer at a time per shot: the background
+    (230 far heads, 29 furrows and 9 clouds as separate nodes, re-rastered as
+    the camera moves) and the field's node count. The background is now five
+    paths; each band of the field is one path per colour (calyx, petals,
+    disc, eye, six shade levels, dry petals, rot, specks, three stalk widths
+    and the leaves), rebuilt as strings once a frame with every head's shapes
+    pushed through its own transform. The bow's settle is 60ms instead of
+    280ms, so the field is still, and unwritten, after it.
+  - *The lantern* in the film's copy is drawn for a close-up (a cap and ring,
+    a thin iron frame, amber glass with a highlight, the flame inside);
+    the board's box and cross stand down only there.
+- **Profile** (`GPU=1 profile-ultimate.ts`, 1920×1080, dev build, film and the
+  round after it in the same run, load 15–36 on a shared machine), three runs:
+
+  | run (load) | film p50 / p95 | film over 34ms | round p50 / p95 | round over 34ms |
+  | --- | --- | ---: | --- | ---: |
+  | 1 (17) | 16.7 / 66.6 | 16 | 16.7 / 50.0 | 16 |
+  | 2 (15) | 16.7 / 100 | 16 | 16.7 / 116.6 | 22 |
+  | 3 (36) | 16.7 / 50.1 | 11 | 16.7 / 83.3 | 24 |
+
+  Peak 826 nodes (772 SVG), down from 1301; 2 live effects at peak, no
+  filtered elements. Per shot (same tool's frames, split by `data-shot`,
+  load 20): lantern, field, hush, bow and return all p50 16.7; the field
+  51 frames in its 1000ms, p95 33.4; the bow's slow frames are its 150ms
+  hit-stop.
 
 ## What the engine could not do, and what was built instead
 
