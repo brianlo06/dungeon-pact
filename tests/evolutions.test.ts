@@ -62,10 +62,24 @@ it("keeps the three rising tiers on a legacy single-floor route", () => {
  * floor always teaches the Whetstone; the second draws the Reliquary or the
  * Cipher. Over enough runs every mentor appears, and tiers never go backwards.
  */
-it("teaches a rising mentor on each floor, and every mentor across runs", () => {
+it("teaches each mentor on its own floor when the run has three", () => {
+  for (let seed = 0; seed < 10; seed++) {
+    const run = createRun("MAP", `floors-${seed}`);
+    const tiers = [1, 2, 3].map((floor) => {
+      run.floor = floor;
+      const mentorsHere = generateMap(run).filter((n) => n.type === "mentor");
+      expect(mentorsHere).toHaveLength(1);
+      return mentorsHere[0].tier!;
+    });
+    expect(tiers).toEqual([1, 2, 3]);
+  }
+});
+
+it("teaches a rising mentor on each of a two-floor room's floors, and every mentor across runs", () => {
   const seen = new Set<number>();
   for (let seed = 0; seed < 40; seed++) {
     const run = createRun("MAP", `floors-${seed}`);
+    delete run.bossVersion;
     const tiers = [1, 2].map((floor) => {
       run.floor = floor;
       const mentorsHere = generateMap(run).filter((n) => n.type === "mentor");

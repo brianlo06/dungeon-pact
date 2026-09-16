@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { FLOOR_DEPTH } from "../src/content/floors";
+import { FLOOR_DEPTH, floors as floorDefs } from "../src/content/floors";
 import { createRun, addPlayer } from "../src/engine/game";
 import { enterCombat, validatePlan } from "../src/engine/combat";
 import { generateMap } from "../src/engine/map";
@@ -16,8 +16,9 @@ function fixture() {
   const s = createRun("WORLD", "world-test");
   addPlayer(s, "a", "Ada");
   addPlayer(s, "b", "Bea");
-  // Floor two opens in the Cistern and closes in the Archive, which is where
-  // the regional encounters these tests read live.
+  // Before boss pools floor two opened in the Cistern and closed in the
+  // Archive, which is where the regional encounters these tests read live.
+  delete s.bossVersion;
   s.floor = 2;
   s.map = generateMap(s);
   s.currentNode = "2-0";
@@ -37,11 +38,29 @@ describe("new world content", () => {
     expect(bows.every(Boolean)).toBe(true);
     expect(new Set(bows).size).toBe(6);
   });
-  it("maps reproducibly traverse three biomes across the run's two floors", () => {
+  it("maps reproducibly traverse three biomes, one to a floor, with each floor's boss drawn from its pool", () => {
     const a = createRun("A", "world"),
       b = createRun("B", "world");
     expect(generateMap(a)).toEqual(generateMap(b));
     const run = createRun("C", "world");
+    const maps = floorDefs.map((def, i) => {
+      run.floor = i + 1;
+      return { def, map: generateMap(run) };
+    });
+    for (const { def, map } of maps) {
+      expect(new Set(map.map((n) => n.biome))).toEqual(new Set([def.biome]));
+      expect(Math.max(...map.map((n) => n.depth))).toBe(FLOOR_DEPTH - 1);
+      expect(new Set(map.map((n) => n.name)).size).toBe(map.length);
+      const boss = map.find((n) => n.type === "boss")!;
+      expect(def.bosses).toContain(boss.boss);
+      expect(
+        map.filter((n) => n.depth === FLOOR_DEPTH - 2).map((n) => n.type),
+      ).toEqual(["camp"]);
+    }
+  });
+  it("maps in a room from before boss pools traverse three biomes across two floors", () => {
+    const run = createRun("C", "world");
+    delete run.bossVersion;
     const floors = [1, 2].map((floor) => {
       run.floor = floor;
       return generateMap(run);

@@ -13,6 +13,7 @@ import { items } from "../content/items";
 import { enemies as definitions } from "../content/enemies";
 import { resourceCap } from "../content/evolutions";
 import { charge, resolvingUltimate } from "./charge";
+import { floorScale } from "./combat";
 /** Mark + Precision bonus. Setting up an Exploit costs a whole action, so the
  * payoff has to beat simply attacking twice. */
 export const EXPLOIT = 20;
@@ -112,6 +113,85 @@ function strongbox(s: RunState): Enemy {
   return box;
 }
 /**
+ * Objects a boss brings in, one to a row it names. They belong to it: breaking
+ * one answers to it (`broken`), and a fuse counts down on each one's intent
+ * (`clock`, read by `prepareIntents`). Priced like the Strongbox, against the
+ * party's actions rather than its headcount, and scaled with the floor.
+ */
+export function spawn(
+  s: RunState,
+  owner: Enemy,
+  e: Extract<Effect, { kind: "spawn" }>,
+) {
+  if (
+    s.enemies.some(
+      (x) => x.owner === owner.id && x.definition === e.object && x.hp > 0,
+    )
+  )
+    return;
+  const def = definitions.find((d) => d.id === e.object)!;
+  const deeper = floorScale(s);
+  const hp = Math.round(def.hp * s.players.length * 0.35 * deeper);
+  for (const row of e.rows) {
+    const made: Enemy = {
+      id: `enemy-${def.id}-${s.round}-${s.enemies.length}`,
+      definition: def.id,
+      name: def.name,
+      hp,
+      maxHp: hp,
+      power: Math.round(def.power * deeper),
+      guard: def.guard,
+      speed: def.speed,
+      row,
+      statuses: [],
+      intent: { ability: def.clock?.waiting ?? def.abilities[0], target: "" },
+      phase: 1,
+      owner: owner.id,
+      ...(e.fuse ? { fuse: { at: s.round, rounds: e.fuse } } : {}),
+    };
+    s.enemies.push(made);
+  }
+  log(
+    s,
+    `${owner.name} brings ${e.rows.length === 1 ? `${def.name}` : `${e.rows.length} × ${def.name}`} into the chamber.`,
+    "combo",
+    { kind: "combo", label: def.name.toUpperCase(), actor: owner.id },
+  );
+}
+/**
+ * A spawned object broke: it answers to its owner for it, and when it was the
+ * last of its batch standing and none of the batch had been spent, it answers
+ * for the batch as well.
+ */
+function answer(s: RunState, broke: Enemy, depth: number) {
+  const def = definitions.find((d) => d.id === broke.definition);
+  const owner = s.enemies.find((x) => x.id === broke.owner && x.hp > 0);
+  if (!def?.broken || !owner) return;
+  // The broken object answers as it was, not as a corpse: the interpreter
+  // stops for a fallen actor, and its own power is not what cracks back.
+  const wax: Enemy = { ...broke, hp: 1, power: 0, statuses: [] };
+  effects(s, wax, owner, def.broken.each, depth);
+  const batch = s.enemies.filter(
+    (x) =>
+      x.owner === broke.owner &&
+      x.definition === broke.definition &&
+      x.fuse?.at === broke.fuse?.at,
+  );
+  if (def.broken.all && batch.every((x) => x.hp <= 0 && !x.spent)) {
+    log(s, `Every ${def.name} is broken. ${owner.name} staggers.`, "combo", {
+      kind: "combo",
+      label: "BROKEN",
+      actor: broke.id,
+      target: owner.id,
+    });
+    effects(s, wax, owner, def.broken.all, depth);
+  }
+}
+/** Rounds left on a spawned object's fuse this round; 0 means it is due. */
+export function fuseLeft(s: RunState, e: Enemy) {
+  return e.fuse ? Math.max(0, e.fuse.rounds - (s.round - e.fuse.at)) : 0;
+}
+/**
  * Everything a broken container was holding goes back to the heroes it was
  * taken from. Called when the box falls and again when the chamber does, so a
  * seizure can never outlive the fight it happened in.
@@ -194,6 +274,7 @@ function hurt(
     if (isPlayer(target)) target.downedRounds = 3;
     else {
       if (isEnemy(target) && target.holding?.length) release(s, target);
+      if (isEnemy(target) && target.owner) answer(s, target, depth + 1);
       // A container opened is a choice, not a kill.
       if (isPlayer(source) && !definitions.find((d) => d.id === (target as Enemy).definition)?.object)
         charge(s, source, "kill");
@@ -398,6 +479,9 @@ export function effects(
         }
       } else log(s, `${target.name} carries nothing worth taking.`);
     }
+    // A boss can bring things into the fight that answer for it: the Notary's
+    // seals. One batch at a time, so a pressing never lands on top of another.
+    if (e.kind === "spawn" && isEnemy(actor)) spawn(s, actor, e);
     // Wealth left in the treasury is collateral the Miser can shield itself
     // with, so arriving rich is a decision and not simply a cushion.
     if (e.kind === "bank") {

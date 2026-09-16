@@ -1,6 +1,6 @@
 import { useCallback, useRef, type ReactNode } from "react";
 import type { Snapshot } from "../../shared/model";
-import { isObject } from "../../content/enemies";
+import { isBoss, isObject } from "../../content/enemies";
 import { BattleUnit, type Impact } from "./BattleUnit";
 import { describeIntentEffect } from "../combat-presentation";
 import { unitPresentation, type Placement } from "../battle/layout";
@@ -189,9 +189,7 @@ export function BattleStage({
     >
       <BiomeScene
         biome={s.map.find((n) => n.id === s.currentNode)?.biome ?? "foundry"}
-        ledger={s.enemies.some((e) =>
-          ["collector", "miser"].includes(e.definition),
-        )}
+        ledger={s.enemies.some((e) => isBoss(e.definition))}
       />
 
       <div className="world" ref={camera.attach}>

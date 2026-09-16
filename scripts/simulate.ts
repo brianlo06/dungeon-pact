@@ -12,6 +12,12 @@ import {
 } from "./policy";
 import { ultimate as ultimateDef } from "../src/content/ultimates";
 
+/** `--bosses=legacy` plays the two-floor run from before boss pools, as a baseline. */
+let bossPools = true;
+export const setBossPools = (on: boolean) => {
+  bossPools = on;
+};
+
 export type Party = string[];
 export type PolicyName = keyof typeof policies;
 
@@ -77,6 +83,8 @@ export function run(
   // With Ultimates off the room is one made before they existed — no charge
   // and the boss's old price — so "off" measures the build before them.
   if (!ultimatesOn) delete s.ultimateVersion;
+  // A room from before boss pools: two floors, the Collector then the Miser.
+  if (!bossPools) delete s.bossVersion;
   let steps = 0;
   let invalid = 0;
   const invalidReasons: string[] = [];
@@ -390,6 +398,9 @@ if (process.argv[1]?.endsWith("simulate.ts")) {
   const ult = flag("ultimates");
   if (ult === "off") setUltimates(false);
   else if (ult && ult !== "on") throw Error(`Unknown --ultimates=${ult}`);
+  const bosses = flag("bosses");
+  if (bosses === "legacy") setBossPools(false);
+  else if (bosses && bosses !== "pools") throw Error(`Unknown --bosses=${bosses}`);
   const pact = flag("pact");
   if (pact === "wealth" || pact === "vitality") setPact(pact);
   else if (pact) throw Error(`Unknown pact ${pact}`);

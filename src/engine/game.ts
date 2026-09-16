@@ -5,7 +5,7 @@ import { items } from "../content/items";
 import { events } from "../content/events";
 import { services } from "../content/services";
 import { hashSeed, pick } from "./rng";
-import { generateMap, availableNodes, nodeMentorTier, FLOORS } from "./map";
+import { generateMap, availableNodes, nodeMentorTier, floorsIn } from "./map";
 import { log, spend, gain, applyStatus } from "./effects";
 import {
   enterCombat,
@@ -45,6 +45,7 @@ export function createRun(room: string, seed: string): RunState {
     encounterVersion: 2,
     combatVersion: 2,
     ultimateVersion: 1,
+    bossVersion: 1,
     revivals: 0,
     schemaVersion: 1,
     contentVersion: 1,
@@ -177,7 +178,7 @@ function descend(s: RunState) {
   }
   log(
     s,
-    `The party descends to floor ${s.floor} of ${FLOORS}, and catches its breath on the stairs.`,
+    `The party descends to floor ${s.floor} of ${floorsIn(s)}, and catches its breath on the stairs.`,
   );
 }
 
@@ -592,7 +593,7 @@ export function reduce(
       if (
         s.phase === "REWARD" &&
         s.floor !== undefined &&
-        s.floor < FLOORS &&
+        s.floor < floorsIn(s) &&
         s.map.find((n) => n.id === s.currentNode)?.type === "boss"
       )
         descend(s);

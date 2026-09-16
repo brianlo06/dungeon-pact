@@ -15,6 +15,32 @@ const attack = (
   cooldown: 0,
   effects: [{ kind: "damage", amount }, ...effects],
 });
+/** A wax seal's clock while it sets: it hardens, and its intent counts down. */
+const waxSetting: Ability = {
+  id: "setting",
+  name: "Setting",
+  description: "The wax hardens. When it sets, the signature is enforced.",
+  cost: 0,
+  speed: 0,
+  target: "self",
+  cooldown: 0,
+  effects: [{ kind: "status", status: "barrier", stacks: 3, duration: 1 }],
+};
+/**
+ * The Notary's pressing: wax seals across both rows, each setting on a fuse.
+ * A WINDUP, so a party that sees it coming can stop it before any wax lands.
+ */
+const pressing = (rows: ("front" | "back")[], fuse: number): Ability => ({
+  id: "press",
+  name: "Press the seals",
+  description: "Wax seals are pressed into the chamber. They set, then they are enforced.",
+  cost: 0,
+  speed: 0,
+  target: "self",
+  cooldown: 0,
+  interruptible: true,
+  effects: [{ kind: "spawn", object: "wax-seal", rows, fuse }],
+});
 const mend: Ability = {
   id: "repair",
   name: "Repair lattice",
@@ -221,6 +247,8 @@ export const enemies: EnemyDef[] = [
     row: "front",
     boss: true,
     epithet: "Keeper of Unpaid Debts",
+    lair: "The Collector's Hoard",
+    targets: "wealthiest",
     objective:
       "It banks what it takes. Break the Strongbox to get your equipment back — or finish the fight without it.",
     abilities: [
@@ -246,6 +274,8 @@ export const enemies: EnemyDef[] = [
     row: "front",
     boss: true,
     epithet: "Who Counts What You Kept",
+    lair: "The Counting House",
+    hoard: { per: 70, legacyPer: 100 },
     objective:
       "It shields itself with whatever gold the pact still holds. A full treasury is armour you gave away.",
     abilities: [
@@ -254,6 +284,78 @@ export const enemies: EnemyDef[] = [
         { kind: "gold", amount: -10 },
       ]),
     ],
+  },
+  {
+    presentation: {
+      spriteSet: "wax-seal",
+      footprint: "container",
+      theme: "contract",
+      idlePeriod: 4.2,
+      shadow: 0.8,
+    },
+    id: "wax-seal",
+    name: "Wax Seal",
+    glyph: "◉",
+    hp: 26,
+    power: 4,
+    guard: 0,
+    speed: 1,
+    row: "back",
+    object: true,
+    abilities: [waxSetting],
+    // The seal's intent is its clock: it hardens while it sets, then every
+    // signature it witnessed is enforced on the party at once.
+    clock: {
+      waiting: waxSetting,
+      due: {
+        id: "enforce",
+        name: "Enforce the signature",
+        description: "Every hero pays what the seal witnessed.",
+        cost: 0,
+        speed: 0,
+        target: "enemy",
+        cooldown: 0,
+        effects: [{ kind: "enemies", effects: [{ kind: "damage", amount: 8 }] }],
+      },
+    },
+    // Wax cracked before it sets splits back up the hand that pressed it, and
+    // a pressing broken whole staggers the Notary: whatever it announced this
+    // round is lost (an interrupt would only reach a WINDUP, and nothing it does
+    // while seals stand is one), and it is open for two rounds.
+    broken: {
+      each: [{ kind: "damage", amount: 8, pierce: true }],
+      all: [
+        { kind: "status", status: "interrupted", stacks: 1, duration: 1 },
+        { kind: "status", status: "vulnerable", stacks: 1, duration: 2 },
+      ],
+    },
+  },
+  {
+    presentation: {
+      spriteSet: "notary",
+      footprint: "boss-large",
+      theme: "contract",
+      idlePeriod: 6.2,
+      shadow: 1,
+    },
+    id: "notary",
+    name: "The Notary",
+    glyph: "✒",
+    hp: 170,
+    power: 3,
+    guard: 3,
+    speed: 3,
+    row: "front",
+    boss: true,
+    epithet: "Who Witnesses Every Signature",
+    lair: "The Sealing Room",
+    objective:
+      "Its seals set in three rounds, and every one is enforced on the party. Break the wax before it sets — or stop the pressing.",
+    abilities: [
+      attack("attest", "Attest", 20),
+      attack("strike-record", "Strike from the record", 14, "enemyRow"),
+    ],
+    busy: attack("countersign", "Countersign", 18),
   },
 ];
 
@@ -337,6 +439,11 @@ export const tacticalIntents: Record<string, Ability[]> = {
     // about the damage changed: the same blow now also takes something.
     collateral,
   ],
+  notary: [
+    attack("attest", "Attest", 20),
+    pressing(["front", "back", "back"], 3),
+    attack("strike-record", "Strike from the record", 14, "enemyRow"),
+  ],
   miser: [
     // Like the Collector's, the objective rides an attack the Miser already
     // had. Spending a whole slot on it only made the boss hit less often.
@@ -350,6 +457,12 @@ export const tacticalIntents: Record<string, Ability[]> = {
 };
 /** Containers are scenery with health: they never count as enemies to clear. */
 export const phaseTwoIntents: Record<string, Ability[]> = {
+  // Phase two presses a fourth seal and sets them faster.
+  notary: [
+    attack("attest", "Attest", 22),
+    pressing(["front", "front", "back", "back"], 2),
+    attack("strike-record", "Strike from the record", 16, "enemyRow"),
+  ],
   collector: [
     attack("appraise", "Final notice", 22, "enemy", [
       { kind: "status", status: "marked", stacks: 1, duration: 2 },
@@ -380,6 +493,10 @@ export const phaseTwoIntents: Record<string, Ability[]> = {
 
 export function isObject(definition: string) {
   return !!enemies.find((d) => d.id === definition)?.object;
+}
+/** Whether a definition is a boss: what the music, the backdrop and the entrance key on. */
+export function isBoss(definition: string) {
+  return !!enemies.find((d) => d.id === definition)?.boss;
 }
 export function enemyAbilities(
   definition: EnemyDef,

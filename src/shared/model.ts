@@ -73,6 +73,13 @@ export type Effect =
    * carrying a working balance, not a hoard, and should not be taxed for it.
    */
   | { kind: "bank"; per: number; free: number }
+  /**
+   * Brings objects into the fight on the actor's side, one per listed row, each
+   * belonging to the actor. With a `fuse` each object's intent counts down that
+   * many rounds and then does what its definition's `clock` says. Nothing is
+   * spawned while the actor still has objects of this kind standing.
+   */
+  | { kind: "spawn"; object: string; rows: Row[]; fuse?: number }
   | { kind: "conditional"; status: StatusId; effects: Effect[] }
   /**
    * Scopes, so one action can reach past its own target: every standing ally
@@ -223,6 +230,12 @@ export interface Enemy extends Unit {
   phase: number;
   /** Equipment this unit is holding hostage, returned when it is destroyed. */
   holding?: { playerId: string; itemId: string }[];
+  /** The enemy that spawned this object, whose `broken` effects answer for it. */
+  owner?: string;
+  /** A spawned object's countdown: the round it arrived and how long it runs. */
+  fuse?: { at: number; rounds: number };
+  /** An object whose countdown ran out and did what it was for; not broken. */
+  spent?: boolean;
 }
 export interface EnemyDef {
   id: string;
@@ -244,6 +257,34 @@ export interface EnemyDef {
   objective?: string;
   /** Title-card subtitle. Flavour; nothing reads it but the entrance. */
   epithet?: string;
+  /** A boss's chamber, as the map names it. */
+  lair?: string;
+  /**
+   * Whom a boss aims at, when it is not the row it prefers: `wealthiest` is
+   * the hero who has spent the most gold, first. The Collector's.
+   */
+  targets?: "wealthiest";
+  /**
+   * Extra damage on every hit for each so much gold the treasury holds: the
+   * current rules, and the rate a room before combat v2 kept. The Miser's.
+   */
+  hoard?: { per: number; legacyPer: number };
+  /**
+   * A spawned object's clock: the intent it shows while its fuse runs, with
+   * the rounds left appended to the name, and the one it takes when the fuse
+   * is out. The object is spent once that has resolved.
+   */
+  clock?: { waiting: Ability; due: Ability };
+  /**
+   * What breaking a spawned object does to its owner: every time one breaks,
+   * and once more when the last of a batch breaks before any was spent.
+   */
+  broken?: { each: Effect[]; all?: Effect[] };
+  /**
+   * What a spawner does instead of spawning while its objects still stand, so
+   * its rotation never offers a move that would do nothing.
+   */
+  busy?: Ability;
   /**
    * How this creature looks and moves. The presentation layer must learn size,
    * rig and effect family from here rather than from the id — "large because
@@ -253,6 +294,12 @@ export interface EnemyDef {
 }
 export interface MapNode {
   biome?: "foundry" | "cistern" | "archive";
+  /**
+   * The boss waiting in a boss chamber, drawn when the floor is built so the
+   * room's name, the fight and every client agree. Missing on older maps,
+   * whose floors had fixed bosses.
+   */
+  boss?: string;
   id: string;
   depth: number;
   lane: number;
@@ -387,6 +434,12 @@ export interface RunState {
    * and nobody may queue one, so an old save plays exactly as it did.
    */
   ultimateVersion?: 1;
+  /**
+   * Missing means a room created before boss pools: two floors, the Collector
+   * then the Miser, and no extra draw from the dice. `1` is three floors, each
+   * drawing its boss from `floors` in `content/floors.ts`.
+   */
+  bossVersion?: 1;
   /** Ultimates queued this round, by player. Hidden like plans. */
   ultimates?: Record<string, UltimatePlan>;
   /** Battlefield revivals already bought this run; each one raises the price. */

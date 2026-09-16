@@ -25,6 +25,7 @@ import {
   Shrine,
 } from "./components/RunScreens";
 import { items } from "../content/items";
+import { isBoss } from "../content/enemies";
 export default function App() {
   const [credentials, setCredentials] = useState<Credentials | null>(
     savedCredentials,
@@ -116,10 +117,7 @@ export default function App() {
   const s = combatExit.state;
   const musicBiome =
     s?.map.find((n) => n.id === s.currentNode)?.biome ?? "foundry";
-  const musicBoss =
-    s?.enemies.some(
-      (e) => e.definition === "collector" || e.definition === "miser",
-    ) ?? false;
+  const musicBoss = s?.enemies.some((e) => isBoss(e.definition)) ?? false;
   useEffect(() => {
     const update = () =>
       audio.setScene(

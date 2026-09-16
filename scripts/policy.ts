@@ -13,7 +13,7 @@ import { drillFor, mentors, pathFor } from "../src/content/evolutions";
 import { items } from "../src/content/items";
 import { isObject } from "../src/content/enemies";
 import { events } from "../src/content/events";
-import { EXPLOIT, WEAK, status } from "../src/engine/effects";
+import { EXPLOIT, WEAK, fuseLeft, status } from "../src/engine/effects";
 import { reviveCost, standing } from "../src/engine/combat";
 import { availableNodes } from "../src/engine/map";
 import { reachError } from "../src/shared/reach";
@@ -165,17 +165,23 @@ function threats(s: RunState): Threats {
   for (const e of living(s)) {
     if (status(e, "interrupted") || status(e, "confused")) continue;
     const a = e.intent.ability;
-    if (!a.effects.some((x) => x.kind === "damage")) continue;
+    // A scope reaching every hero (a seal enforced) threatens all of them.
+    const scoped = a.effects.flatMap((x) =>
+      x.kind === "enemies" ? x.effects.filter((y) => y.kind === "damage") : [],
+    );
+    const direct = a.effects.filter((x) => x.kind === "damage");
+    if (!direct.length && !scoped.length) continue;
     let aim = unit(s, e.intent.target);
     if (!aim || aim.hp <= 0) aim = standing(s)[0];
     if (!aim || isEnemy(aim)) continue;
-    const victims =
-      a.target === "enemyRow"
+    const victims = scoped.length
+      ? standing(s)
+      : a.target === "enemyRow"
         ? standing(s).filter((p) => p.row === (e.intent.row ?? aim!.row))
         : [aim as Player];
     for (const v of victims) {
       let amount = 0;
-      for (const x of a.effects)
+      for (const x of [...direct, ...scoped])
         if (x.kind === "damage") amount += hitAmount(e, v, x.amount);
       perHero.set(v.id, (perHero.get(v.id) ?? 0) + amount);
       perEnemy.set(e.id, (perEnemy.get(e.id) ?? 0) + amount);
@@ -521,12 +527,17 @@ export const tacticalPolicy: Policy = {
     // piece of equipment is an item the party fights the rest of the boss
     // without, so it is priced against the damage the detour costs.
     const held = (e: Enemy) => e.holding?.length ?? 0;
+    // An object on a fuse is worth breaking for what it will do when it goes
+    // off, and more so the nearer it is: every standing hero pays for it.
+    const ticking = (e: Enemy) =>
+      e.fuse ? 18 + 10 * (e.fuse.rounds - fuseLeft(s, e)) : 0;
     const priority = (e: Enemy) =>
       (t.perEnemy.get(e.id) ?? 0) +
       (e.definition === "mender" ? 26 : 0) +
       (e.row === "back" ? 6 : 0) +
-      held(e) * 22 -
-      (isObject(e.definition) && !held(e) ? 999 : 0) -
+      held(e) * 22 +
+      ticking(e) -
+      (isObject(e.definition) && !held(e) && !e.fuse ? 999 : 0) -
       remaining(e) * 0.15;
     const ordered = [...foes].sort(
       (a, b) => priority(b) - priority(a) || a.id.localeCompare(b.id),

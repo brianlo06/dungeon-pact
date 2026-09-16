@@ -1,4 +1,4 @@
-import { FLOORS } from "./map";
+import { floorsIn } from "./map";
 import { applyHazard } from "./chambers";
 import { chooseEncounter } from "../content/encounters";
 import { reachError } from "../shared/reach";
@@ -30,6 +30,7 @@ import {
   release,
   status,
   applyStatus,
+  fuseLeft,
 } from "./effects";
 export function standing(s: RunState) {
   return s.players.filter((p) => p.hp > 0 && !p.fallen);
@@ -75,7 +76,26 @@ export function prepareIntents(s: RunState) {
         ? phaseTwoIntents[e.definition]
         : undefined;
     const rotation = authoredPhase ?? enemyAbilities(def, s.combatVersion);
-    const ability = structuredClone(rotation[(s.round - 1) % rotation.length]);
+    let ability = structuredClone(rotation[(s.round - 1) % rotation.length]);
+    // A spawner whose objects still stand does something else with the slot.
+    if (
+      def.busy &&
+      ability.effects.some(
+        (fx) =>
+          fx.kind === "spawn" &&
+          s.enemies.some(
+            (x) => x.owner === e.id && x.definition === fx.object && x.hp > 0,
+          ),
+      )
+    )
+      ability = structuredClone(def.busy);
+    // A spawned object's intent is its clock: the rounds it has left, then
+    // what it was spawned to do.
+    if (def.clock && e.fuse) {
+      const left = fuseLeft(s, e);
+      ability = structuredClone(left > 0 ? def.clock.waiting : def.clock.due);
+      if (left > 0) ability.name = `${ability.name} · ${left}`;
+    }
     if (e.phase === 2 && !authoredPhase)
       for (const effect of ability.effects)
         if (effect.kind === "damage") effect.amount += 7;
@@ -90,11 +110,12 @@ export function prepareIntents(s: RunState) {
         if (effect.kind === "damage")
           effect.amount += BOSS_PRICING.damagePerHero * s.players.length;
     // Hoarding is meant to be dangerous, not merely wasteful.
-    if (e.definition === "miser")
+    if (def.hoard)
       for (const effect of ability.effects)
         if (effect.kind === "damage")
           effect.amount += Math.floor(
-            s.gold / (s.combatVersion === 2 ? 70 : 100),
+            s.gold /
+              (s.combatVersion === 2 ? def.hoard.per : def.hoard.legacyPer),
           );
     let targets: Unit[] = standing(s);
     if (ability.target === "self") targets = [e];
@@ -102,7 +123,7 @@ export function prepareIntents(s: RunState) {
       targets = s.enemies
         .filter((x) => x.hp > 0)
         .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
-    else if (e.definition === "collector")
+    else if (def.targets === "wealthiest")
       targets = [...targets].sort(
         (a, b) => (isPlayer(b) ? b.spent : 0) - (isPlayer(a) ? a.spent : 0),
       );
@@ -114,7 +135,7 @@ export function prepareIntents(s: RunState) {
     const target =
       ability.target === "self" ||
       ability.target === "ally" ||
-      e.definition === "collector"
+      def.targets === "wealthiest"
         ? targets[0]
         : pick(s, targets);
     e.intent = {
@@ -148,12 +169,13 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
   const count = boss ? 1 : Math.min(4, s.players.length);
   const pool = definitions.filter((d) => !!d.boss === boss && !d.object);
   // Each floor has its own boss, so the vault a party reaches is the one the
-  // floor was built around rather than whichever the dice preferred.
+  // floor was built around rather than whichever the dice preferred. With
+  // boss pools the map drew it and wrote it on the chamber; before them the
+  // Collector kept floor one and the Miser every floor below.
   const floorBoss =
     boss && s.floor !== undefined
-      ? s.floor <= 1
-        ? "collector"
-        : "miser"
+      ? (s.map.find((n) => n.id === s.currentNode)?.boss ??
+        (s.floor <= 1 ? "collector" : "miser"))
       : undefined;
   const deeper = floorScale(s);
   const encounter =
@@ -619,6 +641,14 @@ export function resolveRound(s: RunState) {
         e.hp = Math.min(e.maxHp, e.hp + Math.floor((before - target.hp) / 2));
     }
   }
+  // A clock that came due has done what it was for, struck or not: it leaves,
+  // unbroken, whatever stopped it acting.
+  for (const e of s.enemies)
+    if (e.fuse && e.hp > 0 && fuseLeft(s, e) === 0) {
+      e.spent = true;
+      e.hp = 0;
+      log(s, `${e.name} sets.`, "info", { kind: "defeat", target: e.id, hp: 0 });
+    }
   for (const u of [...s.players, ...s.enemies]) tickStatuses(s, u);
   for (const p of s.players) {
     for (const key of Object.keys(p.cooldowns))
@@ -653,7 +683,11 @@ export function resolveRound(s: RunState) {
     delete s.hazard;
     gain(s, s.reward);
     log(s, "The chamber falls silent.");
-    if (node.type === "boss" && s.floor !== undefined && s.floor < FLOORS) {
+    if (
+      node.type === "boss" &&
+      s.floor !== undefined &&
+      s.floor < floorsIn(s)
+    ) {
       // Not the end: the vault opens onto the next floor down. The party gets
       // the same branch upgrade any victory earns, then descends when it
       // leaves the reward.
