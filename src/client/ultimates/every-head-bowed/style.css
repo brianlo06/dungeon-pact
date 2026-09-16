@@ -312,3 +312,8 @@
   animation: none;
   opacity: 0;
 }
+.ult-cinematic[data-cinematic="every-head-bowed"] .cine-actor[data-role="caster"] .bowed-kit-lamp .ph-wdn-lamp.ph-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(1.7);
+}

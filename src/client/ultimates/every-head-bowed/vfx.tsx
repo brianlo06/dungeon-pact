@@ -82,12 +82,66 @@ function toWorld(root: HTMLElement, x: number, y: number): [number, number] {
   return [p.x, p.y];
 }
 
+/**
+ * When the Warden wears a weapon, the weapon replaces the staff and the
+ * lantern goes with it (`BaseWeapon`). This film is about that lantern, so it
+ * hangs a copy of the Warden's own lantern drawing from the tip of whatever it
+ * is holding, inside the staff arm, kept plumb as the arm turns. Only in the
+ * film's copy; the round's Warden is untouched.
+ */
+function kitLantern(node: HTMLElement): SVGElement | null {
+  const base = node.querySelector<SVGGElement>("[data-base-weapon]");
+  if (!base || base.style.display !== "none") return null;
+  const staff = node.querySelector<SVGGElement>('[data-part="staff"]');
+  const mount = staff?.querySelector<SVGGElement>('[data-attachment="mainHand"]');
+  const drawn = base.querySelector<SVGGElement>('[data-part="lantern"]');
+  if (!staff || !mount || !drawn) return null;
+  let lamp = staff.querySelector<SVGGElement>(":scope > .bowed-kit-lamp");
+  if (!lamp) {
+    // Hung from the weapon's highest point, in the arm's own units.
+    const m = staff.getCTM()?.inverse().multiply(mount.getCTM() ?? new DOMMatrix());
+    let tip: [number, number] = [22, 16];
+    try {
+      const b = mount.getBBox();
+      if (m && b.width + b.height > 0) {
+        let best = Infinity;
+        for (const [px, py] of [[b.x, b.y], [b.x + b.width, b.y], [b.x, b.y + b.height], [b.x + b.width, b.y + b.height]]) {
+          const q = new DOMPoint(px, py).matrixTransform(m);
+          if (q.y < best) {
+            best = q.y;
+            tip = [q.x, q.y];
+          }
+        }
+      }
+    } catch {
+      /* not rendered: the staff's crook */
+    }
+    lamp = document.createElementNS(SVG, "g") as SVGGElement;
+    lamp.setAttribute("class", "bowed-kit-lamp");
+    lamp.setAttribute("transform", `translate(${f1(tip[0] - 16.5)} ${f1(tip[1] - 19)})`);
+    const swing = document.createElementNS(SVG, "g");
+    swing.setAttribute("class", "bowed-kit-swing");
+    const copy = drawn.cloneNode(true) as SVGGElement;
+    copy.removeAttribute("data-part");
+    copy.removeAttribute("style");
+    swing.appendChild(copy);
+    lamp.appendChild(swing);
+    staff.appendChild(lamp);
+  }
+  // Plumb: turned back by as much as the arm is turned.
+  const t = getComputedStyle(staff).transform;
+  const mm = t && t !== "none" ? new DOMMatrix(t) : null;
+  const deg = mm ? (Math.atan2(mm.b, mm.a) * 180) / Math.PI : 0;
+  setAttr(lamp.firstElementChild, "transform", `rotate(${f1(-deg)} 16.5 19)`);
+  return lamp.querySelector<SVGElement>("circle.ph-wdn-lamp:not(.ph-glow)");
+}
+
 /** Where the lantern's flame is this frame, in world units: read off the caster's copy. */
 function lanternAt(el: HTMLElement): [number, number] | null {
   const root = rootOf(el);
   const node = casterNode(el);
   if (!root || !node || node.style.display === "none") return null;
-  const flame = node.querySelector<SVGElement>('[data-part="lantern"] circle.ph-wdn-lamp:not(.ph-glow)');
+  const flame = kitLantern(node) ?? node.querySelector<SVGElement>('[data-part="lantern"] circle.ph-wdn-lamp:not(.ph-glow)');
   const r = flame?.getBoundingClientRect();
   if (!r || (!r.width && !r.height)) return null;
   return toWorld(root, r.left + r.width / 2, r.top + r.height / 2);
