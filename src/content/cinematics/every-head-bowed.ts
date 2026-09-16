@@ -277,7 +277,7 @@ export const everyHeadBowed: Cinematic = {
       background: "bowed-late",
       lighting: { exposure: 0.85, rim: [LAMP, 1, -1], under: [LAMP, 0.5], vignette: 0.4, letterbox: BARS },
       toLighting: { exposure: 0.55, rim: [LAMP, 0.85, -1], under: [LAMP, 0.35], vignette: 0.55, letterbox: BARS },
-      actors: [stooping([250, 930], 560), bowedRow([1020, 830], 330, [210, -6], 18, 9)],
+      actors: [stooping([250, 930], 560), bowedRow([1020, 830], 330, [210, -6], 26, 14)],
       vfx: [
         { kind: "bowed-light", at: 0, until: 1, layer: "back", params: { size: 1500, strength: 1, flareAt: 0.1 } },
         { kind: "bowed-glare", at: 0, until: 1, layer: "back", params: { at: 0.1, x: 1150, y: 640, w: 1500, h: 760, hold: 0.3, until: 0.6 } },
@@ -309,7 +309,7 @@ export const everyHeadBowed: Cinematic = {
             to: { x: 880, y: 572, zoom: 1.15, rotate: 2 },
             ease: "out",
           },
-          actors: [stooping([250, 930], 540), bowedRow([1040, 840], 300, [240, -6], 12, 6)],
+          actors: [stooping([250, 930], 540), bowedRow([1040, 840], 300, [240, -6], 18, 10)],
         },
         boss: {
           camera: {
@@ -317,7 +317,7 @@ export const everyHeadBowed: Cinematic = {
             to: { x: 920, y: 492, zoom: 0.94, rotate: 1.5 },
             ease: "out",
           },
-          actors: [stooping([250, 960], 520), bowedRow([1130, 880], 290, [280, -6], 8, 4)],
+          actors: [stooping([250, 960], 520), bowedRow([1130, 880], 290, [280, -6], 10, 5)],
           vfx: [
             { kind: "bowed-light", at: 0, until: 1, layer: "back", params: { size: 1700, strength: 1, flareAt: 0.1 } },
             { kind: "bowed-glare", at: 0, until: 1, layer: "back", params: { at: 0.1, x: 1250, y: 560, w: 1900, h: 1100, hold: 0.3, until: 0.6 } },
