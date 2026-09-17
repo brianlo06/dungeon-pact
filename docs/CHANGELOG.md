@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.15 picks at the table and chance events — 2026-09-13
+
+Two requests from the table: seeing who picked what meant scrolling to the
+bottom of the lobby, and the events were all sure things.
+
+- **Picks show on the heroes.** Each player gets a seat colour in join order,
+  as in a couch fighting game (red, blue, yellow, green). A hero someone has
+  picked wears that colour as its border, with a small tag carrying the seat
+  and name. Tags are dashed while the player is deciding and solid, with a
+  tick, once they lock in. Friends on the same hero stack rings outside the
+  first. Nobody is shown on the Vanguard just for joining with it: a pick
+  shows once it is made (`Player.chosen`).
+- **The table is pinned to the bottom of the screen.** Four seats, with
+  portrait, hero and ready state, plus the ready and begin buttons, stay in
+  view wherever the grid is scrolled.
+- **Six chance events**, after the Slay the Spire events people remember,
+  drawn into the same pool as the eight fixed ones:
+  - **The Paymaster’s Wheel** (after the Wheel of Change): six equal slices,
+    four good and two bad.
+  - **The Buried Surveyor** (after the Dead Adventurer): search up to three
+    times for loot, with a 25%, then 50%, then 75% chance of an elite ambush.
+    The party keeps what it found.
+  - **The Slag Chute** (after the Scrap Ooze): every try burns the party a
+    little more, and the chance of finding the strongbox climbs from 25% to a
+    sure thing.
+  - **The Automaton Duel** (after the Joust): back the 70% favourite or the
+    30% long shot for 60 gold.
+  - **The Warm Strongbox**: 60% treasure, 40% it bites.
+  - **The Loaded Dice**: every hero rolls for themselves for maximum HP, or
+    pays 80 gold to load the dice from 50% to 75%.
+- **The odds are on the table.** Every chance choice prints its percentages
+  as a d100 strip with what each band does, because a party that votes needs
+  something to argue about. The result is shown on the same strip: the die
+  tumbles, lands, and the party stays on the result until someone continues.
+  A roll that ends in a fight starts it then. Health losses never down a hero,
+  every chance event can be left for free, and a run does not repeat an event
+  until it has seen all fourteen. A fight an event deals pays 80 gold rather
+  than a chamber's 110.
+- **Measured.** The tactical matrix (10 seeds, all 486 compositions) is
+  unchanged within noise: duos 80→79%, trios 94→95%, quartets 91→92%. The
+  bots price each chance choice by its expected value.
+
 ## 0.14 floors, chambers and a readable route — 2026-09-12
 
 The second playtest round: the run ended too soon, the route screen was hard
