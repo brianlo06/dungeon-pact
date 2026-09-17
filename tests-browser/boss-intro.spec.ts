@@ -91,6 +91,18 @@ test("the Notary presses under its title, and three seals count down and are enf
   await expect(film(page).locator(".cine-text-voice")).toContainText("witnessed");
 });
 
+test("the Bailiff raps the court open, and a served writ is torn off and served back", async ({ page }) => {
+  await hold(page, { enemy: "bailiff", shot: 4, at: 0.9 }, "rap");
+  await expect(film(page)).toHaveAttribute("data-cinematic", "bailiff-intro");
+  await expect(film(page).locator(".cine-title-card .ct-name")).toHaveText("The Bailiff");
+  await expect(film(page).locator(".cine-title-card .ct-place")).toHaveText("The Bailiff's Court");
+  await hold(page, { enemy: "bailiff", shot: 5, at: 0.5 }, "served");
+  // Served and tethered: the writ is on a hero, and the heroes are on stage.
+  await expect(film(page).locator(".bbi-served")).toBeVisible();
+  await expect(page.locator('.cine-actor[data-role="allies"]').first()).toBeVisible();
+  await expect(film(page).locator(".cine-text-voice")).toContainText("served");
+});
+
 test("skipping hands the fight back at once, with nothing of the film left", async ({ page }) => {
   await hold(page, { shot: 2, at: 0.5 }, "quiet");
   await page.locator(".cine-skip").click();
