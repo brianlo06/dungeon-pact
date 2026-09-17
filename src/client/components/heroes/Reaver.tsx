@@ -56,6 +56,8 @@ const FACE_PARTS = [
   "unwrap",
   "runOut",
   "runBack",
+  // Elbow Room: the cleaver hand choked up the grip to the blade's heel, for a swing.
+  "choke",
 ] as const;
 /**
  * The chest stroke's axis: where the fist lands under the front shoulder,
@@ -155,6 +157,10 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
             {/* One stroke of blood: heavy where the fist lands, dry-brushed thin where it leaves. */}
             <clipPath id={g.id("entry")}>
               <path d={ENTRY_STROKE} />
+            </clipPath>
+            {/* Elbow Room: the window the hand choked up the grip is slid into. */}
+            <clipPath id={g.id("choke")}>
+              <rect x={-6} y={-6.5} width={18} height={13} />
             </clipPath>
             {/* Give and Take: the bandage's window and the open hand's. */}
             <clipPath id={g.id("palm-window")}>
@@ -507,6 +513,21 @@ export function Reaver({ unitId, animators, className, viewBox }: HeroProps) {
               strokeLinecap="round"
               opacity={0.85}
             />
+            {/*
+              Elbow Room: the bandaged hand choked up the grip to the blade's
+              heel, so a blade swung at full reach sits in the fist. Drawn
+              below its window at rest, so no other film and no round shows it.
+            */}
+            {closeUp && (
+              <g clipPath={`url(#${g.id("choke")})`}>
+                <g transform="translate(0 40)">
+                  <g ref={facePart("choke")}>
+                    <rect x={0.5} y={-4.6} width={10} height={9.2} rx={3.6} fill={wrap} stroke={INK} strokeWidth={LINE} />
+                    <path d="M4 -4.2 V4.2 M7.2 -4.2 V4.2" stroke={RAMP.bone[2]} strokeWidth={0.9} />
+                  </g>
+                </g>
+              </g>
+            )}
           </g>
         </BaseWeapon>
         <GearMount
