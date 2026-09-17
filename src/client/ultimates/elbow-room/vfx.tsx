@@ -25,6 +25,7 @@ import "./style.css";
  *   elbow-gouge     the level gouge torn along the far wall, left to right
  *   elbow-sawdust   the sawdust lifted off the cobbles in a flat sheet
  *   elbow-splinter  a near post splintering, thrown past the lens
+ *   elbow-knock     the row thrown back down the lane, and a bow wave ahead of each
  *   elbow-board     on the board after: a curved bank of swept sawdust
  *
  * Nothing is filtered, nothing is blurred, and nothing re-renders React while

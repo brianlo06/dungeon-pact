@@ -119,7 +119,7 @@ back line with a bank of swept sawdust in front of each where it stood:
 | 2 | The Shambles · wide | 1000 (520) | down the lane from a first-floor window, a slow push | `ult:elbow-stride`: walking up the lane, the cleaver on the shoulder | `elbow-lane`: jetties leaning in over the cobbles, benches, hooks, sawdust | dust kicked up behind the walker | **the rattle** (`elbow-rattle`, `-fast`); **motif** (`elbow-motif`) | **the real row** across the lane, `anticipate` | cut | stakes: what is in the way, and how little room there is; title |
 | 3 | Wind-up · low Dutch | 520 (340) | low, medium, Dutch −9° → −12°, pushing in | `ult:elbow-wind` (bite at 264ms): feet planted, the cleaver swung off the shoulder and back level at full reach until its point bites a post; brow down | `elbow-street`, exposure falling 0.62 → 0.3, teal rim | a timber post behind the blade, notched where it bites (`elbow-post`); plaster bursting there (`elbow-plaster`); both a cue per cut | `elbow-wind`: straps creaking, a breath in, the bite; music ducks to 12% | no | cut | escalation: the swing will not fit, and is coming anyway |
 | 4 | Hush · the cat | 480 (340) | extreme close-up on a shutter bench in the dark, dead still | — | near black; exposure 0.05; vignette 0.95 | **the lane cat** (`elbow-cat`): eyes lit, ears flat at 0.3, pupils round, pressed flat by 0.65 | music at 3%; one drip, a growl too low to be sure of (`elbow-hush`) | no | cut | the quiet: even the cat gets down |
-| 5 | Make room · impact | 780 (780) | medium wide profile, Dutch 4° → 1.5°, easing out | `ult:elbow-sweep` (contact 130ms): from level behind, a foreshortened instant at the lens, to the blade forward across the row with the whole body turned after it, chin up, roaring; targets `hurt`, shoved back down the lane, tilted | `elbow-street` lit with a teal tint, settling | **teal-and-ink two-tone** 70ms over a pale glare behind the row (`elbow-glare`); **the swing** as a flat band round the row, far half behind, near half in front (`elbow-sweep`); **a gouge torn along the far wall** (`elbow-gouge`); plaster out of the wall (`elbow-plaster`); the sawdust sheet (`elbow-sawdust`); splinters out past the lower corner (`elbow-splinter`) | `elbow-swing` into `elbow-impact` + `ult-boom`; **150ms stop**; heavy shake | **the row** | cut; the two-tone on the contact | impact: `$damage` on the held frame; "MAKE ROOM!" |
+| 5 | Make room · impact | 780 (780) | medium wide profile, Dutch 4° → 1.5°, easing out | `ult:elbow-sweep` (contact 130ms): from level behind, a foreshortened instant at the lens, to the blade level across the row at chest height, the hand choked up the grip, the whole body turned after it, chin up, roaring; targets `hurt` | `elbow-street` lit with a teal tint, settling | **teal-and-ink two-tone** 70ms over a pale glare behind the row (`elbow-glare`); **the swing** as a flat band round the row, far half behind, near half in front (`elbow-sweep`); **a gouge torn along the far wall** (`elbow-gouge`); plaster out of the wall (`elbow-plaster`); the sawdust sheet (`elbow-sawdust`); splinters out past the lower corner (`elbow-splinter`); **the row thrown back down the lane** (`elbow-knock`): nearest first, each snapped away on the frame the band reaches it, lifted off its feet and tipped hard back, landing and sliding on, the further ones thrown further, a bow wave of sawdust kicked up ahead of each; the camera pulls back after them | `elbow-swing` into `elbow-impact` + `ult-boom`; **150ms stop**; heavy shake | **the row** | cut; the two-tone on the contact | impact: `$damage` on the held frame; "MAKE ROOM!" |
 | 6 | Elbow room · return | 720 (480) | battle camera | real Butcher `ult:elbow-stretch`: the cleaver set down, the arms and chest stretched out | battlefield; bars open | the house-fronts pushed back out (`elbow-lane`, out); a curved bank of swept sawdust in front of every real target (`elbow-board`, staggered) | sawdust settling, the motif's last two notes (`elbow-settle`); tail | on board | flash 80ms | release: the row in the back line, and room |
 
 ## Framing
@@ -208,6 +208,12 @@ Knit never passes 3°, and the browser test holds the brow's tilt under 5° at
 four moments of the shot. `ult:elbow-wind` lowers the brow and
 `ult:elbow-sweep` roars on the contact (keyed, drawn only in close-ups).
 
+The cleaver hand gained one close-up-only part, `choke` (`Reaver.tsx`): the
+bandaged hand choked up the grip to the blade's heel, slid up into its window
+from 40 below. At rest it is below the window, so rounds and the other Reaver
+films (checked: Red Ledger, A Good Hiding, Give and Take) show nothing of it.
+`ult:elbow-wind` and `ult:elbow-sweep` key it in.
+
 Root keys, authored for the shot each plays in: `ult:elbow-stride` (a ±0.02
 bob and a 3–4.5° lean, for the wide down the lane); `ult:elbow-wind` (back onto
 the heels: x −0.045, rotate −9°, squash 1.08, for the medium Dutch);
@@ -227,11 +233,28 @@ face stays under the beam. Nothing is rebuilt on `.cine-look`.
   on the held frame it read as a hoop lying on the cobbles round everyone; it
   is flat (0.1) at hip-to-chest height now, and reads as one level cut through
   the row.
-- **The blade is 33° off its own arm**, so a level arm points the blade down
-  and a level blade lifts the arm across the face. The contact is a
-  compromise: the arm level under the jaw (−113°, scaled to 1.24 for a bigger
-  blade), the blade angled down across the row, and the chin thrown up into
-  the roar so the arm does not cover the mouth.
+- **The blade is 142° round from its own arm at rest**, so a level blade
+  needs the cleaver arm at −142° less the body's lean (−145° on the contact,
+  where the root leans 3°), which points the arm up across the face. Sent
+  back once for a blade that angled down into the row under a flat band: the
+  arm is now also dropped 11 units and forward 3 (`x`/`y` on the part), so the
+  fist sits at the chest, the blade lies level with the band at chest height,
+  and the band's near half leaves along the blade's edge.
+- **The row did not move.** The first approved cut shoved the targets with the
+  actor cue's `shove`, which eases over the rest of the shot, so on the held
+  frame (inside the stop) they had moved a few units and read as standing
+  still inside a band that passed round them. Sent back; the row is now thrown
+  by `elbow-knock`, which moves each target's `.cine-look` from its feet (as
+  Hammer Price's crush and Every Head Bowed's bow do): a third of the way on
+  the frame the band reaches it, then lifted (80), thrown (170 × 1 + 0.6 per
+  rank) and tipped 32°, landing and sliding. Each further figure is reached 30ms
+  later and thrown further, so the row fans out rather than piling up. A boss
+  is not lifted: it rocks back 17° and slides 120 + 90. The spec measures every
+  figure displaced and tipped on the held frame, further after, and the boss
+  slid.
+- **The blade floated off the arm in the wind-up**: at a medium size the grip
+  between the fist and the blade's heel showed as a thin stick. The hand is
+  choked up the grip (`choke`) in the wind-up and the swing.
 - **The two-tone frame** first turned the dusk lane and every figure to one
   ink. A pale field behind the row (`elbow-glare`) sinks away within 270ms of
   the contact, so on the accent the row is ink inside a teal band.
@@ -261,9 +284,11 @@ face stays under the beam. Nothing is rebuilt on `.cine-look`.
   round the row is an effect laid round the cast (`elbow-sweep`, placed in a
   frame function from where the stage put the Butcher and each target). The
   engine would need an effect anchored to the caster and the whole row.
-- **A row's reactions land together.** Every target plays `hurt` and takes the
-  same shove on the contact; a sweep reaching the far end of the row a beat
-  later would need `react[].stagger`.
+- **A row's reactions land together, and a target takes no folder clip, lift
+  or squash.** Every target plays `hurt` on the contact; the stagger, the lift,
+  the throw and the tilt are `elbow-knock` writing each target's `.cine-look`.
+  The engine would need `react[].stagger` and an actor cue that can lift and
+  fling a figure (or folder clips for enemy rigs).
 - **A move logs no beat.** The row goes into the back line when the board is
   revealed; the film shows it as the shove down the lane and, on the board,
   the bank of sawdust in front of each unit. Whether a windup was broken is not
@@ -277,10 +302,12 @@ face stays under the beam. Nothing is rebuilt on `.cine-look`.
 
 ## Where it is weakest
 
-- **The swing's pose.** The Reaver's cleaver is drawn 33° off its arm, so on
-  the held frame the blade points down into the row rather than level through
-  it. The flat teal band carries the sweep; the pose alone reads closer to a
-  hack.
+- **The swing's pose.** The blade is level now, but the arm has to be dropped
+  into the chest to get it there, so the cleaver reads as held close to the
+  body rather than at full reach. With a worn weapon (`gear=kit`) the worn
+  blade mounts at its own angle and is not level.
+- **A thrown hound overlaps the Iron Bulwark** on the held frame in a full
+  row before the fan separates them.
 - **The call's leaning house-fronts** are flat blocky silhouettes: they read as
   walls closing in, not yet as the Shambles' jettied timber.
 - **The board after** is modest: a curved bank of sawdust in front of each

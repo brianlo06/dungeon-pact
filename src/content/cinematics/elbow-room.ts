@@ -260,7 +260,7 @@ export const elbowRoom: Cinematic = {
       id: "sweep",
       kind: "impact",
       purpose:
-        "Impact. One flat swing wider than the street: on a teal-and-ink frame the wake is wrapped round the whole row, a gouge is torn level along the far houses, a post splinters past the lens and the sawdust comes up off the cobbles in a sheet; the row is knocked back down the lane. The damage lands on the held frame. MAKE ROOM!",
+        "Impact. One flat swing wider than the street: on a teal-and-ink frame the wake is wrapped round the whole row, a gouge is torn level along the far houses, a post splinters past the lens and the sawdust comes up off the cobbles in a sheet; the row is thrown back down the lane, nearest first, lifted and tipped, a bow wave of sawdust ahead of each. The damage lands on the held frame. MAKE ROOM!",
       space: "cinematic",
       ms: IMPACT_MS,
       fastMs: IMPACT_MS,
