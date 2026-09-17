@@ -24,8 +24,11 @@ function atNotary(heroes = ["vanguard", "ranger"]): RunState {
   });
   s.bossVersion = 1;
   s.floor = 3;
+  // Floor three draws the Notary or the Bailiff; this fight is the Notary's.
   s.map = generateMap(s);
   const boss = s.map.find((n) => n.type === "boss")!;
+  boss.boss = "notary";
+  boss.name = "The Sealing Room";
   s.currentNode = boss.id;
   boss.visited = true;
   enterCombat(s, true);

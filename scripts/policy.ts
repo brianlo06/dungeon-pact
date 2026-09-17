@@ -11,7 +11,7 @@ import { abilities } from "../src/content/heroes";
 import { upgradeOffer } from "../src/content/upgrades";
 import { drillFor, mentors, pathFor } from "../src/content/evolutions";
 import { items } from "../src/content/items";
-import { isObject } from "../src/content/enemies";
+import { isBoss, isObject } from "../src/content/enemies";
 import { events } from "../src/content/events";
 import { EXPLOIT, WEAK, fuseLeft, status } from "../src/engine/effects";
 import { reviveCost, standing } from "../src/engine/combat";
@@ -93,6 +93,9 @@ const usable = (s: RunState, p: Player) =>
       a.cost <= p.resource &&
       !(p.cooldowns[a.id] > 0) &&
       (a.id !== "revive" || s.bossVersion !== 1) &&
+      a.effects.every(
+        (e) => e.kind !== "transfer" || !!status(p, e.status),
+      ) &&
       (a.id === "revive" || price(a) <= s.gold),
   );
 const living = (s: RunState) => s.enemies.filter((e) => e.hp > 0);
@@ -185,6 +188,8 @@ function threats(s: RunState): Threats {
       let amount = 0;
       for (const x of [...direct, ...scoped])
         if (x.kind === "damage") amount += hitAmount(e, v, x.amount);
+      // A direct hit on a lien's carrier calls it in on top.
+      if (direct.length) amount += status(v, "lien")?.stacks ?? 0;
       perHero.set(v.id, (perHero.get(v.id) ?? 0) + amount);
       perEnemy.set(e.id, (perEnemy.get(e.id) ?? 0) + amount);
       if (a.target !== "enemyRow") {
@@ -545,8 +550,13 @@ export const tacticalPolicy: Policy = {
     // off, and more so the nearer it is: every standing hero pays for it.
     const ticking = (e: Enemy) =>
       e.fuse ? 18 + 10 * (e.fuse.rounds - fuseLeft(s, e)) : 0;
+    // A move that cracks under damage is worth the party's whole round if the
+    // party can reach the number: the pour lands on the Assayer instead.
+    const cracking = (e: Enemy) =>
+      e.intent.ability.cracks && !status(e, "interrupted") ? 45 : 0;
     const priority = (e: Enemy) =>
       (t.perEnemy.get(e.id) ?? 0) +
+      cracking(e) +
       (e.definition === "mender" ? 26 : 0) +
       (e.row === "back" ? 6 : 0) +
       held(e) * 22 +
@@ -567,6 +577,22 @@ export const tacticalPolicy: Policy = {
       !claimed("revive", down.id)
     )
       return { ability: "revive", target: down.id };
+    // 0. A lien is a bomb with the carrier's name on it: hand it back before
+    // it is collected, onto the enemy the party is already hitting.
+    const serve = opts.find((a) => a.effects.some((e) => e.kind === "transfer"));
+    if (serve && foes.length) {
+      // Onto the boss if there is one, else the healthiest thing standing:
+      // either way somewhere the party's blows will call it in.
+      const holder = foes
+        .filter((e) => !isObject(e.definition))
+        .sort(
+          (a, b) =>
+            Number(isBoss(b.definition)) - Number(isBoss(a.definition)) ||
+            b.hp - a.hp ||
+            a.id.localeCompare(b.id),
+        )[0];
+      if (holder) return { ability: serve.id, target: holder.id };
+    }
     // A found writ is spent on the first ally to go down: holding a life back
     // for a later round is how a party loses the one it is in.
     const writ = opts.find((a) => a.revive);
