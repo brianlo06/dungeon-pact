@@ -78,6 +78,19 @@ test("the Salvor rises out of the water, and plates harden onto its back", async
   await expect(film(page).locator(".cine-text-voice")).toContainText("water takes");
 });
 
+test("the Notary presses under its title, and three seals count down and are enforced", async ({ page }) => {
+  await hold(page, { enemy: "notary", shot: 4, at: 0.9 }, "press");
+  await expect(film(page)).toHaveAttribute("data-cinematic", "notary-intro");
+  await expect(film(page).locator(".cine-title-card .ct-name")).toHaveText("The Notary");
+  await expect(film(page).locator(".cine-title-card .ct-place")).toHaveText("The Sealing Room");
+  await hold(page, { enemy: "notary", shot: 5, at: 0.9 }, "seals");
+  await expect(film(page).locator(".nbi-seals .nbi-seal")).toHaveCount(3);
+  // Every notch has gone out by the time the seals are enforced.
+  const lit = await film(page).locator(".nbi-notch").evaluateAll((els) => els.filter((e) => (e as SVGElement).style.opacity === "1").length);
+  expect(lit).toBe(0);
+  await expect(film(page).locator(".cine-text-voice")).toContainText("witnessed");
+});
+
 test("skipping hands the fight back at once, with nothing of the film left", async ({ page }) => {
   await hold(page, { shot: 2, at: 0.5 }, "quiet");
   await page.locator(".cine-skip").click();
