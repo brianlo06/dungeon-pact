@@ -1,0 +1,81 @@
+/* The Assayer's entrance. Classes prefixed abi- (the drawing's own are asy-). */
+.abi-kilnlight svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* The light pushes in from the right edge and swells. */
+.abi-spill {
+  transform-box: fill-box;
+  transform-origin: 100% 50%;
+  transform: scaleX(calc(0.15 + var(--pe) * 0.85));
+  opacity: calc(0.4 + var(--pe) * 0.6);
+}
+.abi-moulds svg,
+.abi-gauge svg,
+.abi-drip svg,
+.abi-stream svg,
+.abi-splash svg,
+.abi-crucible svg,
+.abi-blade svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.abi-moulds {
+  width: 1800px;
+  height: 240px;
+}
+/* The metal cools as the shot runs, the far moulds first. */
+.abi-mould-metal {
+  opacity: calc(1 - var(--p) * 0.35 * (1 - var(--k)));
+}
+.abi-gauge {
+  width: 320px;
+  height: 320px;
+}
+.abi-red {
+  opacity: calc(0.55 + var(--red, 0) * 0.45);
+  stroke-width: calc(22px + var(--red, 0) * 10px);
+}
+.abi-drip {
+  width: 120px;
+  height: 440px;
+  translate: 0 -40.9%;
+}
+/* The stream hangs from the cue point, drawn down from the lip. */
+.abi-stream {
+  width: 160px;
+  translate: 0 50%;
+}
+.abi-ribbon {
+  opacity: calc(1 - clamp(0, calc((var(--p) - 0.8) * 5), 1));
+}
+.abi-splash {
+  width: 1000px;
+  height: 360px;
+  translate: 0 -33.3%;
+}
+.abi-crucible {
+  width: 900px;
+  height: 520px;
+  translate: 16.7% 0;
+}
+.abi-cup-glow {
+  opacity: calc(0.12 + clamp(0, calc((var(--p) - 0.35) * 2), 0.35));
+}
+.abi-crack path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: calc(1 - clamp(0, calc((var(--p) - 0.36) * 4.5), 1));
+}
+.abi-leak {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  transform: scaleY(clamp(0, calc((var(--p) - 0.55) * 3), 1));
+}
+.abi-blade {
+  width: 760px;
+  height: 240px;
+  translate: -42.1% 0;
+}

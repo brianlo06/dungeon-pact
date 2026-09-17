@@ -56,6 +56,17 @@ test("the Miser wakes in its own film, and the party's gold sets into its shell"
   expect(await film(page).locator("[class^='msr-']:not(.cine-actor *)").count()).toBe(0);
 });
 
+test("the Assayer pours under its title, and a blade cracks its crucible", async ({ page }) => {
+  await hold(page, { enemy: "assayer", shot: 4, at: 0.9 }, "pour");
+  await expect(film(page)).toHaveAttribute("data-cinematic", "assayer-intro");
+  await expect(film(page).locator(".cine-title-card .ct-name")).toHaveText("The Assayer");
+  await expect(film(page).locator(".abi-stream")).toBeVisible();
+  await hold(page, { enemy: "assayer", shot: 5, at: 0.8 }, "crack");
+  await expect(film(page).locator(".abi-crucible .abi-crack")).toBeVisible();
+  await expect(film(page).locator(".abi-blade")).toBeVisible();
+  await expect(film(page).locator(".cine-text-voice")).toContainText("worth");
+});
+
 test("skipping hands the fight back at once, with nothing of the film left", async ({ page }) => {
   await hold(page, { shot: 2, at: 0.5 }, "quiet");
   await page.locator(".cine-skip").click();
