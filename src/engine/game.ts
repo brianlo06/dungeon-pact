@@ -109,6 +109,21 @@ export function addPlayer(s: RunState, id: string, name: string) {
   log(s, `${name} joins the pact.`);
 }
 /**
+ * A player who leaves before the run starts gives their seat back. Left in
+ * the room they would hold it and, never ready, stop anyone starting. Once the
+ * run has begun a hero stays with the party, so a departure changes nothing.
+ * Returns whether the player was removed.
+ */
+export function removePlayer(s: RunState, id: string) {
+  if (s.phase !== "LOBBY") return false;
+  const i = s.players.findIndex((p) => p.id === id);
+  if (i < 0) return false;
+  const [p] = s.players.splice(i, 1);
+  s.revision++;
+  log(s, `${p.name} leaves the pact.`);
+  return true;
+}
+/**
  * Camp is one shared decision. Training used to be free, which made it the
  * obvious pick whenever nobody was dying; paying for it puts recovery and
  * power in direct competition for the same treasury.
