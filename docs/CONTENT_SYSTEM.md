@@ -170,3 +170,61 @@ Stat deltas are applied once, when the hero trains, and may be negative — that
 is where a path's cost lives. `resourceCap()` is the single source of truth for
 a hero's maximum resource and must be used instead of `hero(id).maxResource`
 anywhere a path could apply.
+
+## Primitives added for the faction creatures (wave 1)
+
+Rooms carry `factionVersion: 1`. Without it none of this is reachable: the
+Cistern and the Archive draw the foundry's encounters exactly as before, and a
+creature's `behavior` is ignored in favour of its rotation.
+
+- **`EnemyDef.behavior`** is how an enemy chooses its intent: `steps` taken one
+  a round, each a list of `IntentRule`s (`ability`, optional `when`
+  conditions, optional `target` filter, optional `weight` and `why`). The first
+  rule that applies wins, or with `weighted` the room's seeded dice choose among
+  those that apply; `below` swaps in a second pattern under a health fraction.
+  `src/engine/intents.ts` evaluates it and names no creature. Rotation,
+  sequence, weighted, conditional, reactive, phased, ally-aware, target-aware,
+  economy-aware and position-aware behaviour are all expressible without engine
+  changes — see `ENEMY_DESIGN.md`.
+- **`IntentCondition`** asks only about visible state: `heroHas`, `selfHas`,
+  `selfBelow`, `allyHas`, `allyBelow`, `alliesInRow`, `heroesInRow`,
+  `treasury`, `not`.
+- **`TargetFilter`** narrows and orders candidates: `has`, `lacks`, `row`,
+  `below`, `atLeast`, `self`, `objects`, `unhosted`, `bound`, and `order`
+  (`lowestHp`, `highestHp`, `lowestFraction`, `highestGuard`). With no order the
+  dice choose among the survivors, as they always have.
+- **`EnemyDef.prefers`** replaces the engine's one hard-coded name check: the
+  row a creature aims at when a move names none. The Rivet Sniper's back-row
+  aim is content now.
+- **`Effect.move`** gained `self` and `row: "swap"`, so a creature can change
+  its own row or step to the other one. A row change forced on a hero by the
+  other side logs a `PULLED` / `PUSHED` beat; a hero's own step still does not.
+- **`Effect.spawn.on: "target"`** puts one object in the target's row: owned by
+  the target when it is an ally (a plate on a friend, whose `broken` answers to
+  its host), or bound to it when it is a hero (`Enemy.bound`) while still
+  answering to its maker. A bound object's due move is aimed at the hero whose
+  name is on it.
+- **`Effect.status.tether`** marks a status as its setter's to keep up: it is
+  lifted from every carrier when that unit falls, and `EnemyDef.tethered` does
+  the same for an object, which crumbles unbroken. Both record `sourceId`, as
+  every enemy-applied status on a hero now does, so a delayed consequence can be
+  credited to whoever set it.
+- **`Effect.damage.scale`** adds `per` for each stack of a status the striker
+  carries — a vent that releases what it stored. `baseAmount` in
+  `shared/damage.ts` is shared by the engine and the forecast.
+- **Statuses** `pressure` (a meter, read by conditions and scaled damage) and
+  `debt` (when it runs out the pact pays its stacks in gold, and the carrier
+  takes whatever the treasury cannot cover).
+- **`EnemyDef.starts`** gives a creature statuses on arrival; **`eliteOnly`**
+  keeps it out of ordinary encounters, and an elite chamber built around one
+  rolls no trait and no extra health for its escorts; **`faction`** and
+  **`roles`** are for pools, the codex and design analysis.
+- **`EncounterDef`** gained `faction`, `tier`, `elite` and `sentence`, and
+  `chooseEncounter` draws along the floor's complexity curve
+  (`CURVE = [1, 2, 2, 3, 4, 4]`) without repeating what `RunState.fought`
+  records.
+- **Telemetry** (`engine/telemetry.ts`) is a measurement probe, not a game
+  system: the engine reports hits, statuses, forced moves, spawns, interrupts,
+  cracks, countdowns coming due, objects broken, defeats, gold taken and
+  resource drained. Nothing listens in the game, and nothing it reports changes
+  state, logs or beats.

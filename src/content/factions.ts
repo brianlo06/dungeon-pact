@@ -485,9 +485,14 @@ const stalker: EnemyDef = {
   power: 1,
   guard: 0,
   speed: 8,
-  row: "front",
+  // It opens in the margins, where melee cannot reach it while anything
+  // stands in front; its own Sidenote is what brings it out.
+  row: "back",
   faction: "archive",
   roles: ["ASSASSIN", "MOBILE"],
+  // Hard to pin down: it arrives already half out of the light, so the party
+  // cannot simply delete the payoff piece before it acts once.
+  starts: [{ status: "barrier", stacks: 10, duration: 2 }],
   abilities: [footnote],
   behavior: {
     steps: [

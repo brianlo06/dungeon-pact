@@ -93,7 +93,6 @@ function ridersOf(list: Effect[]): string[] {
               ? "pushes back"
               : "swaps row",
       );
-    if (e.kind === "spawn") out.push(e.on === "target" ? "seals it" : "spawns");
     if (e.kind === "damage" && e.damageType === "lightning") out.push("chains 12");
     if (e.kind === "damage" && e.precision) out.push("+20 Marked");
   }

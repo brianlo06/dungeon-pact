@@ -474,3 +474,60 @@ both policies.
    they have met the Miser a second time.
 
 No telemetry leaves the local environment.
+
+## Faction creatures, wave 1 (2026-09-17)
+
+Same bot, same seeds, every 2nd composition, 8 seeds (1,944 runs), tactical.
+`--factions=off` plays the same rooms with the Cistern and the Archive drawing
+the foundry's encounters, which is the build before this wave.
+
+| | 2p | 3p | 4p | all |
+| --- | --- | --- | --- | --- |
+| factions off | 69% | 74% | 70% | **71%** |
+| factions on | 65% | 74% | 73% | **73%** |
+
+The duo column is the one to distrust at this sample: 144 duo runs put a
+7-point swing inside noise. Measured on its own (every composition, 20 seeds,
+720 duo runs): **69% on against 68% off**. Duos are not paying for this wave.
+
+Per-boss end rates are unchanged (Collector 13%, Assayer 13%, Salvor 13%,
+Miser 10–12%, Notary 6–7%, Bailiff 5–6%), and no faction fight ended a run in
+1,944 runs: the new creatures change what a fight asks, not what it kills.
+Fights are slightly longer — a foundry encounter runs 3.3–4.5 rounds, a faction
+encounter 1.9–4.5 — because the party spends actions on setups.
+
+### What the creatures actually do (`--telemetry`, per appearance)
+
+| creature | rounds alive | damage | killed | kill order | interrupted | statuses / effects |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| Pressure Maw | 1.3 | 7 | 96% | 1.9 | 42% | Wet 0.6, drags a hero 0.6 |
+| Sluice Eel | 1.5 | 23 | 99% | 2.4 | 23% | Wet 0.8 |
+| Plate Tender | 1.8 | 7 | 98% | 2.5 | 0% | plates 1.0, hardened 0.1, broken soft 0.3 |
+| Dredger | 1.4 | 16 | 97% | 2.2 | 0% | moves an ally 0.1 |
+| Seal Scribe | 1.7 | 17 | 97% | 2.4 | 39% | sentences 0.7, passed 0.5, broken 0.2, Weak 0.4 |
+| Ledger Wraith | 1.6 | 8 | 98% | 2.5 | 0% | Debt 1.6 written, 0.6 came due |
+| Indexer | 1.4 | 5 | 99% | 2.2 | 0% | Marked 0.9, Vulnerable 0.5 |
+| Margin Stalker | 1.2 | 6 | 99% | 1.8 | 0% | — |
+| Pressure Engine (elite) | 2.8 | 34 | 80% | 3.3 | 0% | 5 appearances in 1,944 runs |
+
+### What measurement changed
+
+- **Two-round clocks never resolved.** Regular fights last three to four
+  rounds and a setup creature lives 1.2–1.8 of them, so nothing came due.
+  Sentences and plates now land the round after they are set, and each setup
+  creature buys one round with its own action (Barrier 6–10). Sentences went
+  from 0.0 to 0.5 per appearance.
+- **A wax sentence outliving its Scribe** turned "kill the clerk" into "spend
+  an action on the wax".
+- **The debt looked inert and was not.** The probe read the writer off the
+  status *after* it was lifted, so every debt that came due was credited to
+  nobody. Fixed: 0.6 per appearance. This is the third time this project has
+  measured a mechanic as dead when the instrument was wrong.
+- **The Margin Stalker is the party's first kill** (order 1.8, 99% killed). Ten
+  Barrier on arrival and a back-row start moved it from 0.7 to 1.2 rounds and
+  4 to 6 damage, and no further: in bot hands the payoff piece dies before it
+  cashes a Mark. Left as it is for human playtest — the bot's kill priority is
+  more ruthless and better informed than a table's.
+- **The elite creature cannot be measured in the matrix.** Elite chambers are
+  rare and the Cistern is one floor: 5 appearances in 1,944 runs. It is
+  measured in the Battle Lab instead (`--encounter=pressure-engine`).
