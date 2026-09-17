@@ -28,7 +28,7 @@ summons flung up, the title) → the mechanic (a writ flown onto a hero, tied to
 the staff and counting three — torn off and thrown back into the Bailiff; "You
 have been served.") → back as the door is pulled to.
 
-## Shots — FULL 5710ms, FAST 3120ms (55%)
+## Shots — FULL 5710ms, FAST 3100ms (54%)
 
 | # | Shot | ms (FAST) | Camera | Boss | Space / light | Effects | Sound | Purpose |
 |---|---|---|---|---|---|---|---|---|
