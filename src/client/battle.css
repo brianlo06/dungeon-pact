@@ -613,18 +613,38 @@
 /* The second line: how hard, at whom, and what comes with it. */
 .intent-line {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 5px;
   max-width: 100%;
   min-width: 0;
   white-space: nowrap;
 }
-/* The number is the loudest thing on the chip: a clean red-orange figure. */
+/*
+ * The damage is the loudest thing on the chip: a red badge with a big figure
+ * and "dmg" after it, so how hard the blow lands reads at a glance and is
+ * never mistaken for a count or a cost.
+ */
 .intent-damage {
   flex: none;
-  font: 11px var(--pixel);
-  color: #ff8a5c;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 0 4px;
+  line-height: 1;
+  background: #6a1c16;
+  border: 1px solid #d0503e;
+  border-radius: 2px;
+  color: #fff0e2;
+}
+.intent-dmg-value {
+  font: 12px/1 var(--pixel);
   letter-spacing: 0.02em;
+}
+.intent-dmg-unit {
+  font: 7px/1 var(--pixel);
+  color: #ffb49c;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 /* What Barrier on the target will soak, in the colour of Barrier. */
 .intent-damage small {

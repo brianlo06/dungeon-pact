@@ -147,7 +147,10 @@ export function BattleStage({
           <span className="intent-line">
             {damage && (
               <span className="intent-damage" aria-label={`${damage} damage`}>
-                {damage}
+                <span className="intent-dmg-value">{damage}</span>
+                <span className="intent-dmg-unit" aria-hidden="true">
+                  dmg
+                </span>
                 {soaked > 0 && <small> −{soaked}</small>}
               </span>
             )}
