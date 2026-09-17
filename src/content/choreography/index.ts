@@ -25,6 +25,17 @@ import salvor from "./salvor";
 import bailiff from "./bailiff";
 import salvagePlate from "./salvage-plate";
 import waxSeal from "./wax-seal";
+import maw from "./maw";
+import eel from "./eel";
+import tender from "./tender";
+import tenderPlate from "./tender-plate";
+import dredger from "./dredger";
+import engine from "./engine";
+import scribe from "./scribe";
+import sentenceSeal from "./sentence-seal";
+import wraith from "./wraith";
+import indexer from "./indexer";
+import stalker from "./stalker";
 
 /**
  * Choreography annotations, by hero id or enemy definition id. One file per
@@ -57,6 +68,17 @@ export const CHOREOGRAPHY: Record<string, CreatureChoreography> = {
   bailiff,
   "salvage-plate": salvagePlate,
   "wax-seal": waxSeal,
+  maw,
+  eel,
+  tender,
+  "tender-plate": tenderPlate,
+  dredger,
+  engine,
+  scribe,
+  "sentence-seal": sentenceSeal,
+  wraith,
+  indexer,
+  stalker,
 };
 
 export const COMMON: CreatureChoreography = common;

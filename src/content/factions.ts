@@ -116,9 +116,9 @@ const eel: EnemyDef = {
   id: "eel",
   name: "Sluice Eel",
   glyph: "∿",
-  hp: 36,
+  hp: 40,
   power: 1,
-  guard: 0,
+  guard: 1,
   speed: 7,
   row: "back",
   faction: "cistern",
@@ -140,15 +140,18 @@ const eel: EnemyDef = {
 /**
  * PLATE TENDER — defensive support; the Salvor's plates, in miniature. *Break
  * the plate while it is soft, or chew through the armour later?* It sets a
- * soft plate on its sturdiest friend, which hardens in two rounds into Barrier
- * and a heavier hit. Broken soft, the friend is left Vulnerable.
+ * soft plate on its sturdiest friend, which hardens the next round into
+ * Barrier and a heavier hit. Broken soft, the friend is left Vulnerable.
  */
 const plate = move(
   "plate",
   "Set a plate",
-  "A soft plate on an ally. In two rounds it hardens into armour.",
+  "A soft plate on an ally. Next round it hardens into armour.",
   "ally",
-  [{ kind: "spawn", object: "tender-plate", rows: ["front"], fuse: 2, on: "target" }],
+  [
+    { kind: "spawn", object: "tender-plate", rows: ["front"], fuse: 1, on: "target" },
+    status("barrier", 8, 1, { self: true }),
+  ],
 );
 const reinforce = move(
   "reinforce",
@@ -245,7 +248,7 @@ const dredger: EnemyDef = {
     steps: [
       {
         rules: [
-          rule(drag, { target: { row: "front", below: 0.5 }, why: "{target} wounded" }),
+          rule(drag, { target: { row: "front", below: 0.6 }, why: "{target} wounded" }),
           rule(shove, {
             when: [{ kind: "alliesInRow", row: "front", atMost: 1 }],
             target: { row: "back", atLeast: 0.6, order: "highestGuard" },
@@ -262,13 +265,14 @@ const dredger: EnemyDef = {
 
 /**
  * PRESSURE ENGINE — elite. *Crack it, or brace for the vent?* It builds
- * pressure every round while it hits, and at four it vents on every hero,
+ * pressure every round while it hits — and loses it if it stops for three
+ * rounds — and at four it vents on every hero,
  * harder for what it stored. Enough damage in the vent round cracks it over
  * itself instead; Wet halves the damage it takes to crack.
  */
 const build = move("build", "Build pressure", "A piston blow, and the gauge climbs.", "enemy", [
   hit(12),
-  status("pressure", 1, 99, { self: true }),
+  status("pressure", 1, 3, { self: true }),
 ]);
 const vent = move(
   "vent",
@@ -302,7 +306,7 @@ const engine: EnemyDef = {
   faction: "cistern",
   eliteOnly: true,
   roles: ["OBJECTIVE", "COUNTDOWN", "BRUISER"],
-  starts: [{ status: "pressure", stacks: 1, duration: 99 }],
+  starts: [{ status: "pressure", stacks: 2, duration: 3 }],
   abilities: [build],
   behavior: {
     steps: [
@@ -320,17 +324,20 @@ const engine: EnemyDef = {
 // ---------------------------------------------------------------- ARCHIVE --
 
 /**
- * SEAL SCRIBE — countdown; the Notary's seals, one at a time. *Break the seal,
- * or kill the one holding the pen?* It presses a wax sentence with a hero's
- * name on it that passes in three rounds. Break the seal, interrupt the
- * pressing, or kill the Scribe and every seal it holds crumbles.
+ * SEAL SCRIBE — countdown; the Notary's seals, one at a time. *Spend an action
+ * on the wax, or wear the sentence?* It presses a wax sentence with a hero's
+ * name on it that passes the round after it is pressed. The wax does not care
+ * whether the Scribe still stands: interrupt the pressing, or break the seal.
  */
 const sentence = move(
   "sentence",
   "Wax sentence",
-  "Seals a hero's sentence: in three rounds it passes on them.",
+  "Seals a hero's sentence: next round it passes on them.",
   "enemy",
-  [{ kind: "spawn", object: "sentence-seal", rows: ["back"], fuse: 3, on: "target" }],
+  [
+    { kind: "spawn", object: "sentence-seal", rows: ["back"], fuse: 1, on: "target" },
+    status("barrier", 8, 1, { self: true }),
+  ],
   { interruptible: true },
 );
 const stamp = move("stamp", "Stamp", "A heavy stamp.", "enemy", [hit(13)]);
@@ -338,7 +345,7 @@ const scribe: EnemyDef = {
   id: "scribe",
   name: "Seal Scribe",
   glyph: "✎",
-  hp: 34,
+  hp: 38,
   power: 0,
   guard: 0,
   speed: 5,
@@ -362,13 +369,12 @@ const sentenceSeal: EnemyDef = {
   id: "sentence-seal",
   name: "Wax Sentence",
   glyph: "◉",
-  hp: 22,
+  hp: 30,
   power: 0,
   guard: 0,
   speed: 1,
   row: "back",
   object: true,
-  tethered: true,
   faction: "archive",
   roles: ["OBJECTIVE", "COUNTDOWN"],
   abilities: [sealWaiting],
@@ -389,9 +395,10 @@ const sentenceSeal: EnemyDef = {
  * rounds as gold from the treasury, and blood when the treasury runs short.
  * Everything it wrote is forgiven if it falls before then.
  */
-const entry = move("entry", "Ledger entry", "Writes a debt on a hero, due in three rounds.", "enemy", [
+const entry = move("entry", "Ledger entry", "Writes a debt on a hero, due in two rounds.", "enemy", [
   hit(6),
-  status("debt", 30, 3, { tether: true }),
+  status("debt", 30, 2, { tether: true }),
+  status("barrier", 10, 1, { self: true }),
 ]);
 const interest = move("interest", "Interest", "The debt grows.", "enemy", [
   hit(8),
@@ -402,9 +409,9 @@ const wraith: EnemyDef = {
   id: "wraith",
   name: "Ledger Wraith",
   glyph: "¤",
-  hp: 42,
+  hp: 44,
   power: 0,
-  guard: 1,
+  guard: 2,
   speed: 3,
   row: "back",
   prefers: "back",
@@ -428,6 +435,7 @@ const wraith: EnemyDef = {
 const index = move("index", "Index", "Marks a hero for the Archive.", "enemy", [
   hit(5),
   status("marked", 1, 3),
+  status("barrier", 6, 1, { self: true }),
 ]);
 const crossref = move("crossref", "Cross-reference", "Leaves a Marked hero Vulnerable.", "enemy", [
   hit(8),
@@ -457,16 +465,17 @@ const indexer: EnemyDef = {
 
 /**
  * MARGIN STALKER — mobile assassin. *Can you reach it, and who does it want?*
- * It shifts rows every other round behind a scrap of Barrier — out of melee
- * reach when it hides at the back — then strikes the Marked hero, or else the
- * weakest, with a precise blow that cashes a Mark in.
+ * It strikes the Marked hero, or else the weakest, with a precise blow that
+ * cashes a Mark in — then slips to the other row behind a scrap of Barrier,
+ * out of melee reach whenever it hides at the back.
  */
 const sidenote = move("sidenote", "Sidenote", "Slips to the other row.", "self", [
   { kind: "move", row: "swap", self: true },
   status("barrier", 8, 1, { self: true }),
 ]);
-const footnote = move("footnote", "Footnote", "A precise blow. Cashes in a Mark.", "enemy", [
+const footnote = move("footnote", "Footnote", "A precise blow, and it slips away behind it.", "enemy", [
   hit(14, { precision: true }),
+  status("barrier", 6, 1, { self: true }),
 ]);
 const stalker: EnemyDef = {
   id: "stalker",
@@ -482,13 +491,13 @@ const stalker: EnemyDef = {
   abilities: [footnote],
   behavior: {
     steps: [
-      { rules: [rule(sidenote)] },
       {
         rules: [
           rule(footnote, { target: { has: "marked" }, why: "Marked" }),
           rule(footnote, { target: { order: "lowestFraction" }, why: "{target} weakest" }),
         ],
       },
+      { rules: [rule(sidenote)] },
     ],
   },
   presentation: { spriteSet: "stalker", footprint: "person", theme: "blood", idlePeriod: 1.9 },

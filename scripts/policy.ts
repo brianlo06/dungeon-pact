@@ -11,7 +11,8 @@ import { abilities } from "../src/content/heroes";
 import { upgradeOffer } from "../src/content/upgrades";
 import { drillFor, mentors, pathFor } from "../src/content/evolutions";
 import { items } from "../src/content/items";
-import { isBoss, isObject } from "../src/content/enemies";
+import { enemies as enemyDefs, enemyAbilities, isBoss, isObject } from "../src/content/enemies";
+import { baseAmount } from "../src/shared/damage";
 import { events, type Outcome } from "../src/content/events";
 import { eventChoices, eventDef, pressOdds, shares } from "../src/engine/luck";
 import { EXPLOIT, WEAK, fuseLeft, status } from "../src/engine/effects";
@@ -188,7 +189,21 @@ function threats(s: RunState): Threats {
     for (const v of victims) {
       let amount = 0;
       for (const x of [...direct, ...scoped])
-        if (x.kind === "damage") amount += hitAmount(e, v, x.amount);
+        if (x.kind === "damage")
+          amount += hitAmount(e, v, baseAmount(x, e), x.precision);
+      // A bonus against a status the victim already carries.
+      for (const fx of a.effects)
+        if (fx.kind === "conditional" && status(v, fx.status))
+          for (const y of fx.effects)
+            if (y.kind === "damage") amount += hitAmount(e, v, baseAmount(y, e), y.precision);
+      // Lightning into a Wet hero chains to everyone else standing.
+      if (
+        direct.some((x) => x.kind === "damage" && x.damageType === "lightning") &&
+        status(v, "wet")
+      )
+        for (const other of standing(s))
+          if (other.id !== v.id)
+            perHero.set(other.id, (perHero.get(other.id) ?? 0) + 12);
       // A direct hit on a lien's carrier calls it in on top.
       if (direct.length) amount += status(v, "lien")?.stacks ?? 0;
       perHero.set(v.id, (perHero.get(v.id) ?? 0) + amount);
@@ -199,6 +214,13 @@ function threats(s: RunState): Threats {
           biggest.set(v.id, { enemy: e, amount });
       }
     }
+  }
+  // A debt due this round is paid in gold; what the treasury cannot cover is
+  // damage to its carrier.
+  for (const p of standing(s)) {
+    const debt = status(p, "debt");
+    if (debt && debt.duration <= 1)
+      perHero.set(p.id, (perHero.get(p.id) ?? 0) + Math.max(0, debt.stacks - s.gold));
   }
   return { perHero, perEnemy, biggest };
 }
@@ -624,10 +646,64 @@ export const tacticalPolicy: Policy = {
     // party can reach the number: the pour lands on the Assayer instead.
     const cracking = (e: Enemy) =>
       e.intent.ability.cracks && !status(e, "interrupted") ? 45 : 0;
+    // A healer is worth removing for every round it would keep its side up.
+    // Read from what it can do, never from what it is called.
+    const healer = (e: Enemy) => {
+      const def = enemyDefs.find((d) => d.id === e.definition);
+      const moves = def
+        ? [
+            ...enemyAbilities(def, s.combatVersion),
+            ...(s.factionVersion === 1
+              ? (def.behavior?.steps ?? []).flatMap((st) => st.rules.map((r) => r.ability))
+              : []),
+          ]
+        : [];
+      return moves.some(
+        (a) => a.target === "ally" && a.effects.some((x) => x.kind === "heal"),
+      );
+    };
+    // What an announced move sets up rather than hits for: a pull, an object
+    // on the field, a condition on a hero that something else will cash in.
+    const setup = (e: Enemy) => {
+      if (status(e, "interrupted")) return 0;
+      const fx = e.intent.ability.effects;
+      return (
+        (fx.some((x) => x.kind === "move" && !x.self) ? 14 : 0) +
+        (fx.some((x) => x.kind === "spawn") ? 16 : 0) +
+        (fx.some(
+          (x) =>
+            x.kind === "status" &&
+            !x.self &&
+            ["wet", "marked", "vulnerable", "weak", "debt"].includes(x.status),
+        )
+          ? 8
+          : 0)
+      );
+    };
+    // What falls with it: debts it wrote and seals it holds are lifted or
+    // crumble when it does.
+    const tethers = (e: Enemy) =>
+      s.players.reduce(
+        (n, p) =>
+          n +
+          p.statuses
+            .filter((x) => x.tethered && x.sourceId === e.id)
+            .reduce((m, x) => m + 8 + x.stacks * 0.6, 0),
+        0,
+      ) +
+      s.enemies.filter(
+        (x) =>
+          x.owner === e.id &&
+          x.hp > 0 &&
+          enemyDefs.find((d) => d.id === x.definition)?.tethered,
+      ).length *
+        20;
     const priority = (e: Enemy) =>
       (t.perEnemy.get(e.id) ?? 0) +
       cracking(e) +
-      (e.definition === "mender" ? 26 : 0) +
+      (healer(e) ? 26 : 0) +
+      setup(e) +
+      tethers(e) +
       (e.row === "back" ? 6 : 0) +
       held(e) * 22 +
       ticking(e) -
@@ -705,7 +781,15 @@ export const tacticalPolicy: Policy = {
           e.intent.ability.interruptible &&
           !status(e, "interrupted") &&
           ((t.perEnemy.get(e.id) ?? 0) >= 16 ||
-            e.intent.ability.effects.some((x) => x.kind === "heal")) &&
+            e.intent.ability.effects.some(
+              (x) =>
+                x.kind === "heal" ||
+                x.kind === "spawn" ||
+                (x.kind === "move" && !x.self) ||
+                (x.kind === "damage" && x.damageType === "lightning"),
+            ) ||
+            (e.intent.ability.target === "ally" &&
+              e.intent.ability.effects.some((x) => x.kind === "status"))) &&
           !claimed(counter.id, e.id),
       );
       if (windup) return { ability: counter.id, target: windup.id };
@@ -768,6 +852,23 @@ export const tacticalPolicy: Policy = {
     )
       return { ability: "brace", target: p.id };
 
+    // 6a. Dragged into the front line: a hero not built to stand there steps
+    // back before the front row is hit. Read from the hero's own Guard, not
+    // its class: the one built to hold the front carries the most.
+    const retreat = opts.find(
+      (a) =>
+        a.target === "self" &&
+        a.effects.some((x) => x.kind === "move" && x.row === "back" && !x.self),
+    );
+    if (
+      retreat &&
+      p.row === "front" &&
+      p.guard < 4 &&
+      standing(s).some((x) => x.id !== p.id && x.row === "front") &&
+      (t.perHero.get(p.id) ?? 0) >= p.hp * 0.3
+    )
+      return { ability: retreat.id, target: p.id };
+
     // 6b. Turn the biggest attacker on its own side.
     const beguile = has("beguile");
     if (beguile) {
@@ -784,7 +885,7 @@ export const tacticalPolicy: Policy = {
     // 6c. Clear what the dungeon has stuck to the party.
     const cleanse = has("counterpoint");
     if (cleanse) {
-      const afflictions = ["burn", "poison", "vulnerable", "weak"] as const;
+      const afflictions = ["burn", "poison", "vulnerable", "weak", "wet"] as const;
       const row = (["front", "back"] as Row[])
         .map((r) => ({
           r,

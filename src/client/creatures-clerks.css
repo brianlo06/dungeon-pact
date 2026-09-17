@@ -1,0 +1,14 @@
+/*
+ * The Archive's clerks: wax, paper, ink, bindings and pale light. Wave 1 art
+ * is blocked in; these are the faction's colours.
+ */
+.clerks-creature {
+  --paper: #d8cfb6;
+  --ink: #241f2e;
+  --wax: #a8352a;
+  --brass: #b89a6a;
+  --pale: #9fb6d8;
+}
+.clerks-creature .wax {
+  fill: var(--wax);
+}

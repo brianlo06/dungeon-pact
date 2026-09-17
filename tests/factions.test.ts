@@ -138,7 +138,7 @@ describe("the Cistern", () => {
     const engine = find(s, "engine");
     expect(s.enemies.every((e) => !e.elite)).toBe(true);
     engine.statuses = engine.statuses.filter((x) => x.id !== "pressure");
-    give(engine, "pressure", 4, 99);
+    give(engine, "pressure", 4, 3);
     prepareIntents(s);
     expect(engine.intent.ability.id).toBe("vent");
     const forecast = forecastIntent(s, engine);
@@ -154,7 +154,7 @@ describe("the Cistern", () => {
     const t = stage("pressure-engine", 2);
     const e2 = find(t, "engine");
     e2.statuses = e2.statuses.filter((x) => x.id !== "pressure");
-    give(e2, "pressure", 4, 99);
+    give(e2, "pressure", 4, 3);
     prepareIntents(t);
     e2.taken = 999;
     const hp = t.players.map((p) => p.hp);
@@ -167,7 +167,7 @@ describe("the Cistern", () => {
 });
 
 describe("the Archive", () => {
-  it("the Seal Scribe seals a hero's sentence; it passes on them, and crumbles if the Scribe falls", () => {
+  it("the Seal Scribe seals a hero's sentence; it passes on them, and outlives the Scribe", () => {
     const s = stage("copy-desk");
     const scribe = find(s, "scribe");
     prepareIntents(s);
@@ -183,12 +183,15 @@ describe("the Archive", () => {
     prepareIntents(next);
     expect(find(next, "sentence-seal").intent.target).toBe(sealed);
 
-    // Kill the Scribe and the seal it holds crumbles, unbroken.
+    // The wax outlives the Scribe: killing it does not lift the sentence.
     const t = stage("copy-desk");
     prepareIntents(t);
     alone(t, find(t, "scribe"));
     const u = finishPreviewRound(t);
     effects(u, u.players[0], find(u, "scribe"), [{ kind: "damage", amount: 999, pierce: true }]);
+    expect(find(u, "sentence-seal").hp).toBeGreaterThan(0);
+    // Breaking it answers to the Scribe while it stands, and ends the sentence.
+    effects(u, u.players[0], find(u, "sentence-seal"), [{ kind: "damage", amount: 999, pierce: true }]);
     expect(u.enemies.find((e) => e.definition === "sentence-seal")!.hp).toBe(0);
   });
 
@@ -229,7 +232,7 @@ describe("the Archive", () => {
     expect(u.players.some((p) => has(p, "debt"))).toBe(false);
   });
 
-  it("the Indexer Marks the most exposed hero, and the Stalker's precise blow cashes the Mark in", () => {
+  it("the Indexer Marks the most exposed hero, and the Stalker strikes, slips rows, then cashes the Mark in", () => {
     const s = stage("marked-for-collection");
     const indexer = find(s, "indexer");
     const stalker = find(s, "stalker");
@@ -237,18 +240,25 @@ describe("the Archive", () => {
     prepareIntents(s);
     expect(indexer.intent.ability.id).toBe("index");
     expect(indexer.intent.target).toBe(s.players[1].id);
-    expect(stalker.intent.ability.id).toBe("sidenote");
+    // Round one: the Stalker goes for the weakest.
+    expect(stalker.intent.ability.id).toBe("footnote");
+    expect(stalker.intent.target).toBe(s.players[1].id);
+    expect(stalker.why).toBe(`${s.players[1].name} weakest`);
     const row = stalker.row;
     s.players[1].hp = s.players[1].maxHp;
-    const next = finishPreviewRound(s);
+    let next = finishPreviewRound(s);
+    // Round two: it slips to the other row.
+    expect(find(next, "stalker").intent.ability.id).toBe("sidenote");
+    next = finishPreviewRound(next);
     expect(find(next, "stalker").row).not.toBe(row);
+    // Round three: the Mark is what it wants.
     const marked = next.players.find((p) => has(p, "marked"))!;
     expect(marked).toBeTruthy();
     const st = find(next, "stalker");
     expect(st.intent.ability.id).toBe("footnote");
     expect(st.intent.target).toBe(marked.id);
     expect(st.why).toBe("Marked");
-    expect(forecastIntent(next, st).riders).toContain("+20 if Marked");
+    expect(forecastIntent(next, st).riders).toContain("+20 Marked");
   });
 });
 

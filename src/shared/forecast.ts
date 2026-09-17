@@ -79,22 +79,23 @@ function ridersOf(list: Effect[]): string[] {
         (n, x) => n + (x.kind === "damage" && !x.self ? x.amount : 0),
         0,
       );
-      if (bonus) out.push(`+${bonus} if ${STATUS_NAMES[e.status] ?? e.status}`);
+      if (bonus) out.push(`+${bonus} ${STATUS_NAMES[e.status] ?? e.status}`);
       for (const r of ridersOf(e.effects)) out.push(`${r} if ${STATUS_NAMES[e.status] ?? e.status}`);
     }
+    // Short enough to sit on the chip beside the figure and the aim.
     if (e.kind === "move")
       out.push(
         e.self
-          ? "shifts rows"
+          ? "shifts row"
           : e.row === "front"
-            ? "pulls to front"
+            ? "pulls front"
             : e.row === "back"
-              ? "pushes to back"
-              : "swaps rows",
+              ? "pushes back"
+              : "swaps row",
       );
-    if (e.kind === "spawn" && e.on === "target") out.push(`sets ${e.object.replace(/-/g, " ")}`);
-    if (e.kind === "damage" && e.damageType === "lightning") out.push("chains 12 if Wet");
-    if (e.kind === "damage" && e.precision) out.push("+20 if Marked");
+    if (e.kind === "spawn") out.push(e.on === "target" ? "seals it" : "spawns");
+    if (e.kind === "damage" && e.damageType === "lightning") out.push("chains 12");
+    if (e.kind === "damage" && e.precision) out.push("+20 Marked");
   }
   return [...new Set(out)];
 }

@@ -15,6 +15,7 @@ import { resourceCap } from "../content/evolutions";
 import { charge, resolvingUltimate } from "./charge";
 import { floorScale } from "./combat";
 import { baseAmount, hitDamage } from "../shared/damage";
+import { emit } from "./telemetry";
 export { EXPLOIT, WEAK, EMPOWERED } from "../shared/damage";
 export function log(
   s: RunState,
@@ -153,6 +154,7 @@ export function spawn(
     };
     s.enemies.push(made);
   }
+  emit(s, { kind: "spawned", actor, object: def.id });
   log(
     s,
     onTarget
@@ -190,6 +192,7 @@ function releaseTethers(s: RunState, fallen: Enemy) {
     if (!definitions.find((d) => d.id === x.definition)?.tethered) continue;
     x.hp = 0;
     x.spent = true;
+    emit(s, { kind: "defeated", actor: fallen, target: x });
     log(s, `${x.name} crumbles without ${fallen.name}.`, "combo", {
       kind: "defeat",
       target: x.id,
@@ -295,6 +298,7 @@ function hurt(
   }
   const actual = Math.min(target.hp, n);
   target.hp -= actual;
+  if (actual) emit(s, { kind: "hit", actor: source, target, amount: actual });
   // What an enemy has taken this round, Barrier included: what cracks a move.
   if (isEnemy(target) && source.id !== target.id)
     target.taken = (target.taken ?? 0) + actual + soaked;
@@ -309,6 +313,9 @@ function hurt(
     hp: target.hp,
   });
   if (target.hp === 0) {
+    emit(s, { kind: "defeated", actor: source, target });
+    if (isEnemy(target) && target.owner && isPlayer(source))
+      emit(s, { kind: "broken", actor: source, target });
     log(
       s,
       `${target.name} is ${isPlayer(target) ? "downed" : "defeated"}.`,
@@ -459,6 +466,7 @@ export function effects(
       target.intent.ability.interruptible
     ) {
       applyStatus(target, "interrupted", 1, 1);
+      emit(s, { kind: "interrupted", actor, target });
       charge(s, actor, "interrupt");
       log(
         s,
@@ -474,6 +482,7 @@ export function effects(
     }
     if (e.kind === "gold") {
       const moved = e.amount < 0 ? Math.min(s.gold, -e.amount) : e.amount;
+      if (e.amount < 0 && isEnemy(actor)) emit(s, { kind: "gold", actor, amount: moved });
       if (e.amount < 0) spend(s, moved);
       else gain(s, e.amount);
       charge(s, actor, "trade", moved / 10);
@@ -575,6 +584,8 @@ export function effects(
       // A hero pulled or pushed by the other side is a moment the party has to
       // see happen; a hero's own step is not.
       const forced = isEnemy(actor) && isPlayer(mover) && mover.row !== row;
+      if (isEnemy(actor) && mover.id !== actor.id && mover.row !== row)
+        emit(s, { kind: "moved", actor, target: mover });
       if (mover.hp > 0 || !e.self) mover.row = row;
       if (forced)
         log(s, `${actor.name} drags ${mover.name} to the ${row} row.`, "combo", {
@@ -588,6 +599,13 @@ export function effects(
       const recipient = e.self ? actor : statusRecipient;
       if (recipient.hp > 0) {
         applyStatus(recipient, e.status, e.stacks, e.duration);
+        emit(s, { kind: "status", actor, target: recipient, status: e.status, stacks: e.stacks });
+        // Who put it there, so a delayed consequence can be credited to the
+        // creature that set it even after the status itself is gone.
+        if (isEnemy(actor) && isPlayer(recipient)) {
+          const held = status(recipient, e.status)!;
+          held.sourceId ??= actor.id;
+        }
         if (e.tether) {
           const held = status(recipient, e.status)!;
           held.sourceId = actor.id;
@@ -750,7 +768,15 @@ export function scald(s: RunState, u: Unit, amount: number) {
 export function callLien(s: RunState, carrier: Unit, source: Unit, depth = 1) {
   const lien = status(carrier, "lien");
   if (!lien || carrier.hp <= 0) return;
+  const served = lien.sourceId ?? (isEnemy(source) ? source.id : undefined);
   carrier.statuses = carrier.statuses.filter((x) => x.id !== "lien");
+  emit(s, {
+    kind: "due",
+    unit: carrier,
+    what: "lien",
+    amount: lien.stacks,
+    source: served,
+  });
   log(s, `The lien on ${carrier.name} comes due: ${lien.stacks}!`, "combo", {
     kind: "combo",
     label: "LIEN CALLED",
@@ -764,9 +790,11 @@ export function callLien(s: RunState, carrier: Unit, source: Unit, depth = 1) {
  * treasury cannot cover the carrier takes as damage, through nothing.
  */
 export function callDebt(s: RunState, carrier: Unit, amount: number) {
+  const wrote = status(carrier, "debt")?.sourceId;
   carrier.statuses = carrier.statuses.filter((x) => x.id !== "debt");
   const paid = Math.min(s.gold, amount);
   const short = amount - paid;
+  emit(s, { kind: "due", unit: carrier, what: "debt", amount, source: wrote });
   log(
     s,
     `The debt on ${carrier.name} comes due: ${amount}.${short ? ` The treasury is ${short} short.` : ""}`,

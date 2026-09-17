@@ -16,6 +16,17 @@ import { SalvagePlate } from "./SalvagePlate";
 import { WaxSeal } from "./WaxSeal";
 import { Sniper } from "./Sniper";
 import { Leech } from "./Leech";
+import { Maw } from "./Maw";
+import { Eel } from "./Eel";
+import { Tender } from "./Tender";
+import { TenderPlate } from "./TenderPlate";
+import { Dredger } from "./Dredger";
+import { PressureEngine } from "./PressureEngine";
+import { Scribe } from "./Scribe";
+import { SentenceSeal } from "./SentenceSeal";
+import { Wraith } from "./Wraith";
+import { Indexer } from "./Indexer";
+import { Stalker } from "./Stalker";
 import { PARTY } from "./heroes";
 
 /**
@@ -43,5 +54,16 @@ export const CREATURES: Record<string, ComponentType<CreatureProps>> = {
   "wax-seal": WaxSeal,
   sniper: Sniper,
   thief: Leech,
+  maw: Maw,
+  eel: Eel,
+  tender: Tender,
+  "tender-plate": TenderPlate,
+  dredger: Dredger,
+  engine: PressureEngine,
+  scribe: Scribe,
+  "sentence-seal": SentenceSeal,
+  wraith: Wraith,
+  indexer: Indexer,
+  stalker: Stalker,
   ...PARTY,
 };

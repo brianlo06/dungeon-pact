@@ -1,0 +1,16 @@
+/*
+ * The Cistern's creatures: corroded metal, pressure pipes, wet stone, brine
+ * and glass. Wave 1 art is blocked in; these are the faction's colours, so a
+ * finished drawing inherits the palette rather than inventing one.
+ */
+.cistern-creature {
+  --brine: #3f7f78;
+  --brine-deep: #1b3b3a;
+  --rust: #7a5a3a;
+  --glass: #9fd8d0;
+  --iron: #4a5254;
+}
+.cistern-creature .wet {
+  fill: var(--glass);
+  opacity: 0.85;
+}

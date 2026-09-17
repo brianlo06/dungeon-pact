@@ -30,6 +30,7 @@ import {
 import { charge, withUltimate } from "./charge";
 import { pick } from "./rng";
 import { chooseIntent } from "./intents";
+import { emit } from "./telemetry";
 import {
   effects,
   trigger,
@@ -701,6 +702,7 @@ export function resolveRound(s: RunState) {
     // the one who was making it.
     const cracks = e.intent.ability.cracks;
     if (cracks && (e.taken ?? 0) >= crackAt(s, e)) {
+      emit(s, { kind: "cracked", target: e });
       log(s, `${e.name}'s ${e.intent.ability.name} cracks under the blows!`, "combo", {
         kind: "combo",
         label: "CRACKED",
@@ -775,6 +777,7 @@ export function resolveRound(s: RunState) {
       if (e.elite === "greedy" && target.hp < before)
         effects(s, e, target, [{ kind: "gold", amount: -10 }]);
       if (e.elite === "sapping" && target.hp < before && isPlayer(target)) {
+        if (target.resource > 0) emit(s, { kind: "drained", actor: e, target, amount: 1 });
         target.resource = Math.max(0, target.resource - 1);
         log(s, `${e.name} drains 1 resource from ${target.name}.`);
       }
@@ -788,6 +791,7 @@ export function resolveRound(s: RunState) {
     if (e.fuse && e.hp > 0 && fuseLeft(s, e) === 0) {
       e.spent = true;
       e.hp = 0;
+      emit(s, { kind: "due", unit: e, what: "object", amount: 0 });
       log(s, `${e.name} sets.`, "info", { kind: "defeat", target: e.id, hp: 0 });
     }
   for (const u of [...s.players, ...s.enemies]) tickStatuses(s, u);
