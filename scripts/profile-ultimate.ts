@@ -71,6 +71,8 @@ const prof = (await page.evaluate("window.prof")) as Profile;
 const stats = (xs: number[]) => {
   // The skipped measurement-start frame and anything after a long stall.
   const s = [...xs].slice(1).sort((a, b) => a - b);
+  // A boss intro has no round after it.
+  if (!s.length) return null;
   const q = (p: number) => s[Math.min(s.length - 1, Math.floor(p * s.length))];
   return {
     frames: s.length,

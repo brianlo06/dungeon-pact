@@ -6,7 +6,7 @@ export const ultimate: UltimateDef = {
   name: "Green Reckoning",
   epithet: "Nothing living is beyond hope. Nothing dead stays comfortable.",
   description:
-    "Every ally — the downed included — is healed 18, regenerates and is cleared of Burn, Poison and Weak. Every enemy is poisoned for 4 a round.",
+    "Every ally — the downed included — is healed 12, regenerates and is cleared of Burn, Poison and Weak. Every enemy is poisoned for 4 a round.",
   target: "self",
   effects: [
     {
@@ -16,12 +16,12 @@ export const ultimate: UltimateDef = {
       effects: [
         {
           kind: "heal",
-          amount: 18,
+          amount: 12,
         },
         {
           kind: "status",
           status: "regen",
-          stacks: 3,
+          stacks: 2,
           duration: 3,
         },
         {

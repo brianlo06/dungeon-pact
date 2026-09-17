@@ -1,0 +1,44 @@
+/* The Notary's entrance. Classes prefixed nbi- (the drawings' own are nty-/wax-). */
+.nbi-candle svg,
+.nbi-ledger svg,
+.nbi-drop svg,
+.nbi-splat svg,
+.nbi-seals svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.nbi-candle {
+  width: 80px;
+  height: 150px;
+  translate: 0 -115%;
+  /* Each candle is lit in turn: it scales up out of nothing. */
+  scale: clamp(0, calc(var(--pe) * 3), 1);
+}
+.nbi-flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transform: scaleY(calc(0.9 + 0.12 * sin(var(--p) * 40rad)));
+}
+.nbi-ledger {
+  width: 840px;
+  height: 600px;
+}
+.nbi-empty-seal {
+  opacity: calc(1 - clamp(0, calc((var(--p) - 0.5) * 4), 1));
+}
+.nbi-drop {
+  width: 200px;
+  height: 560px;
+  translate: 0 -39.3%;
+}
+.nbi-splat {
+  width: 1200px;
+  height: 360px;
+  translate: 0 -33.3%;
+}
+.nbi-seals {
+  width: 900px;
+  height: 360px;
+  translate: -27.8% -22.2%;
+}

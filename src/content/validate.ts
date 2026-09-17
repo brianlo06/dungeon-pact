@@ -8,6 +8,7 @@ import { evolutions, mentors, pathFor } from "./evolutions";
 import { items } from "./items";
 import { enemies, enemyAbilities, phaseTwoIntents } from "./enemies";
 import { events } from "./events";
+import { floors } from "./floors";
 import { statuses } from "./statuses";
 import { ultimates, ultimateFor, ULTIMATE_MAX } from "./ultimates";
 const nonnegative = z.number().int().min(0).max(10000);
@@ -24,6 +25,9 @@ const statusId = z.enum([
   "confused",
   "guarded",
   "interrupted",
+  "heat",
+  "encrusted",
+  "lien",
 ]);
 export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
   z.discriminatedUnion("kind", [
@@ -67,6 +71,13 @@ export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
       per: z.number().int().positive(),
       free: nonnegative,
     }),
+    z.object({ kind: z.literal("transfer"), status: statusId }),
+    z.object({
+      kind: z.literal("spawn"),
+      object: z.string().min(1),
+      rows: z.array(z.enum(["front", "back"])).min(1).max(4),
+      fuse: z.number().int().positive().max(10).optional(),
+    }),
     z.object({
       kind: z.literal("conditional"),
       status: statusId,
@@ -88,6 +99,13 @@ export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
 );
 const abilitySchema = z.object({
   interruptible: z.boolean().optional(),
+  cracks: z
+    .object({
+      per: z.number().int().positive(),
+      effects: z.array(effectSchema).min(1).max(20),
+    })
+    .optional(),
+  revive: z.boolean().optional(),
   id: z.string().min(1),
   name: z.string().min(1),
   description: z.string().min(1),
@@ -222,6 +240,16 @@ export function validateContent() {
   // in the catalog and has to be an object, or breaking it would end a chamber.
   const box = enemies.find((e) => e.id === "strongbox");
   if (!box?.object) throw Error("Missing strongbox container");
+  // A floor's pool is drawn when the floor is built and named after the boss's
+  // lair, so every entry has to be a boss that has one. A boss belongs to one
+  // floor: two floors drawing the same boss could put it in a run twice.
+  const pooled = floors.flatMap((f) => f.bosses);
+  unique(pooled.map((id) => ({ id })), "floor boss");
+  for (const id of pooled) {
+    const boss = enemies.find((e) => e.id === id);
+    if (!boss?.boss || boss.object || !boss.lair)
+      throw Error(`Floor boss ${id} must be a boss with a lair`);
+  }
   for (const e of enemies) {
     z.object({
       hp: z.number().int().positive(),
@@ -233,8 +261,25 @@ export function validateContent() {
       ...e.abilities,
       ...enemyAbilities(e, 2),
       ...(phaseTwoIntents[e.id] ?? []),
-    ])
+      ...(e.busy ? [e.busy] : []),
+      ...(e.clock ? [e.clock.waiting, e.clock.due] : []),
+    ]) {
       abilitySchema.parse(a);
+      // A spawned object is an object, or it would have to be cleared; and a
+      // fuse needs a clock to show and to strike with.
+      for (const fx of a.effects)
+        if (fx.kind === "spawn") {
+          const spawned = enemies.find((d) => d.id === fx.object);
+          if (!spawned?.object)
+            throw Error(`${e.id} spawns ${fx.object}, which is not an object`);
+          if (fx.fuse && !spawned.clock)
+            throw Error(`${fx.object} has a fuse but no clock`);
+          if (!e.busy)
+            throw Error(`${e.id} spawns objects but has nothing to do while they stand`);
+        }
+    }
+    for (const fx of [...(e.broken?.each ?? []), ...(e.broken?.all ?? [])])
+      effectSchema.parse(fx);
   }
   const supplyIds = items.filter((i) => i.slot === "supply").map((i) => i.id);
   const outcomeSchema = z

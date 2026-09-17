@@ -508,7 +508,7 @@ export const upgrades: UpgradeDef[] = [
     ability: "rend",
     kind: "force",
     name: "Rend · Cleaving",
-    description: "Deal 25. Gain 2 Fury.",
+    description: "Deal 25, gain 2 Fury and heal yourself 6.",
     apply: (a) => damage(a, 7),
   }),
   make({
@@ -518,7 +518,7 @@ export const upgrades: UpgradeDef[] = [
     ability: "rend",
     kind: "guard",
     name: "Rend · Draining",
-    description: "Deal 18, gain 2 Fury and heal yourself 9.",
+    description: "Deal 18, gain 2 Fury and heal yourself 15.",
     apply: (a) => after(a, selfHeal(9)),
   }),
   make({

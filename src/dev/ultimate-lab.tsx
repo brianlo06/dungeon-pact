@@ -33,15 +33,19 @@ import "./ultimate-lab.css";
  *     &mode=full&speed=1&tempo=1&auto=1&shot=4&pause=1
  */
 
-type Enemy = "hound" | "bulwark" | "sniper" | "collector" | "miser";
+type Enemy = "hound" | "bulwark" | "sniper" | "collector" | "miser" | "notary" | "assayer" | "salvor" | "bailiff";
 type Gear = "base" | "weapon" | "armor" | "relic" | "kit" | "seized";
 
-const FIGHTS: Record<Enemy, { boss?: "collector" | "miser"; encounter?: string; label: string }> = {
+const FIGHTS: Record<Enemy, { boss?: "collector" | "miser" | "notary" | "assayer" | "salvor" | "bailiff"; encounter?: string; label: string }> = {
   hound: { encounter: "diving-detail", label: "Slag Hound · normal" },
   sniper: { encounter: "sluice-sentries", label: "Rivet Sniper · normal (back row)" },
   bulwark: { encounter: "sluice-sentries", label: "Iron Bulwark · large" },
   collector: { boss: "collector", label: "The Collector · boss" },
   miser: { boss: "miser", label: "The Miser · boss" },
+  notary: { boss: "notary", label: "The Notary · boss" },
+  assayer: { boss: "assayer", label: "The Assayer · boss" },
+  salvor: { boss: "salvor", label: "The Salvor · boss" },
+  bailiff: { boss: "bailiff", label: "The Bailiff · boss" },
 };
 
 const GEAR: Record<Gear, { items: string[]; label: string }> = {
@@ -78,6 +82,8 @@ function read() {
       downed: q.get("downed") === "1",
     },
     mode: (q.get("mode") ?? "full") as "full" | "fast",
+    /** `film=intro`: play the enemy's boss intro instead of the hero's Ultimate. */
+    film: (q.get("film") === "intro" ? "intro" : "ultimate") as "intro" | "ultimate",
     framing: (q.get("framing") ?? "auto") as Framing | "auto",
     motion: flag("motion", true),
     tempo: q.get("tempo") ?? "1",
@@ -191,6 +197,16 @@ function UltimateLab() {
   /** Queue the Ultimate and resolve the round through the real reducer. */
   const trigger = useCallback(
     (from: RunState = run) => {
+      if (initial.film === "intro") {
+        // The intro plays on the board as the fight opens; nothing is sent.
+        before.current = from;
+        const play = () => {
+          if (!api.current) return void requestAnimationFrame(play);
+          api.current.playIntro();
+        };
+        play();
+        return;
+      }
       try {
         const primed = structuredClone(from);
         primed.players[0].ultimateCharge = Math.max(primed.players[0].ultimateCharge ?? 0, ULTIMATE_MAX);
@@ -469,6 +485,7 @@ function UltimateLab() {
                 onSettled={exit.ending ? exit.finish : undefined}
                 reducedMotion={!motion}
                 cinematics={mode}
+                bossIntros={false}
                 lab={hooks}
               />
             ) : (

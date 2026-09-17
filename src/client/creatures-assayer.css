@@ -1,0 +1,34 @@
+/*
+ * The Assayer. Kept out of battle.css so creatures drawn in parallel do not
+ * collide. Every class here is prefixed asy-.
+ */
+.assayer {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+/* Parts are moved by the animator; they need their own transform box or the
+ * rotations would pivot around the whole SVG rather than the joint. */
+.assayer > g {
+  transform-box: view-box;
+}
+/* The melt and the grate burn brighter the hotter the crucible, as the heat
+ * status is read off the combatant. No animation: the rig carries motion. */
+.asy-melt,
+.asy-grate {
+  opacity: 0.55;
+}
+.combatant[data-heat="1"] .asy-melt,
+.combatant[data-heat="1"] .asy-grate {
+  opacity: 0.8;
+}
+.combatant[data-heat="2"] .asy-melt,
+.combatant[data-heat="2"] .asy-grate,
+.combatant[data-heat="3"] .asy-melt,
+.combatant[data-heat="3"] .asy-grate {
+  opacity: 1;
+}
+.combatant[data-phase="2"] .asy-needle {
+  stroke: #ff6a3a;
+}

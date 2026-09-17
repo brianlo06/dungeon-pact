@@ -8,6 +8,12 @@ import { Acolyte } from "./Acolyte";
 import { Bellows } from "./Bellows";
 import { Hound } from "./Hound";
 import { Miser } from "./Miser";
+import { Notary } from "./Notary";
+import { Assayer } from "./Assayer";
+import { Salvor } from "./Salvor";
+import { Bailiff } from "./Bailiff";
+import { SalvagePlate } from "./SalvagePlate";
+import { WaxSeal } from "./WaxSeal";
 import { Sniper } from "./Sniper";
 import { Leech } from "./Leech";
 import { PARTY } from "./heroes";
@@ -29,6 +35,12 @@ export const CREATURES: Record<string, ComponentType<CreatureProps>> = {
   bellows: Bellows,
   hound: Hound,
   miser: Miser,
+  notary: Notary,
+  assayer: Assayer,
+  salvor: Salvor,
+  bailiff: Bailiff,
+  "salvage-plate": SalvagePlate,
+  "wax-seal": WaxSeal,
   sniper: Sniper,
   thief: Leech,
   ...PARTY,

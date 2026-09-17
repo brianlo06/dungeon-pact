@@ -1,0 +1,35 @@
+/* The Bailiff's entrance. Classes prefixed bbi- (the drawing's own are blf-). */
+.bbi-dust svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.bbi-under svg,
+.bbi-door svg,
+.bbi-papers svg,
+.bbi-writ svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.bbi-under {
+  width: 1000px;
+  height: 400px;
+}
+/* The door's box is its leaf, hinged on the left: its top-left is the cue point. */
+.bbi-door {
+  width: 380px;
+  height: 620px;
+  translate: 50% 50%;
+}
+.bbi-papers {
+  width: 1200px;
+  height: 700px;
+  translate: 0 -35.7%;
+}
+.bbi-writ {
+  width: 900px;
+  height: 500px;
+  translate: -27.8% -10%;
+}

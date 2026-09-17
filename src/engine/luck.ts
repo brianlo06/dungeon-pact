@@ -6,6 +6,7 @@ import {
   type Outcome,
 } from "../content/events";
 import { services } from "../content/services";
+import { items } from "../content/items";
 import { random, pick } from "./rng";
 import { eventDef, landOn, pressOdds } from "../content/odds";
 export {
@@ -40,8 +41,10 @@ import { enterCombat } from "./combat";
  */
 export function enterEvent(s: RunState) {
   const seen = s.eventsSeen ?? [];
-  const fresh = events.filter((e) => !seen.includes(e.id));
-  const event = pick(s, fresh.length ? fresh : events);
+  // An event added with boss pools is only drawn in a room that has them.
+  const offered = events.filter((e) => !e.bossVersion || s.bossVersion === 1);
+  const fresh = offered.filter((e) => !seen.includes(e.id));
+  const event = pick(s, fresh.length ? fresh : offered);
   s.eventId = event.id;
   s.eventsSeen = [...seen, event.id];
   delete s.luck;
@@ -142,6 +145,15 @@ export function resolveEvent(s: RunState, result: string) {
     if (p.hp > 0) p.hp = Math.max(1, Math.min(p.maxHp, p.hp + (c.heal ?? 0)));
     if (c.cleanse) p.statuses = [];
     if (c.supply) p.items.push(c.supply);
+  }
+  if (c.gift) {
+    const bearer = [...s.players]
+      .filter((p) => p.hp > 0 && !p.fallen)
+      .sort((a, b) => b.hp - a.hp || a.id.localeCompare(b.id))[0];
+    if (bearer) {
+      bearer.items.push(c.gift);
+      log(s, `${bearer.name} carries the ${items.find((i) => i.id === c.gift)?.name ?? c.gift}.`);
+    }
   }
   log(s, `The party chose ${c.name}.`);
   leaveEvent(s);

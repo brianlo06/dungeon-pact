@@ -11,10 +11,10 @@ import { abilities } from "../src/content/heroes";
 import { upgradeOffer } from "../src/content/upgrades";
 import { drillFor, mentors, pathFor } from "../src/content/evolutions";
 import { items } from "../src/content/items";
-import { isObject } from "../src/content/enemies";
+import { isBoss, isObject } from "../src/content/enemies";
 import { events, type Outcome } from "../src/content/events";
 import { eventChoices, eventDef, pressOdds, shares } from "../src/engine/luck";
-import { EXPLOIT, WEAK, status } from "../src/engine/effects";
+import { EXPLOIT, WEAK, fuseLeft, status } from "../src/engine/effects";
 import { reviveCost, standing } from "../src/engine/combat";
 import { availableNodes } from "../src/engine/map";
 import { reachError } from "../src/shared/reach";
@@ -93,6 +93,10 @@ const usable = (s: RunState, p: Player) =>
     (a) =>
       a.cost <= p.resource &&
       !(p.cooldowns[a.id] > 0) &&
+      (a.id !== "revive" || s.bossVersion !== 1) &&
+      a.effects.every(
+        (e) => e.kind !== "transfer" || !!status(p, e.status),
+      ) &&
       (a.id === "revive" || price(a) <= s.gold),
   );
 const living = (s: RunState) => s.enemies.filter((e) => e.hp > 0);
@@ -113,8 +117,9 @@ function hitAmount(source: Unit, victim: Unit, base: number, precise = false) {
 
 function abilityDamage(p: Player, a: Ability, target: Unit) {
   let total = 0;
+  // A price paid in the caster's own blood is not damage to the target.
   for (const e of a.effects)
-    if (e.kind === "damage")
+    if (e.kind === "damage" && !e.self)
       total += hitAmount(p, target, e.amount, e.precision);
   if (total > 0)
     for (const id of p.items) {
@@ -166,18 +171,26 @@ function threats(s: RunState): Threats {
   for (const e of living(s)) {
     if (status(e, "interrupted") || status(e, "confused")) continue;
     const a = e.intent.ability;
-    if (!a.effects.some((x) => x.kind === "damage")) continue;
+    // A scope reaching every hero (a seal enforced) threatens all of them.
+    const scoped = a.effects.flatMap((x) =>
+      x.kind === "enemies" ? x.effects.filter((y) => y.kind === "damage") : [],
+    );
+    const direct = a.effects.filter((x) => x.kind === "damage");
+    if (!direct.length && !scoped.length) continue;
     let aim = unit(s, e.intent.target);
     if (!aim || aim.hp <= 0) aim = standing(s)[0];
     if (!aim || isEnemy(aim)) continue;
-    const victims =
-      a.target === "enemyRow"
+    const victims = scoped.length
+      ? standing(s)
+      : a.target === "enemyRow"
         ? standing(s).filter((p) => p.row === (e.intent.row ?? aim!.row))
         : [aim as Player];
     for (const v of victims) {
       let amount = 0;
-      for (const x of a.effects)
+      for (const x of [...direct, ...scoped])
         if (x.kind === "damage") amount += hitAmount(e, v, x.amount);
+      // A direct hit on a lien's carrier calls it in on top.
+      if (direct.length) amount += status(v, "lien")?.stacks ?? 0;
       perHero.set(v.id, (perHero.get(v.id) ?? 0) + amount);
       perEnemy.set(e.id, (perEnemy.get(e.id) ?? 0) + amount);
       if (a.target !== "enemyRow") {
@@ -446,8 +459,9 @@ export const attackPolicy: Policy = {
   },
   plan(s, p) {
     const target = living(s)[0];
+    // Standing allies only: a heal cannot stand a downed hero up any more.
     const ally = [...s.players]
-      .filter((x) => !x.fallen)
+      .filter((x) => !x.fallen && x.hp > 0)
       .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
     const options = usable(s, p);
     const a =
@@ -568,6 +582,17 @@ export const tacticalPolicy: Policy = {
     const choices = events.find((e) => e.id === s.eventId)!.choices;
     const heal = choices.find((c) => (c.heal ?? 0) > 0);
     const purse = choices.find((c) => (c.gold ?? 0) > 0);
+    // A writ is a life. Sign for it while the party can bear the price in
+    // blood, or buy it when the treasury can spare the fee.
+    const writ = choices.filter((c) => c.gift === "writ-of-reprieve");
+    const signed = writ.find((c) => (c.heal ?? 0) < 0 && c.cost === 0);
+    if (
+      signed &&
+      s.players.every((p) => p.fallen || p.hp + (signed.heal ?? 0) > p.maxHp * 0.45)
+    )
+      return signed.id;
+    const bought = writ.find((c) => c.cost > 0);
+    if (bought && s.gold - bought.cost >= reserve(s)) return bought.id;
     if (heal && s.gold - heal.cost >= reserve(s) && wounded(s) > 0.3)
       return heal.id;
     if (
@@ -591,12 +616,22 @@ export const tacticalPolicy: Policy = {
     // piece of equipment is an item the party fights the rest of the boss
     // without, so it is priced against the damage the detour costs.
     const held = (e: Enemy) => e.holding?.length ?? 0;
+    // An object on a fuse is worth breaking for what it will do when it goes
+    // off, and more so the nearer it is: every standing hero pays for it.
+    const ticking = (e: Enemy) =>
+      e.fuse ? 18 + 10 * (e.fuse.rounds - fuseLeft(s, e)) : 0;
+    // A move that cracks under damage is worth the party's whole round if the
+    // party can reach the number: the pour lands on the Assayer instead.
+    const cracking = (e: Enemy) =>
+      e.intent.ability.cracks && !status(e, "interrupted") ? 45 : 0;
     const priority = (e: Enemy) =>
       (t.perEnemy.get(e.id) ?? 0) +
+      cracking(e) +
       (e.definition === "mender" ? 26 : 0) +
       (e.row === "back" ? 6 : 0) +
-      held(e) * 22 -
-      (isObject(e.definition) && !held(e) ? 999 : 0) -
+      held(e) * 22 +
+      ticking(e) -
+      (isObject(e.definition) && !held(e) && !e.fuse ? 999 : 0) -
       remaining(e) * 0.15;
     const ordered = [...foes].sort(
       (a, b) => priority(b) - priority(a) || a.id.localeCompare(b.id),
@@ -612,6 +647,27 @@ export const tacticalPolicy: Policy = {
       !claimed("revive", down.id)
     )
       return { ability: "revive", target: down.id };
+    // 0. A lien is a bomb with the carrier's name on it: hand it back before
+    // it is collected, onto the enemy the party is already hitting.
+    const serve = opts.find((a) => a.effects.some((e) => e.kind === "transfer"));
+    if (serve && foes.length) {
+      // Onto the boss if there is one, else the healthiest thing standing:
+      // either way somewhere the party's blows will call it in.
+      const holder = foes
+        .filter((e) => !isObject(e.definition))
+        .sort(
+          (a, b) =>
+            Number(isBoss(b.definition)) - Number(isBoss(a.definition)) ||
+            b.hp - a.hp ||
+            a.id.localeCompare(b.id),
+        )[0];
+      if (holder) return { ability: serve.id, target: holder.id };
+    }
+    // A found writ is spent on the first ally to go down: holding a life back
+    // for a later round is how a party loses the one it is in.
+    const writ = opts.find((a) => a.revive);
+    if (down && writ && !claimed(writ.id, down.id))
+      return { ability: writ.id, target: down.id };
 
     // 2. Recovery before it is wasted on a corpse.
     // Only abilities that can be aimed at a wounded ally count as recovery: a
@@ -621,6 +677,7 @@ export const tacticalPolicy: Policy = {
     const heals = opts.filter(
       (a) =>
         a.id !== "revive" &&
+        !a.revive &&
         a.target === "ally" &&
         a.effects.some((e) => e.kind === "heal" && !e.self),
     );
@@ -675,10 +732,21 @@ export const tacticalPolicy: Policy = {
         return { ability: protect.id, target: ward.x.id };
     }
 
+    // An attack paid for in blood is only on the table while the caster can
+    // afford the price on top of what is already coming at it this round.
+    const bleed = (a: Ability) =>
+      a.effects.reduce(
+        (n, e) => n + (e.kind === "damage" && e.self ? e.amount : 0),
+        0,
+      );
+    const affordable = (a: Ability) =>
+      !bleed(a) ||
+      p.hp - bleed(a) - (t.perHero.get(p.id) ?? 0) > p.maxHp * 0.25;
     const attacks = opts.filter(
       (a) =>
         (a.target === "enemy" || a.target === "enemyRow") &&
-        a.effects.some((e) => e.kind === "damage"),
+        a.effects.some((e) => e.kind === "damage" && !e.self) &&
+        affordable(a),
     );
 
     // 5. Secure a kill; removing an actor removes its whole intention.

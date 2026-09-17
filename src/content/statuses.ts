@@ -75,6 +75,27 @@ export const statuses: Record<
     description: "Restore stacks HP at round end while standing.",
     max: 20,
   },
+  heat: {
+    name: "Heat",
+    icon: "♦",
+    description:
+      "A crucible heating. At full heat the pour is announced; enough damage before it acts cracks it.",
+    max: 3,
+  },
+  encrusted: {
+    name: "Encrusted",
+    icon: "▦",
+    description:
+      "Hardened plates. Every hit this unit makes deals 3 more per stack.",
+    max: 6,
+  },
+  lien: {
+    name: "Lien",
+    icon: "⚖",
+    description:
+      "A debt served on you. It detonates for its stacks when it runs out — or at once if the other side lands a direct hit on you. Serve it back to hand it on.",
+    max: 100,
+  },
   vulnerable: {
     name: "Vulnerable",
     icon: "◇",

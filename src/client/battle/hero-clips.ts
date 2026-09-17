@@ -14,7 +14,9 @@ import { enemies, enemyAbilities } from "../../content/enemies";
  * and the Miser's banked treasury. Matched by what the ability does, not by who
  * is using it, so any content that seizes or banks gets the same choreography.
  */
-const OBJECTIVE = new Set<Effect["kind"]>(["seize", "bank"]);
+const OBJECTIVE = new Set<Effect["kind"]>(["seize", "bank", "spawn"]);
+/** A status that is itself a boss's objective: serving it is the signature. */
+const OBJECTIVE_STATUS = new Set(["lien"]);
 
 /**
  * Whether an enemy is holding a wind-up: it has announced an interruptible
@@ -24,7 +26,7 @@ const OBJECTIVE = new Set<Effect["kind"]>(["seize", "bank"]);
 export function holdsWindup(enemy: Enemy): boolean {
   return (
     enemy.hp > 0 &&
-    !!enemy.intent?.ability.interruptible &&
+    (!!enemy.intent?.ability.interruptible || !!enemy.intent?.ability.cracks) &&
     !enemy.statuses.some((s) => s.id === "interrupted")
   );
 }
@@ -37,7 +39,12 @@ export function holdsWindup(enemy: Enemy): boolean {
 export function isSignatureMove(ability: Ability): boolean {
   return (
     !!ability.interruptible ||
-    ability.effects.some((e) => OBJECTIVE.has(e.kind))
+    !!ability.cracks ||
+    ability.effects.some(
+      (e) =>
+        OBJECTIVE.has(e.kind) ||
+        (e.kind === "status" && OBJECTIVE_STATUS.has(e.status)),
+    )
   );
 }
 
@@ -64,12 +71,15 @@ export function isSignatureMove(ability: Ability): boolean {
 export function castClip(s: Snapshot | null, beat: Beat): ClipName {
   const enemy = s?.enemies.find((e) => e.id === beat.actor);
   if (s && enemy) {
-    if (beat.target === beat.actor) return "block";
-    if (s.enemies.some((e) => e.id === beat.target)) return "cast";
     const def = enemies.find((d) => d.id === enemy.definition);
     const ability =
       def &&
       enemyAbilities(def, s.combatVersion).find((a) => a.name === beat.label);
+    // Bringing something into the fight is aimed at nobody but is still the
+    // move the creature wound up for: the Notary's pressing lands.
+    if (ability?.effects.some((e) => e.kind === "spawn")) return "signature";
+    if (beat.target === beat.actor) return "block";
+    if (s.enemies.some((e) => e.id === beat.target)) return "cast";
     return ability && isSignatureMove(ability) ? "signature" : "attack";
   }
   const hero = s?.players.find((p) => p.id === beat.actor);

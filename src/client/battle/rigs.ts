@@ -2,6 +2,10 @@ import type { Rig } from "./animation";
 import { GENERIC } from "./animation";
 import { FORGE_RIGS } from "./rigs-forge";
 import { DEBT_RIGS } from "./rigs-debt";
+import { ARCHIVE_RIGS } from "./rigs-archive";
+import { ASSAYER_RIGS } from "./rigs-assayer";
+import { SALVOR_RIGS } from "./rigs-salvor";
+import { BAILIFF_RIGS } from "./rigs-bailiff";
 import { PARTY_RIGS } from "./rigs-party";
 import { ULTIMATE_RIGS } from "./rigs-ultimate";
 
@@ -831,7 +835,31 @@ const RIGS: Record<string, Rig> = {
   strongbox,
   ...FORGE_RIGS,
   ...DEBT_RIGS,
+  ...ARCHIVE_RIGS,
+  ...ASSAYER_RIGS,
+  ...SALVOR_RIGS,
+  ...BAILIFF_RIGS,
 };
+
+// A boss's intro performances join its rig under `intro:` names, written
+// beside the intro in `src/client/boss-intros/<boss>/poses.ts`, each exporting
+// `poses` by sprite set.
+const introPoses = import.meta.glob<{ poses: Record<string, Rig> }>(
+  "../boss-intros/*/poses.ts",
+  { eager: true },
+);
+for (const [path, m] of Object.entries(introPoses))
+  for (const [id, clips] of Object.entries(m.poses ?? {})) {
+    const rig = RIGS[id];
+    if (!rig) throw Error(`Intro poses for ${id}, which has no rig (${path})`);
+    for (const name of Object.keys(clips)) {
+      if (!name.startsWith("intro:"))
+        throw Error(`Intro pose ${name} for ${id} must be named intro:… (${path})`);
+      if (rig[name as keyof Rig])
+        throw Error(`Pose ${name} for ${id} is defined twice (${path})`);
+    }
+    Object.assign(rig, clips);
+  }
 
 /** The rig for a unit, falling back to the generic one. */
 export function rigFor(spriteSet: string | undefined): Rig {

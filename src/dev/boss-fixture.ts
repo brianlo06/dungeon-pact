@@ -5,7 +5,15 @@ import { items } from "../content/items";
 import { encounters } from "../content/encounters";
 import type { RunState } from "../shared/model";
 
-export type Boss = "collector" | "miser";
+export type Boss =
+  | "collector"
+  | "miser"
+  | "notary"
+  | "assayer"
+  | "salvor"
+  | "bailiff";
+/** Bosses a single-floor room drew between; any other is staged by name. */
+const DRAWN: Boss[] = ["collector", "miser"];
 /**
  * `windup` is the first round in which the boss — or, in an ordinary
  * encounter, any enemy — has an interruptible move announced, so the held
@@ -103,6 +111,11 @@ export function bossFixture(options: FixtureOptions): RunState {
         lane: 0,
         type: formation ? "combat" : "boss",
         name: formation ? "A Foundry Chamber" : "The Counting House",
+        // A boss added with the floor pools is written on the chamber, the
+        // way a floor's map records it, rather than sought among seeds.
+        ...(!formation && !DRAWN.includes(options.boss)
+          ? { boss: options.boss }
+          : {}),
         next: [],
         visited: true,
       },
@@ -124,7 +137,18 @@ export function bossFixture(options: FixtureOptions): RunState {
         prepareIntents(s);
       }
     } else if (!formation && options.stage !== "opening") {
-      s.round = options.boss === "collector" ? (options.legacy ? 2 : 3) : 1;
+      // The round whose intent carries the boss's objective: the Collector's
+      // repossession, the Miser's ledger, the Notary's pressing.
+      s.round =
+        options.boss === "collector"
+          ? options.legacy
+            ? 2
+            : 3
+          : options.boss === "notary"
+            ? 2
+            : options.boss === "assayer"
+              ? 4
+              : 1;
       prepareIntents(s);
     }
     if (options.stage === "resolved" || options.stage === "released")
@@ -134,6 +158,9 @@ export function bossFixture(options: FixtureOptions): RunState {
       effects(s, s.enemies[0], victim, [
         { kind: "damage", amount: victim.maxHp + 50 },
       ]);
+      // A room with boss pools sells no lives: the way back is a found Writ
+      // of Reprieve, so the first hero carries one to revive with.
+      if (s.bossVersion) s.players[0].items.push("writ-of-reprieve");
       prepareIntents(s);
     }
     if (options.stage === "released") {

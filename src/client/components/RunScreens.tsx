@@ -12,7 +12,7 @@ import type { MapNode, Snapshot } from "../../shared/model";
 import type { Intent } from "../../shared/protocol";
 import { heroes } from "../../content/heroes";
 import { OFFERINGS } from "../../content/shrines";
-import { FLOORS } from "../../content/floors";
+import { floorDef, floorsIn } from "../../content/floors";
 import { items } from "../../content/items";
 import { upgradeOffer, lines } from "../../content/upgrades";
 import {
@@ -362,13 +362,11 @@ export function DungeonMap(props: Props) {
         <div>
           <span className="eyebrow">
             {s.floor
-              ? `FLOOR ${s.floor} OF ${FLOORS} · ${s.floor <= 1 ? "THE EMBER FOUNDRY" : "THE DROWNED CISTERN"}`
+              ? `FLOOR ${s.floor} OF ${floorsIn(s)} · ${floorDef(s).title}`
               : "REGION I · THE EMBER FOUNDRY"}
           </span>
           <h1>
-            {!s.floor || s.floor <= 1
-              ? "Into the Foundry."
-              : "Further down, where it floods."}
+            {s.floor ? floorDef(s).heading : "Into the Foundry."}
           </h1>
           <p>
             {s.votes[s.you]

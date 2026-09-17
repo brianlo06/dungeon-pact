@@ -19,7 +19,8 @@ import {
 import { hitAnchor, planRound, type PlanOptions } from "./round-plan";
 import type { CinematicMode, Framing } from "../../shared/cinematic";
 import { cinematicFor, reducedCinematic } from "../../content/cinematics";
-import type { UltimateDef } from "../../content/ultimates";
+import type { FilmCredit, FilmSegment } from "../cinematic/segments";
+import type { Cinematic } from "../../shared/cinematic";
 import { CinematicRun } from "../cinematic/run";
 import {
   revealed,
@@ -123,6 +124,18 @@ export interface DirectorControls {
   skipCinematic: () => void;
   /** The cinematic playing, for the Battle Lab. */
   cinematicRun: () => CinematicRun | null;
+  /**
+   * Play a boss's entrance before the fight's first round. Presentation only:
+   * nothing waits on it, a round that resolves under it ends it, and it plays
+   * on this screen alone.
+   */
+  playIntro: (
+    film: Cinematic,
+    segment: FilmSegment,
+    mode: CinematicMode,
+    framing: Framing,
+    reduced: boolean,
+  ) => void;
   /** The round being played, for the Battle Lab and the debug overlay. */
   timeline: () => RoundTimeline | null;
   /** How far into the round's timeline the clock is, or null. */
@@ -157,9 +170,9 @@ export interface DirectorHooks {
   /** Lab only: override how moves are choreographed. */
   plan?: PlanOptions;
   /** FULL or FAST, for this Ultimate; the player's setting decides. */
-  cinematicMode?: (u: UltimateDef) => CinematicMode;
+  cinematicMode?: (u: FilmCredit) => CinematicMode;
   /** A cinematic finished or was skipped: the player has now seen it. */
-  onCinematicSeen?: (u: UltimateDef) => void;
+  onCinematicSeen?: (u: FilmCredit) => void;
   /** A group of sounds a skip can silence. */
   openChannel?: () => { play: (name: string) => void; stop: () => void };
   /** Dip the music under a moment. */
@@ -601,6 +614,8 @@ export function useDirector(
       if (skipped) {
         channel.current?.stop();
         channel.current = null;
+        // A skipped film leaves no music dipped under a moment that is gone.
+        hooksRef.current.onDuck?.(1, 0);
         // Nothing the film asked for may linger on the board it hands back.
         for (const id of run.segment.targets) hooksRef.current.onSettle?.(id);
         if (run.segment.cast.actor) hooksRef.current.onSettle?.(run.segment.cast.actor);
@@ -622,7 +637,17 @@ export function useDirector(
         case "shot":
           run.shot = x.shot;
           if (shot.space === "battlefield")
-            h.onCinematicFocus?.(x.shot === 0 ? (seg.cast.actor ?? null) : null);
+            // An Ultimate's board shots look at its caster as it is called;
+            // an intro's look at the boss as it is shown.
+            h.onCinematicFocus?.(
+              run.intro
+                ? x.shot === 0 && shot.space === "battlefield"
+                  ? (seg.targets[0] ?? null)
+                  : null
+                : x.shot === 0
+                  ? (seg.cast.actor ?? null)
+                  : null,
+            );
           break;
         case "sound":
           channel.current?.play(x.sfx);
@@ -690,6 +715,21 @@ export function useDirector(
     const before = { ...healthOf(s), ...settled.current };
     const standing = (id: string) => (before[id] ?? 1) > 0;
     const beats = fresh.map((l) => l.beat!);
+    // A boss intro is not tied to a round. A teammate locking a plan sends a
+    // snapshot with nothing new in it, and the intro plays on through it; a
+    // round that resolves under it ends it, and the round plays as ever.
+    const intro = cine.current?.intro ? cine.current : null;
+    if (intro && !first && s.phase === "COMBAT" && !fresh.length) return;
+    if (intro) {
+      intro.done = true;
+      channel.current?.stop();
+      channel.current = null;
+      cine.current = null;
+      hooksRef.current.onDuck?.(1, 0);
+      hooksRef.current.onCinematicFocus?.(null);
+      hooksRef.current.onCinematicSeen?.(intro.segment.def);
+      for (const id of intro.segment.targets) hooksRef.current.onSettle?.(id);
+    }
     if (first || !fresh.length || s.phase !== "COMBAT") {
       finish(s);
       return;
@@ -880,6 +920,19 @@ export function useDirector(
     },
     skipCinematic: () => endCinematic(true),
     cinematicRun: () => cine.current,
+    playIntro: (film, segment, mode, framing, reduced) => {
+      // Nothing else may be playing: an intro opens a fight, it never
+      // interrupts one.
+      if (cine.current || plan.current) return;
+      const run = new CinematicRun(segment, film, mode, framing, clock.time, reduced, true);
+      queue.current = [];
+      after.current = null;
+      cine.current = run;
+      channel.current?.stop();
+      channel.current = hooksRef.current.openChannel?.() ?? null;
+      applyRate();
+      publish({ ...live.current, cinematic: run, playing: true });
+    },
     timeline: () => plan.current,
     elapsed: () =>
       cine.current

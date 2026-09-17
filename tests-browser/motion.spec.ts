@@ -291,7 +291,8 @@ test.describe("downed heroes", () => {
     page,
   }) => {
     await open(page, downed);
-    await page.getByRole("option", { name: "Pact revival" }).click();
+    // Revival in a room with boss pools is a found Writ of Reprieve.
+    await page.getByRole("option", { name: "Writ of Reprieve" }).click();
     await unit(page, "Dain").locator(".combatant-body").click();
     await page.getByRole("button", { name: "Lock action" }).click();
     await trace(page, "Dain");

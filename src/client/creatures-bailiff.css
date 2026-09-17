@@ -1,0 +1,22 @@
+/*
+ * The Bailiff. Kept out of battle.css so creatures drawn in parallel do not
+ * collide. Every class here is prefixed blf-.
+ */
+.bailiff {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+/* Parts are moved by the animator; they need their own transform box or the
+ * rotations would pivot around the whole SVG rather than the joint. */
+.bailiff > g {
+  transform-box: view-box;
+}
+/* Two small lamps under the brim, cold; hot in phase two. */
+.blf-eye {
+  fill: #cfe3ff;
+}
+.combatant[data-phase="2"] .blf-eye {
+  fill: #ffb27a;
+}

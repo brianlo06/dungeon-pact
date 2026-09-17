@@ -1,8 +1,17 @@
-import { FLOORS } from "./map";
+import { floorsIn } from "./map";
+import { LEGACY_BOSSES } from "../content/floors";
+import { crackAt } from "../shared/forecast";
 import { applyHazard } from "./chambers";
 import { chooseEncounter } from "../content/encounters";
 import { reachError } from "../shared/reach";
-import type { RunState, Player, Enemy, Ability, Unit } from "../shared/model";
+import type {
+  RunState,
+  Player,
+  Enemy,
+  Ability,
+  Unit,
+  Effect,
+} from "../shared/model";
 import {
   enemies as definitions,
   enemyAbilities,
@@ -30,6 +39,7 @@ import {
   release,
   status,
   applyStatus,
+  fuseLeft,
 } from "./effects";
 export function standing(s: RunState) {
   return s.players.filter((p) => p.hp > 0 && !p.fallen);
@@ -61,10 +71,42 @@ export const REVIVAL = 90;
 export function reviveCost(s: RunState) {
   return s.combatVersion === 2 ? REVIVAL + 60 * (s.revivals ?? 0) : REVIVAL;
 }
+/**
+ * How much harder every enemy hits in a three-floor room, by party size, as a
+ * multiplier on each damage effect it announces, scoped ones included. A room
+ * from before boss pools keeps the old numbers. `TUNING.enemyHit`, when not
+ * 1, overrides it for every size so the simulator can sweep (`--hit=`); the
+ * game never writes it.
+ *
+ * Raised after a playtest note that wins came too easily and asked too little
+ * strategy. A duo is lighter: it has no spare action to answer an objective
+ * with, and at ×1.4 duos fell to 48% while larger parties sat near 73%. See
+ * docs/BOSSES.md for the measurements.
+ */
+export const ENEMY_HIT: Record<number, number> = { 2: 1.3, 3: 1.4, 4: 1.4 };
+export const TUNING = { enemyHit: 1 };
+/** The multiplier a room's enemies hit with. */
+export function enemyHit(s: RunState) {
+  if (s.bossVersion !== 1) return 1;
+  if (TUNING.enemyHit !== 1) return TUNING.enemyHit;
+  return ENEMY_HIT[s.players.length] ?? 1.4;
+}
+/** Every damage effect in a list, however deeply scoped. */
+function damageIn(list: Effect[]): Extract<Effect, { kind: "damage" }>[] {
+  return list.flatMap((e) =>
+    e.kind === "damage"
+      ? [e]
+      : e.kind === "enemies" || e.kind === "allies" || e.kind === "conditional"
+        ? damageIn(e.effects)
+        : [],
+  );
+}
 export function prepareIntents(s: RunState) {
   const impatience = pressure(s);
   for (const e of s.enemies.filter((e) => e.hp > 0)) {
     const def = definitions.find((d) => d.id === e.definition)!;
+    // A move that cracks is measured against this round's damage alone.
+    e.taken = 0;
     const phase = def.boss && e.hp < e.maxHp / 2 ? 2 : 1;
     if (phase !== e.phase) {
       e.phase = phase;
@@ -75,7 +117,41 @@ export function prepareIntents(s: RunState) {
         ? phaseTwoIntents[e.definition]
         : undefined;
     const rotation = authoredPhase ?? enemyAbilities(def, s.combatVersion);
-    const ability = structuredClone(rotation[(s.round - 1) % rotation.length]);
+    let ability = structuredClone(rotation[(s.round - 1) % rotation.length]);
+    // A spawner whose objects still stand does something else with the slot.
+    if (
+      def.busy &&
+      ability.effects.some(
+        (fx) =>
+          fx.kind === "spawn" &&
+          s.enemies.some(
+            (x) => x.owner === e.id && x.definition === fx.object && x.hp > 0,
+          ),
+      )
+    )
+      ability = structuredClone(def.busy);
+    // A spawned object's intent is its clock: the rounds it has left, then
+    // what it was spawned to do.
+    if (def.clock && e.fuse) {
+      const left = fuseLeft(s, e);
+      ability = structuredClone(left > 0 ? def.clock.waiting : def.clock.due);
+      if (left > 0) ability.name = `${ability.name} ${left}`;
+    }
+    const hit = enemyHit(s);
+    if (hit !== 1)
+      for (const effect of damageIn(ability.effects))
+        effect.amount = Math.round(effect.amount * hit);
+    // A lien lands on one hero, which is half of a duo and a quarter of a
+    // quartet, and a larger party has the guards and the spare actions to
+    // answer it: its weight scales with the party. Measured, not derived:
+    // ×0.6 for a duo, ×1.1 for a trio, ×1.35 for a quartet.
+    if (s.bossVersion === 1)
+      for (const effect of ability.effects)
+        if (effect.kind === "status" && effect.status === "lien")
+          effect.stacks = Math.round(
+            effect.stacks *
+              (s.players.length <= 2 ? 0.6 : 0.35 + 0.25 * s.players.length),
+          );
     if (e.phase === 2 && !authoredPhase)
       for (const effect of ability.effects)
         if (effect.kind === "damage") effect.amount += 7;
@@ -90,19 +166,35 @@ export function prepareIntents(s: RunState) {
         if (effect.kind === "damage")
           effect.amount += BOSS_PRICING.damagePerHero * s.players.length;
     // Hoarding is meant to be dangerous, not merely wasteful.
-    if (e.definition === "miser")
+    if (def.hoard)
       for (const effect of ability.effects)
         if (effect.kind === "damage")
           effect.amount += Math.floor(
-            s.gold / (s.combatVersion === 2 ? 70 : 100),
+            s.gold /
+              (s.combatVersion === 2 ? def.hoard.per : def.hoard.legacyPer),
           );
     let targets: Unit[] = standing(s);
     if (ability.target === "self") targets = [e];
     else if (ability.target === "ally")
       targets = s.enemies
         .filter((x) => x.hp > 0)
-        .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
-    else if (e.definition === "collector")
+        // A spawned object serves the one who brought it in.
+        .sort(
+          (a, b) =>
+            Number(b.id === e.owner) - Number(a.id === e.owner) ||
+            a.hp / a.maxHp - b.hp / b.maxHp,
+        );
+    else if (def.targets === "indebted") {
+      // It collects from whoever carries a lien, and serves whoever does not.
+      const serving = ability.effects.some(
+        (fx) => fx.kind === "status" && fx.status === "lien",
+      );
+      const owes = (u: Unit) => Number(!!status(u, "lien")) * (serving ? -1 : 1);
+      targets = [...targets].sort(
+        (a, b) => owes(b) - owes(a) || b.hp - a.hp || a.id.localeCompare(b.id),
+      );
+    }
+    else if (def.targets === "wealthiest")
       targets = [...targets].sort(
         (a, b) => (isPlayer(b) ? b.spent : 0) - (isPlayer(a) ? a.spent : 0),
       );
@@ -114,7 +206,8 @@ export function prepareIntents(s: RunState) {
     const target =
       ability.target === "self" ||
       ability.target === "ally" ||
-      e.definition === "collector"
+      def.targets === "wealthiest" ||
+      def.targets === "indebted"
         ? targets[0]
         : pick(s, targets);
     e.intent = {
@@ -146,15 +239,25 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
   if (s.ultimateVersion === 1) s.ultimates = {};
   s.enemies = [];
   const count = boss ? 1 : Math.min(4, s.players.length);
-  const pool = definitions.filter((d) => !!d.boss === boss && !d.object);
+  const pool = definitions.filter(
+    (d) =>
+      !!d.boss === boss &&
+      !d.object &&
+      (!boss || LEGACY_BOSSES.includes(d.id)),
+  );
   // Each floor has its own boss, so the vault a party reaches is the one the
-  // floor was built around rather than whichever the dice preferred.
-  const floorBoss =
-    boss && s.floor !== undefined
-      ? s.floor <= 1
-        ? "collector"
-        : "miser"
-      : undefined;
+  // floor was built around rather than whichever the dice preferred. With
+  // boss pools the map drew it and wrote it on the chamber; before them the
+  // Collector kept floor one and the Miser every floor below.
+  const drawn = s.map.find((n) => n.id === s.currentNode)?.boss;
+  const floorBoss = !boss
+    ? undefined
+    : (drawn ??
+      (s.floor === undefined
+        ? undefined
+        : s.floor <= 1
+          ? "collector"
+          : "miser"));
   const deeper = floorScale(s);
   const encounter =
     !boss && s.encounterVersion === 2 ? chooseEncounter(s) : undefined;
@@ -296,8 +399,24 @@ export function validatePlan(
     if (blocked) throw Error(blocked);
   }
   aim(s, p, a.target, targetId);
+  // A room with boss pools sells no lives: its only revival is a found writ.
+  if (a.id === "revive" && s.bossVersion === 1)
+    throw Error("Revival takes a Writ of Reprieve");
   if (a.id === "revive" && (target.hp > 0 || s.gold < reviveCost(s)))
     throw Error(`Revival requires a downed ally and ${reviveCost(s)} gold`);
+  if (a.revive && target.hp > 0) throw Error("Choose a downed ally");
+  for (const fx of a.effects)
+    if (fx.kind === "transfer" && !status(p, fx.status))
+      throw Error("You carry nothing to serve back");
+  // A heal aimed at a downed ally would stand them up for the price of a
+  // dressing. With boss pools, only a revival reaches the downed.
+  if (
+    s.bossVersion === 1 &&
+    !a.revive &&
+    isPlayer(target) &&
+    target.hp <= 0
+  )
+    throw Error("Only a revival reaches a downed ally");
   // An ability billed to the treasury must actually be affordable, or it would
   // quietly resolve at a discount when the purse is short.
   const price = a.effects.reduce(
@@ -547,6 +666,19 @@ export function resolveRound(s: RunState) {
       log(s, `${e.name} loses its ${e.intent.ability.name}: interrupted.`);
       continue;
     }
+    // Enough damage before a cracking move lands breaks it, and it spills on
+    // the one who was making it.
+    const cracks = e.intent.ability.cracks;
+    if (cracks && (e.taken ?? 0) >= crackAt(s, e)) {
+      log(s, `${e.name}'s ${e.intent.ability.name} cracks under the blows!`, "combo", {
+        kind: "combo",
+        label: "CRACKED",
+        actor: e.id,
+        target: e.id,
+      });
+      effects(s, e, e, cracks.effects);
+      continue;
+    }
     const a = e.intent.ability;
     const announcedRow = e.intent.row;
     let t = [...s.players, ...s.enemies].find((u) => u.id === e.intent.target);
@@ -619,6 +751,14 @@ export function resolveRound(s: RunState) {
         e.hp = Math.min(e.maxHp, e.hp + Math.floor((before - target.hp) / 2));
     }
   }
+  // A clock that came due has done what it was for, struck or not: it leaves,
+  // unbroken, whatever stopped it acting.
+  for (const e of s.enemies)
+    if (e.fuse && e.hp > 0 && fuseLeft(s, e) === 0) {
+      e.spent = true;
+      e.hp = 0;
+      log(s, `${e.name} sets.`, "info", { kind: "defeat", target: e.id, hp: 0 });
+    }
   for (const u of [...s.players, ...s.enemies]) tickStatuses(s, u);
   for (const p of s.players) {
     for (const key of Object.keys(p.cooldowns))
@@ -657,7 +797,11 @@ export function resolveRound(s: RunState) {
     delete s.hazard;
     gain(s, s.reward);
     log(s, "The chamber falls silent.");
-    if (node.type === "boss" && s.floor !== undefined && s.floor < FLOORS) {
+    if (
+      node.type === "boss" &&
+      s.floor !== undefined &&
+      s.floor < floorsIn(s)
+    ) {
       // Not the end: the vault opens onto the next floor down. The party gets
       // the same branch upgrade any victory earns, then descends when it
       // leaves the reward.

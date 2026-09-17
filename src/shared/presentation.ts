@@ -56,7 +56,9 @@ export type ClipName =
    * An Ultimate's own performance: poses no ordinary action plays, so a
    * cinematic never has to overload `attack`. A rig without one idles.
    */
-  | `ult:${string}`;
+  | `ult:${string}`
+  /** A boss's performance in its intro, merged into its rig (`boss-intros/<boss>/poses.ts`). */
+  | `intro:${string}`;
 
 /** The reusable effect vocabulary. Adding one means adding a renderer for it. */
 export type VfxName =

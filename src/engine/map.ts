@@ -1,8 +1,16 @@
 import type { MapNode, RunState } from "../shared/model";
 import { pick } from "./rng";
 import { biomeAtDepth, chamberName } from "../content/biomes";
+import { floorDef } from "../content/floors";
+import { enemies } from "../content/enemies";
 
-export { FLOORS, FLOOR_DEPTH, runDepth } from "../content/floors";
+export {
+  FLOORS,
+  FLOOR_DEPTH,
+  LEGACY_FLOORS,
+  floorsIn,
+  runDepth,
+} from "../content/floors";
 
 /** Depth decides which mentor archetype a node holds. */
 export function mentorTier(depth: number): 1 | 2 | 3 {
@@ -27,18 +35,25 @@ export function nodeMentorTier(
 }
 
 /**
- * The biome a chamber sits in. Floor one is the Foundry end to end, so it has
- * an identity of its own; floor two opens in the Cistern and closes in the
- * Archive, where the Miser keeps his vault. A legacy single-floor run keeps the
- * old depth bands.
+ * The biome a chamber sits in. With boss pools every floor is one region end
+ * to end: the Foundry, the Cistern, the Archive. Before them floor one was the
+ * Foundry and floor two opened in the Cistern and closed in the Archive, where
+ * the Miser keeps his vault. A legacy single-floor run keeps the old depth
+ * bands.
  */
-export function floorBiome(s: Pick<RunState, "floor">, depth: number) {
+export function floorBiome(
+  s: Pick<RunState, "floor" | "bossVersion">,
+  depth: number,
+) {
   if (s.floor === undefined) return biomeAtDepth(depth);
+  if (s.bossVersion === 1) return floorDef(s).biome;
   if (s.floor <= 1) return "foundry" as const;
   return depth < 3 ? ("cistern" as const) : ("archive" as const);
 }
 
-export function generateMap(s: Pick<RunState, "rng" | "floor">): MapNode[] {
+export function generateMap(
+  s: Pick<RunState, "rng" | "floor" | "bossVersion">,
+): MapNode[] {
   // Mentors sit alongside a fight or a rest, so training is always taken
   // instead of something else. Their tiers rise with depth, and a single route
   // cannot reach all three.
@@ -93,16 +108,29 @@ export function generateMap(s: Pick<RunState, "rng" | "floor">): MapNode[] {
     shrine: ["The Banked Altar", "The Cinder Shrine"],
     forge: ["The Reforge", "The Anvil Room"],
   };
-  const bossRoom =
-    s.floor === 1 ? "The Collector's Hoard" : "The Counting House";
   // Drawn once per floor, before any node is named, so a floor's mentor is
-  // settled the moment its route exists.
+  // settled the moment its route exists. With boss pools a run has a floor
+  // for each mentor, so each teaches on its own floor and none is left out.
   const floorTier: 1 | 2 | 3 | undefined =
     s.floor === undefined
       ? undefined
-      : s.floor <= 1
-        ? 1
-        : pick(s, [2, 3] as const);
+      : s.bossVersion === 1
+        ? floorDef(s).tier
+        : s.floor <= 1
+          ? 1
+          : pick(s, [2, 3] as const);
+  // The floor's boss, drawn after its mentor so an older room's draws are
+  // untouched, and before any chamber is named.
+  const floorBoss =
+    s.bossVersion === 1 && s.floor !== undefined
+      ? pick(s, floorDef(s).bosses)
+      : undefined;
+  const bossRoom =
+    floorBoss !== undefined
+      ? (enemies.find((d) => d.id === floorBoss)?.lair ?? names.boss[0])
+      : s.floor === 1
+        ? "The Collector's Hoard"
+        : "The Counting House";
   // Two chambers on one route sharing a name reads as a bug. Draw from the
   // pool without replacement while it lasts.
   const used: Record<string, string[]> = {};
@@ -138,6 +166,7 @@ export function generateMap(s: Pick<RunState, "rng" | "floor">): MapNode[] {
           type,
           biome: floorBiome(s, depth),
           ...(type === "mentor" && floorTier ? { tier: floorTier } : {}),
+          ...(type === "boss" && floorBoss ? { boss: floorBoss } : {}),
           // A mentor node is named for the tier it teaches, not rolled.
           name:
             type === "boss" && s.floor !== undefined

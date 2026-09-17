@@ -1,4 +1,5 @@
 import { GuildScene } from "./components/GuildScene";
+import { SceneTransition } from "./components/SceneTransition";
 import { useCombatExit } from "./battle/useCombatExit";
 import { ExpeditionGuide } from "./components/ExpeditionGuide";
 import { Onboarding } from "./components/Onboarding";
@@ -31,6 +32,7 @@ import {
   Shrine,
 } from "./components/RunScreens";
 import { items } from "../content/items";
+import { isBoss } from "../content/enemies";
 export default function App() {
   const [credentials, setCredentials] = useState<Credentials | null>(
     resumableCredentials,
@@ -133,10 +135,7 @@ export default function App() {
   const s = combatExit.state;
   const musicBiome =
     s?.map.find((n) => n.id === s.currentNode)?.biome ?? "foundry";
-  const musicBoss =
-    s?.enemies.some(
-      (e) => e.definition === "collector" || e.definition === "miser",
-    ) ?? false;
+  const musicBoss = s?.enemies.some((e) => isBoss(e.definition)) ?? false;
   useEffect(() => {
     const update = () =>
       audio.setScene(
@@ -291,6 +290,7 @@ export default function App() {
             {s.phase === "REWARD" && <Reward {...props!} />}{" "}
             {s.phase === "COMPLETE" && <Results s={s} onLeave={leave} />}
           </main>
+          <SceneTransition s={s} reducedMotion={settings.reducedMotion} />
           <footer className="run-footer">
             <ExpeditionGuide {...props!} />
             <div className="pings">

@@ -638,6 +638,36 @@ export function UltimateCinematic({
 
   const texts = (shot?.text ?? []).filter((x) => !x.mode || x.mode === run.mode);
   const textNode = (cue: TextCue, i: number) => {
+    if (cue.kind === "title") {
+      // A boss's title card: a writ, not a caption. The seal comes down, the
+      // name is struck, the line is ruled and the epithet is written under it.
+      const credit = run.segment.def;
+      return (
+        <div
+          key={`${shot?.id}-t${i}`}
+          className="cine-text cine-title-card"
+          data-window={`${cue.at},${cue.until ?? 1}`}
+          style={
+            {
+              ...(cue.x !== undefined ? { left: `${cue.x * 100}%` } : {}),
+              ...(cue.y !== undefined ? { top: `${cue.y * 100}%` } : {}),
+              "--rot": `${cue.rotate ?? 0}deg`,
+              visibility: "hidden",
+            } as CSSProperties
+          }
+        >
+          {credit.place && <span className="ct-place">{credit.place}</span>}
+          <span className="ct-row">
+            <span className="ct-seal" aria-hidden="true">
+              <span>{credit.name.replace(/^The\s+/i, "").charAt(0)}</span>
+            </span>
+            <strong className="ct-name">{credit.name}</strong>
+          </span>
+          <span className="ct-rule" aria-hidden="true" />
+          {credit.epithet && <em className="ct-epithet">{credit.epithet}</em>}
+        </div>
+      );
+    }
     const text = fill(cue.text, run);
     if (!text) return null;
     return (
@@ -672,7 +702,12 @@ export function UltimateCinematic({
       data-cinematic={run.cinematic.id}
       style={{ "--accent": accent } as CSSProperties}
       role="dialog"
-      aria-label={`${caster?.name ?? "A hero"} calls ${def.name}`}
+      aria-label={
+        run.intro
+          ? `${def.name}${def.epithet ? `, ${def.epithet}` : ""}`
+          : `${caster?.name ?? "A hero"} calls ${def.name}`
+      }
+      data-intro={run.intro ? "" : undefined}
     >
       <div className="cine-tint" aria-hidden="true" />
       <div ref={film} className="cine-film" aria-hidden="true">

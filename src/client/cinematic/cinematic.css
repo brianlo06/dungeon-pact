@@ -1138,3 +1138,102 @@
   transform: scale(calc(0.2 + var(--pi) * 1.2));
   opacity: var(--pi);
 }
+
+/* ------------------------------------------------------ boss title card -- */
+/*
+ * A writ, not a caption: the chamber as its heading, a wax seal stamped in
+ * the boss's accent, the name struck beside it, a signature rule drawn out
+ * and the epithet written under it like a clause. Everything is driven by the
+ * text window's --p/--pe/--pb on the combat clock; nothing here animates on
+ * its own.
+ */
+.cine-title-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35em;
+  transform: translate3d(0, -50%, 0) rotate(var(--rot, 0deg));
+  --stamp: min(1, calc(var(--p) * 3.2));
+  --settle: clamp(0, calc((var(--p) - 0.18) * 2.4), 1);
+}
+.ct-place {
+  font: clamp(9px, 1.5cqh, 14px) var(--pixel, monospace);
+  letter-spacing: 0.32em;
+  color: color-mix(in srgb, var(--accent) 70%, #f4e7cc);
+  text-transform: uppercase;
+  opacity: calc(var(--settle) * 0.9);
+  transform: translate3d(calc((1 - var(--settle)) * 24px), 0, 0);
+  text-shadow: 2px 2px 0 #0a0706;
+}
+.ct-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+/* The seal comes down hard: large and faint, then small, solid and still. */
+.ct-seal {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: clamp(40px, 9cqh, 104px);
+  aspect-ratio: 1;
+  max-width: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 38% 34%,
+    color-mix(in srgb, var(--accent) 70%, #fff) 0,
+    var(--accent) 38%,
+    color-mix(in srgb, var(--accent) 45%, #1a0a08) 100%
+  );
+  box-shadow:
+    inset 0 0 0 4px color-mix(in srgb, var(--accent) 40%, #1a0a08),
+    0 4px 0 #0a0706;
+  transform: scale(calc(2.4 - var(--stamp) * 1.4)) rotate(calc((1 - var(--stamp)) * -24deg));
+  opacity: var(--stamp);
+}
+.ct-seal span {
+  font: clamp(20px, 5cqh, 58px) var(--pixel, monospace);
+  color: #1a0a08;
+  opacity: 0.8;
+}
+/* The name is struck as the seal lands: wide, then closed up. */
+.ct-name {
+  font: clamp(34px, 7.6cqh, 96px) / 0.9 var(--pixel, monospace);
+  letter-spacing: calc(0.04em + (1 - var(--settle)) * 0.14em);
+  color: #f6e6c6;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: var(--settle);
+  text-shadow:
+    0 0 26px color-mix(in srgb, var(--accent) 55%, transparent),
+    5px 5px 0 #0a0706,
+    -2px -2px 0 #0a0706;
+}
+/* The signature rule, drawn out from the seal. */
+.ct-rule {
+  align-self: stretch;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 30%, transparent) 70%, transparent);
+  transform-origin: left;
+  transform: scaleX(clamp(0, calc((var(--p) - 0.28) * 2.2), 1));
+}
+.ct-epithet {
+  font-size: clamp(12px, 2.4cqh, 24px);
+  font-style: italic;
+  letter-spacing: 0.05em;
+  color: #f4e7cc;
+  opacity: clamp(0, calc((var(--p) - 0.4) * 3), 0.95);
+  text-shadow: 2px 2px 0 #0a0706;
+}
+.ult-cinematic[data-reduced] .cine-title-card {
+  --stamp: 1;
+  --settle: 1;
+  translate: -50% 0;
+  align-items: center;
+}
+.ult-cinematic[data-reduced] .ct-rule {
+  transform: none;
+}
+.ult-cinematic[data-reduced] .ct-epithet {
+  opacity: 0.95;
+}

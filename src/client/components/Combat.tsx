@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Snapshot } from "../../shared/model";
 import type { Intent } from "../../shared/protocol";
 import { abilities, hero, supplyFor } from "../../content/heroes";
-import { enemies as enemyDefs } from "../../content/enemies";
+import { enemies as enemyDefs, isBoss, isObject } from "../../content/enemies";
 import { useDirector } from "../battle/director";
 import { BattleStage } from "./BattleStage";
 import { PartyHud } from "./PartyHud";
@@ -16,7 +16,10 @@ import type { StageShapes } from "../battle/unit-layout";
 import { useCamera } from "../battle/camera";
 import { BattleVfx } from "./BattleVfx";
 import { useAnimators, type Animators } from "../battle/useAnimators";
-import { BossIntro } from "./BossIntro";
+import { introFor, reducedIntro } from "../../content/boss-intros";
+import type { FilmCredit } from "../cinematic/segments";
+import { framingFor } from "../cinematic/timeline";
+import { unitPresentation } from "../battle/layout";
 import { mixer } from "../audio/engine";
 import { useFrameLoop, type FrameLoop } from "../battle/clock";
 import { useStagehand, type Stagehand } from "../battle/stagehand";
@@ -67,6 +70,8 @@ export interface LabApi {
   /** The Ultimate cinematic playing, if any. */
   cinematic: () => CinematicRun | null;
   skipCinematic: () => void;
+  /** Play this chamber's boss intro now, whether or not it has played. */
+  playIntro: () => void;
 }
 export interface LabHooks {
   plan?: PlanOptions;
@@ -92,6 +97,7 @@ export function Combat({
   disabled,
   reducedMotion = false,
   cinematics = "full",
+  bossIntros = true,
   lab,
   onSettled,
 }: {
@@ -101,6 +107,11 @@ export function Combat({
   reducedMotion?: boolean;
   /** How Ultimates play; see `Settings.cinematics`. */
   cinematics?: "full" | "fast" | "first";
+  /**
+   * Whether a boss chamber opens with its boss's intro. The labs turn it off
+   * so a staged fight is the fight, and play it on request instead.
+   */
+  bossIntros?: boolean;
   onSettled?: () => void;
   /** The Battle Lab's hooks into the stage. Never set in the game. */
   lab?: LabHooks;
@@ -109,7 +120,7 @@ export function Combat({
   const me = s.players.find((p) => p.id === s.you)!;
   const [history, setHistory] = useState(false);
   // The entrance plays once for an encounter, not once a round.
-  const [introShown, setIntroShown] = useState(false);
+  const introPlayed = useRef(false);
   // The stage measures what each combatant paints, and everyone is placed by
   // it: the units, and everything that aims at them — camera, effects, fan.
   const [shapes, setShapes] = useState<StageShapes | null>(null);
@@ -161,6 +172,65 @@ export function Combat({
     { loop, stagehand },
   );
   const replayRef = useRef(replay);
+
+  /**
+   * A boss chamber opens with its boss's entrance, once. Presentation only:
+   * the fight is live behind it, nothing is sent to the room, and each
+   * player's screen plays its own, starting on the snapshot that put the
+   * party in the chamber. A reconnect in the same chamber does not play it
+   * again (`sessionStorage`, keyed by room, floor and chamber).
+   */
+  const startIntro = (force: boolean) => {
+    if (!force && (introPlayed.current || !bossIntros)) return;
+    if (s.phase !== "COMBAT" || (!force && s.round > 1)) return;
+    const unit = s.enemies.find((e) => e.hp > 0 && isBoss(e.definition));
+    const def = unit && enemyDefs.find((d) => d.id === unit.definition);
+    if (!unit || !def) return;
+    const key = `pact.intro.${s.room}:${s.floor ?? 0}:${s.currentNode}`;
+    if (!force)
+      try {
+        if (sessionStorage.getItem(key)) {
+          introPlayed.current = true;
+          return;
+        }
+        sessionStorage.setItem(key, "1");
+      } catch {
+        // Without storage the intro may play again after a reload.
+      }
+    introPlayed.current = true;
+    const film = reducedMotion ? reducedIntro(def) : introFor(def);
+    const credit: FilmCredit = {
+      id: `intro:${def.id}`,
+      name: def.name,
+      epithet: def.epithet ?? "",
+      place: def.lair ?? s.map.find((n) => n.id === s.currentNode)?.name,
+      presentation: {
+        accent: film.accent,
+        cinematic: `intro:${def.id}`,
+        voice: film.line ? { activation: film.line } : undefined,
+      },
+    };
+    const escort = s.enemies
+      .filter((e) => e.hp > 0 && e.id !== unit.id && !isObject(e.definition))
+      .map((e) => e.id);
+    const mode =
+      reducedMotion ||
+      !(cinematics === "fast" || (cinematics === "first" && seenBefore(credit.id)))
+        ? "full"
+        : "fast";
+    replayRef.current.playIntro(
+      film,
+      { cast: { kind: "cast" }, def: credit, beats: [], targets: [unit.id, ...escort] },
+      mode,
+      lab?.framing ?? framingFor(unitPresentation(def.id).footprint),
+      reducedMotion,
+    );
+  };
+  const startIntroRef = useRef(startIntro);
+  startIntroRef.current = startIntro;
+  useEffect(() => {
+    if (!replay.playing) startIntroRef.current(false);
+  }, [s.phase, s.round, s.currentNode, replay.playing]);
   // Tell whoever is holding the stage that the round has finished playing.
   // `replay.playing` is true from the render a round arrives in, not from the
   // effect that starts it — see the director's `pending` — so this cannot fire
@@ -183,6 +253,7 @@ export function Combat({
       setSpeed: (n) => replayRef.current.setSpeed(n),
       cinematic: () => replayRef.current.cinematicRun(),
       skipCinematic: () => replayRef.current.skipCinematic(),
+      playIntro: () => startIntroRef.current(true),
     });
     return () => lab?.attach?.(null);
   }, [lab, stagehand, loop, animators]);
@@ -209,13 +280,25 @@ export function Combat({
   }, [trace, stagehand, animators, unitIds]);
   const b = replay.beat;
 
+  // A room with boss pools sells no lives, so Pact revival is not offered.
   const list = abilities(
     me.heroId,
     s.combatVersion,
     me.upgrades,
     me.evolution,
     me.items,
-  );
+  )
+    .filter((a) => a.id !== "revive" || s.bossVersion !== 1)
+    // Serving a lien back is only an action while you carry one.
+    .filter(
+      (a) =>
+        !a.effects.some((e) => e.kind === "transfer") ||
+        a.effects.some(
+          (e) =>
+            e.kind === "transfer" &&
+            me.statuses.some((st) => st.id === e.status),
+        ),
+    );
   const [ability, setAbility] = useState(list[0].id);
   const [target, setTarget] = useState("");
   /**
@@ -274,7 +357,8 @@ export function Combat({
       ids.add(me.id);
     } else if (chosen.target === "ally" || chosen.target === "allyRow") {
       for (const p of s.players) {
-        if (p.fallen || (chosen.id === "revive" ? p.hp > 0 : p.hp <= 0))
+        const revives = chosen.id === "revive" || !!chosen.revive;
+        if (p.fallen || (revives ? p.hp > 0 : p.hp <= 0))
           continue;
         if (chosen.effects.some((e) => e.kind === "protect") && p.id === me.id)
           continue;
@@ -431,14 +515,17 @@ export function Combat({
     return null;
   };
 
-  const COMMON = new Set(["brace", "advance", "retreat", "revive"]);
+  const COMMON = new Set(["brace", "advance", "retreat", "revive", "serve"]);
+  const indebted = me.statuses.some((st) => st.id === "lien");
   const someoneDown = s.players.some((p) => p.hp <= 0 && !p.fallen);
   const fanOptions: FanAbility[] = list
     .map((a) => ({
       ability: a,
       blocked: why(a),
       common: COMMON.has(a.id),
-      urgent: a.id === "revive" && someoneDown,
+      urgent:
+        ((a.id === "revive" || !!a.revive) && someoneDown) ||
+        (a.id === "serve" && indebted),
       cost: cost(a),
     }))
     // Signature abilities sit nearest the hero; shared ones cascade further
@@ -630,7 +717,9 @@ export function Combat({
         {me.hp <= 0 ? (
           <div className="control-note">
             Your pact still holds. Ping priorities and help choose the route.
-            Allies can revive you; the camp restores fallen heroes.
+            {s.bossVersion === 1
+              ? "A Writ of Reprieve can return you; the camp restores fallen heroes."
+              : "Allies can revive you; the camp restores fallen heroes."}
             <p>
               Spirit aid: once per round, give a standing ally 4 Barrier or 1
               class resource. The party can continue without waiting for you.
@@ -748,15 +837,6 @@ export function Combat({
         )}
       </div>
 
-      {bossDef?.objective && !introShown && s.round <= 1 && (
-        <BossIntro
-          name={bossDef.name}
-          epithet={bossDef.epithet}
-          boss={bossDef.id}
-          reduced={reducedMotion}
-          onDone={() => setIntroShown(true)}
-        />
-      )}
       <HistoryDrawer s={s} open={history} onClose={() => setHistory(false)} />
       {replay.cinematic && (
         <UltimateCinematic

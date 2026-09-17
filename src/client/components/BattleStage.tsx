@@ -1,8 +1,9 @@
 import { useCallback, useRef, type ReactNode } from "react";
 import type { Snapshot } from "../../shared/model";
-import { isObject } from "../../content/enemies";
+import { enemies as enemyDefs, isBoss, isObject } from "../../content/enemies";
 import { BattleUnit, type Impact } from "./BattleUnit";
 import { describeIntentEffect } from "../combat-presentation";
+import { crackAt, damageLabel, forecastIntent } from "../../shared/forecast";
 import { unitPresentation, type Placement } from "../battle/layout";
 import type { Camera } from "../battle/camera";
 import type { Animators } from "../battle/useAnimators";
@@ -80,31 +81,82 @@ export function BattleStage({
     if (e.hp <= 0)
       return (
         <span className="intent-chip intent-gone">
-          {isObject(e.definition) ? "Opened" : "Defeated"}
+          {e.fuse
+          ? e.spent
+            ? "Set"
+            : "Broken"
+          : isObject(e.definition)
+            ? "Opened"
+            : "Defeated"}
         </span>
       );
     const a = e.intent.ability;
-    const aim =
-      a.target === "enemyRow"
-        ? `${e.intent.row ?? s.players.find((p) => p.id === e.intent.target)?.row ?? ""} row · locked`
-        : ([...s.players, ...s.enemies].find((u) => u.id === e.intent.target)
-            ?.name ?? "");
-    const reads = a.effects
-      .map((x) => describeIntentEffect(x, e.power, s))
+    const interrupted = e.statuses.some((x) => x.id === "interrupted");
+    // What the round will do with it, by the engine's own damage rule.
+    const forecast = forecastIntent(s, e);
+    const damage = interrupted ? "" : damageLabel(forecast);
+    // A clock threatens nobody yet; say what it will do, and to whom.
+    const def = enemyDefs.find((d) => d.id === e.definition);
+    // A clock's due move is aimed at every hero (a seal) or at the one that
+    // owns it (a plate); while it counts down, say what it will reach.
+    const owner = s.enemies.find((x) => x.id === e.owner)?.name;
+    const dueAim = def?.clock
+      ? def.clock.due.effects.some((x) => x.kind === "enemies")
+        ? "every hero"
+        : def.clock.due.target === "ally"
+          ? (owner ?? "its owner")
+          : ""
+      : "";
+    const aim = def?.clock
+      ? a.id === def.clock.due.id
+        ? dueAim
+        : `then ${dueAim}`
+      : a.target === "enemyRow"
+        ? `${forecast.aim} · locked`
+        : forecast.aim;
+    const riders = interrupted ? [] : forecast.riders;
+    const soaked = forecast.hits.reduce((n, h) => n + h.blocked, 0);
+    const reads = [
+      ...forecast.hits.map(
+        (h) =>
+          `${h.name}: ${h.damage} damage${h.blocked ? ` (Barrier soaks ${h.blocked})` : ""}`,
+      ),
+      ...a.effects.map((x) => describeIntentEffect(x, e.power, s)),
+    ]
       .filter(Boolean)
       .join(" · ");
     return (
       <span
-        className={`intent-chip ${a.interruptible ? "intent-windup" : ""}`}
+        className={`intent-chip ${(a.interruptible || a.cracks) && !interrupted ? "intent-windup" : ""} ${interrupted ? "intent-broken" : ""}`}
+        data-damage={damage || undefined}
         title={reads}
       >
-        {/* The warning rides the name's line: a third line put a back-row
-            chip above the top of what every camera framing shows. */}
+        {/* Two lines at most: a third put a back-row chip above the top of
+            what every camera framing shows. The move, then what it does. */}
         <span className="intent-head">
-          {a.interruptible && <b>WINDUP</b>}
+          {a.interruptible && !interrupted && <b>WINDUP</b>}
+          {a.cracks && !interrupted && (
+            <b className="intent-crack" title="Damage this round that cracks it">
+              CRACK AT {crackAt(s, e)}
+            </b>
+          )}
+          {interrupted && <b className="intent-stopped">BROKEN</b>}
           <strong>{a.name}</strong>
         </span>
-        {aim && <em>→ {aim}</em>}
+        {(damage || aim || riders.length > 0) && !interrupted && (
+          <span className="intent-line">
+            {damage && (
+              <span className="intent-damage" aria-label={`${damage} damage`}>
+                {damage}
+                {soaked > 0 && <small> −{soaked}</small>}
+              </span>
+            )}
+            {aim && <em>→ {aim}</em>}
+            {riders.length > 0 && (
+              <span className="intent-riders">{riders.join(" · ")}</span>
+            )}
+          </span>
+        )}
       </span>
     );
   };
@@ -189,9 +241,7 @@ export function BattleStage({
     >
       <BiomeScene
         biome={s.map.find((n) => n.id === s.currentNode)?.biome ?? "foundry"}
-        ledger={s.enemies.some((e) =>
-          ["collector", "miser"].includes(e.definition),
-        )}
+        ledger={s.enemies.some((e) => isBoss(e.definition))}
       />
 
       <div className="world" ref={camera.attach}>

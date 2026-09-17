@@ -13,14 +13,9 @@ import { items } from "../content/items";
 import { enemies as definitions } from "../content/enemies";
 import { resourceCap } from "../content/evolutions";
 import { charge, resolvingUltimate } from "./charge";
-/** Mark + Precision bonus. Setting up an Exploit costs a whole action, so the
- * payoff has to beat simply attacking twice. */
-export const EXPLOIT = 20;
-/** Weak is the answer to a spike for parties with no Vanguard to intercept it,
- * so it has to be worth the action it costs. */
-export const WEAK = 0.65;
-/** Empowered is Weak's mirror: the Herald's whole job is making allies hit harder. */
-export const EMPOWERED = 1.3;
+import { floorScale } from "./combat";
+import { hitDamage } from "../shared/damage";
+export { EXPLOIT, WEAK, EMPOWERED } from "../shared/damage";
 export function log(
   s: RunState,
   text: string,
@@ -112,6 +107,85 @@ function strongbox(s: RunState): Enemy {
   return box;
 }
 /**
+ * Objects a boss brings in, one to a row it names. They belong to it: breaking
+ * one answers to it (`broken`), and a fuse counts down on each one's intent
+ * (`clock`, read by `prepareIntents`). Priced like the Strongbox, against the
+ * party's actions rather than its headcount, and scaled with the floor.
+ */
+export function spawn(
+  s: RunState,
+  owner: Enemy,
+  e: Extract<Effect, { kind: "spawn" }>,
+) {
+  if (
+    s.enemies.some(
+      (x) => x.owner === owner.id && x.definition === e.object && x.hp > 0,
+    )
+  )
+    return;
+  const def = definitions.find((d) => d.id === e.object)!;
+  const deeper = floorScale(s);
+  const hp = Math.round(def.hp * s.players.length * 0.35 * deeper);
+  for (const row of e.rows) {
+    const made: Enemy = {
+      id: `enemy-${def.id}-${s.round}-${s.enemies.length}`,
+      definition: def.id,
+      name: def.name,
+      hp,
+      maxHp: hp,
+      power: Math.round(def.power * deeper),
+      guard: def.guard,
+      speed: def.speed,
+      row,
+      statuses: [],
+      intent: { ability: def.clock?.waiting ?? def.abilities[0], target: "" },
+      phase: 1,
+      owner: owner.id,
+      ...(e.fuse ? { fuse: { at: s.round, rounds: e.fuse } } : {}),
+    };
+    s.enemies.push(made);
+  }
+  log(
+    s,
+    `${owner.name} brings ${e.rows.length === 1 ? `${def.name}` : `${e.rows.length} × ${def.name}`} into the chamber.`,
+    "combo",
+    { kind: "combo", label: def.name.toUpperCase(), actor: owner.id },
+  );
+}
+/**
+ * A spawned object broke: it answers to its owner for it, and when it was the
+ * last of its batch standing and none of the batch had been spent, it answers
+ * for the batch as well.
+ */
+function answer(s: RunState, broke: Enemy, depth: number) {
+  const def = definitions.find((d) => d.id === broke.definition);
+  const owner = s.enemies.find((x) => x.id === broke.owner && x.hp > 0);
+  if (!def?.broken || !owner) return;
+  // The broken object answers as it was, not as a corpse: the interpreter
+  // stops for a fallen actor, and its own power is not what cracks back.
+  const wax: Enemy = { ...broke, hp: 1, power: 0, statuses: [] };
+  effects(s, wax, owner, def.broken.each, depth);
+  const batch = s.enemies.filter(
+    (x) =>
+      x.owner === broke.owner &&
+      x.definition === broke.definition &&
+      x.fuse?.at === broke.fuse?.at,
+  );
+  if (def.broken.all && batch.every((x) => x.hp <= 0 && !x.spent)) {
+    log(s, `Every ${def.name} is broken. ${owner.name} staggers.`, "combo", {
+      kind: "combo",
+      label: "BROKEN",
+      actor: broke.id,
+      target: owner.id,
+    });
+    effects(s, wax, owner, def.broken.all, depth);
+  }
+}
+/** Rounds left on a spawned object's fuse this round; 0 means it is due. */
+export function fuseLeft(s: RunState, e: Enemy) {
+  return e.fuse ? Math.max(0, e.fuse.rounds - (s.round - e.fuse.at)) : 0;
+}
+/**
  * Everything a broken container was holding goes back to the heroes it was
  * taken from. Called when the box falls and again when the chamber does, so a
  * seizure can never outlive the fight it happened in.
@@ -157,8 +231,10 @@ function hurt(
   if (target.hp <= 0) return;
   const barrier = status(target, "barrier");
   let n = Math.max(0, Math.round(amount));
+  let soaked = 0;
   if (barrier) {
     const blocked = Math.min(barrier.stacks, n);
+    soaked = blocked;
     barrier.stacks -= blocked;
     n -= blocked;
     target.statuses = target.statuses.filter((x) => x.stacks > 0);
@@ -174,6 +250,9 @@ function hurt(
   }
   const actual = Math.min(target.hp, n);
   target.hp -= actual;
+  // What an enemy has taken this round, Barrier included: what cracks a move.
+  if (isEnemy(target) && source.id !== target.id)
+    target.taken = (target.taken ?? 0) + actual + soaked;
   if (isPlayer(source)) source.damage += actual;
   if (isPlayer(source) && !isPlayer(target)) charge(s, source, "damage", actual);
   if (isPlayer(target) && !isPlayer(source)) charge(s, target, "hurt", actual);
@@ -194,6 +273,7 @@ function hurt(
     if (isPlayer(target)) target.downedRounds = 3;
     else {
       if (isEnemy(target) && target.holding?.length) release(s, target);
+      if (isEnemy(target) && target.owner) answer(s, target, depth + 1);
       // A container opened is a choice, not a kill.
       if (isPlayer(source) && !definitions.find((d) => d.id === (target as Enemy).definition)?.object)
         charge(s, source, "kill");
@@ -398,6 +478,30 @@ export function effects(
         }
       } else log(s, `${target.name} carries nothing worth taking.`);
     }
+    // Handing on what the actor carries: a lien served back onto an enemy.
+    if (e.kind === "transfer") {
+      const held = status(actor, e.status);
+      if (held && target.hp > 0) {
+        actor.statuses = actor.statuses.filter((x) => x.id !== e.status);
+        // A debt served back is split: half falls due on the one serving it,
+        // now, and half on the enemy it is handed to, this round. Handing it
+        // on is a way to share the weight, not a free blow: at full weight
+        // the Bailiff ended 1% of the runs that met it.
+        const half = Math.ceil(held.stacks / 2);
+        if (e.status === "lien") hurt(s, actor, actor, held.stacks - half, depth + 1);
+        applyStatus(target, e.status, half, 1);
+        log(s, `${actor.name} serves the ${statuses[e.status].name} back on ${target.name}.`, "combo", {
+          kind: "combo",
+          label: "SERVED BACK",
+          actor: actor.id,
+          target: target.id,
+        });
+      }
+      continue;
+    }
+    // A boss can bring things into the fight that answer for it: the Notary's
+    // seals. One batch at a time, so a pressing never lands on top of another.
+    if (e.kind === "spawn" && isEnemy(actor)) spawn(s, actor, e);
     // Wealth left in the treasury is collateral the Miser can shield itself
     // with, so arriving rich is a decision and not simply a cushion.
     if (e.kind === "bank") {
@@ -523,14 +627,13 @@ export function effects(
         }
       }
       statusRecipient = victim;
-      let amount =
-        (e.amount + actor.power) *
-          (status(actor, "weak") ? WEAK : 1) *
-          (status(actor, "empowered") ? EMPOWERED : 1) -
-        (e.pierce ? 0 : victim.guard);
-      if (status(victim, "vulnerable")) amount *= 1.25;
-      if (e.precision && status(victim, "marked")) {
-        amount += EXPLOIT;
+      // The same function the battlefield forecasts intents with.
+      const exploit = !!e.precision && !!status(victim, "marked");
+      const amount = hitDamage(e.amount, actor, victim, {
+        pierce: e.pierce,
+        precision: e.precision,
+      });
+      if (exploit) {
         victim.statuses = victim.statuses.filter((x) => x.id !== "marked");
         charge(s, actor, "reaction");
         log(s, "EXPLOIT · Mark + Precision", "combo", {
@@ -552,6 +655,9 @@ export function effects(
         });
       }
       hurt(s, actor, victim, Math.max(1, amount), depth);
+      // A direct hit from the other side calls in a lien at once.
+      if (depth === 0 && isPlayer(actor) !== isPlayer(victim))
+        callLien(s, victim, actor, depth + 1);
       if (chain) {
         const side = isPlayer(victim) ? s.players : s.enemies;
         for (const other of side)
@@ -570,7 +676,27 @@ export function scald(s: RunState, u: Unit, amount: number) {
   hurt(s, u, u, amount, 5);
 }
 
+/**
+ * A lien comes due: its stacks, through armour, on whoever carries it. Called
+ * when a direct hit from the other side lands on the carrier, and when the lien
+ * runs out at the end of a round.
+ */
+export function callLien(s: RunState, carrier: Unit, source: Unit, depth = 1) {
+  const lien = status(carrier, "lien");
+  if (!lien || carrier.hp <= 0) return;
+  carrier.statuses = carrier.statuses.filter((x) => x.id !== "lien");
+  log(s, `The lien on ${carrier.name} comes due: ${lien.stacks}!`, "combo", {
+    kind: "combo",
+    label: "LIEN CALLED",
+    actor: source.id,
+    target: carrier.id,
+  });
+  hurt(s, source, carrier, lien.stacks, depth);
+}
 export function tickStatuses(s: RunState, u: Unit) {
+  // A lien in its last round comes due before anything else ticks.
+  const due = status(u, "lien");
+  if (due && due.duration <= 1 && u.hp > 0) callLien(s, u, u, 5);
   if (u.hp > 0) {
     for (const st of [...u.statuses]) {
       if (st.id === "burn" || st.id === "poison") hurt(s, u, u, st.stacks, 5);

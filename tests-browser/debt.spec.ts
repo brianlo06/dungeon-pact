@@ -244,19 +244,17 @@ test.describe("the Counting House is authored throughout", () => {
       .toBeGreaterThan(25);
   });
 
-  test("it arrives with its own mark rather than the Collector's seal", async ({
-    page,
-  }) => {
+  test("it arrives with its own entrance and title card", async ({ page }) => {
     await open(page, {
       boss: "miser",
       party: 4,
       stage: "opening",
       motion: 1,
       tempo: 0.2,
+      intro: 1,
     });
-    const intro = page.locator(".boss-intro");
-    await expect(intro).toHaveAttribute("data-boss", "miser");
-    await expect(intro.locator(".intro-coin")).toHaveCount(1);
-    await expect(intro.locator(".intro-name")).toHaveText("The Miser");
+    const intro = page.locator(".ult-cinematic[data-intro]");
+    await expect(intro).toHaveAttribute("aria-label", /The Miser/);
+    await expect(intro.locator(".ct-name")).toHaveText("The Miser", { timeout: 20_000 });
   });
 });

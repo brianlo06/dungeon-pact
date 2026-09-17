@@ -169,8 +169,11 @@ html[data-motion="reduced"] .gear-energy {
 .equipment-inspector {
   pointer-events: auto;
 }
+/* An open inspector lifts its hero over every combatant, whose depth order runs
+ * into the hundreds: the panel opens up into the stage, where a creature's
+ * intent chip would otherwise sit on it and take the pointer. */
 .combatant:has(.equipment-inspector[open]) {
-  z-index: 60 !important;
+  z-index: 4300 !important;
 }
 .auction-room {
   max-width: 1080px;

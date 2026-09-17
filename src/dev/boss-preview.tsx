@@ -146,15 +146,28 @@ function BossPreview() {
               value={options.encounter ?? options.boss}
               onChange={(e) => {
                 const v = e.target.value;
+                const bosses: FixtureOptions["boss"][] = [
+                  "collector",
+                  "miser",
+                  "notary",
+                  "assayer",
+                  "salvor",
+                  "bailiff",
+                ];
+                const boss = bosses.find((b) => b === v);
                 load(
-                  v === "collector" || v === "miser"
-                    ? { ...options, boss: v, encounter: undefined }
+                  boss
+                    ? { ...options, boss, encounter: undefined }
                     : { ...options, encounter: v },
                 );
               }}
             >
               <option value="collector">The Collector</option>
               <option value="miser">The Miser</option>
+              <option value="notary">The Notary</option>
+              <option value="assayer">The Assayer</option>
+              <option value="salvor">The Salvor</option>
+              <option value="bailiff">The Bailiff</option>
               {encounters.map((e) => (
                 <option key={e.id} value={e.id}>
                   {e.name}
@@ -299,6 +312,7 @@ function BossPreview() {
               disabled={exit.ending}
               onSettled={exit.ending ? exit.finish : undefined}
               reducedMotion={!motion}
+              bossIntros={new URLSearchParams(location.search).get("intro") === "1"}
               lab={lab.hooks}
             />
           ) : (
