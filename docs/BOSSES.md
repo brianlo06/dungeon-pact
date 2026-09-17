@@ -280,3 +280,26 @@ or when struck, and that can be set off on the monster instead).
 The party's answers: step the carrier out of the garnished row (the row is
 locked when announced), guard the carrier, or serve it back onto the Bailiff and
 hit it. Every class can do at least one.
+## Re-measured with all 32 Ultimates
+
+The bosses were tuned on a base that had only some of the Ultimate films'
+rules. After merging all 32 (attack-choreography d9f6f73), the same measure
+— every 2nd composition, 8 seeds, tactical — with `BOSS_PRICING` unchanged
+(HP ×1.2, +2 damage per hero):
+
+| | 2p | 3p | 4p | all |
+| --- | --- | --- | --- | --- |
+| tuned (before all 32) | 64% | 75% | 72% | **72%** |
+| all 32 Ultimates on | 68% | 79% | 69% | **71%** |
+| Ultimates off (a pre-Ultimate room) | 48% | 54% | 42% | 45% |
+
+Runs each boss ends, on then off: Collector 11 / 17%, Assayer 12 / 22%, Miser
+12 / 24%, Salvor 14 / 35%, Notary 7 / 20%, Bailiff 5 / 11%. The price holds:
+the overall rate and every boss's share moved by three points or less, so it
+was left as it is.
+
+The class spread did move. With against without: Warden +23, Vanguard +15,
+Reaver +9, Beguiler +9, Broker 0, Ranger −8, Herald −15, **Arcanist −18**. The
+Arcanist is now the weakest class and the Herald close behind it; the Reaver,
+last measured at −1, is ahead of the middle. Those are class levers, not the
+boss price, and the next balance pass.
