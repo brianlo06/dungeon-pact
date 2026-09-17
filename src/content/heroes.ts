@@ -84,6 +84,17 @@ export const utility: Ability[] = [
     0,
     6,
   ),
+  // Only offered while the hero carries a lien. Fast, so it lands before the
+  // Bailiff comes to collect.
+  a(
+    "serve",
+    "Serve it back",
+    "Hand the lien you carry to an enemy. It comes due on them instead — at once, if the party hits them.",
+    "enemy",
+    [{ kind: "transfer", status: "lien" }],
+    0,
+    14,
+  ),
 ];
 export const heroes: HeroDef[] = [
   {

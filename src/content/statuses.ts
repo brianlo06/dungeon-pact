@@ -89,6 +89,13 @@ export const statuses: Record<
       "Hardened plates. Every hit this unit makes deals 3 more per stack.",
     max: 6,
   },
+  lien: {
+    name: "Lien",
+    icon: "⚖",
+    description:
+      "A debt served on you. It detonates for its stacks when it runs out — or at once if the other side lands a direct hit on you. Serve it back to hand it on.",
+    max: 100,
+  },
   vulnerable: {
     name: "Vulnerable",
     icon: "◇",

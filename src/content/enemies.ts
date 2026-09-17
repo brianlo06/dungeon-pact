@@ -75,6 +75,15 @@ const plateSoft: Ability = {
   cooldown: 0,
   effects: [{ kind: "status", status: "barrier", stacks: 1, duration: 1 }],
 };
+/**
+ * The Bailiff's writ: a light blow, and a lien served on whoever does not yet
+ * carry one. It comes due in three rounds, or the moment the Bailiff's side
+ * lands a direct hit on its carrier.
+ */
+const serveLien = (amount: number, lien: number): Ability =>
+  attack("serve-lien", "Serve a lien", amount, "enemy", [
+    { kind: "status", status: "lien", stacks: lien, duration: 3 },
+  ]);
 /** A wax seal's clock while it sets: it hardens, and its intent counts down. */
 const waxSetting: Ability = {
   id: "setting",
@@ -444,6 +453,36 @@ export const enemies: EnemyDef[] = [
   },
   {
     presentation: {
+      spriteSet: "bailiff",
+      footprint: "boss-large",
+      theme: "contract",
+      idlePeriod: 5.8,
+      shadow: 1,
+    },
+    id: "bailiff",
+    name: "The Bailiff",
+    glyph: "⚖",
+    hp: 195,
+    power: 3,
+    guard: 3,
+    speed: 4,
+    row: "front",
+    boss: true,
+    epithet: "Who Comes to Collect",
+    lair: "The Bailiff's Court",
+    objective:
+      "It serves liens that come due in three rounds — or the moment it lands a hit on the one carrying them. Keep the carrier out of reach, guard them, or serve it back.",
+    // It collects from whoever carries a lien, and serves whoever does not.
+    targets: "indebted",
+    abilities: [
+      attack("collect", "Collect", 22),
+      attack("garnish", "Garnish wages", 14, "enemyRow", [
+        { kind: "gold", amount: -10 },
+      ]),
+    ],
+  },
+  {
+    presentation: {
       spriteSet: "wax-seal",
       footprint: "small",
       theme: "contract",
@@ -596,6 +635,13 @@ export const tacticalIntents: Record<string, Ability[]> = {
     // about the damage changed: the same blow now also takes something.
     collateral,
   ],
+  bailiff: [
+    serveLien(12, 32),
+    attack("garnish", "Garnish wages", 16, "enemyRow", [
+      { kind: "gold", amount: -10 },
+    ]),
+    attack("collect", "Collect", 24),
+  ],
   salvor: [
     encrust(["front"]),
     attack("volley", "Rust volley", 16, "enemyRow"),
@@ -626,6 +672,12 @@ export const tacticalIntents: Record<string, Ability[]> = {
 };
 /** Containers are scenery with health: they never count as enemies to clear. */
 export const phaseTwoIntents: Record<string, Ability[]> = {
+  // Phase two serves a second lien before it collects.
+  bailiff: [
+    serveLien(14, 36),
+    serveLien(14, 36),
+    attack("collect", "Collect", 28),
+  ],
   // Phase two grows two plates at once and hooks harder.
   salvor: [
     encrust(["front", "back"]),

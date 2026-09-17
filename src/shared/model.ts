@@ -31,7 +31,12 @@ export type StatusId =
   /** A crucible's charge: what a pour is building to. Shown, never read by damage. */
   | "heat"
   /** Hardened plates: every hit this unit makes is heavier by 3 a stack. */
-  | "encrusted";
+  | "encrusted"
+  /**
+   * A debt served on this unit: it detonates for its stacks when it runs out,
+   * or at once when the other side lands a direct hit on its carrier.
+   */
+  | "lien";
 export type Trigger =
   | "roundStart"
   | "afterAttack"
@@ -77,6 +82,8 @@ export type Effect =
    * carrying a working balance, not a hoard, and should not be taxed for it.
    */
   | { kind: "bank"; per: number; free: number }
+  /** Moves a status the actor carries onto the target, whole. */
+  | { kind: "transfer"; status: StatusId }
   /**
    * Brings objects into the fight on the actor's side, one per listed row, each
    * belonging to the actor. With a `fuse` each object's intent counts down that
@@ -280,7 +287,7 @@ export interface EnemyDef {
    * Whom a boss aims at, when it is not the row it prefers: `wealthiest` is
    * the hero who has spent the most gold, first. The Collector's.
    */
-  targets?: "wealthiest";
+  targets?: "wealthiest" | "indebted";
   /**
    * Extra damage on every hit for each so much gold the treasury holds: the
    * current rules, and the rate a room before combat v2 kept. The Miser's.

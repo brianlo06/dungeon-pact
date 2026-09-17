@@ -15,6 +15,8 @@ import { enemies, enemyAbilities } from "../../content/enemies";
  * is using it, so any content that seizes or banks gets the same choreography.
  */
 const OBJECTIVE = new Set<Effect["kind"]>(["seize", "bank", "spawn"]);
+/** A status that is itself a boss's objective: serving it is the signature. */
+const OBJECTIVE_STATUS = new Set(["lien"]);
 
 /**
  * Whether an enemy is holding a wind-up: it has announced an interruptible
@@ -38,7 +40,11 @@ export function isSignatureMove(ability: Ability): boolean {
   return (
     !!ability.interruptible ||
     !!ability.cracks ||
-    ability.effects.some((e) => OBJECTIVE.has(e.kind))
+    ability.effects.some(
+      (e) =>
+        OBJECTIVE.has(e.kind) ||
+        (e.kind === "status" && OBJECTIVE_STATUS.has(e.status)),
+    )
   );
 }
 

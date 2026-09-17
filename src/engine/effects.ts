@@ -478,6 +478,21 @@ export function effects(
         }
       } else log(s, `${target.name} carries nothing worth taking.`);
     }
+    // Handing on what the actor carries: a lien served back onto an enemy.
+    if (e.kind === "transfer") {
+      const held = status(actor, e.status);
+      if (held && target.hp > 0) {
+        actor.statuses = actor.statuses.filter((x) => x.id !== e.status);
+        applyStatus(target, e.status, held.stacks, Math.max(2, held.duration));
+        log(s, `${actor.name} serves the ${statuses[e.status].name} back on ${target.name}.`, "combo", {
+          kind: "combo",
+          label: "SERVED BACK",
+          actor: actor.id,
+          target: target.id,
+        });
+      }
+      continue;
+    }
     // A boss can bring things into the fight that answer for it: the Notary's
     // seals. One batch at a time, so a pressing never lands on top of another.
     if (e.kind === "spawn" && isEnemy(actor)) spawn(s, actor, e);
@@ -634,6 +649,9 @@ export function effects(
         });
       }
       hurt(s, actor, victim, Math.max(1, amount), depth);
+      // A direct hit from the other side calls in a lien at once.
+      if (depth === 0 && isPlayer(actor) !== isPlayer(victim))
+        callLien(s, victim, actor, depth + 1);
       if (chain) {
         const side = isPlayer(victim) ? s.players : s.enemies;
         for (const other of side)
@@ -652,7 +670,27 @@ export function scald(s: RunState, u: Unit, amount: number) {
   hurt(s, u, u, amount, 5);
 }
 
+/**
+ * A lien comes due: its stacks, through armour, on whoever carries it. Called
+ * when a direct hit from the other side lands on the carrier, and when the lien
+ * runs out at the end of a round.
+ */
+export function callLien(s: RunState, carrier: Unit, source: Unit, depth = 1) {
+  const lien = status(carrier, "lien");
+  if (!lien || carrier.hp <= 0) return;
+  carrier.statuses = carrier.statuses.filter((x) => x.id !== "lien");
+  log(s, `The lien on ${carrier.name} comes due: ${lien.stacks}!`, "combo", {
+    kind: "combo",
+    label: "LIEN CALLED",
+    actor: source.id,
+    target: carrier.id,
+  });
+  hurt(s, source, carrier, lien.stacks, depth);
+}
 export function tickStatuses(s: RunState, u: Unit) {
+  // A lien in its last round comes due before anything else ticks.
+  const due = status(u, "lien");
+  if (due && due.duration <= 1 && u.hp > 0) callLien(s, u, u, 5);
   if (u.hp > 0) {
     for (const st of [...u.statuses]) {
       if (st.id === "burn" || st.id === "poison") hurt(s, u, u, st.stacks, 5);

@@ -173,6 +173,16 @@ export function prepareIntents(s: RunState) {
             Number(b.id === e.owner) - Number(a.id === e.owner) ||
             a.hp / a.maxHp - b.hp / b.maxHp,
         );
+    else if (def.targets === "indebted") {
+      // It collects from whoever carries a lien, and serves whoever does not.
+      const serving = ability.effects.some(
+        (fx) => fx.kind === "status" && fx.status === "lien",
+      );
+      const owes = (u: Unit) => Number(!!status(u, "lien")) * (serving ? -1 : 1);
+      targets = [...targets].sort(
+        (a, b) => owes(b) - owes(a) || b.hp - a.hp || a.id.localeCompare(b.id),
+      );
+    }
     else if (def.targets === "wealthiest")
       targets = [...targets].sort(
         (a, b) => (isPlayer(b) ? b.spent : 0) - (isPlayer(a) ? a.spent : 0),
@@ -185,7 +195,8 @@ export function prepareIntents(s: RunState) {
     const target =
       ability.target === "self" ||
       ability.target === "ally" ||
-      def.targets === "wealthiest"
+      def.targets === "wealthiest" ||
+      def.targets === "indebted"
         ? targets[0]
         : pick(s, targets);
     e.intent = {
@@ -383,6 +394,9 @@ export function validatePlan(
   if (a.id === "revive" && (target.hp > 0 || s.gold < reviveCost(s)))
     throw Error(`Revival requires a downed ally and ${reviveCost(s)} gold`);
   if (a.revive && target.hp > 0) throw Error("Choose a downed ally");
+  for (const fx of a.effects)
+    if (fx.kind === "transfer" && !status(p, fx.status))
+      throw Error("You carry nothing to serve back");
   // A heal aimed at a downed ally would stand them up for the price of a
   // dressing. With boss pools, only a revival reaches the downed.
   if (

@@ -58,6 +58,7 @@ const STATUS_NAMES: Record<string, string> = {
   empowered: "Empowered",
   heat: "Heat",
   encrusted: "Encrusted",
+  lien: "Lien",
 };
 
 function ridersOf(list: Effect[]): string[] {
@@ -74,6 +75,35 @@ function ridersOf(list: Effect[]): string[] {
       for (const r of ridersOf(e.effects)) out.push(`${r} if ${e.status}`);
   }
   return [...new Set(out)];
+}
+
+/** Every hero an enemy's announced move will strike directly, if any. */
+function directVictims(s: State, enemy: Enemy): Player[] {
+  const a = enemy.intent.ability;
+  if (!a.effects.some((e) => e.kind === "damage" && !e.self)) return [];
+  if (enemy.statuses.some((x) => x.id === "interrupted")) return [];
+  if (a.target === "enemyRow") {
+    const row =
+      enemy.intent.row ??
+      s.players.find((p) => p.id === enemy.intent.target)?.row;
+    return standing(s).filter((p) => p.row === row);
+  }
+  if (a.target !== "enemy") return [];
+  const aimed = s.players.find((p) => p.id === enemy.intent.target);
+  const target = aimed && aimed.hp > 0 ? aimed : standing(s)[0];
+  return target ? [target] : [];
+}
+
+/**
+ * The enemy whose hit calls in a hero's lien: the first, in the order enemies
+ * act (fastest first), to land a direct hit on its carrier. A lien is called
+ * once; every later hit that round finds it gone.
+ */
+function lienCaller(s: State, heroId: string): string | undefined {
+  return [...s.enemies]
+    .filter((e) => e.hp > 0)
+    .sort((a, b) => b.speed - a.speed)
+    .find((e) => directVictims(s, e).some((v) => v.id === heroId))?.id;
 }
 
 export function forecastIntent(s: State, enemy: Enemy): Forecast {
@@ -127,13 +157,20 @@ export function forecastIntent(s: State, enemy: Enemy): Forecast {
             }),
           0,
         );
+        // A direct hit calls in a lien on the one it lands on.
+        const struckUnit = guard && direct.length ? guard : v;
+        const lien =
+          direct.length && lienCaller(s, struckUnit.id) === enemy.id
+            ? (struckUnit.statuses.find((x) => x.id === "lien")?.stacks ?? 0)
+            : 0;
         const barrier =
           v.statuses.find((x) => x.id === "barrier")?.stacks ?? 0;
         return {
           id: v.id,
           name: guard && direct.length ? `${guard.name} for ${v.name}` : v.name,
-          damage,
-          blocked: guard && direct.length ? 0 : Math.min(barrier, damage),
+          damage: damage + lien,
+          blocked:
+            guard && direct.length ? 0 : Math.min(barrier, damage + lien),
         };
       })
     : [];

@@ -27,6 +27,7 @@ const statusId = z.enum([
   "interrupted",
   "heat",
   "encrusted",
+  "lien",
 ]);
 export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
   z.discriminatedUnion("kind", [
@@ -70,6 +71,7 @@ export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
       per: z.number().int().positive(),
       free: nonnegative,
     }),
+    z.object({ kind: z.literal("transfer"), status: statusId }),
     z.object({
       kind: z.literal("spawn"),
       object: z.string().min(1),

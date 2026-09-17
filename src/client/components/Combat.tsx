@@ -216,7 +216,18 @@ export function Combat({
     me.upgrades,
     me.evolution,
     me.items,
-  ).filter((a) => a.id !== "revive" || s.bossVersion !== 1);
+  )
+    .filter((a) => a.id !== "revive" || s.bossVersion !== 1)
+    // Serving a lien back is only an action while you carry one.
+    .filter(
+      (a) =>
+        !a.effects.some((e) => e.kind === "transfer") ||
+        a.effects.some(
+          (e) =>
+            e.kind === "transfer" &&
+            me.statuses.some((st) => st.id === e.status),
+        ),
+    );
   const [ability, setAbility] = useState(list[0].id);
   const [target, setTarget] = useState("");
   /**
@@ -433,14 +444,17 @@ export function Combat({
     return null;
   };
 
-  const COMMON = new Set(["brace", "advance", "retreat", "revive"]);
+  const COMMON = new Set(["brace", "advance", "retreat", "revive", "serve"]);
+  const indebted = me.statuses.some((st) => st.id === "lien");
   const someoneDown = s.players.some((p) => p.hp <= 0 && !p.fallen);
   const fanOptions: FanAbility[] = list
     .map((a) => ({
       ability: a,
       blocked: why(a),
       common: COMMON.has(a.id),
-      urgent: (a.id === "revive" || !!a.revive) && someoneDown,
+      urgent:
+        ((a.id === "revive" || !!a.revive) && someoneDown) ||
+        (a.id === "serve" && indebted),
       cost: cost(a),
     }))
     // Signature abilities sit nearest the hero; shared ones cascade further

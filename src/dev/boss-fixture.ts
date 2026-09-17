@@ -5,7 +5,13 @@ import { items } from "../content/items";
 import { encounters } from "../content/encounters";
 import type { RunState } from "../shared/model";
 
-export type Boss = "collector" | "miser" | "notary" | "assayer" | "salvor";
+export type Boss =
+  | "collector"
+  | "miser"
+  | "notary"
+  | "assayer"
+  | "salvor"
+  | "bailiff";
 /** Bosses a single-floor room drew between; any other is staged by name. */
 const DRAWN: Boss[] = ["collector", "miser"];
 /**

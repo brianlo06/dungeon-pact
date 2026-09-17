@@ -216,8 +216,26 @@ ignores the plates faces a Salvor that hits a little harder every other round.
 
 ## The Bailiff — Ledger Archive
 
-**Two words: serve, collect.** The Bailiff serves a Lien on one hero with a
-visible countdown. Hitting the carrier sets it off early; a cleanse removes
-it; the carrier can sign it over into the Bailiff's lane, where the Bailiff's
-own attack sets it off. Principle: a delayed detonation the party can turn
-around.
+**Two words: serve, collect.** The Bailiff serves a lien on a hero and comes
+back to collect it. Principle: a delayed detonation the party can turn around
+(Brachydios's slime and Magnamalo's Hellfire — a mark that goes off on a timer
+or when struck, and that can be set off on the monster instead).
+
+- **Lien** (a status): stacks are its damage, and it comes due, through armour,
+  when it runs out — or **at once** when the other side lands a direct hit on
+  its carrier. A guard who takes the hit for the carrier does not call it in.
+- **Rotation**: Serve a lien (12, and a Lien of 32 for three rounds on a hero
+  who carries none) → Garnish wages (16 over the carrier's row, −10 gold) →
+  Collect (24 on the carrier). It aims at whoever carries a lien
+  (`targets: "indebted"`), and serves whoever does not.
+- **Serve it back**: a shared action offered only while a hero carries a lien
+  (fast, speed 14): the lien moves whole onto an enemy, where the party's next
+  direct hit calls it in on them.
+- **The chips** add the lien to the damage of the first enemy, in the order
+  they act, that will hit the carrier — the garnish reads `30–59 each` when
+  the 59 is the carrier's.
+- **Phase two** serves two liens of 36 before it collects for 28.
+
+The party's answers: step the carrier out of the garnished row (the row is
+locked when announced), guard the carrier, or serve it back onto the Bailiff and
+hit it. Every class can do at least one.

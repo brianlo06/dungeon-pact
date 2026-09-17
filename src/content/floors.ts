@@ -70,7 +70,7 @@ export const floors: FloorDef[] = [
     title: "THE LEDGER ARCHIVE",
     heading: "Below the water, where the debts are kept.",
     tier: 3,
-    bosses: ["notary"],
+    bosses: ["notary", "bailiff"],
   },
 ];
 

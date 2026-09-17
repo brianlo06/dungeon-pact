@@ -11,6 +11,7 @@ import { Miser } from "./Miser";
 import { Notary } from "./Notary";
 import { Assayer } from "./Assayer";
 import { Salvor } from "./Salvor";
+import { Bailiff } from "./Bailiff";
 import { SalvagePlate } from "./SalvagePlate";
 import { WaxSeal } from "./WaxSeal";
 import { Sniper } from "./Sniper";
@@ -37,6 +38,7 @@ export const CREATURES: Record<string, ComponentType<CreatureProps>> = {
   notary: Notary,
   assayer: Assayer,
   salvor: Salvor,
+  bailiff: Bailiff,
   "salvage-plate": SalvagePlate,
   "wax-seal": WaxSeal,
   sniper: Sniper,

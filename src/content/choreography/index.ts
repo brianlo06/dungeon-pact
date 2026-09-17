@@ -22,6 +22,7 @@ import miser from "./miser";
 import notary from "./notary";
 import assayer from "./assayer";
 import salvor from "./salvor";
+import bailiff from "./bailiff";
 import salvagePlate from "./salvage-plate";
 import waxSeal from "./wax-seal";
 
@@ -53,6 +54,7 @@ export const CHOREOGRAPHY: Record<string, CreatureChoreography> = {
   notary,
   assayer,
   salvor,
+  bailiff,
   "salvage-plate": salvagePlate,
   "wax-seal": waxSeal,
 };
