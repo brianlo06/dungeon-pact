@@ -158,6 +158,9 @@ export function bossFixture(options: FixtureOptions): RunState {
       effects(s, s.enemies[0], victim, [
         { kind: "damage", amount: victim.maxHp + 50 },
       ]);
+      // A room with boss pools sells no lives: the way back is a found Writ
+      // of Reprieve, so the first hero carries one to revive with.
+      if (s.bossVersion) s.players[0].items.push("writ-of-reprieve");
       prepareIntents(s);
     }
     if (options.stage === "released") {
