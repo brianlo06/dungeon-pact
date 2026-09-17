@@ -2,7 +2,6 @@ import type { RunState, Player, Snapshot } from "../shared/model";
 import type { Intent } from "../shared/protocol";
 import { hero } from "../content/heroes";
 import { items } from "../content/items";
-import { events } from "../content/events";
 import { services } from "../content/services";
 import { hashSeed, pick } from "./rng";
 import { generateMap, availableNodes, nodeMentorTier, FLOORS } from "./map";
@@ -25,6 +24,7 @@ import {
   proposePurchase,
   approvePurchase,
 } from "./shop";
+import { continueEvent, enterEvent, eventChoices, resolveEvent } from "./luck";
 import {
   answerShrine,
   enterHazard,
@@ -214,10 +214,8 @@ function finishVote(s: RunState, result: string) {
     else if (n.type === "shrine") enterShrine(s);
     else if (n.type === "forge") enterForge(s);
     else if (n.type === "auction" || n.type === "mystery") enterShop(s);
-    else if (n.type === "event") {
-      s.eventId = pick(s, events).id;
-      s.phase = "EVENT";
-    } else if (n.type === "mentor") {
+    else if (n.type === "event") enterEvent(s);
+    else if (n.type === "mentor") {
       const teaching = mentors[nodeMentorTier(s, n) - 1];
       s.mentorId = teaching.id;
       s.mentorClass = teachableClass(s, teaching.id);
@@ -232,18 +230,7 @@ function finishVote(s: RunState, result: string) {
     return;
   }
   if (s.phase === "EVENT") {
-    const c = events
-      .find((e) => e.id === s.eventId)!
-      .choices.find((c) => c.id === result)!;
-    spend(s, c.cost);
-    if (c.gold) gain(s, c.gold);
-    for (const p of s.players) {
-      if (p.hp > 0) p.hp = Math.max(1, Math.min(p.maxHp, p.hp + c.heal));
-      if (c.cleanse) p.statuses = [];
-      if (c.supply) p.items.push(c.supply);
-    }
-    log(s, `The party chose ${c.name}.`);
-    s.phase = "MAP";
+    resolveEvent(s, result);
     return;
   }
   if (s.phase === "CAMP") {
@@ -291,6 +278,7 @@ export function reduce(
       const h = hero(intent.hero);
       Object.assign(p, {
         heroId: h.id,
+        chosen: true,
         hp: h.hp,
         maxHp: h.hp,
         power: h.power,
@@ -329,9 +317,7 @@ export function reduce(
               ? ["rest", "restore", "train"]
               : s.phase === "TOLL"
                 ? ["pay", "fight"]
-                : events
-                    .find((e) => e.id === s.eventId)!
-                    .choices.map((c) => c.id);
+                : eventChoices(s).map((c) => c.id);
       if (!choices.includes(intent.choice)) throw Error("Invalid choice");
       const cost =
         s.phase === "CAMP"
@@ -341,9 +327,7 @@ export function reduce(
               ? (s.toll ?? 0)
               : 0
             : s.phase === "EVENT"
-              ? events
-                  .find((e) => e.id === s.eventId)!
-                  .choices.find((c) => c.id === intent.choice)!.cost
+              ? eventChoices(s).find((c) => c.id === intent.choice)!.cost
               : 0;
       if (s.gold < cost) throw Error("The treasury cannot cover that choice");
       s.votes[p.id] = intent.choice;
@@ -572,7 +556,11 @@ export function reduce(
       break;
     }
     case "continue":
-      requirePhase("REWARD", "AUCTION", "SHOP");
+      requirePhase("REWARD", "AUCTION", "SHOP", "EVENT");
+      if (s.phase === "EVENT") {
+        continueEvent(s);
+        break;
+      }
       if (s.phase === "SHOP") {
         if (s.shop!.proposal)
           throw Error("Finish the purchase decision before leaving");
