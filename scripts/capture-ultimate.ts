@@ -66,11 +66,12 @@ if (errors.length) console.log("ERRORS\n" + [...new Set(errors)].slice(0, 12).jo
 // of frames can be looked at in one image.
 if (process.env.SHEET) {
   const { readFileSync } = await import("node:fs");
+  const jpeg = process.env.FORMAT === "jpeg";
   const names = jobs.map((j) => j.slice(0, j.indexOf("=")));
   const cells = names
     .map(
       (n) =>
-        `<figure><img src="data:image/png;base64,${readFileSync(`${out}/${n}.png`).toString("base64")}"><figcaption>${n}</figcaption></figure>`,
+        `<figure><img src="data:image/${jpeg ? "jpeg" : "png"};base64,${readFileSync(`${out}/${n}.${jpeg ? "jpg" : "png"}`).toString("base64")}"><figcaption>${n}</figcaption></figure>`,
     )
     .join("");
   const sheet = await browser.newPage({ viewport: { width: 1290, height: 400 } });

@@ -42,6 +42,20 @@ test("the Strongbox is set out and a blade is hauled into it", async ({ page }) 
   await expect(film(page).locator(".cine-text-voice")).toContainText("collateral");
 });
 
+test("the Miser wakes in its own film, and the party's gold sets into its shell", async ({ page }) => {
+  await hold(page, { enemy: "miser", shot: 4, at: 0.9 }, "slam");
+  await expect(film(page)).toHaveAttribute("data-cinematic", "miser-intro");
+  const card = film(page).locator(".cine-title-card");
+  await expect(card.locator(".ct-name")).toHaveText("The Miser");
+  await expect(card.locator(".ct-place")).toHaveText("The Counting House");
+  await hold(page, { enemy: "miser", shot: 5, at: 0.85 }, "shell");
+  await expect(film(page).locator(".mbi-shell .mbi-scale")).toHaveCount(22);
+  await expect(film(page).locator(".cine-text-voice")).toContainText("wear it");
+  // The intro's own classes never restyle the Miser's drawing.
+  expect(await page.locator(".cine-actor .msr-coin-face").count()).toBeGreaterThan(0);
+  expect(await film(page).locator("[class^='msr-']:not(.cine-actor *)").count()).toBe(0);
+});
+
 test("skipping hands the fight back at once, with nothing of the film left", async ({ page }) => {
   await hold(page, { shot: 2, at: 0.5 }, "quiet");
   await page.locator(".cine-skip").click();
