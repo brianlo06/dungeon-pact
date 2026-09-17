@@ -518,6 +518,38 @@ test.describe("intent chips stay readable and on screen", () => {
     });
   }
 
+  test("every attack shows how much damage it will do, as a figure with its unit", async ({
+    page,
+  }) => {
+    await lab(page, { encounter: "hunting-pack", party: 3, stage: "opening" });
+    const chips = await page.locator(".intent-chip").evaluateAll((els) =>
+      els.map((e) => {
+        const badge = e.querySelector<HTMLElement>(".intent-damage");
+        const box = badge?.getBoundingClientRect();
+        return {
+          forecast: e.getAttribute("data-damage"),
+          value: badge?.querySelector(".intent-dmg-value")?.textContent ?? null,
+          unit: badge?.querySelector(".intent-dmg-unit")?.textContent ?? null,
+          label: badge?.getAttribute("aria-label") ?? null,
+          height: box ? Math.round(box.height) : 0,
+        };
+      }),
+    );
+    const attacks = chips.filter((c) => c.forecast);
+    // The hunting pack opens with at least two attacks on the party.
+    expect(attacks.length).toBeGreaterThanOrEqual(2);
+    for (const c of attacks) {
+      // The figure on the chip is the engine's forecast, labelled as damage.
+      expect(c.value).toBe(c.forecast);
+      expect(c.unit).toBe("dmg");
+      expect(c.label).toBe(`${c.forecast} damage`);
+      // Big enough to read at a glance: taller than the chip's small print.
+      expect(c.height).toBeGreaterThanOrEqual(12);
+    }
+    // A move that hurts nobody carries no damage badge.
+    for (const c of chips.filter((x) => !x.forecast)) expect(c.value).toBeNull();
+  });
+
   test("the 4-hero hunting party's Stoker no longer covers the Acolyte", async ({
     page,
   }) => {
