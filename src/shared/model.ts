@@ -470,6 +470,14 @@ export interface RunState {
    * drawing its boss from `floors` in `content/floors.ts`.
    */
   bossVersion?: 1;
+  /**
+   * Missing means a room created before open training: each training ground
+   * draws one class from the party to evolve, and everyone else may only
+   * drill. `1` lets every hero in a party of three or four who has not yet
+   * taken a path take theirs at any training ground, each paying tuition; a
+   * duo keeps one class a ground.
+   */
+  trainingVersion?: 1;
   /** Ultimates queued this round, by player. Hidden like plans. */
   ultimates?: Record<string, UltimatePlan>;
   /** Battlefield revivals already bought this run; each one raises the price. */
@@ -535,9 +543,9 @@ export interface RunState {
   /**
    * The one class this training ground will evolve, drawn from the party when
    * the chamber is entered. Everyone else may drill for stats instead.
-   * `undefined` means a room that entered its mentor before the rule existed,
-   * where every class could still take a path; `null` means this ground has
-   * nobody to teach.
+   * `undefined` means open teaching, where every class may take a path: a
+   * room with `trainingVersion`, or one that entered its mentor before the
+   * one-class rule existed. `null` means this ground has nobody to teach.
    */
   mentorClass?: string | null;
   trained?: string[];
