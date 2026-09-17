@@ -67,6 +67,17 @@ test("the Assayer pours under its title, and a blade cracks its crucible", async
   await expect(film(page).locator(".cine-text-voice")).toContainText("worth");
 });
 
+test("the Salvor rises out of the water, and plates harden onto its back", async ({ page }) => {
+  await hold(page, { enemy: "salvor", shot: 4, at: 0.9 }, "haul");
+  await expect(film(page)).toHaveAttribute("data-cinematic", "salvor-intro");
+  await expect(film(page).locator(".cine-title-card .ct-name")).toHaveText("The Salvor");
+  await expect(film(page).locator(".cine-title-card .ct-place")).toHaveText("The Wreck Pool");
+  await hold(page, { enemy: "salvor", shot: 5, at: 0.85 }, "harden");
+  await expect(film(page).locator(".sbi-plates .sbi-plate")).toHaveCount(3);
+  await expect(film(page).locator(".sbi-surface")).toBeVisible();
+  await expect(film(page).locator(".cine-text-voice")).toContainText("water takes");
+});
+
 test("skipping hands the fight back at once, with nothing of the film left", async ({ page }) => {
   await hold(page, { shot: 2, at: 0.5 }, "quiet");
   await page.locator(".cine-skip").click();
