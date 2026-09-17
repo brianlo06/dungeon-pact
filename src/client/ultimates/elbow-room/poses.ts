@@ -37,6 +37,12 @@ const SHOULDERED = 100;
 const LOW = 78;
 /** Level behind, at full reach. */
 const BACK = 62;
+/**
+ * The hand choked up the grip to the blade's heel (`choke`, a close-up-only
+ * part slid up into its window from 40 below), so the blade held out at full
+ * reach sits in the fist instead of floating off the end of the arm.
+ */
+const CHOKED = { choke: [{ at: 0, y: -0.4 }] };
 
 /**
  * The call, on the board: the neck rolled one way and the other, and the
@@ -168,6 +174,7 @@ const wind: Clip = {
   ],
   parts: {
     cleaver: turn([0, SHOULDERED], [0.3, 70], [0.55, BACK - 4], [0.62, BACK + 3], [0.72, BACK - 1], [1, BACK]),
+    ...CHOKED,
     fist: [
       { at: 0, rotate: -6, x: 0, y: 0, scale: 1 },
       { at: 0.55, rotate: -46, x: 0.03, y: 0.01, scale: 1.04 },
@@ -217,14 +224,16 @@ const sweep: Clip = {
     { at: 1, x: 0.12, y: 0.01, rotate: 5, squash: 0.96, scale: 1.02 },
   ],
   parts: {
+    ...CHOKED,
     cleaver: [
       { at: 0, rotate: BACK, scale: 1 },
       { at: C * 0.45, rotate: BACK - 14, scale: 0.94 },
-      { at: C * 0.72, rotate: -52, scale: 0.6 },
-      { at: C, rotate: -113, scale: 1.24 },
-      { at: C + 0.2, rotate: -119, scale: 1.2 },
-      { at: 0.7, rotate: -117, scale: 1.12 },
-      { at: 1, rotate: -115, scale: 1.08 },
+      { at: C * 0.72, rotate: -52, x: 0.015, y: 0.05, scale: 0.6 },
+      // Level: the blade lies 142° round from the arm at rest, and the body leans R into the swing, so −142 − R.
+      { at: C, rotate: -145, x: 0.03, y: 0.11, scale: 1.18 },
+      { at: C + 0.2, rotate: -150, x: 0.03, y: 0.11, scale: 1.16 },
+      { at: 0.7, rotate: -148, x: 0.03, y: 0.1, scale: 1.1 },
+      { at: 1, rotate: -147, x: 0.03, y: 0.1, scale: 1.08 },
     ],
     fist: [
       { at: 0, rotate: -50, x: 0.035, y: 0.01, scale: 1.05 },

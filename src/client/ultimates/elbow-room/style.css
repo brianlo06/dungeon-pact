@@ -208,6 +208,17 @@
   opacity: calc(clamp(0, (var(--p) - var(--d)) * 40, 1) * (1 - clamp(0, (var(--k) - 0.8) * 5, 1)));
 }
 
+/* ---- the row swept back: its bow waves of sawdust ---- */
+.elbow-knock-wave {
+  fill: #e4c58c;
+  stroke: #5b4329;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.elbow-knock-wave-dark {
+  fill: #8a6a44;
+}
+
 /* ---- the glare behind the row ---- */
 .cine-vfx > .elbow-glare {
   width: var(--gw);

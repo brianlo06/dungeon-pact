@@ -513,7 +513,133 @@ const Board = ({ cue }: VfxProps) => {
   );
 };
 
+/* ── The row swept back ────────────────────────────────────────────────── */
+
+/**
+ * The row thrown back down the lane. The engine gives a target no clip of
+ * this film's and an actor cue no lift, so this moves each target copy's
+ * drawing (`.cine-look`, which nothing else in the film touches) from its
+ * feet: snapped away from the Butcher on the frame the band reaches it, lifted
+ * off its feet and tipped hard back, landing and sliding on; the nearest
+ * first, the rest as the band gets to them. Its `hurt` still plays inside it.
+ * Ahead of each figure, in the way it travels, a bow wave of sawdust is kicked
+ * up off the cobbles. A boss is not lifted: it rocks back hard and slides a
+ * shorter way.
+ *
+ * Params (world units and ms of the cue's age): `hit` when the band reaches
+ * the last of the row, `lead` how much sooner it reaches each nearer one,
+ * `push`, `slide`, `lift`, `tilt` (degrees), `settle` (the tilt kept).
+ */
+const Knock = ({ cue }: VfxProps) => (
+  <World cue={cue} className="elbow-knock">
+    <path className="elbow-knock-wave" />
+    <path className="elbow-knock-wave-dark" />
+  </World>
+);
+
+interface Flight {
+  dx: number;
+  dy: number;
+  rot: number;
+  squash: number;
+  /** How hard the bow wave is kicking, 0…1, and how far it has travelled. */
+  wave: number;
+  since: number;
+}
+
+function flight(since: number, o: Params, further = 1): Flight {
+  if (since < 0) return { dx: 0, dy: 0, rot: 0, squash: 1, wave: 0, since };
+  const push = pn(o, "push", 300) * further;
+  const slide = pn(o, "slide", 90) * further;
+  const lift = pn(o, "lift", 70);
+  const tilt = pn(o, "tilt", 30);
+  const settle = pn(o, "settle", 0.45);
+  const air = pn(o, "air", 300);
+  // Snapped a third of the way on the frame it is struck: the held frame shows it going.
+  const throwK = 0.32 + 0.68 * easeOut(clamp(since / air));
+  const slideK = easeOut(clamp((since - air) / 360));
+  const dx = push * throwK + slide * slideK;
+  const inAir = since < air ? Math.sin(Math.PI * (0.18 + 0.82 * (since / air))) : 0;
+  const dy = -lift * Math.max(0, inAir);
+  const land = clamp((since - air) / 90);
+  const rot = tilt * (since < air ? 0.7 + 0.3 * easeOut(clamp(since / 120)) : 1 - (1 - settle) * easeOut(clamp((since - air) / 320)));
+  const squash = since < air ? 1 : 1 - 0.12 * Math.sin(Math.PI * land);
+  const wave = since < air + 360 ? 1 - clamp((since - air * 0.6) / 480) : 0;
+  return { dx, dy, rot, squash, wave, since };
+}
+
+const knock: Frame = (el, _p, age, ctx) => {
+  const svg = el.querySelector("svg");
+  const root = el.closest<HTMLElement>(".ult-cinematic");
+  if (!svg || !root) return;
+  const o = params(el);
+  const actors = [...root.querySelectorAll<HTMLElement>('.cine-actor[data-role="targets"]')];
+  const placed = actors.map((node, i) => ({ node, i, at: ctx.actor(`targets-${i}`) })).filter((a) => a.at && a.node.style.display !== "none");
+  // The band comes round from the Butcher's side: nearest first.
+  const order = [...placed].sort((a, b) => a.at!.x - b.at!.x);
+  const caster = ctx.actor("caster");
+  const dir = caster && order.length && order[0].at!.x < caster.x ? -1 : 1;
+  const hit = pn(o, "hit", 130);
+  const lead = pn(o, "lead", 28);
+  let wave = "";
+  let dark = "";
+  order.forEach((a, rank) => {
+    const at = a.at!;
+    const since = age - (hit - (order.length - 1 - rank) * lead);
+    // Each further along the row is caught later in the swing and thrown further, so they fan out rather than pile up.
+    const f = flight(since, o, 1 + rank * pn(o, "fan", 0.5));
+    // World units to the figure's own drawing units (its box is 100 across and the figure 84 tall).
+    const unit = 84 / at.h;
+    const look = a.node.querySelector<HTMLElement>(".cine-look");
+    if (look) {
+      if (look.style.transformOrigin !== "50% 96%") look.style.transformOrigin = "50% 96%";
+      const t =
+        since < 0
+          ? ""
+          : `translate(${f1(f.dx * unit * dir)}px, ${f1(f.dy * unit)}px) rotate(${f1(f.rot * dir)}deg) scale(${(1 / f.squash).toFixed(3)}, ${f.squash.toFixed(3)})`;
+      if (look.style.transform !== t) look.style.transform = t;
+    }
+    if (f.wave <= 0) return;
+    // The bow wave: sawdust flung up and forward off the cobbles, ahead of the feet as they go.
+    const rand = seeded(71 + a.i * 13);
+    const fx = at.x + f.dx * dir + at.h * 0.22 * dir;
+    const fy = at.y;
+    const k = clamp(since / 420);
+    for (let j = 0; j < 48; j++) {
+      const ang = ((-12 - rand() * 70) * Math.PI) / 180;
+      const speed = at.h * (0.3 + rand() * 0.75);
+      const delay = rand() * 0.3;
+      const len = at.h * (0.06 + rand() * 0.09);
+      const chunk = rand() > 0.55;
+      const shade = rand() > 0.8;
+      const kj = clamp((k - delay) / (1 - delay));
+      if (kj <= 0) continue;
+      const x = fx - rand() * at.h * 0.25 * dir + Math.cos(ang) * speed * kj * dir;
+      const y = fy + Math.sin(ang) * speed * kj + at.h * 0.7 * kj * kj;
+      const fade = 0.35 + 0.65 * f.wave;
+      if (chunk) {
+        const r = len * 0.55 * fade;
+        const q = `M${f1(x - r)} ${f1(y - r * 0.4)} L${f1(x + r)} ${f1(y - r * 0.7)} L${f1(x + r * 0.7)} ${f1(y + r * 0.5)} L${f1(x - r * 0.6)} ${f1(y + r * 0.4)} Z `;
+        if (shade) dark += q;
+        else wave += q;
+      } else {
+        // A streak along the way it flies.
+        const vx = Math.cos(ang) * dir;
+        const vy = Math.sin(ang) + 1.4 * kj;
+        const n = Math.hypot(vx, vy) || 1;
+        const l = len * fade;
+        const w = l * 0.22;
+        const [ux, uy] = [vx / n, vy / n];
+        wave += `M${f1(x - ux * l)} ${f1(y - uy * l)} L${f1(x - uy * w)} ${f1(y + ux * w)} L${f1(x + ux * l * 0.3)} ${f1(y + uy * l * 0.3)} L${f1(x + uy * w)} ${f1(y - ux * w)} Z `;
+      }
+    }
+  });
+  setD(svg.querySelector(".elbow-knock-wave"), wave.trim());
+  setD(svg.querySelector(".elbow-knock-wave-dark"), dark.trim());
+};
+
 export const renderers: Record<string, (p: VfxProps) => ReactNode> = {
+  "elbow-knock": Knock,
   "elbow-lane": Lane,
   "elbow-eaves": Eaves,
   "elbow-plaster": Plaster,
@@ -530,4 +656,5 @@ export const renderers: Record<string, (p: VfxProps) => ReactNode> = {
 export const frames: Record<string, Frame> = {
   "elbow-sweep": sweep,
   "elbow-gouge": gouge,
+  "elbow-knock": knock,
 };

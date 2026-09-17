@@ -46,7 +46,19 @@ const IMPACT_MS = 780;
 const HIT = 130 / IMPACT_MS;
 
 /** The swing's effects for one framing: both halves of the band, the gouge, the sawdust, plaster off the far wall. */
-function swing(o: { wall: number; ground: number; lift: number; ry: number; w: number; past: number; saw: number; gx: number; gy: number }): VfxCue[] {
+function swing(o: {
+  wall: number;
+  ground: number;
+  lift: number;
+  ry: number;
+  w: number;
+  past: number;
+  saw: number;
+  gx: number;
+  gy: number;
+  /** The row thrown back: world units, degrees and ms (see `elbow-knock`). */
+  knock: Record<string, number>;
+}): VfxCue[] {
   const band = { from: 55, hit: 130, hold: 150, fade: 320, lift: o.lift, ry: o.ry, w: o.w, past: o.past, behind: 0.4 };
   return [
     { kind: "elbow-glare", at: HIT - 0.01, until: 0.6, x: o.gx, y: o.gy, layer: "back", params: { w: 1700, h: 560, hold: 0.12 } },
@@ -65,6 +77,7 @@ function swing(o: { wall: number; ground: number; lift: number; ry: number; w: n
         params: { n: 12, dir: 80, spread: 160, reach: 110, size: 18, fall: 220 },
       }),
     ),
+    { kind: "elbow-knock", at: 0, until: 1, layer: "front", params: { hit: 130, ...o.knock } },
     { kind: "elbow-sawdust", at: HIT - 0.02, until: 1, x: 900, y: o.ground, layer: "front", seed: 3, params: { n: 90, w: o.saw, lift: 150, drift: 220, lag: 0.1, size: 11 } },
     { kind: "elbow-splinter", at: HIT, until: 0.7, layer: "screen", seed: 9, params: { n: 6 } },
   ];
@@ -254,7 +267,7 @@ export const elbowRoom: Cinematic = {
       transition: { kind: "cut" },
       camera: {
         from: { x: 880, y: 590, zoom: 1.18, rotate: 4 },
-        to: { x: 900, y: 590, zoom: 1.1, rotate: 1.5 },
+        to: { x: 960, y: 580, zoom: 1.02, rotate: 1.5 },
         ease: "out",
       },
       background: STREET,
@@ -269,12 +282,10 @@ export const elbowRoom: Cinematic = {
           face: -1,
           z: 1,
           react: [{ at: HIT, clip: "hurt" }],
-          shove: { at: HIT, by: [150, -6] },
-          toTilt: 12,
         },
         { role: "caster", at: [470, 860], size: 470, clip: "ult:elbow-sweep", then: "ult:elbow-sweep", look: "lit", z: 2 },
       ],
-      vfx: swing({ wall: 520, ground: 870, lift: 0.52, ry: 0.1, w: 0.16, past: 0.55, saw: 1500, gx: 950, gy: 640 }),
+      vfx: swing({ wall: 520, ground: 870, lift: 0.52, ry: 0.1, w: 0.16, past: 0.55, saw: 1500, gx: 950, gy: 640, knock: { push: 170, slide: 80, lift: 80, tilt: 32, settle: 0.5, lead: 30, fan: 0.6 } }),
       screen: [{ kind: "two-tone", at: HIT, ms: 70, color: TEAL }],
       stop: [{ at: HIT, ms: 150 }],
       shake: [
@@ -308,12 +319,10 @@ export const elbowRoom: Cinematic = {
               face: -1,
               z: 1,
               react: [{ at: HIT, clip: "hurt" }],
-              shove: { at: HIT, by: [40, 0] },
-              toTilt: 3,
             },
             { role: "caster", at: [470, 870], size: 440, clip: "ult:elbow-sweep", then: "ult:elbow-sweep", look: "lit", z: 2 },
           ],
-          vfx: swing({ wall: 470, ground: 880, lift: 0.55, ry: 0.12, w: 0.18, past: 0.4, saw: 1600, gx: 1000, gy: 560 }),
+          vfx: swing({ wall: 470, ground: 880, lift: 0.55, ry: 0.12, w: 0.18, past: 0.4, saw: 1600, gx: 1000, gy: 560, knock: { push: 120, slide: 90, lift: 12, tilt: 17, settle: 0.45, air: 240 } }),
         },
       },
     },

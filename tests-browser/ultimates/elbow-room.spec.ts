@@ -8,7 +8,8 @@ import { test, expect, type Page } from "@playwright/test";
  * acting under a beam with the figure held still, that the real row stands
  * across the lane, that the quiet is the cat and nobody in the cast, that the
  * swing is drawn round the whole row on the held frame with the gouge torn
- * along the wall, that a boss is framed and not shrunk, that the return marks
+ * along the wall and every target thrown back down the lane, staggered
+ * (a boss rocking back and sliding), that a boss is framed and not shrunk, that the return marks
  * every real target, and that it hands back clean. Read from the film's
  * attributes, the cast it placed and the paths its effects drew.
  */
@@ -97,6 +98,50 @@ test("make room: on the held frame the swing is drawn round the whole row, the w
   await expect(page.locator(".cine-text-impact")).toBeVisible();
   // The Butcher wears what it wears.
   await expect(caster(page).locator('[data-equipment="blood-price"]').first()).toBeAttached();
+});
+
+test("the row is swept back: on the frame after the contact every target is thrown away from the Butcher and tipped", async ({ page }) => {
+  // Where each figure's drawing is, against the ground point the stage placed it on (the camera moves in this shot),
+  // in widths of its own box: 0 standing where it stood, positive thrown to the right.
+  const centres = () =>
+    targets(page).evaluateAll((els) =>
+      els.map((el) => {
+        const box = el.getBoundingClientRect();
+        const look = el.querySelector(".cine-look")!.getBoundingClientRect();
+        return { x: (look.x + look.width / 2 - (box.x + box.width / 2)) / box.width, w: 1, at: box.x + box.width / 2 };
+      }),
+    );
+  await hold(page, { party: 4, shot: 5, at: 0.1 }, "sweep");
+  const before = await centres();
+  expect(before).toHaveLength(2);
+  const butcher = (await caster(page).boundingBox())!;
+  await hold(page, { party: 4, shot: 5, at: 0.27 }, "sweep");
+  const held = await centres();
+  const tipped = await targets(page).evaluateAll((els) =>
+    els.map((el) => {
+      const m = new DOMMatrix(getComputedStyle(el.querySelector(".cine-look")!).transform);
+      return (Math.atan2(m.b, m.a) * 180) / Math.PI;
+    }),
+  );
+  held.forEach((h, i) => {
+    // Away from the Butcher, who stands to the left of the row.
+    expect(before[i].at).toBeGreaterThan(butcher.x + butcher.width / 2);
+    expect(h.x - before[i].x, `target ${i} on the held frame`).toBeGreaterThan(before[i].w * 0.12);
+    expect(tipped[i], `target ${i} tipped back`).toBeGreaterThan(8);
+  });
+  // And further still after the stop, staggered: the further one thrown further.
+  await hold(page, { party: 4, shot: 5, at: 0.6 }, "sweep");
+  const after = await centres();
+  after.forEach((a, i) => expect(a.x - before[i].x, `target ${i} after`).toBeGreaterThan(before[i].w * 0.35));
+  expect(after[1].x - before[1].x).toBeGreaterThan(after[0].x - before[0].x);
+  expect(await page.locator(".elbow-knock-wave").getAttribute("d")).toMatch(/L/);
+
+  // A boss is not lifted, but rocks back and slides.
+  await hold(page, { enemy: "collector", shot: 5, at: 0.1 }, "sweep");
+  const boss0 = (await centres())[0];
+  await hold(page, { enemy: "collector", shot: 5, at: 0.6 }, "sweep");
+  const boss1 = (await centres())[0];
+  expect(boss1.x - boss0.x).toBeGreaterThan(boss0.w * 0.08);
 });
 
 test("a boss is framed, not shrunk, and the swing still goes round it", async ({ page }) => {
