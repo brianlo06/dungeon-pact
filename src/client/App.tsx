@@ -7,7 +7,13 @@ import { mixer } from "./audio/engine";
 import { PixelIcon } from "./components/PixelIcon";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { useRoom, savedCredentials, type Credentials } from "./useRoom";
+import {
+  useRoom,
+  savedCredentials,
+  resumableCredentials,
+  leaveRoom,
+  type Credentials,
+} from "./useRoom";
 import { audio, defaultSettings, type Settings } from "./audio";
 import { Combat } from "./components/Combat";
 import { Auction } from "./components/Auction";
@@ -29,7 +35,7 @@ import { items } from "../content/items";
 import { isBoss } from "../content/enemies";
 export default function App() {
   const [credentials, setCredentials] = useState<Credentials | null>(
-    savedCredentials,
+    resumableCredentials,
   );
   const room = useRoom(credentials);
   const [name, setName] = useState(localStorage.getItem("pact.name") ?? "");
@@ -100,6 +106,10 @@ export default function App() {
       const data = z
         .object({ room: z.string(), player: z.string(), token: z.string() })
         .parse(raw);
+      // Joining one pact leaves any other this browser was seated in, so an
+      // abandoned lobby does not keep a seat nobody will ready.
+      const previous = savedCredentials();
+      if (previous && previous.room !== data.room) leaveRoom(previous);
       localStorage.setItem("pact.session", JSON.stringify(data));
       localStorage.setItem("pact.name", name.trim());
       setCredentials(data);
@@ -110,10 +120,17 @@ export default function App() {
     }
   }
   function leave() {
+    if (credentials) leaveRoom(credentials);
     localStorage.removeItem("pact.session");
     setCredentials(null);
     history.replaceState(null, "", location.pathname);
   }
+  // Left from another tab: this one lets go too instead of reconnecting.
+  useEffect(() => {
+    if (room.connection !== "left") return;
+    localStorage.removeItem("pact.session");
+    setCredentials(null);
+  }, [room.connection]);
   const combatExit = useCombatExit(room.state);
   const s = combatExit.state;
   const musicBiome =
@@ -164,6 +181,9 @@ export default function App() {
               </div>
               <button onClick={() => setInventory(!inventory)}>Builds</button>
             </>
+          )}
+          {s?.phase === "LOBBY" && (
+            <button onClick={leave}>Leave pact</button>
           )}
           <button
             aria-label="Open settings"

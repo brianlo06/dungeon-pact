@@ -99,3 +99,6 @@ export type Command = z.infer<typeof commandSchema>;
 export const joinSchema = z
   .object({ name: z.string().trim().min(1).max(24) })
   .strict();
+export const leaveSchema = z
+  .object({ token: z.string().regex(/^[0-9a-f]{64}$/) })
+  .strict();

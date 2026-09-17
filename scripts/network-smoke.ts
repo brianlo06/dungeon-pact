@@ -68,6 +68,34 @@ try {
   await Promise.all([a.wait(() => !!a.state), b.wait(() => !!b.state)]);
   assert.equal(a.state.players.length, 2);
   assert.equal(a.state.you, one.player);
+  // Someone who wanders into the lobby and leaves gives the seat back: the
+  // room is not left holding a player who will never ready.
+  const stray = await post(`/api/rooms/${room}/join`, { name: "Smoke Stray" });
+  await a.wait(() => a.state.players.length === 3);
+  const strayClient = new Client(stray.token);
+  await strayClient.wait(() => !!strayClient.state);
+  const closed = new Promise<number>((r) => strayClient.ws.on("close", r));
+  assert.deepEqual(
+    await post(`/api/rooms/${room}/leave`, { token: stray.token }),
+    { left: true },
+  );
+  assert.equal(await closed, 4002, "the leaver's socket closes as final");
+  await a.wait(() => a.state.players.length === 2);
+  assert.ok(a.state.logs.some((l) => l.text === "Smoke Stray leaves the pact."));
+  assert.deepEqual(
+    await post(`/api/rooms/${room}/leave`, { token: stray.token }),
+    { left: false },
+    "a spent token leaves nothing",
+  );
+  const refused = new WebSocket(
+    base.replace("http", "ws") + `/api/rooms/${room}/socket`,
+    ["pact-v1", stray.token],
+  );
+  await new Promise<void>((resolve, reject) => {
+    refused.on("open", () => reject(Error("a spent token reconnected")));
+    refused.on("error", () => resolve());
+    refused.on("close", () => resolve());
+  });
   await b.send({ type: "hero", hero: "arcanist" });
   await a.wait(() => a.state.revision === b.state.revision);
   const cmd = await a.send({ type: "ready", ready: true });
@@ -277,6 +305,7 @@ try {
       checks: [
         "room creation",
         "2-player join",
+        "a lobby leaver gives the seat back",
         "authenticated snapshots",
         "ready/start",
         "duplicate command receipts",
