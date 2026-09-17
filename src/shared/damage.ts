@@ -16,6 +16,8 @@ export const WEAK = 0.65;
 export const EMPOWERED = 1.3;
 /** Vulnerable: every hit a quarter heavier. */
 export const VULNERABLE = 1.25;
+/** Each hardened plate a striker wears adds this much to every hit. */
+export const ENCRUSTED = 3;
 
 interface Striker {
   power: number;
@@ -27,9 +29,11 @@ interface Struck {
 }
 const has = (u: { statuses: Status[] }, id: StatusId) =>
   u.statuses.some((x) => x.id === id);
+const stacks = (u: { statuses: Status[] }, id: StatusId) =>
+  u.statuses.find((x) => x.id === id)?.stacks ?? 0;
 
 /**
- * A hit's damage before Barrier, as the engine applies it: power added, Weak
+ * A hit's damage before Barrier, as the engine applies it: power and plates added, Weak
  * and Empowered on the striker, Guard taken off unless it pierces, Vulnerable
  * on the victim, and the Exploit bonus when a precise hit meets a Mark. Never
  * less than 1.
@@ -41,7 +45,7 @@ export function hitDamage(
   options: { pierce?: boolean; precision?: boolean } = {},
 ) {
   let n =
-    (amount + striker.power) *
+    (amount + striker.power + ENCRUSTED * stacks(striker, "encrusted")) *
       (has(striker, "weak") ? WEAK : 1) *
       (has(striker, "empowered") ? EMPOWERED : 1) -
     (options.pierce ? 0 : victim.guard);

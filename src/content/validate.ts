@@ -26,6 +26,7 @@ const statusId = z.enum([
   "guarded",
   "interrupted",
   "heat",
+  "encrusted",
 ]);
 export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
   z.discriminatedUnion("kind", [

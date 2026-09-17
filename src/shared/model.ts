@@ -29,7 +29,9 @@ export type StatusId =
   | "guarded"
   | "interrupted"
   /** A crucible's charge: what a pour is building to. Shown, never read by damage. */
-  | "heat";
+  | "heat"
+  /** Hardened plates: every hit this unit makes is heavier by 3 a stack. */
+  | "encrusted";
 export type Trigger =
   | "roundStart"
   | "afterAttack"

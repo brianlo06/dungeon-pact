@@ -63,7 +63,7 @@ export const floors: FloorDef[] = [
     title: "THE DROWNED CISTERN",
     heading: "Further down, where it floods.",
     tier: 2,
-    bosses: ["miser"],
+    bosses: ["miser", "salvor"],
   },
   {
     biome: "archive",

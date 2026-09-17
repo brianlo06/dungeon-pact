@@ -57,6 +57,7 @@ const STATUS_NAMES: Record<string, string> = {
   regen: "Regen",
   empowered: "Empowered",
   heat: "Heat",
+  encrusted: "Encrusted",
 };
 
 function ridersOf(list: Effect[]): string[] {

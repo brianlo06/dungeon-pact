@@ -82,6 +82,13 @@ export const statuses: Record<
       "A crucible heating. At full heat the pour is announced; enough damage before it acts cracks it.",
     max: 3,
   },
+  encrusted: {
+    name: "Encrusted",
+    icon: "▦",
+    description:
+      "Hardened plates. Every hit this unit makes deals 3 more per stack.",
+    max: 6,
+  },
   vulnerable: {
     name: "Vulnerable",
     icon: "◇",

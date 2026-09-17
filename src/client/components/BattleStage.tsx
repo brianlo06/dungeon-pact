@@ -97,10 +97,20 @@ export function BattleStage({
     const damage = interrupted ? "" : damageLabel(forecast);
     // A clock threatens nobody yet; say what it will do, and to whom.
     const def = enemyDefs.find((d) => d.id === e.definition);
+    // A clock's due move is aimed at every hero (a seal) or at the one that
+    // owns it (a plate); while it counts down, say what it will reach.
+    const owner = s.enemies.find((x) => x.id === e.owner)?.name;
+    const dueAim = def?.clock
+      ? def.clock.due.effects.some((x) => x.kind === "enemies")
+        ? "every hero"
+        : def.clock.due.target === "ally"
+          ? (owner ?? "its owner")
+          : ""
+      : "";
     const aim = def?.clock
       ? a.id === def.clock.due.id
-        ? "every hero"
-        : "then every hero"
+        ? dueAim
+        : `then ${dueAim}`
       : a.target === "enemyRow"
         ? `${forecast.aim} · locked`
         : forecast.aim;

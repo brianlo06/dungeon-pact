@@ -167,7 +167,12 @@ export function prepareIntents(s: RunState) {
     else if (ability.target === "ally")
       targets = s.enemies
         .filter((x) => x.hp > 0)
-        .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
+        // A spawned object serves the one who brought it in.
+        .sort(
+          (a, b) =>
+            Number(b.id === e.owner) - Number(a.id === e.owner) ||
+            a.hp / a.maxHp - b.hp / b.maxHp,
+        );
     else if (def.targets === "wealthiest")
       targets = [...targets].sort(
         (a, b) => (isPlayer(b) ? b.spent : 0) - (isPlayer(a) ? a.spent : 0),

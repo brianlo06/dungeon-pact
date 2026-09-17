@@ -1,0 +1,36 @@
+/*
+ * The Salvor and its soft plates. Kept out of battle.css so creatures drawn in
+ * parallel do not collide. Every class here is prefixed slv- or slp-.
+ */
+.salvor,
+.salvage-plate {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+/* Parts are moved by the animator; they need their own transform box or the
+ * rotations would pivot around the whole SVG rather than the joint. */
+.salvor > g,
+.salvage-plate > g {
+  transform-box: view-box;
+}
+/* One barnacle cluster per hardened plate, read off the combatant. */
+.slv-crust {
+  opacity: 0;
+}
+.combatant[data-encrusted="1"] .slv-crust-1,
+.combatant[data-encrusted="2"] :is(.slv-crust-1, .slv-crust-2),
+.combatant[data-encrusted="3"] :is(.slv-crust-1, .slv-crust-2, .slv-crust-3),
+.combatant[data-encrusted="4"] :is(.slv-crust-1, .slv-crust-2, .slv-crust-3, .slv-crust-4),
+.combatant[data-encrusted="5"] :is(.slv-crust-1, .slv-crust-2, .slv-crust-3, .slv-crust-4, .slv-crust-5),
+.combatant[data-encrusted="6"] .slv-crust {
+  opacity: 1;
+}
+.combatant[data-phase="2"] .slv-port {
+  filter: none;
+  fill: #ffd27a;
+}
+.slp-wet {
+  opacity: 0.8;
+}

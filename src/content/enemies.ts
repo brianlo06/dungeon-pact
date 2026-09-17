@@ -49,6 +49,32 @@ const pour = (amount: number, burn: number, per: number): Ability => ({
     ],
   },
 });
+/**
+ * The Salvor grows a plate out of the drowned goods it claims: a soft object on
+ * a one-round fuse. Left alone it hardens onto the Salvor; broken while soft it
+ * staggers it.
+ */
+const encrust = (rows: ("front" | "back")[]): Ability => ({
+  id: "encrust",
+  name: "Grow a plate",
+  description: "A soft plate grows. Next round it hardens onto the Salvor, unless it is broken first.",
+  cost: 0,
+  speed: 0,
+  target: "self",
+  cooldown: 0,
+  effects: [{ kind: "spawn", object: "salvage-plate", rows, fuse: 1 }],
+});
+/** A plate still soft: it does nothing but wait to harden. */
+const plateSoft: Ability = {
+  id: "soft",
+  name: "Hardens in",
+  description: "Soft now. Next round it hardens onto the Salvor.",
+  cost: 0,
+  speed: 0,
+  target: "self",
+  cooldown: 0,
+  effects: [{ kind: "status", status: "barrier", stacks: 1, duration: 1 }],
+};
 /** A wax seal's clock while it sets: it hardens, and its intent counts down. */
 const waxSetting: Ability = {
   id: "setting",
@@ -347,6 +373,77 @@ export const enemies: EnemyDef[] = [
   },
   {
     presentation: {
+      spriteSet: "salvage-plate",
+      footprint: "small",
+      theme: "guard",
+      idlePeriod: 3.8,
+      shadow: 0.8,
+    },
+    id: "salvage-plate",
+    name: "Soft Plate",
+    glyph: "▣",
+    hp: 30,
+    power: 0,
+    guard: 0,
+    speed: 1,
+    row: "front",
+    object: true,
+    abilities: [plateSoft],
+    // The plate's intent is its clock: soft this round, hardened onto the
+    // Salvor the next.
+    clock: {
+      waiting: plateSoft,
+      due: {
+        id: "harden",
+        name: "Harden onto the Salvor",
+        description: "The plate sets: the Salvor gains Barrier, and every hit it makes grows heavier.",
+        cost: 0,
+        speed: 0,
+        target: "ally",
+        cooldown: 0,
+        effects: [
+          { kind: "status", status: "encrusted", stacks: 1, duration: 30 },
+          { kind: "status", status: "barrier", stacks: 12, duration: 3 },
+        ],
+      },
+    },
+    // Torn off while it is soft, the plate takes the Salvor's footing with it.
+    broken: {
+      each: [
+        { kind: "status", status: "interrupted", stacks: 1, duration: 1 },
+        { kind: "status", status: "vulnerable", stacks: 1, duration: 2 },
+      ],
+    },
+  },
+  {
+    presentation: {
+      spriteSet: "salvor",
+      footprint: "boss-large",
+      theme: "guard",
+      idlePeriod: 5.6,
+      shadow: 1,
+    },
+    id: "salvor",
+    name: "The Salvor",
+    glyph: "⚓",
+    hp: 185,
+    power: 2,
+    guard: 4,
+    speed: 3,
+    row: "front",
+    boss: true,
+    epithet: "Who Claims What the Water Took",
+    lair: "The Wreck Pool",
+    objective:
+      "It grows plates from what it salvaged. Break a plate while it is soft and the Salvor staggers; leave it, and every blow it strikes grows heavier.",
+    abilities: [
+      attack("gaff", "Gaff hook", 22),
+      attack("volley", "Rust volley", 16, "enemyRow"),
+    ],
+    busy: attack("grind", "Grind the wreck", 20, "enemyRow"),
+  },
+  {
+    presentation: {
       spriteSet: "wax-seal",
       footprint: "small",
       theme: "contract",
@@ -499,6 +596,12 @@ export const tacticalIntents: Record<string, Ability[]> = {
     // about the damage changed: the same blow now also takes something.
     collateral,
   ],
+  salvor: [
+    encrust(["front"]),
+    attack("volley", "Rust volley", 16, "enemyRow"),
+    encrust(["back"]),
+    attack("gaff", "Gaff hook", 24),
+  ],
   assayer: [
     assay(1),
     attack("tongs", "Tongs", 22),
@@ -523,6 +626,12 @@ export const tacticalIntents: Record<string, Ability[]> = {
 };
 /** Containers are scenery with health: they never count as enemies to clear. */
 export const phaseTwoIntents: Record<string, Ability[]> = {
+  // Phase two grows two plates at once and hooks harder.
+  salvor: [
+    encrust(["front", "back"]),
+    attack("volley", "Rust volley", 18, "enemyRow"),
+    attack("gaff", "Gaff hook", 28),
+  ],
   // Phase two heats faster and pours hotter, and a crack takes more.
   assayer: [
     assay(2),

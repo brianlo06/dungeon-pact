@@ -147,7 +147,7 @@ function BossPreview() {
               onChange={(e) => {
                 const v = e.target.value;
                 load(
-                  v === "collector" || v === "miser" || v === "notary" || v === "assayer"
+                  v === "collector" || v === "miser" || v === "notary" || v === "assayer" || v === "salvor"
                     ? { ...options, boss: v, encounter: undefined }
                     : { ...options, encounter: v },
                 );
@@ -157,6 +157,7 @@ function BossPreview() {
               <option value="miser">The Miser</option>
               <option value="notary">The Notary</option>
               <option value="assayer">The Assayer</option>
+              <option value="salvor">The Salvor</option>
               {encounters.map((e) => (
                 <option key={e.id} value={e.id}>
                   {e.name}

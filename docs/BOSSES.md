@@ -191,10 +191,28 @@ of the pour's lane and take it on Barrier.
 
 ## The Salvor — Drowned Cistern
 
-**Two words: encrust, shed.** The Salvor is plated in the drowned goods it
-claims, and a plate regrows every round. A fresh plate is soft and breaks for
-a stagger; a plate left to harden becomes Barrier and fuels a volley.
-Principle: regrowth that rewards breaking a part while it is soft.
+**Two words: encrust, shed.** The Salvor grows plates out of the drowned goods
+it claims. A plate is soft for a round: torn off then, it staggers the Salvor;
+left alone, it hardens onto it and every blow the Salvor strikes grows
+heavier. Principle: regrowth that rewards breaking a part while it is soft
+(Nergigante's spikes, soft and breakable before they harden).
+
+- **Rotation**: Grow a plate (front row) → Rust volley 16 over a row → Grow a
+  plate (back row) → Gaff hook 24.
+- **A soft plate** is an object (30 HP a hero × 0.35, the Strongbox's pricing)
+  on a one-round fuse. Its chip reads `Harden onto the Salvor → The Salvor ·
+  Encrusted 1 · Barrier 12`.
+- **Hardened**: the Salvor gains **Encrusted** (every hit it makes deals 3 more
+  a stack, up to 6, for the rest of the fight — the shared damage rule reads
+  it, so every chip shows it) and 12 Barrier. A barnacle cluster appears on its
+  hump for each stack.
+- **Torn off while soft**: the Salvor loses its action that round and is
+  Vulnerable for two. A torn plate never hardens.
+- **Phase two** grows a plate in both rows at once, and hooks for 28.
+
+The party's answer is to spend one hero's action on each plate the round it
+grows, which buys a stagger and Vulnerable for everyone else; a party that
+ignores the plates faces a Salvor that hits a little harder every other round.
 
 ## The Bailiff — Ledger Archive
 
