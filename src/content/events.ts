@@ -1,27 +1,89 @@
+import { luckEvents } from "./luck-events";
+/**
+ * What a roll of the dice can do. Every field is optional and stacks; a
+ * negative number takes rather than gives. Health changes never down a hero,
+ * the same promise every event has made since the first one.
+ */
+export interface Outcome {
+  id: string;
+  /** Two or three words, shown on the odds bar and the reveal. */
+  label: string;
+  /** What happened, in the event's voice. */
+  text: string;
+  /** Relative weight among a choice's outcomes. They need not sum to 100. */
+  weight: number;
+  tone: "good" | "bad";
+  /** Gold into the treasury, or out of it (never below zero). */
+  gold?: number;
+  /** HP for each hero it touches, standing heroes only. */
+  heal?: number;
+  /** HP as a share of each hero's maximum: `1` is a full heal. */
+  healShare?: number;
+  /** Permanent maximum HP, gained or lost along with the HP itself. */
+  maxHp?: number;
+  /** Permanent Power for one standing hero, drawn at random. */
+  power?: number;
+  /** One consumable for each hero it touches. */
+  supply?: string;
+  cleanse?: boolean;
+  /** A team relic the party does not own yet; `gold` stands in once they own both. */
+  relic?: boolean;
+  /** The roll ends in a fight, once the party has seen it coming. */
+  fight?: "combat" | "elite";
+}
+/**
+ * Press your luck, one vote at a time. The party decides after every try
+ * whether to go again, with the odds of the next one in front of them.
+ *
+ * - A **search** turns up one piece of `loot` per safe try, never the same
+ *   piece twice, and the chance of `bust` climbs each time. Searching every
+ *   piece out ends the event.
+ * - A **dig** costs every standing hero `hurt` HP per try, and the chance of
+ *   the `prize` climbs each time until someone finds it.
+ */
+export interface Press {
+  kind: "search" | "dig";
+  /** Percent per try, from the first; the last value repeats. */
+  chances: number[];
+  hurt?: number[];
+  loot?: Outcome[];
+  bust?: Outcome;
+  prize?: Outcome;
+}
+export interface EventChoice {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  heal?: number;
+  gold?: number;
+  /** One consumable for each hero; never replaces worn equipment. */
+  supply?: string;
+  /**
+   * One consumable for the whole party, carried by the standing hero with the
+   * most health, who is likeliest to be on their feet when it is needed.
+   */
+  gift?: string;
+  cleanse?: boolean;
+  /** One roll for the whole party, among these outcomes. */
+  roll?: Outcome[];
+  /** Every standing hero rolls for themselves, among these outcomes. */
+  each?: Outcome[];
+  /** A press-your-luck try; the rules live on the event. */
+  press?: true;
+}
 export interface EventDef {
   id: string;
   name: string;
   text: string;
-  choices: {
-    id: string;
-    name: string;
-    description: string;
-    cost: number;
-    heal: number;
-    gold: number;
-    /** One consumable for each hero; never replaces worn equipment. */
-    supply?: string;
-    /**
-     * One consumable for the whole party, carried by the standing hero with the
-     * most health, who is likeliest to be on their feet when it is needed.
-     */
-    gift?: string;
-    cleanse?: boolean;
-  }[];
+  /** A chance event: some of its choices are decided by the dice. */
+  luck?: boolean;
+  press?: Press;
+  choices: EventChoice[];
   /** Only offered in a room with boss pools, so older rooms draw as they did. */
   bossVersion?: 1;
 }
-export const events: EventDef[] = [
+const fixedEvents: EventDef[] = [
   {
     id: "reprieve-office",
     name: "The Reprieve Office",
@@ -318,3 +380,4 @@ export const events: EventDef[] = [
     ],
   },
 ];
+export const events: EventDef[] = [...fixedEvents, ...luckEvents];

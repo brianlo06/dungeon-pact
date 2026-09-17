@@ -20,6 +20,8 @@ const shapes: Record<string, string> = {
   warn: "M7 1h2v2h2v4h2v4h2v4H1v-4h2V7h2V3h2zM7 6v4h2V6zM7 11v2h2v-2z",
   // A shrine: an altar with a flame standing on it.
   altar: "M7 1h2v2h2v4H5V3h2zM3 8h10v2h-2v4h2v2H3v-2h2v-4H3z",
+  // A chance event: a die showing five, so a gamble never reads as a question.
+  dice: "M3 1h10v2h2v10h-2v2H3v-2H1V3h2zM4 4v2h2V4zM10 4v2h2V4zM7 7v2h2V7zM4 10v2h2v-2zM10 10v2h2v-2z",
   // A workbench: an anvil.
   anvil: "M1 3h12v2h2v2h-4v2H9v3h3v3H4v-3h3V9H5V7H3V5H1z",
 };

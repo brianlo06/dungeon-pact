@@ -222,6 +222,12 @@ export interface Unit {
 export interface Player extends Unit {
   spiritRound?: number;
   heroId: string;
+  /**
+   * Whether the player has picked a hero themselves. Everyone joins holding
+   * the Vanguard, so the table only shows a pick once one has been made.
+   * Absent in rooms created before the lobby showed picks.
+   */
+  chosen?: boolean;
   ready: boolean;
   /** Chosen ability branches. Absent in saves written before upgrades existed. */
   upgrades?: string[];
@@ -488,6 +494,31 @@ export interface RunState {
   round: number;
   auction: Auction | null;
   eventId: string | null;
+  /** Events this run has already drawn, so a floor does not repeat one. */
+  eventsSeen?: string[];
+  /**
+   * A chance event in progress: the last roll the party is looking at, and for
+   * press-your-luck events how far they have pushed it. Absent between events
+   * and throughout a fixed event.
+   */
+  luck?: {
+    /** The choice that started the roll. */
+    choice: string;
+    /** Tries made so far. Part of the decision epoch. */
+    step: number;
+    /** The last d100, 1–100. */
+    roll?: number;
+    /** The outcome the last roll landed on; absent for a dig that found nothing. */
+    outcome?: string;
+    /** When every hero rolled for themselves: each hero's roll and result. */
+    heroes?: Record<string, { roll: number; outcome: string }>;
+    /** Loot a search has turned up, by outcome id. */
+    found?: string[];
+    /** Nothing is left to vote on; continuing leaves the chamber. */
+    done?: boolean;
+    /** The roll ended in a fight, which starts when the party continues. */
+    fight?: "combat" | "elite";
+  };
   /** The price the keepers of a toll gate are asking. */
   toll?: number;
   /** What the room is doing to everyone in it, for a hazard chamber's fight. */

@@ -39,8 +39,22 @@ const PARTS = [
   "pans",
   "ledger",
 ] as const;
-/** The face, moved only in an Ultimate close-up (see `CloseUpContext`). */
-const FACE_PARTS = ["brow", "eyes", "mouth"] as const;
+/**
+ * Moved only in an Ultimate close-up (see `CloseUpContext`): the face, and
+ * for Hammer Price the balance taken out of the fist (`balance`, the post and
+ * the pans together) and the sale hammer the Magnate holds up in its place
+ * (`gavel`, with its handle, `shaft`, which a swing lengthens, and its head,
+ * `mallet`, which swells). The hammer is parked
+ * outside a clip at rest, so a copy of the figure that no clip drives shows
+ * none of it, and the balance at rest is the balance as drawn.
+ */
+const FACE_PARTS = ["brow", "eyes", "mouth", "balance", "gavel", "shaft", "mallet"] as const;
+/**
+ * Where the parked hammer waits, in drawing units right of the fist and
+ * outside its clip. A clip brings it home with `x: -GAVEL_PARK / 100`
+ * (`ultimates/hammer-price/poses.ts`).
+ */
+const GAVEL_PARK = 1000;
 
 /**
  * The heaviest face in the party, and the only one wider at the chin than at
@@ -96,6 +110,11 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
         <Shade id={g.id("whisker")} ramp={RAMP.silver} />
         <Shade id={g.id("nose")} ramp={["#f6b9a4", "#e2877a", "#a8514b"]} />
         <Shade id={g.id("leather")} ramp={RAMP.leather} />
+        {closeUp && (
+          <clipPath id={g.id("gavel")}>
+            <rect x={-300} y={-300} width={700} height={700} />
+          </clipPath>
+        )}
       </defs>
 
       <g ref={hold("legs")} data-part="legs" style={at(48, 90)}>
@@ -359,6 +378,8 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
       {/* ---- the balance, held out front; the beam tips on its own ---- */}
       <g ref={hold("scales")} data-part="scales" style={at(fx, fy)}>
         <Limb d={`M${fx} ${fy} Q66 57 71 53`} fill={RAMP.violet[1]} width={9} />
+        {/* The balance itself, which a close-up can take out of the fist (`balance`). */}
+        <g ref={facePart("balance")} style={at(71.5, 52.5)}>
         <rect
           x={72.5}
           y={43}
@@ -408,6 +429,44 @@ export function Broker({ unitId, animators, className, viewBox }: HeroProps) {
             strokeWidth={0.8}
           />
         </g>
+        </g>
+        {closeUp && (
+          <g clipPath={`url(#${g.id("gavel")})`}>
+            <g transform={`translate(${GAVEL_PARK} 0)`}>
+              {/* the sale hammer, pivoting in the fist; its handle hides the balance's post */}
+              <g ref={facePart("gavel")} style={at(71.5, 52.5)}>
+                {/* the handle, which a swing can lengthen from the butt (`shaft`) */}
+                <g ref={facePart("shaft")} style={at(73.5, 62)}>
+                  <path
+                    d="M72 62 L71.8 26 Q73.5 24.6 75.2 26 L75 62 Z"
+                    fill="#2a1418"
+                    stroke={INK}
+                    strokeWidth={DETAIL}
+                    strokeLinejoin="round"
+                  />
+                  <path d="M72.9 58 L72.8 28" stroke="#6a3444" strokeWidth={0.8} />
+                </g>
+                {/* a turned collar over the balance's ring, and a knob at the butt */}
+                <rect x={69.6} y={41.4} width={7.8} height={3.4} rx={1.2} fill="#3b1a22" stroke={INK} strokeWidth={DETAIL} />
+                <ellipse cx={73.5} cy={62.6} rx={2.8} ry={2} fill="#3b1a22" stroke={INK} strokeWidth={DETAIL} />
+                <g ref={facePart("mallet")} style={at(73.5, 19.5)}>
+                  {/* the head: black lacquer, flared at both striking faces, one Tyrian band */}
+                  <path
+                    d="M62.5 14 Q61.4 19.5 62.5 25 L65.6 24.2 L81.4 24.2 L84.5 25 Q85.6 19.5 84.5 14 L81.4 14.8 L65.6 14.8 Z"
+                    fill="#1c0c11"
+                    stroke={INK}
+                    strokeWidth={LINE}
+                    strokeLinejoin="round"
+                  />
+                  <path d="M65.6 14.8 V24.2 M81.4 14.8 V24.2" stroke="#4a2230" strokeWidth={1} />
+                  <rect x={71.2} y={14.6} width={4.6} height={9.8} fill="#b0359f" stroke={INK} strokeWidth={0.9} />
+                  <path d="M64 16.6 H83" stroke="#e05bd8" strokeWidth={0.9} strokeLinecap="round" opacity={0.85} />
+                  <path d="M62.8 15.4 Q62.2 19.5 62.8 23.6 M84.2 15.4 Q84.8 19.5 84.2 23.6" stroke="#f4b8ee" strokeWidth={0.7} fill="none" />
+                </g>
+              </g>
+            </g>
+          </g>
+        )}
         <circle
           cx={71.5}
           cy={52.5}

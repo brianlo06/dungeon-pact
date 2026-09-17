@@ -161,7 +161,8 @@ export function run(
       auctionSpend += s.spent - auctionEntry;
       auctionEntry = null;
     }
-    if (["PACT", "MAP", "EVENT", "CAMP", "TOLL"].includes(s.phase)) {
+    if (s.phase === "EVENT" && s.luck?.done) send("p0", { type: "continue" });
+    else if (["PACT", "MAP", "EVENT", "CAMP", "TOLL"].includes(s.phase)) {
       const p = s.players.find((p) => !s.votes[p.id])!;
       const before = s.gold;
       const wasCamp = s.phase === "CAMP";

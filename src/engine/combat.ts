@@ -789,7 +789,11 @@ export function resolveRound(s: RunState) {
           ? 180
           : node.type === "hazard"
             ? 150
-            : 110;
+            : // A fight a chance event dealt you pays less than a chamber
+              // built for one: the party already took something to earn it.
+              node.type === "event"
+              ? 80
+              : 110;
     delete s.hazard;
     gain(s, s.reward);
     log(s, "The chamber falls silent.");

@@ -12,7 +12,8 @@ import { upgradeOffer } from "../src/content/upgrades";
 import { drillFor, mentors, pathFor } from "../src/content/evolutions";
 import { items } from "../src/content/items";
 import { isBoss, isObject } from "../src/content/enemies";
-import { events } from "../src/content/events";
+import { events, type Outcome } from "../src/content/events";
+import { eventChoices, eventDef, pressOdds, shares } from "../src/engine/luck";
 import { EXPLOIT, WEAK, fuseLeft, status } from "../src/engine/effects";
 import { reviveCost, standing } from "../src/engine/combat";
 import { availableNodes } from "../src/engine/map";
@@ -285,6 +286,70 @@ const reserve = (s: RunState) => {
   const depth = s.map.find((n) => n.id === s.currentNode)?.depth ?? 0;
   return Math.max(0, 240 - depth * 45);
 };
+/**
+ * How a sensible table reads a chance event: every outcome priced in gold and
+ * weighted by the odds printed on the choice. Health is worth more the more
+ * hurt the party is, and a fight is priced as the health it would cost.
+ */
+const hpGold = (s: RunState) => 1 + 3 * wounded(s);
+function outcomeValue(s: RunState, o: Outcome, heroes: Player[]) {
+  const rate = hpGold(s);
+  let v = o.relic ? 160 : (o.gold ?? 0);
+  for (const p of heroes) {
+    const missing = p.maxHp - p.hp;
+    const change = (o.heal ?? 0) + (o.healShare ?? 0) * p.maxHp;
+    v += Math.min(change, missing) * rate;
+    v += (o.maxHp ?? 0) * 3;
+    if (o.supply) v += 30;
+  }
+  v += (o.power ?? 0) * 35;
+  if (o.cleanse) v += 10;
+  if (o.fight) v -= (o.fight === "elite" ? 140 : 60) * (0.5 + 2 * wounded(s));
+  return v;
+}
+const expected = (s: RunState, outcomes: Outcome[], heroes: Player[]) =>
+  shares(outcomes).reduce(
+    (n, { outcome, percent }) =>
+      n + (percent / 100) * outcomeValue(s, outcome, heroes),
+    0,
+  );
+/** The worth of the next try of a press-your-luck event, against stopping. */
+function pressValue(s: RunState) {
+  const event = eventDef(s);
+  const press = event.press!;
+  const { chance, hurt } = pressOdds(event, s.luck?.step ?? 0);
+  const c = chance / 100;
+  const standingNow = s.players.filter((p) => p.hp > 0);
+  if (press.kind === "search") {
+    const found = s.luck?.found ?? [];
+    const left = press.loot!.filter((o) => !found.includes(o.id));
+    const loot = left.length ? expected(s, left, s.players) : 0;
+    return (1 - c) * loot + c * outcomeValue(s, press.bust!, s.players);
+  }
+  return (
+    c * outcomeValue(s, press.prize!, s.players) -
+    hurt * standingNow.length * hpGold(s) * 1.5
+  );
+}
+/** A chance event's vote, or undefined for an event the dice have no part in. */
+function luckVote(s: RunState, spendable: (cost: number) => boolean) {
+  const event = eventDef(s);
+  if (!event.luck) return undefined;
+  if (s.luck && event.press) return pressValue(s) > 0 ? "press" : "leave";
+  const standingNow = s.players.filter((p) => p.hp > 0);
+  const worth = (c: (typeof event.choices)[number]) =>
+    !spendable(c.cost)
+      ? -Infinity
+      : -c.cost +
+        (c.roll
+          ? expected(s, c.roll, s.players)
+          : c.each
+            ? standingNow.reduce((n, p) => n + expected(s, c.each!, [p]), 0)
+            : c.press
+              ? pressValue(s)
+              : 0);
+  return [...event.choices].sort((a, b) => worth(b) - worth(a))[0].id;
+}
 /** What a hero will pay for a lot before letting a rival have it. */
 const valuation = (fit: number) => fit * 70;
 
@@ -390,7 +455,7 @@ export const attackPolicy: Policy = {
       ).id;
     if (s.phase === "CAMP") return s.gold >= 120 ? "restore" : "rest";
     if (s.phase === "TOLL") return "fight";
-    return events.find((e) => e.id === s.eventId)!.choices.at(-1)!.id;
+    return eventChoices(s).at(-1)!.id;
   },
   plan(s, p) {
     const target = living(s)[0];
@@ -512,23 +577,28 @@ export const tacticalPolicy: Policy = {
       if (wounded(s) > 0.25 || broken) return "rest";
       return s.gold >= 100 + reserve(s) ? "train" : "rest";
     }
+    const gamble = luckVote(s, (cost) => s.gold - cost >= reserve(s));
+    if (gamble) return gamble;
     const choices = events.find((e) => e.id === s.eventId)!.choices;
-    const heal = choices.find((c) => c.heal > 0);
-    const purse = choices.find((c) => c.gold > 0);
+    const heal = choices.find((c) => (c.heal ?? 0) > 0);
+    const purse = choices.find((c) => (c.gold ?? 0) > 0);
     // A writ is a life. Sign for it while the party can bear the price in
     // blood, or buy it when the treasury can spare the fee.
     const writ = choices.filter((c) => c.gift === "writ-of-reprieve");
-    const signed = writ.find((c) => c.heal < 0 && c.cost === 0);
+    const signed = writ.find((c) => (c.heal ?? 0) < 0 && c.cost === 0);
     if (
       signed &&
-      s.players.every((p) => p.fallen || p.hp + signed.heal > p.maxHp * 0.45)
+      s.players.every((p) => p.fallen || p.hp + (signed.heal ?? 0) > p.maxHp * 0.45)
     )
       return signed.id;
     const bought = writ.find((c) => c.cost > 0);
     if (bought && s.gold - bought.cost >= reserve(s)) return bought.id;
     if (heal && s.gold - heal.cost >= reserve(s) && wounded(s) > 0.3)
       return heal.id;
-    if (purse && s.players.every((p) => p.hp + purse.heal > p.maxHp * 0.25))
+    if (
+      purse &&
+      s.players.every((p) => p.hp + (purse.heal ?? 0) > p.maxHp * 0.25)
+    )
       return purse.id;
     return choices.at(-1)!.id;
   },
@@ -1016,9 +1086,11 @@ export const hoardPolicy: Policy = {
     if (s.phase === "CAMP") return "rest";
     if (s.phase === "TOLL") return "fight";
     if (s.phase === "EVENT") {
+      const gamble = luckVote(s, (cost) => cost === 0);
+      if (gamble) return gamble;
       const choices = events.find((e) => e.id === s.eventId)!.choices;
       return (
-        choices.find((c) => c.cost === 0 && c.gold > 0) ??
+        choices.find((c) => c.cost === 0 && (c.gold ?? 0) > 0) ??
         choices.find((c) => c.cost === 0) ??
         choices.at(-1)!
       ).id;

@@ -1,5 +1,6 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { Sprite } from "./Sprite";
+import { SEATS, type Seat } from "./seats";
 import {
   gildedPurse,
   VITALITY_MAX_HP,
@@ -12,7 +13,6 @@ import type { Intent } from "../../shared/protocol";
 import { heroes } from "../../content/heroes";
 import { OFFERINGS } from "../../content/shrines";
 import { floorDef, floorsIn } from "../../content/floors";
-import { events } from "../../content/events";
 import { items } from "../../content/items";
 import { upgradeOffer, lines } from "../../content/upgrades";
 import {
@@ -24,8 +24,12 @@ import {
 } from "../../content/evolutions";
 import { abilities, hero } from "../../content/heroes";
 type Props = { s: Snapshot; send: (i: Intent) => void; disabled: boolean };
+/** A pick shows once it has been made; older rooms only knew who was ready. */
+const picked = (p: Snapshot["players"][number]) => p.chosen ?? p.ready;
 export function Lobby({ s, send, disabled }: Props) {
   const me = s.players.find((p) => p.id === s.you)!;
+  const seated = s.players.map((p, i) => ({ p, seat: SEATS[i] as Seat }));
+  const everyoneReady = s.players.every((p) => p.ready);
   return (
     <>
       <div className="section-heading">
@@ -51,45 +55,119 @@ export function Lobby({ s, send, disabled }: Props) {
         </div>
       </div>
       <div className="hero-grid">
-        {heroes.map((h) => (
-          <button
-            key={h.id}
-            className={`hero-choice hero-${h.id} ${me.heroId === h.id ? "selected" : ""}`}
-            disabled={disabled}
-            onClick={() => send({ type: "hero", hero: h.id })}
-          >
-            <div className="hero-stage">
-              <Sprite id={h.id} />
-            </div>
-            <small>
-              {h.resource.toUpperCase()} · {h.hp} HP
-            </small>
-            <h2>{h.name}</h2>
-            <p className="lore">{h.title}</p>
-            <p>{h.description}</p>
-            <span className="choice-footer">
-              {me.heroId === h.id ? "✓ YOUR HERO" : "Choose hero →"}
-            </span>
-          </button>
-        ))}
-      </div>
-      <section className="lobby-footer">
-        <div>
-          {s.players.map((p) => (
-            <div className="player-line" key={p.id}>
-              <span className={s.connected.includes(p.id) ? "online" : "muted"}>
-                ●
+        {heroes.map((h) => {
+          const pickers = seated.filter(
+            ({ p }) => p.heroId === h.id && picked(p),
+          );
+          const [first, ...others] = pickers;
+          const locked = pickers.some(({ p }) => p.ready);
+          return (
+            <button
+              key={h.id}
+              className={[
+                "hero-choice",
+                `hero-${h.id}`,
+                me.heroId === h.id && picked(me) ? "selected" : "",
+                first ? "claimed" : "",
+                locked ? "locked" : "",
+              ].join(" ")}
+              style={
+                first
+                  ? ({
+                      "--seat": first.seat.color,
+                      // A second, third or fourth player on the same hero
+                      // adds a ring outside the first, in their own colour.
+                      "--rings": others
+                        .map(
+                          ({ seat }, i) =>
+                            `0 0 0 ${(i + 1) * 4}px ${seat.color}`,
+                        )
+                        .join(", "),
+                    } as CSSProperties)
+                  : undefined
+              }
+              aria-label={`${h.name}${pickers.length ? `, picked by ${pickers.map(({ p }) => p.name).join(" and ")}` : ""}`}
+              disabled={disabled}
+              onClick={() => send({ type: "hero", hero: h.id })}
+            >
+              <div className="hero-stage">
+                {pickers.length > 0 && (
+                  <div className="pick-tags">
+                    {pickers.map(({ p, seat }) => (
+                      <span
+                        key={p.id}
+                        className={`pick-tag ${p.ready ? "ready" : ""}`}
+                        style={{ "--seat": seat.color } as CSSProperties}
+                      >
+                        <b>{seat.label}</b>
+                        <span className="pick-name">{p.name}</span>
+                        {p.ready && <i aria-label="locked in">✓</i>}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <Sprite id={h.id} />
+              </div>
+              <small>
+                {h.resource.toUpperCase()} · {h.hp} HP
+              </small>
+              <h2>{h.name}</h2>
+              <p className="lore">{h.title}</p>
+              <p>{h.description}</p>
+              <span className="choice-footer">
+                {me.heroId === h.id && picked(me)
+                  ? me.ready
+                    ? "✓ LOCKED IN"
+                    : "✓ YOUR HERO"
+                  : "Choose hero →"}
               </span>
-              <strong>{p.name}</strong>
-              <span>{p.heroId}</span>
-              <span>{p.ready ? "✓ Ready" : "Choosing"}</span>
-            </div>
-          ))}
-          <p className="muted">
-            Foundry Expedition · seven chambers · casual planning · no host
-            dependency
-          </p>
-        </div>
+            </button>
+          );
+        })}
+      </div>
+      <section className="lobby-roster" aria-label="The table">
+        <ol className="seats">
+          {SEATS.map((seat, i) => {
+            const p = s.players[i];
+            if (!p)
+              return (
+                <li key={seat.label} className="seat open">
+                  <b className="seat-label">{seat.label}</b>
+                  <span className="seat-empty">Open seat</span>
+                </li>
+              );
+            const h = hero(p.heroId);
+            return (
+              <li
+                key={seat.label}
+                className={`seat ${p.ready ? "ready" : ""} ${p.id === s.you ? "you" : ""}`}
+                style={{ "--seat": seat.color } as CSSProperties}
+              >
+                <b className="seat-label">{seat.label}</b>
+                <span className="seat-portrait">
+                  {picked(p) ? <Sprite id={p.heroId} crop="portrait" /> : "?"}
+                </span>
+                <span className="seat-text">
+                  <strong>
+                    <span
+                      className={
+                        s.connected.includes(p.id) ? "online" : "muted"
+                      }
+                      aria-label={
+                        s.connected.includes(p.id) ? "online" : "offline"
+                      }
+                    >
+                      ●
+                    </span>{" "}
+                    {p.name}
+                  </strong>
+                  <span>{picked(p) ? h.name : "Choosing…"}</span>
+                  <em>{p.ready ? "✓ Locked in" : "Choosing"}</em>
+                </span>
+              </li>
+            );
+          })}
+        </ol>
         <div className="button-stack">
           <button
             className="primary"
@@ -99,11 +177,7 @@ export function Lobby({ s, send, disabled }: Props) {
             {me.ready ? "Cancel ready" : "I accept the pact"}
           </button>
           <button
-            disabled={
-              disabled ||
-              s.players.length < 2 ||
-              !s.players.every((p) => p.ready)
-            }
+            disabled={disabled || s.players.length < 2 || !everyoneReady}
             onClick={() => send({ type: "start" })}
           >
             Begin expedition →
@@ -111,7 +185,7 @@ export function Lobby({ s, send, disabled }: Props) {
           <p role="status">
             {s.players.length < 2
               ? "Invite one more player to begin."
-              : !s.players.every((p) => p.ready)
+              : !everyoneReady
                 ? "Waiting for every hero to ready up."
                 : "Everyone is ready. Begin when you’re set."}
           </p>
@@ -366,31 +440,7 @@ export function DungeonMap(props: Props) {
     </>
   );
 }
-export function EventRoom(props: Props) {
-  const event = events.find((e) => e.id === props.s.eventId)!;
-  return (
-    <section className="center-screen">
-      <span className="large-symbol">
-        <PixelIcon name="question" />
-      </span>
-      <span className="eyebrow">A CHANCE ENCOUNTER</span>
-      <h1>{event.name}</h1>
-      <p className="lore">{event.text}</p>
-      <div className="choices">
-        {event.choices.map((c) => (
-          <Choice
-            {...props}
-            key={c.id}
-            id={c.id}
-            title={c.name}
-            text={c.description}
-            cost={c.cost}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
+export { EventRoom } from "./ChanceEvent";
 export function Camp(props: Props) {
   return (
     <section className="center-screen camp">

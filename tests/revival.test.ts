@@ -95,5 +95,5 @@ it("hands one writ to the party at the Reprieve Office, for gold or for blood", 
 it("draws the Reprieve Office only in a room with boss pools", () => {
   const legacy = events.filter((e) => !e.bossVersion);
   expect(legacy.map((e) => e.id)).not.toContain("reprieve-office");
-  expect(legacy).toHaveLength(8);
+  expect(legacy.length).toBe(events.length - 1);
 });
