@@ -312,6 +312,7 @@ function BossPreview() {
               disabled={exit.ending}
               onSettled={exit.ending ? exit.finish : undefined}
               reducedMotion={!motion}
+              bossIntros={new URLSearchParams(location.search).get("intro") === "1"}
               lab={lab.hooks}
             />
           ) : (

@@ -9,8 +9,35 @@ import { ultimate, type UltimateDef } from "../../content/ultimates";
  * logged until the next cast. What follows is the round as the choreographer
  * already knows it, and it is played exactly as it would have been.
  */
-export interface UltimateSegment {
+/**
+ * What a film is credited to: the name and epithet it shows, its accent, and
+ * its lines. An Ultimate's definition is one; a boss intro builds its own.
+ */
+export interface FilmCredit {
+  id: string;
+  name: string;
+  epithet: string;
+  presentation: {
+    accent?: string;
+    cinematic?: string;
+    voice?: { activation?: string; impact?: string; after?: string };
+  };
+  /** Where it happens, for a title card's heading: a boss's chamber. */
+  place?: string;
+}
+
+/**
+ * Everything a film plays: who calls it, what it caused, and whom it reached.
+ * A boss intro is a segment with no caster, no beats, and the boss first.
+ */
+export interface FilmSegment {
   cast: Beat;
+  def: FilmCredit;
+  beats: Beat[];
+  targets: string[];
+}
+
+export interface UltimateSegment extends FilmSegment {
   def: UltimateDef;
   /** Everything the Ultimate caused, in the order the engine logged it. */
   beats: Beat[];
@@ -60,7 +87,7 @@ export function revealed(
 }
 
 /** The damage an Ultimate did to its chosen target, for `$damage`. */
-export function damageTo(seg: UltimateSegment) {
+export function damageTo(seg: FilmSegment) {
   const primary = seg.targets[0];
   const total = seg.beats
     .filter((b) => b.kind === "damage" && b.actor === seg.cast.actor)

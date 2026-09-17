@@ -576,22 +576,25 @@ test.describe("the Collector's objective is legible without the chronicle", () =
 });
 
 test.describe("the new visual layer stays inside the viewport", () => {
-  test("the boss entrance never overflows or blocks the fight", async ({
+  test("the boss entrance never overflows, and skipping hands the fight back clean", async ({
     page,
   }) => {
     // Slowed, so a loaded parallel worker cannot miss the window. The tempo
     // control is development-only and exists for capture; this reuses it.
-    await open(page, { party: 4, stage: "opening", motion: 1, tempo: 0.2 });
-    await expect(page.locator(".boss-intro")).toBeVisible();
+    await open(page, { party: 4, stage: "opening", motion: 1, tempo: 0.2, intro: 1 });
+    const film = page.locator(".ult-cinematic[data-intro]");
+    await expect(film).toBeVisible();
     const o = await overflow(page);
     expect(o.vertical).toBeLessThanOrEqual(TOLERANCE);
     expect(o.horizontal).toBeLessThanOrEqual(TOLERANCE);
-    // The title must stay on screen at every supported size.
-    const plate = await inViewport(page, ".intro-plate");
-    expect(plate.inside).toBe(true);
-    // Any input clears it, so nobody is trapped watching it.
-    await page.keyboard.press("Space");
-    await expect(page.locator(".boss-intro")).toHaveCount(0);
+    // The title card must stay on screen at every supported size.
+    await expect(film.locator(".cine-title-card")).toBeVisible({ timeout: 20_000 });
+    const card = await inViewport(page, ".cine-title-card");
+    expect(card.inside).toBe(true);
+    // Skipping hands the fight back with nothing of the film left behind.
+    await page.keyboard.press("Escape");
+    await expect(page.locator("[class*='cine-']")).toHaveCount(0);
+    await expect(page.locator(".fan-slip").first()).toBeVisible();
   });
 
   test("the environment never covers a combatant or an intention", async ({

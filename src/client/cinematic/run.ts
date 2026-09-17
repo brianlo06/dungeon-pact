@@ -1,5 +1,5 @@
 import type { Cinematic, CinematicMode, Framing } from "../../shared/cinematic";
-import type { UltimateSegment } from "./segments";
+import type { FilmSegment } from "./segments";
 import { layout, type Timeline } from "./timeline";
 
 /** The Battle Lab's switches. The game never sets any of them. */
@@ -48,13 +48,15 @@ export class CinematicRun {
   done = false;
 
   constructor(
-    readonly segment: UltimateSegment,
+    readonly segment: FilmSegment,
     readonly cinematic: Cinematic,
     readonly mode: CinematicMode,
     readonly framing: Framing,
     /** Clock time the run started. */
     public start: number,
     readonly reduced = false,
+    /** A boss's entrance rather than an Ultimate: nothing to reveal, no round after. */
+    readonly intro = false,
   ) {
     this.timeline = layout(cinematic, mode, framing);
   }

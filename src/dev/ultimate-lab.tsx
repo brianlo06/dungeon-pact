@@ -82,6 +82,8 @@ function read() {
       downed: q.get("downed") === "1",
     },
     mode: (q.get("mode") ?? "full") as "full" | "fast",
+    /** `film=intro`: play the enemy's boss intro instead of the hero's Ultimate. */
+    film: (q.get("film") === "intro" ? "intro" : "ultimate") as "intro" | "ultimate",
     framing: (q.get("framing") ?? "auto") as Framing | "auto",
     motion: flag("motion", true),
     tempo: q.get("tempo") ?? "1",
@@ -195,6 +197,16 @@ function UltimateLab() {
   /** Queue the Ultimate and resolve the round through the real reducer. */
   const trigger = useCallback(
     (from: RunState = run) => {
+      if (initial.film === "intro") {
+        // The intro plays on the board as the fight opens; nothing is sent.
+        before.current = from;
+        const play = () => {
+          if (!api.current) return void requestAnimationFrame(play);
+          api.current.playIntro();
+        };
+        play();
+        return;
+      }
       try {
         const primed = structuredClone(from);
         primed.players[0].ultimateCharge = Math.max(primed.players[0].ultimateCharge ?? 0, ULTIMATE_MAX);
@@ -473,6 +485,7 @@ function UltimateLab() {
                 onSettled={exit.ending ? exit.finish : undefined}
                 reducedMotion={!motion}
                 cinematics={mode}
+                bossIntros={false}
                 lab={hooks}
               />
             ) : (

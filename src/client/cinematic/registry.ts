@@ -2,7 +2,8 @@ import type { ComponentType, ReactNode } from "react";
 import { VFX, VFX_FRAME, type VfxContext, type VfxProps } from "./vfx";
 
 /**
- * Everything an Ultimate brings with it, collected from its own folder.
+ * Everything an Ultimate or a boss intro brings with it, collected from its
+ * own folder (`src/client/ultimates/<id>/` or `src/client/boss-intros/<id>/`).
  *
  * `src/client/ultimates/<id>/` holds one Ultimate's presentation: `vfx.tsx`
  * (exporting `renderers` and optionally `frames`), `background.tsx`
@@ -18,11 +19,11 @@ type Frame = (el: HTMLElement, p: number, age: number, ctx: VfxContext) => void;
 const vfxModules = import.meta.glob<{
   renderers?: Record<string, Renderer>;
   frames?: Record<string, Frame>;
-}>("../ultimates/*/vfx.tsx", { eager: true });
+}>(["../ultimates/*/vfx.tsx", "../boss-intros/*/vfx.tsx"], { eager: true });
 
 const backgroundModules = import.meta.glob<{
   backgrounds?: Record<string, ComponentType>;
-}>("../ultimates/*/background.tsx", { eager: true });
+}>(["../ultimates/*/background.tsx", "../boss-intros/*/background.tsx"], { eager: true });
 
 function merge<T>(base: Record<string, T>, found: [string, Record<string, T> | undefined][], label: string) {
   const out: Record<string, T> = { ...base };

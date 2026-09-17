@@ -345,7 +345,13 @@ export type TextKind =
   /** A spoken line, as a subtitle. */
   | "voice"
   /** A word or number punched onto an impact. */
-  | "impact";
+  | "impact"
+  /**
+   * A boss's title card: its name struck like a seal on a contract, and its
+   * epithet as the clause beneath. The film's `text` is ignored; the card is
+   * always the boss's own name.
+   */
+  | "title";
 
 export interface TextCue {
   kind: TextKind;
@@ -422,7 +428,13 @@ export interface Shot {
 export interface Cinematic {
   id: string;
   /** Who it was made for, so the lab can show it with the right cast. */
-  heroId: string;
+  heroId?: string;
+  /**
+   * A boss intro names the boss it introduces instead. Its cast is the boss
+   * (`target`), the boss and its escort (`targets`) and the party (`allies`);
+   * it has no caster and reveals nothing.
+   */
+  bossId?: string;
   shots: Shot[];
   /** The character's motif, played under the shots that ask for it. */
   motif?: string;

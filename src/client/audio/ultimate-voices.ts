@@ -6,7 +6,7 @@ import type { Voice } from "./synth";
  * here so authoring an Ultimate never edits a file another Ultimate shares.
  */
 const modules = import.meta.glob<{ voices: Record<string, Voice> }>(
-  "../ultimates/*/sounds.ts",
+  ["../ultimates/*/sounds.ts", "../boss-intros/*/sounds.ts"],
   { eager: true },
 );
 
