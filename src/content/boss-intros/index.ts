@@ -144,8 +144,8 @@ export function reducedIntro(def: EnemyDef): BossIntroFilm {
         camera: { from: { x: 800, y: 540, zoom: 1.45 } },
         background: "pact-sigil",
         lighting: still,
-        actors: [{ role: "target", at: [800, 860], size: 260, face: -1, look: "rim", rim: accent }],
-        text: [{ kind: "title", at: 0, until: 1, text: "", x: 0.5, y: 0.78 }],
+        actors: [{ role: "target", at: [800, 900], size: 240, face: -1, look: "rim", rim: accent }],
+        text: [{ kind: "title", at: 0, until: 1, text: "", x: 0.5, y: 0.24 }],
       },
       {
         id: "return",
