@@ -69,6 +69,34 @@ one Strongbox to a chamber. The Miser's Weight of wealth also shields it for one
 Barrier per 12 gold the treasury holds **above 160** — the allowance is the
 whole mechanic, and is explained below.
 
+## Simulation evidence — open training, 2026-09-17
+
+A playtest asked for training to be more common: with one class taught per
+training ground, most of a trio or quartet never took its path. Rooms with
+`trainingVersion` now let every hero in a party of **three or four** who has
+not evolved take their path at any training ground, each paying tuition; a
+duo keeps one class a ground. Measured on the three-floor boss-pool build
+(`6b6cc48`), tactical policy, 8 seeds, same seeds and same `scripts/policy.ts`
+on both builds:
+
+| Party | one class a ground | open training | runs |
+| ----- | -----------------: | ------------: | ---: |
+| 2 players (every composition) | 70% | 70% (unchanged) | 288 |
+| 3 players (every 2nd) | 79% | **72%** | 480 |
+| 4 players (every 4th) | 68% | 66% | 664 |
+
+Opening it to duos as well measured 70% → 56%, which is why duos keep the
+old rule: over three floors one class a ground already reaches both heroes.
+The drop is not the purse — final treasury *rose* (trios 428 → 462) — and not
+the Ultimates: with `--ultimates=off` open duos still fell 47% → 33%. The
+likely cost is the drill. Under the old rule every untaught hero drilled for
+permanent Power and HP at each ground; open training offers a path instead,
+which trades a signature ability and some stats, and the bot takes whatever is
+offered. A hero who would rather drill than evolve cannot choose to yet. The
+user accepted the trade to ship it (more paths at the table matter more than
+seven bot points for trios); if trios read too hard with people, offering
+path *or* drill at a ground is the next thing to try.
+
 ## Simulation evidence — supplies, 486 compositions, 25 seeds each
 
 Measured against the boss-objectives build with the _same_ policy on both, so

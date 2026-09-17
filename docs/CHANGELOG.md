@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.17 open training — 2026-09-17
+
+Training was too rare: each training ground evolved one hero, so most of a
+party of three or four finished a run without a path.
+
+- **Every hero can train.** In a new room of three or four, a training ground
+  teaches every hero who has not taken a path yet, each paying tuition from
+  the shared purse. A hero who already walks a path may still drill. A duo
+  keeps one class a ground, which over three floors already reaches both.
+- Rooms created before this keep one class a ground. Measured with the bots,
+  trios win 72% (from 79%) and quartets 66% (from 68%); see `BALANCE.md`.
+
 ## 0.16.1 leaving a pact — 2026-09-16
 
 A player who created a room could not leave it, and a friend who pressed

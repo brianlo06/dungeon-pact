@@ -170,8 +170,14 @@ it("stocks shelves with gear the party does not already own", () => {
  * could never take the Vanguard's — but nothing made that visible at the
  * table, because everyone walked out of every mentor changed.
  */
-function atMentor(heroIds: string[], before?: (s: RunState) => void) {
+function atMentor(
+  heroIds: string[],
+  before?: (s: RunState) => void,
+  open = false,
+) {
   let s = createRun("MENTOR", "feedback-mentor");
+  // The one-class rule now belongs to rooms from before open training.
+  if (!open) delete s.trainingVersion;
   heroIds.forEach((_, i) => addPlayer(s, `p${i}`, `Hero ${i}`));
   heroIds.forEach((heroId, i) => {
     s = reduce(s, `p${i}`, { type: "hero", hero: heroId }, 0);
@@ -245,4 +251,59 @@ it("keeps the old open teaching for rooms that entered before the rule", () => {
   expect(
     after.players.find((p) => p.id === student.id)!.evolution,
   ).toBeTruthy();
+});
+
+/**
+ * Open training. A later playtest found paths too rare: with one class taught
+ * per ground, most of a trio or quartet never took theirs. A newer room lets
+ * every hero who has not evolved take their path at any training ground.
+ */
+it("a newer room's training ground evolves every hero who has not evolved", () => {
+  const s = atMentor(["vanguard", "arcanist", "ranger", "warden"], undefined, true);
+  expect(s.phase).toBe("MENTOR");
+  expect(s.mentorClass).toBeUndefined();
+  const teacher = mentors.find((m) => m.id === s.mentorId)!;
+  const gold = s.gold;
+  let run = s;
+  for (const p of s.players)
+    run = reduce(run, p.id, { type: "train", accept: true }, 0);
+  expect(run.players.every((p) => p.evolution)).toBe(true);
+  // Each hero pays their own tuition from the shared purse.
+  expect(run.gold).toBe(gold - 4 * teacher.tuition);
+  expect(run.phase).toBe("MAP");
+});
+
+it("open training still drills a hero who already walks a path", () => {
+  const s = atMentor(
+    ["vanguard", "arcanist", "ranger"],
+    (run) => {
+      run.players[0].evolution = evolutions.find(
+        (e) => e.heroId === "vanguard",
+      )!.id;
+    },
+    true,
+  );
+  const teacher = mentors.find((m) => m.id === s.mentorId)!;
+  const walked = s.players[0].evolution;
+  const gold = s.gold;
+  const after = reduce(s, "p0", { type: "train", accept: true }, 0);
+  expect(after.players[0].evolution).toBe(walked);
+  expect(after.gold).toBe(gold - drillFor(teacher.tier).fee);
+});
+
+it("open training draws nothing from the dice on entry", () => {
+  const open = atMentor(["vanguard", "arcanist", "ranger"], undefined, true);
+  const locked = atMentor(["vanguard", "arcanist", "ranger"]);
+  // The one-class rule rolls for its class; open training must not, or every
+  // draw after the chamber would shift for no reason.
+  expect(open.rng).not.toBe(locked.rng);
+});
+
+it("a duo in a newer room keeps one class a ground", () => {
+  const s = atMentor(["vanguard", "arcanist"], undefined, true);
+  expect(["vanguard", "arcanist"]).toContain(s.mentorClass);
+  let run = s;
+  for (const p of s.players)
+    run = reduce(run, p.id, { type: "train", accept: true }, 0);
+  expect(run.players.filter((p) => p.evolution)).toHaveLength(1);
 });

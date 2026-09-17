@@ -46,6 +46,7 @@ export function createRun(room: string, seed: string): RunState {
     combatVersion: 2,
     ultimateVersion: 1,
     bossVersion: 1,
+    trainingVersion: 1,
     revivals: 0,
     schemaVersion: 1,
     contentVersion: 1,
@@ -234,7 +235,16 @@ function finishVote(s: RunState, result: string) {
     else if (n.type === "mentor") {
       const teaching = mentors[nodeMentorTier(s, n) - 1];
       s.mentorId = teaching.id;
-      s.mentorClass = teachableClass(s, teaching.id);
+      // Playtesters found paths too rare: a ground that evolves one hero
+      // leaves most of a trio or quartet without theirs for the whole run. A
+      // newer room of three or four teaches everyone who has not evolved yet,
+      // and draws nothing from the dice for it. A duo keeps one class a ground:
+      // over three floors that already reaches both heroes, and measured open
+      // it fell from 70% to 56% (docs/BALANCE.md). An older room keeps its one
+      // class too.
+      if (s.trainingVersion === 1 && s.players.length >= 3)
+        delete s.mentorClass;
+      else s.mentorClass = teachableClass(s, teaching.id);
       s.trained = [];
       s.phase = "MENTOR";
     } else if (n.type === "camp") s.phase = "CAMP";
