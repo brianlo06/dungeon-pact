@@ -137,6 +137,47 @@ harder Warden nerf.
 
 The Herald is now the weakest class, and the next one to look at.
 
+## Six bosses, tuned in pairs
+
+With a pool of two a floor, each new boss was tuned against its floor
+partner, on the same seeds (`scripts/simulate.ts --pool=…` keeps only the
+named bosses in each pool; which boss a run meets otherwise depends on the
+seed alone, so 8 seeds gave lopsided samples). "Ends" is the share of runs
+that meet a boss and die to it; every 2nd composition, 8 seeds, tactical.
+
+| Floor | Original | Ends | New | First cut | Shipped |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Collector | 11% | Assayer | 8% | 12% |
+| 2 | Miser | 15% | Salvor | 1% | 14% |
+| 3 | Notary | 9% | Bailiff | 1% | 4% |
+
+| Trio | 2p | 3p | 4p | all |
+| --- | --- | --- | --- | --- |
+| Collector · Miser · Notary | 61% | 70% | 69% | 69% |
+| Assayer · Salvor · Bailiff | 62% | 78% | 71% | 72% |
+
+What the first cuts got wrong, and the fixes:
+
+- **The Salvor** broke for the cheapest stagger in the game: a soft plate
+  took the Salvor's whole action, and half its rotation dealt no damage (the
+  handoff's trap: a slot with no damage is a free round). Plates are tougher
+  (40), breaking one strips Barrier and leaves it Vulnerable instead of
+  costing the round, a hardened plate gives 16 Barrier, and growing a plate
+  rides a scraping blow (18).
+- **The Bailiff**'s lien was a gift: served straight back, it was free damage
+  on the boss. Serving back now splits it — half due on the server at once,
+  half on the enemy this round. A lien's weight scales with the party (×0.6,
+  ×1.1, ×1.35 for two, three, four), because a duo has no spare action to
+  answer it.
+- **Duos and the Bailiff**: even with no lien the Bailiff ended 31% of duo
+  runs that met it (the Notary: 5%), because it strikes every round where the
+  Notary spends rounds pressing. Its blows were lightened (12, 16, 22) and its
+  health trimmed (205), which brought duos level (62% against 61%) and left it
+  softer than the Notary for larger parties (4% against 9%). That is the
+  remaining gap on this floor.
+- **The Assayer** needed only a little more: a pour of 38, cracked at 18 a
+  hero, 190 HP.
+
 ## The Notary — Ledger Archive
 
 **Two words: witness, enforce.** The Notary presses its seal into the room.
@@ -171,9 +212,9 @@ damage in the round it is announced cracks the crucible, and the metal goes
 over the Assayer instead. Principle: a charged state that damage knocks out
 (Monster Hunter's charged monsters losing their charge to a damage threshold).
 
-- **Rotation**: Heat the crucible (Heat 1, 6 Barrier) → Tongs 22 → Bring it to
-  the pour (Heat 2) → **Pour the crucible**: 34 down a row with Burn 4.
-- **Cracks** (`Ability.cracks`): if the Assayer takes **16 × heroes** damage,
+- **Rotation**: Heat the crucible (Heat 1, 6 Barrier) → Tongs 24 → Bring it to
+  the pour (Heat 2) → **Pour the crucible**: 38 down a row with Burn 4.
+- **Cracks** (`Ability.cracks`): if the Assayer takes **18 × heroes** damage,
   Barrier included, between the announcement and its turn, the pour is lost
   and the crucible spills on it — 24 through armour, Burn 6, Vulnerable 2, and
   its Heat gone. Only that round's damage counts (`Enemy.taken`, reset when

@@ -38,7 +38,8 @@ it("serves a lien on a hero that does not carry one", () => {
   expect(bailiff(s).intent.ability.id).toBe("serve-lien");
   idle(s);
   expect(carrier(s)).toBeDefined();
-  expect(status(carrier(s)!, "lien")!.stacks).toBe(32);
+  // 46, weighed for a duo.
+  expect(status(carrier(s)!, "lien")!.stacks).toBe(Math.round(46 * 0.6));
 });
 
 it("garnishes the carrier's row, which the carrier can step out of, then collects from them", () => {
@@ -83,19 +84,23 @@ it("is not called in by a guard taking the hit for the carrier", () => {
   expect(status(debtor, "lien")?.stacks).toBe(30);
 });
 
-it("serves back onto an enemy, where the party's next hit calls it in", () => {
+it("serves back onto an enemy at half its weight, where the party's next hit calls it in", () => {
   let s = atBailiff();
   const debtor = s.players[0];
   expect(() => validatePlan(s, debtor, "serve", bailiff(s).id)).toThrow("nothing to serve");
   debtor.statuses.push({ id: "lien", stacks: 30, duration: 3 });
   expect(validatePlan(s, debtor, "serve", bailiff(s).id).id).toBe("serve");
+  const own = debtor.hp;
   effects(s, debtor, bailiff(s), [{ kind: "transfer", status: "lien" }]);
   expect(status(debtor, "lien")).toBeUndefined();
-  expect(status(bailiff(s), "lien")?.stacks).toBe(30);
+  // The other half falls due on the one serving it.
+  expect(own - debtor.hp).toBe(15);
+  // Half its weight, and due this round.
+  expect(status(bailiff(s), "lien")).toMatchObject({ stacks: 15, duration: 1 });
   const hp = bailiff(s).hp;
   effects(s, s.players[1], bailiff(s), [{ kind: "damage", amount: 5 }]);
   expect(status(bailiff(s), "lien")).toBeUndefined();
-  expect(hp - bailiff(s).hp).toBeGreaterThanOrEqual(30);
+  expect(hp - bailiff(s).hp).toBeGreaterThanOrEqual(15);
 });
 
 it("does nothing when there is no lien to call", () => {

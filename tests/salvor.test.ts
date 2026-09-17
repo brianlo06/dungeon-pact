@@ -1,8 +1,8 @@
 /**
  * The Salvor, floor two's second boss. It grows soft plates out of the goods
  * it salvaged; a plate left one round hardens onto it (Encrusted: every hit
- * heavier, and Barrier), and a plate broken while soft staggers it and leaves
- * it Vulnerable. See `docs/BOSSES.md`.
+ * heavier, and Barrier), and a plate broken while soft strips its Barrier and
+ * leaves it Vulnerable. See `docs/BOSSES.md`.
  */
 import { expect, it } from "vitest";
 import { addPlayer, createRun, reduce } from "../src/engine/game";
@@ -60,12 +60,13 @@ it("hardens onto the Salvor when it is left: Encrusted and Barrier, and every hi
   expect(hitDamage(20, salvor(s), hero)).toBeGreaterThan(before);
 });
 
-it("staggers and opens the Salvor when a plate is torn off while soft", () => {
+it("opens the Salvor when a plate is torn off while soft", () => {
   const s = atSalvor();
   idle(s);
+  salvor(s).statuses.push({ id: "barrier", stacks: 10, duration: 2 });
   tear(s, plates(s)[0]);
-  expect(status(salvor(s), "interrupted")).toBeDefined();
   expect(status(salvor(s), "vulnerable")).toBeDefined();
+  expect(status(salvor(s), "barrier")).toBeUndefined();
   // A torn plate never hardens.
   idle(s);
   expect(status(salvor(s), "encrusted")).toBeUndefined();

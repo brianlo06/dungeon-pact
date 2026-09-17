@@ -483,7 +483,13 @@ export function effects(
       const held = status(actor, e.status);
       if (held && target.hp > 0) {
         actor.statuses = actor.statuses.filter((x) => x.id !== e.status);
-        applyStatus(target, e.status, held.stacks, Math.max(2, held.duration));
+        // A debt served back is split: half falls due on the one serving it,
+        // now, and half on the enemy it is handed to, this round. Handing it
+        // on is a way to share the weight, not a free blow: at full weight
+        // the Bailiff ended 1% of the runs that met it.
+        const half = Math.ceil(held.stacks / 2);
+        if (e.status === "lien") hurt(s, actor, actor, held.stacks - half, depth + 1);
+        applyStatus(target, e.status, half, 1);
         log(s, `${actor.name} serves the ${statuses[e.status].name} back on ${target.name}.`, "combo", {
           kind: "combo",
           label: "SERVED BACK",

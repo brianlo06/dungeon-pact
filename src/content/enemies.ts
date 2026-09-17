@@ -54,15 +54,13 @@ const pour = (amount: number, burn: number, per: number): Ability => ({
  * a one-round fuse. Left alone it hardens onto the Salvor; broken while soft it
  * staggers it.
  */
-const encrust = (rows: ("front" | "back")[]): Ability => ({
-  id: "encrust",
-  name: "Grow a plate",
-  description: "A soft plate grows. Next round it hardens onto the Salvor, unless it is broken first.",
-  cost: 0,
-  speed: 0,
-  target: "self",
-  cooldown: 0,
-  effects: [{ kind: "spawn", object: "salvage-plate", rows, fuse: 1 }],
+const encrust = (rows: ("front" | "back")[], amount: number): Ability => ({
+  // A plate grows as it scrapes: a slot that dealt no damage was a free round
+  // for the party, and the Salvor ended 3% of the runs that met it.
+  ...attack("encrust", "Scrape and grow", amount, "enemy", [
+    { kind: "spawn", object: "salvage-plate", rows, fuse: 1 },
+  ]),
+  description: "A scraping blow, and a soft plate grows. Next round it hardens onto the Salvor, unless it is broken first.",
 });
 /** A plate still soft: it does nothing but wait to harden. */
 const plateSoft: Ability = {
@@ -365,7 +363,7 @@ export const enemies: EnemyDef[] = [
     id: "assayer",
     name: "The Assayer",
     glyph: "⚗",
-    hp: 180,
+    hp: 190,
     power: 3,
     guard: 3,
     speed: 3,
@@ -391,7 +389,7 @@ export const enemies: EnemyDef[] = [
     id: "salvage-plate",
     name: "Soft Plate",
     glyph: "▣",
-    hp: 30,
+    hp: 40,
     power: 0,
     guard: 0,
     speed: 1,
@@ -412,15 +410,17 @@ export const enemies: EnemyDef[] = [
         cooldown: 0,
         effects: [
           { kind: "status", status: "encrusted", stacks: 1, duration: 30 },
-          { kind: "status", status: "barrier", stacks: 12, duration: 3 },
+          { kind: "status", status: "barrier", stacks: 16, duration: 3 },
         ],
       },
     },
-    // Torn off while it is soft, the plate takes the Salvor's footing with it.
+    // Torn off while it is soft, the plate leaves a raw patch: the Salvor is
+    // Vulnerable while it regrows. (A stagger that cost the whole round made
+    // a plate the cheapest interrupt in the game: 1% of runs died to it.)
     broken: {
       each: [
-        { kind: "status", status: "interrupted", stacks: 1, duration: 1 },
         { kind: "status", status: "vulnerable", stacks: 1, duration: 2 },
+        { kind: "removeStatus", status: "barrier" },
       ],
     },
   },
@@ -435,7 +435,7 @@ export const enemies: EnemyDef[] = [
     id: "salvor",
     name: "The Salvor",
     glyph: "⚓",
-    hp: 185,
+    hp: 205,
     power: 2,
     guard: 4,
     speed: 3,
@@ -462,7 +462,7 @@ export const enemies: EnemyDef[] = [
     id: "bailiff",
     name: "The Bailiff",
     glyph: "⚖",
-    hp: 195,
+    hp: 205,
     power: 3,
     guard: 3,
     speed: 4,
@@ -636,23 +636,23 @@ export const tacticalIntents: Record<string, Ability[]> = {
     collateral,
   ],
   bailiff: [
-    serveLien(12, 32),
+    serveLien(12, 46),
     attack("garnish", "Garnish wages", 16, "enemyRow", [
       { kind: "gold", amount: -10 },
     ]),
-    attack("collect", "Collect", 24),
+    attack("collect", "Collect", 22),
   ],
   salvor: [
-    encrust(["front"]),
-    attack("volley", "Rust volley", 16, "enemyRow"),
-    encrust(["back"]),
-    attack("gaff", "Gaff hook", 24),
+    encrust(["front"], 18),
+    attack("volley", "Rust volley", 20, "enemyRow"),
+    encrust(["back"], 18),
+    attack("gaff", "Gaff hook", 28),
   ],
   assayer: [
     assay(1),
-    attack("tongs", "Tongs", 22),
+    attack("tongs", "Tongs", 24),
     assay(2),
-    pour(34, 4, 16),
+    pour(38, 4, 18),
   ],
   notary: [
     attack("attest", "Attest", 20),
@@ -674,15 +674,15 @@ export const tacticalIntents: Record<string, Ability[]> = {
 export const phaseTwoIntents: Record<string, Ability[]> = {
   // Phase two serves a second lien before it collects.
   bailiff: [
-    serveLien(14, 36),
-    serveLien(14, 36),
-    attack("collect", "Collect", 28),
+    serveLien(20, 50),
+    serveLien(20, 50),
+    attack("collect", "Collect", 34),
   ],
   // Phase two grows two plates at once and hooks harder.
   salvor: [
-    encrust(["front", "back"]),
-    attack("volley", "Rust volley", 18, "enemyRow"),
-    attack("gaff", "Gaff hook", 28),
+    encrust(["front", "back"], 20),
+    attack("volley", "Rust volley", 22, "enemyRow"),
+    attack("gaff", "Gaff hook", 32),
   ],
   // Phase two heats faster and pours hotter, and a crack takes more.
   assayer: [

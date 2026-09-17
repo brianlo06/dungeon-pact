@@ -141,6 +141,17 @@ export function prepareIntents(s: RunState) {
     if (hit !== 1)
       for (const effect of damageIn(ability.effects))
         effect.amount = Math.round(effect.amount * hit);
+    // A lien lands on one hero, which is half of a duo and a quarter of a
+    // quartet, and a larger party has the guards and the spare actions to
+    // answer it: its weight scales with the party. Measured, not derived:
+    // ×0.6 for a duo, ×1.1 for a trio, ×1.35 for a quartet.
+    if (s.bossVersion === 1)
+      for (const effect of ability.effects)
+        if (effect.kind === "status" && effect.status === "lien")
+          effect.stacks = Math.round(
+            effect.stacks *
+              (s.players.length <= 2 ? 0.6 : 0.35 + 0.25 * s.players.length),
+          );
     if (e.phase === 2 && !authoredPhase)
       for (const effect of ability.effects)
         if (effect.kind === "damage") effect.amount += 7;

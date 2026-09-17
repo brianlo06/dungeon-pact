@@ -1,5 +1,7 @@
 import { createRun, addPlayer, reduce } from "../src/engine/game";
 import { heroes } from "../src/content/heroes";
+import { isBoss } from "../src/content/enemies";
+import { floors } from "../src/content/floors";
 import { items } from "../src/content/items";
 import type { RunState } from "../src/shared/model";
 import type { Intent } from "../src/shared/protocol";
@@ -38,6 +40,8 @@ export interface RunResult {
    * gap was a guess about where duos die, and none of the guesses measured it.
    */
   lostAt: string | null;
+  /** Every boss this run fought, in order. */
+  bossesMet: string[];
   revives: number;
   campSpend: number;
   /** Gold spent on gear. The exchange is a shop now; the name outlived it. */
@@ -87,6 +91,8 @@ export function run(
   // A room from before boss pools: two floors, the Collector then the Miser.
   if (!bossPools) delete s.bossVersion;
   let steps = 0;
+  const bossesMet: string[] = [];
+  let bossNode: string | null = null;
   let invalid = 0;
   const invalidReasons: string[] = [];
   let campSpend = 0;
@@ -162,6 +168,13 @@ export function run(
       send(p.id, { type: "vote", choice: policy.vote(s, p) });
       if (wasCamp && s.gold < before) campSpend += before - s.gold;
     } else if (s.phase === "COMBAT") {
+      const node = s.map.find((n) => n.id === s.currentNode);
+      const key = `${s.floor ?? 1}:${s.currentNode}`;
+      if (node?.type === "boss" && bossNode !== key) {
+        bossNode = key;
+        const boss = s.enemies.find((e) => e.hp > 0 && isBoss(e.definition));
+        if (boss) bossesMet.push(boss.definition);
+      }
       const p = s.players.find((p) => p.hp > 0 && !p.fallen && !s.plans[p.id])!;
       const aim = policy.ultimate?.(s, p);
       if (aim)
@@ -251,6 +264,7 @@ export function run(
       s.outcome === "victory"
         ? null
         : `${s.floor ?? 1}:${s.map.find((n) => n.id === s.currentNode)?.type ?? "?"}`,
+    bossesMet,
     revives: s.players.reduce((n, p) => n + p.revives, 0),
     campSpend,
     auctionSpend,
@@ -286,6 +300,9 @@ export interface Summary {
   invalidPlans: number;
   /** Where each lost run ended, as `floor:chamber`. */
   lossesAt: string[];
+  /** How many runs fought each boss, and how many of those died to it. */
+  bossMet: Record<string, number>;
+  bossLost: Record<string, number>;
 }
 
 export function summarise(
@@ -304,6 +321,8 @@ export function summarise(
     losses = 0,
     lossDepth = 0;
   const lossesAt: string[] = [];
+  const bossMet: Record<string, number> = {};
+  const bossLost: Record<string, number> = {};
   for (let i = 0; i < seeds; i++) {
     const r = run(`${prefix}-${i}`, party, policyName);
     if (r.state.outcome === "victory") wins++;
@@ -311,7 +330,12 @@ export function summarise(
       losses++;
       lossDepth += r.depth;
       if (r.lostAt) lossesAt.push(r.lostAt);
+      if (r.lostAt?.endsWith(":boss") && r.bossesMet.length) {
+        const killer = r.bossesMet.at(-1)!;
+        bossLost[killer] = (bossLost[killer] ?? 0) + 1;
+      }
     }
+    for (const b of r.bossesMet) bossMet[b] = (bossMet[b] ?? 0) + 1;
     gold += r.state.gold;
     auction += r.auctionSpend;
     camp += r.campSpend;
@@ -332,6 +356,8 @@ export function summarise(
     averageDefeatDepth: losses ? Number((lossDepth / losses).toFixed(1)) : null,
     invalidPlans: invalid,
     lossesAt,
+    bossMet,
+    bossLost,
   };
 }
 
@@ -402,6 +428,15 @@ if (process.argv[1]?.endsWith("simulate.ts")) {
   const hit = flag("hit");
   if (hit) TUNING.enemyHit = Number(hit);
   const sample = Number(flag("sample") ?? 1);
+  // `--pool=assayer,salvor,bailiff` keeps only those bosses in each floor's
+  // pool, so bosses can be measured against their floor partners on the same
+  // seeds rather than on whichever the dice drew.
+  const pool = flag("pool")?.split(",");
+  if (pool)
+    for (const f of floors) {
+      const kept = f.bosses.filter((b) => pool.includes(b));
+      if (kept.length) f.bosses = kept;
+    }
   const bosses = flag("bosses");
   if (bosses === "legacy") setBossPools(false);
   else if (bosses && bosses !== "pools") throw Error(`Unknown --bosses=${bosses}`);
@@ -415,7 +450,7 @@ if (process.argv[1]?.endsWith("simulate.ts")) {
     const parties: Party[] = only
       ? [only]
       : matrix
-        ? [2, 3, 4].flatMap((n) =>
+        ? (flag("size") ? [Number(flag("size"))] : [2, 3, 4]).flatMap((n) =>
             partyList(n).filter((_, i) => i % sample === 0),
           )
         : [2, 3, 4].map((n) => heroes.slice(0, n).map((h) => h.id));
@@ -455,6 +490,17 @@ if (process.argv[1]?.endsWith("simulate.ts")) {
       }
       for (const n of [2, 3, 4]) bucket((p) => p.length === n, `${n} players`);
       bucket(() => true, "all");
+      // Every boss: how many runs met it, and what share of those it ended.
+      const met: Record<string, number> = {};
+      const lost: Record<string, number> = {};
+      for (const r of rows) {
+        for (const [b, n] of Object.entries(r.bossMet)) met[b] = (met[b] ?? 0) + n;
+        for (const [b, n] of Object.entries(r.bossLost)) lost[b] = (lost[b] ?? 0) + n;
+      }
+      for (const b of Object.keys(met).sort())
+        console.log(
+          `boss ${b.padEnd(17)} met ${String(met[b]).padStart(5)}  ends ${String(Math.round(((lost[b] ?? 0) / met[b]) * 100)).padStart(3)}% of runs that meet it`,
+        );
       console.log("");
       for (const h of heroes) {
         bucket((p) => p.includes(h.id), `with ${short[h.id]}`);

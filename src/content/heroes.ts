@@ -89,7 +89,7 @@ export const utility: Ability[] = [
   a(
     "serve",
     "Serve it back",
-    "Hand the lien you carry to an enemy. It comes due on them instead — at once, if the party hits them.",
+    "Split the lien you carry: half comes due on you now, half is handed to an enemy, due this round — at once, if the party hits them.",
     "enemy",
     [{ kind: "transfer", status: "lien" }],
     0,

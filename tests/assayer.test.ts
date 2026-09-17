@@ -66,7 +66,7 @@ it("cracks under enough damage that round, and the metal goes over the Assayer",
   toPour(s);
   const boss = assayer(s);
   const threshold = crackAt(s, boss);
-  expect(threshold).toBe(16 * s.players.length);
+  expect(threshold).toBe(18 * s.players.length);
   const before = s.players.map((p) => p.hp);
   // The party's blows, landed before the Assayer acts.
   effects(s, s.players[0], boss, [{ kind: "damage", amount: threshold + 10, pierce: true }]);
