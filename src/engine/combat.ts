@@ -29,6 +29,7 @@ import {
 } from "../content/ultimates";
 import { charge, withUltimate } from "./charge";
 import { pick } from "./rng";
+import { chooseIntent } from "./intents";
 import {
   effects,
   trigger,
@@ -116,8 +117,17 @@ export function prepareIntents(s: RunState) {
       s.expeditionVersion === 1 && e.phase === 2
         ? phaseTwoIntents[e.definition]
         : undefined;
+    // A creature with a behavior chooses by its rules in a room with
+    // factions; everything else keeps the rotation it always had.
+    const behavior =
+      s.factionVersion === 1 && s.combatVersion === 2 ? def.behavior : undefined;
+    const chosen = behavior ? chooseIntent(s, e, def, behavior) : undefined;
+    delete e.why;
     const rotation = authoredPhase ?? enemyAbilities(def, s.combatVersion);
-    let ability = structuredClone(rotation[(s.round - 1) % rotation.length]);
+    let ability = structuredClone(
+      chosen ? chosen.rule.ability : rotation[(s.round - 1) % rotation.length],
+    );
+    if (chosen?.why) e.why = chosen.why;
     // A spawner whose objects still stand does something else with the slot.
     if (
       def.busy &&
@@ -174,7 +184,12 @@ export function prepareIntents(s: RunState) {
               (s.combatVersion === 2 ? def.hoard.per : def.hoard.legacyPer),
           );
     let targets: Unit[] = standing(s);
-    if (ability.target === "self") targets = [e];
+    // A bound object's due move is aimed at the hero whose name is on it.
+    const bound = e.bound && standing(s).find((p) => p.id === e.bound);
+    if (chosen && !(def.clock && e.fuse)) targets = chosen.target ? [chosen.target] : [];
+    else if (bound && ability.target !== "self" && ability.target !== "ally")
+      targets = [bound];
+    else if (ability.target === "self") targets = [e];
     else if (ability.target === "ally")
       targets = s.enemies
         .filter((x) => x.hp > 0)
@@ -199,11 +214,13 @@ export function prepareIntents(s: RunState) {
         (a, b) => (isPlayer(b) ? b.spent : 0) - (isPlayer(a) ? a.spent : 0),
       );
     else {
-      const row = e.definition === "sniper" ? "back" : "front";
+      const row = def.prefers ?? "front";
       const preferred = targets.filter((p) => p.row === row);
       if (preferred.length) targets = preferred;
     }
     const target =
+      (chosen && !(def.clock && e.fuse)) ||
+      bound ||
       ability.target === "self" ||
       ability.target === "ally" ||
       def.targets === "wealthiest" ||
@@ -238,11 +255,12 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
   s.plans = {};
   if (s.ultimateVersion === 1) s.ultimates = {};
   s.enemies = [];
-  const count = boss ? 1 : Math.min(4, s.players.length);
   const pool = definitions.filter(
     (d) =>
       !!d.boss === boss &&
       !d.object &&
+      !d.eliteOnly &&
+      (d.faction === undefined || d.faction === "foundry") &&
       (!boss || LEGACY_BOSSES.includes(d.id)),
   );
   // Each floor has its own boss, so the vault a party reaches is the one the
@@ -260,9 +278,18 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
           : "miser"));
   const deeper = floorScale(s);
   const encounter =
-    !boss && s.encounterVersion === 2 ? chooseEncounter(s) : undefined;
+    !boss && s.encounterVersion === 2 ? chooseEncounter(s, elite) : undefined;
   const formation = encounter?.formations[s.players.length as 2 | 3 | 4];
-  if (encounter) log(s, `${encounter.name} bars the way.`);
+  if (encounter) {
+    log(s, `${encounter.name} bars the way.`);
+    if (s.factionVersion === 1) s.fought = [...(s.fought ?? []), encounter.id];
+  }
+  // An elite creature is the elite: its chamber needs no stronger escorts
+  // and no rolled trait on top.
+  const creatureElite =
+    elite &&
+    !!formation?.some((id) => definitions.find((d) => d.id === id)?.eliteOnly);
+  const count = formation ? formation.length : boss ? 1 : Math.min(4, s.players.length);
   for (let i = 0; i < count; i++) {
     const d = formation
       ? definitions.find((d) => d.id === formation[i])!
@@ -284,7 +311,9 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
       ? BOSS_BASE + s.players.length * BOSS_PER_HERO
       : 0.75 + s.players.length * 0.14;
     const priced = boss && s.ultimateVersion === 1 ? BOSS_PRICING.hp : 1;
-    const hp = Math.round(d.hp * scale * (elite ? 1.3 : 1) * deeper * priced);
+    const hp = Math.round(
+      d.hp * scale * (elite && !creatureElite ? 1.3 : 1) * deeper * priced,
+    );
     const e: Enemy = {
       id: `enemy-${i}`,
       definition: d.id,
@@ -298,7 +327,7 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
       statuses: [],
       intent: { ability: d.abilities[0], target: "" },
       phase: 1,
-      ...(elite
+      ...(elite && !creatureElite
         ? {
             elite: pick(
               s,
@@ -309,6 +338,8 @@ export function enterCombat(s: RunState, boss = false, elite = false) {
           }
         : {}),
     };
+    for (const st of d.starts ?? [])
+      e.statuses.push({ id: st.status, stacks: st.stacks, duration: st.duration });
     s.enemies.push(e);
   }
   // Boss support scales with the party's spare actions: a repairer at three

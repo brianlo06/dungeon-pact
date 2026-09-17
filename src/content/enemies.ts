@@ -1,4 +1,5 @@
 import type { Ability, EnemyDef } from "../shared/model";
+import { factionEnemies } from "./factions";
 const attack = (
   id: string,
   name: string,
@@ -218,6 +219,7 @@ export const enemies: EnemyDef[] = [
     },
     id: "sniper",
     name: "Rivet Sniper",
+    prefers: "back",
     glyph: "⌖",
     hp: 34,
     power: 1,
@@ -553,6 +555,7 @@ export const enemies: EnemyDef[] = [
     ],
     busy: attack("countersign", "Countersign", 24),
   },
+  ...factionEnemies,
 ];
 
 /** Versioned tactical intent rotations. Existing rooms retain their legacy definitions. */

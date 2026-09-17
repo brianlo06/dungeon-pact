@@ -1,5 +1,5 @@
 import type { Effect, Enemy, Player, RunState, Unit } from "./model";
-import { hitDamage } from "./damage";
+import { baseAmount, hitDamage } from "./damage";
 
 /**
  * What an enemy's announced intent will do, read the way the round will
@@ -59,6 +59,9 @@ const STATUS_NAMES: Record<string, string> = {
   heat: "Heat",
   encrusted: "Encrusted",
   lien: "Lien",
+  pressure: "Pressure",
+  debt: "Debt",
+  confused: "Confused",
 };
 
 function ridersOf(list: Effect[]): string[] {
@@ -71,8 +74,27 @@ function ridersOf(list: Effect[]): string[] {
     if (e.kind === "removeStatus" && e.status === "barrier")
       out.push("strips Barrier");
     if (e.kind === "enemies") out.push(...ridersOf(e.effects));
-    if (e.kind === "conditional")
-      for (const r of ridersOf(e.effects)) out.push(`${r} if ${e.status}`);
+    if (e.kind === "conditional") {
+      const bonus = e.effects.reduce(
+        (n, x) => n + (x.kind === "damage" && !x.self ? x.amount : 0),
+        0,
+      );
+      if (bonus) out.push(`+${bonus} if ${STATUS_NAMES[e.status] ?? e.status}`);
+      for (const r of ridersOf(e.effects)) out.push(`${r} if ${STATUS_NAMES[e.status] ?? e.status}`);
+    }
+    if (e.kind === "move")
+      out.push(
+        e.self
+          ? "shifts rows"
+          : e.row === "front"
+            ? "pulls to front"
+            : e.row === "back"
+              ? "pushes to back"
+              : "swaps rows",
+      );
+    if (e.kind === "spawn" && e.on === "target") out.push(`sets ${e.object.replace(/-/g, " ")}`);
+    if (e.kind === "damage" && e.damageType === "lightning") out.push("chains 12 if Wet");
+    if (e.kind === "damage" && e.precision) out.push("+20 if Marked");
   }
   return [...new Set(out)];
 }
@@ -148,15 +170,36 @@ export function forecastIntent(s: State, enemy: Enemy): Forecast {
           : undefined;
         const struck = (i: number): Unit =>
           guard && i === 0 && direct.length ? guard : v;
-        const damage = strikes.reduce(
-          (n, e, i) =>
-            n +
-            hitDamage(e.amount, enemy, struck(i), {
-              pierce: e.pierce,
-              precision: e.precision,
-            }),
-          0,
-        );
+        const damage =
+          strikes.reduce(
+            (n, e, i) =>
+              n +
+              hitDamage(baseAmount(e, enemy), enemy, struck(i), {
+                pierce: e.pierce,
+                precision: e.precision,
+              }),
+            0,
+          ) +
+          // A bonus the move carries against a status its target already has.
+          a.effects.reduce(
+            (n, fx) =>
+              fx.kind === "conditional" &&
+              v.statuses.some((x) => x.id === fx.status)
+                ? n +
+                  fx.effects.reduce(
+                    (m, x) =>
+                      x.kind === "damage" && !x.self
+                        ? m +
+                          hitDamage(baseAmount(x, enemy), enemy, v, {
+                            pierce: x.pierce,
+                            precision: x.precision,
+                          })
+                        : m,
+                    0,
+                  )
+                : n,
+            0,
+          );
         // A direct hit calls in a lien on the one it lands on.
         const struckUnit = guard && direct.length ? guard : v;
         const lien =

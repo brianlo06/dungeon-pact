@@ -53,3 +53,17 @@ export function hitDamage(
   if (options.precision && has(victim, "marked")) n += EXPLOIT;
   return Math.max(1, Math.round(n));
 }
+
+/**
+ * A hit's base before the damage pipeline: its amount, plus whatever it scales
+ * with that the striker is carrying. Shared by the engine and the forecast so a
+ * chip and a resolved round always agree.
+ */
+export function baseAmount(
+  hit: { amount: number; scale?: { status: StatusId; per: number } },
+  striker: { statuses: Status[] },
+) {
+  return hit.scale
+    ? hit.amount + hit.scale.per * stacks(striker, hit.scale.status)
+    : hit.amount;
+}

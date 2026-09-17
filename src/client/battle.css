@@ -665,6 +665,11 @@
 .intent-chip b.intent-crack {
   color: #ff9a5a;
 }
+/* Why a creature chose this move: the state the party can change to stop it. */
+.intent-chip b.intent-why {
+  color: #8fe0ff;
+  text-transform: uppercase;
+}
 .intent-chip b.intent-stopped {
   color: #9fd6a0;
 }

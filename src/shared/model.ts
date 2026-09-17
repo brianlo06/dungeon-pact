@@ -36,7 +36,19 @@ export type StatusId =
    * A debt served on this unit: it detonates for its stacks when it runs out,
    * or at once when the other side lands a direct hit on its carrier.
    */
-  | "lien";
+  | "lien"
+  /**
+   * A crucible, a boiler, a tank: pressure a unit is building towards a
+   * release. Shown on the unit and read by conditions and scaled damage;
+   * nothing about it acts on its own.
+   */
+  | "pressure"
+  /**
+   * An entry in a ledger: when it runs out the pact pays its stacks in gold,
+   * and whatever the treasury cannot cover the carrier takes as damage. Written
+   * off if the enemy that entered it falls first.
+   */
+  | "debt";
 export type Trigger =
   | "roundStart"
   | "afterAttack"
@@ -55,6 +67,11 @@ export type Effect =
       self?: boolean;
       /** Ignores Guard entirely. */
       pierce?: boolean;
+      /**
+       * Heavier for what the actor has stored: `per` more for every stack of
+       * `status` it carries when the hit lands. A vent that releases pressure.
+       */
+      scale?: { status: StatusId; per: number };
     }
   | { kind: "protect"; barrier: number }
   | { kind: "interrupt" }
@@ -67,9 +84,18 @@ export type Effect =
       stacks: number;
       duration: number;
       self?: boolean;
+      /**
+       * The status is the actor's to keep up: it is lifted from everyone
+       * carrying it the moment the actor falls. A ledger entry written off.
+       */
+      tether?: boolean;
     }
   | { kind: "resource"; amount: number }
-  | { kind: "move"; row: Row }
+  /**
+   * Changes a row: the target's, or with `self` the actor's own. `swap` sends
+   * it to whichever row it is not in.
+   */
+  | { kind: "move"; row: Row | "swap"; self?: boolean }
   | { kind: "gold"; amount: number }
   /**
    * Takes carried equipment off the target and banks it in a strongbox. The
@@ -90,7 +116,20 @@ export type Effect =
    * many rounds and then does what its definition's `clock` says. Nothing is
    * spawned while the actor still has objects of this kind standing.
    */
-  | { kind: "spawn"; object: string; rows: Row[]; fuse?: number }
+  | {
+      kind: "spawn";
+      object: string;
+      rows: Row[];
+      fuse?: number;
+      /**
+       * Where the object goes and whom it answers to. `actor` (the default):
+       * one per listed row, belonging to the actor. `target`: one, in the
+       * target's row — belonging to the target when it is an ally (a plate on
+       * a friend), or bound to it when it is a hero (a seal with their name on
+       * it), in which case it still belongs to the actor.
+       */
+      on?: "actor" | "target";
+    }
   | { kind: "conditional"; status: StatusId; effects: Effect[] }
   /**
    * Scopes, so one action can reach past its own target: every standing ally
@@ -204,6 +243,8 @@ export interface ItemDef {
 }
 export interface Status {
   sourceId?: string;
+  /** Lifted from its carrier when the unit named by `sourceId` falls. */
+  tethered?: boolean;
   id: StatusId;
   stacks: number;
   duration: number;
@@ -266,6 +307,95 @@ export interface Enemy extends Unit {
   spent?: boolean;
   /** Damage taken since this round's intents were announced: what cracks a move. */
   taken?: number;
+  /** A spawned object with a hero's name on it: its due move is aimed at them. */
+  bound?: string;
+  /**
+   * Why this intent was chosen, when a rule chose it for a reason the party
+   * can see: "Ada is Wet", "Iron Bulwark is below half". Shown on the chip.
+   */
+  why?: string;
+}
+/**
+ * Something about the fight an enemy's intent rule can ask before it commits.
+ * Every condition is a question about state the whole party can see, so an
+ * intent that depends on one is still fully visible once it is announced.
+ */
+export type IntentCondition =
+  /** Some standing hero carries the status. */
+  | { kind: "heroHas"; status: StatusId }
+  /** The actor carries at least `atLeast` (default 1) stacks of the status. */
+  | { kind: "selfHas"; status: StatusId; atLeast?: number }
+  /** The actor is below this fraction of its health. */
+  | { kind: "selfBelow"; fraction: number }
+  /** Another living, non-object enemy carries the status. */
+  | { kind: "allyHas"; status: StatusId }
+  /** Another living, non-object enemy is below this fraction of its health. */
+  | { kind: "allyBelow"; fraction: number }
+  /** How many living non-object enemies (the actor included) stand in a row. */
+  | { kind: "alliesInRow"; row: Row; atMost?: number; atLeast?: number }
+  /** How many standing heroes stand in a row. */
+  | { kind: "heroesInRow"; row: Row; atMost?: number; atLeast?: number }
+  /** The treasury holds at least this much gold. */
+  | { kind: "treasury"; atLeast: number }
+  /** None of the listed conditions holds. */
+  | { kind: "not"; condition: IntentCondition };
+/**
+ * Which units an intent may be aimed at, and in what order. Every field is a
+ * filter the candidates must pass; `order` picks among the survivors. With no
+ * `order` the dice choose, as they always have.
+ */
+export interface TargetFilter {
+  has?: StatusId;
+  lacks?: StatusId;
+  row?: Row;
+  /** Below this fraction of health. */
+  below?: number;
+  /** At or above this fraction of health. */
+  atLeast?: number;
+  /** For an ally-aimed move: include the actor itself (default no). */
+  self?: boolean;
+  /** For an ally-aimed move: objects only (true) or never objects (false). */
+  objects?: boolean;
+  /** For an ally-aimed move: only an ally that is not yet hosting this object. */
+  unhosted?: string;
+  /** For a bound object's move: the hero whose name is on it. */
+  bound?: boolean;
+  order?: "lowestHp" | "highestHp" | "lowestFraction" | "highestGuard";
+}
+/**
+ * One way an enemy can spend a round: a move, the conditions under which it
+ * is on the table, and whom it may be aimed at. A rule whose conditions fail,
+ * or that has nobody it may be aimed at, is passed over.
+ */
+export interface IntentRule {
+  ability: Ability;
+  when?: IntentCondition[];
+  target?: TargetFilter;
+  /** For a weighted step: how often, relative to the others that apply. */
+  weight?: number;
+  /**
+   * Said on the chip when this rule is chosen, with `{target}` standing for
+   * the unit it is aimed at: "{target} is Wet".
+   */
+  why?: string;
+}
+/**
+ * One slot of an enemy's pattern. The first rule that applies is chosen, or
+ * with `weighted` the seeded dice choose among every rule that applies.
+ */
+export interface IntentStep {
+  rules: IntentRule[];
+  weighted?: boolean;
+}
+/**
+ * How an enemy chooses what to do. `steps` repeat in order, one a round — a
+ * single step is a pure priority list, two plain steps are the old rotation.
+ * `below` swaps in a second pattern once the enemy drops under a fraction of
+ * its health.
+ */
+export interface Behavior {
+  steps: IntentStep[];
+  below?: { fraction: number; steps: IntentStep[] };
 }
 export interface EnemyDef {
   id: string;
@@ -315,6 +445,26 @@ export interface EnemyDef {
    * its rotation never offers a move that would do nothing.
    */
   busy?: Ability;
+  /**
+   * How it chooses its intent in a room with factions. When present it
+   * replaces `tacticalIntents`; see `IntentStep`.
+   */
+  behavior?: Behavior;
+  /**
+   * The row it aims at when a move names no row of its own: `front` (the
+   * default) or `back`. A move's `TargetFilter.row` overrides it.
+   */
+  prefers?: Row;
+  /** The region a creature belongs to, for encounter pools and the codex. */
+  faction?: "foundry" | "cistern" | "archive";
+  /** Design roles, for analysis and tooling only; nothing in combat reads them. */
+  roles?: string[];
+  /** Appears only in elite chambers, never in an ordinary encounter. */
+  eliteOnly?: boolean;
+  /** Statuses it enters the fight carrying: a boiler that starts warm. */
+  starts?: { status: StatusId; stacks: number; duration: number }[];
+  /** An object that falls with the enemy that owns it: a seal its scribe holds. */
+  tethered?: boolean;
   /**
    * How this creature looks and moves. The presentation layer must learn size,
    * rig and effect family from here rather than from the id — "large because
@@ -478,6 +628,14 @@ export interface RunState {
    * duo keeps one class a ground.
    */
   trainingVersion?: 1;
+  /**
+   * Missing means a room created before factions: every floor draws from the
+   * foundry creatures' encounters. `1` gives the Cistern and the Archive their
+   * own creatures and encounters, chosen along each floor's complexity curve.
+   */
+  factionVersion?: 1;
+  /** Encounters this run has already fought, so a floor does not repeat itself. */
+  fought?: string[];
   /** Ultimates queued this round, by player. Hidden like plans. */
   ultimates?: Record<string, UltimatePlan>;
   /** Battlefield revivals already bought this run; each one raises the price. */

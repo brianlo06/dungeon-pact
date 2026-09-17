@@ -117,6 +117,7 @@ export function BattleStage({
     const riders = interrupted ? [] : forecast.riders;
     const soaked = forecast.hits.reduce((n, h) => n + h.blocked, 0);
     const reads = [
+      ...(e.why ? [`Chosen because ${e.why}`] : []),
       ...forecast.hits.map(
         (h) =>
           `${h.name}: ${h.damage} damage${h.blocked ? ` (Barrier soaks ${h.blocked})` : ""}`,
@@ -141,6 +142,11 @@ export function BattleStage({
             </b>
           )}
           {interrupted && <b className="intent-stopped">BROKEN</b>}
+          {e.why && !interrupted && (
+            <b className="intent-why" title={`Chosen because ${e.why}`}>
+              {e.why}
+            </b>
+          )}
           <strong>{a.name}</strong>
         </span>
         {(damage || aim || riders.length > 0) && !interrupted && (
