@@ -51,7 +51,12 @@ export type ClipName =
   /** One-shot that ends holding a drawn or charged pose: a bow at full draw. */
   | "aim"
   /** One-shot from the held aim: the loose, and the recovery. */
-  | "release";
+  | "release"
+  /**
+   * An Ultimate's own performance: poses no ordinary action plays, so a
+   * cinematic never has to overload `attack`. A rig without one idles.
+   */
+  | `ult:${string}`;
 
 /** The reusable effect vocabulary. Adding one means adding a renderer for it. */
 export type VfxName =
@@ -162,6 +167,24 @@ export interface UnitPresentation {
    * one file per creature, so annotating two creatures never touches the
    * same file. See `docs/CHOREOGRAPHY.md`.
    */
+}
+
+/**
+ * What an Ultimate looks like. The cinematic is named, never inferred from
+ * the Ultimate's id, so two Ultimates may share one and a new Ultimate with
+ * no cinematic of its own falls back to the generic one rather than failing.
+ */
+export interface UltimatePresentation {
+  /** A key into the cinematic registry (`content/cinematics`). */
+  cinematic?: string;
+  theme?: VfxTheme;
+  /** The one colour the Ultimate owns: its aura, its meter, its title. */
+  accent?: string;
+  /**
+   * Optional lines, shown as subtitles; a recorded line would play in the
+   * same slot. None of these are required for anything to work.
+   */
+  voice?: { activation?: string; impact?: string; after?: string };
 }
 
 /** What an action looks like when it is performed. */

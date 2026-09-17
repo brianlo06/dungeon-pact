@@ -9,6 +9,7 @@ import { items } from "./items";
 import { enemies, enemyAbilities, phaseTwoIntents } from "./enemies";
 import { events } from "./events";
 import { statuses } from "./statuses";
+import { ultimates, ultimateFor, ULTIMATE_MAX } from "./ultimates";
 const nonnegative = z.number().int().min(0).max(10000);
 const statusId = z.enum([
   "burn",
@@ -70,6 +71,18 @@ export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
       kind: z.literal("conditional"),
       status: statusId,
       effects: z.array(effectSchema).max(20),
+    }),
+    z.object({
+      kind: z.literal("allies"),
+      effects: z.array(effectSchema).min(1).max(20),
+      self: z.boolean().optional(),
+      downed: z.boolean().optional(),
+    }),
+    z.object({
+      kind: z.literal("enemies"),
+      effects: z.array(effectSchema).min(1).max(20),
+      row: z.boolean().optional(),
+      others: z.boolean().optional(),
     }),
   ]),
 );
@@ -287,6 +300,30 @@ export function validateContent() {
   }
   for (const id of statusId.options)
     if (!statuses[id]?.description) throw Error(`Missing status ${id}`);
+  // Ultimates: one base per class, at most one per path, each on a real hero
+  // and path, each affordable from a full meter.
+  unique(ultimates, "ultimate");
+  for (const u of ultimates) {
+    z.object({
+      name: z.string().min(1),
+      description: z.string().min(1),
+      target: z.enum(["enemy", "ally", "self", "enemyRow", "allyRow"]),
+      effects: z.array(effectSchema).min(1).max(20),
+      cost: z.number().int().positive().max(ULTIMATE_MAX),
+      speed: z.number().int(),
+    }).parse(u);
+    if (!heroes.some((h) => h.id === u.heroId))
+      throw Error(`Ultimate ${u.id} has no hero`);
+    const path = u.evolution && evolutions.find((e) => e.id === u.evolution);
+    if (u.evolution && (!path || path.heroId !== u.heroId))
+      throw Error(`Ultimate ${u.id} names a path its hero cannot take`);
+    const peers = ultimates.filter(
+      (x) => x.heroId === u.heroId && x.evolution === u.evolution,
+    );
+    if (peers.length !== 1) throw Error(`Ultimate ${u.id} is not the only one`);
+  }
+  for (const h of heroes)
+    if (!ultimateFor({ heroId: h.id })) throw Error(`${h.id} has no Ultimate`);
   return {
     presentationWarnings: validateEquipmentVisuals(items),
     heroes: heroes.length,
@@ -297,5 +334,6 @@ export function validateContent() {
     upgrades: upgrades.length,
     evolutions: evolutions.length,
     mentors: mentors.length,
+    ultimates: ultimates.length,
   };
 }

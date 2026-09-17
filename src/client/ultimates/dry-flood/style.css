@@ -1,0 +1,102 @@
+/*
+ * Dry Flood — effects and space.
+ *
+ * Soot, dry stone, the water's pale lines, and fire drawn in four flat
+ * layers. No filters and no keyframes: every tongue is placed and scaled
+ * from a frame function (`vfx.tsx`), and boils by showing one of its three
+ * drawings at a time.
+ */
+
+/* ---- a tongue of flame: one drawing of three, by the fire's beat ---- */
+.dry-t > use {
+  display: none;
+}
+[data-k="0"] .dry-t[data-ph="0"] > .v0,
+[data-k="0"] .dry-t[data-ph="1"] > .v1,
+[data-k="0"] .dry-t[data-ph="2"] > .v2,
+[data-k="1"] .dry-t[data-ph="0"] > .v1,
+[data-k="1"] .dry-t[data-ph="1"] > .v2,
+[data-k="1"] .dry-t[data-ph="2"] > .v0,
+[data-k="2"] .dry-t[data-ph="0"] > .v2,
+[data-k="2"] .dry-t[data-ph="1"] > .v0,
+[data-k="2"] .dry-t[data-ph="2"] > .v1 {
+  display: inline;
+}
+
+/* ---- effects drawn in world units, over the whole stage ---- */
+.cine-vfx > .dry-world {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none !important;
+}
+
+/* ---- a column of flame up a struck figure: its base on the figure's feet ---- */
+.cine-vfx > .dry-flare {
+  width: 600px;
+  height: 640px;
+  overflow: visible;
+  transform: translate(-50%, -93.75%) scale(var(--s));
+  transform-origin: 50% 93.75%;
+}
+
+/* ---- smoke across the lens ---- */
+.cine-screen > .cine-vfx > .dry-wipe {
+  inset: -10% -30%;
+  width: auto;
+  height: auto;
+  will-change: transform;
+}
+.dry-wipe svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ---- on the board ---- */
+.cine-anchored > .dry-kindle,
+.cine-anchored > .dry-singe,
+.cine-anchored > .dry-burning {
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: none;
+  will-change: transform;
+}
+.dry-kindle svg,
+.dry-singe svg {
+  position: absolute;
+  overflow: visible;
+  width: calc(var(--unit-w, 100px) * 0.4);
+  height: calc(var(--unit-w, 100px) * 0.4 * 1.1);
+  left: calc(var(--unit-w, 100px) * -0.2);
+  top: calc(var(--unit-w, 100px) * -0.4);
+}
+.dry-singe svg {
+  width: calc(var(--unit-w, 100px) * 0.3);
+  height: calc(var(--unit-w, 100px) * 0.3 * 1.25);
+  left: calc(var(--unit-w, 100px) * -0.15);
+  top: calc(var(--unit-w, 100px) * -0.35);
+}
+.dry-burning svg {
+  position: absolute;
+  overflow: visible;
+  width: calc(var(--unit-w, 100px) * 1.25);
+  height: calc(var(--unit-w, 100px) * 1.25 * 1.1);
+  left: calc(var(--unit-w, 100px) * -0.625);
+  top: calc(var(--unit-w, 100px) * -1.25);
+}
+
+/* In this film's silhouettes the drawing's own eye-lights stay lit, warm. */
+.ult-cinematic[data-cinematic="dry-flood"] .cine-actor[data-role="caster"] .ph-glow-eyes ellipse {
+  fill: #ffe2a0 !important;
+}
+
+/* On the lip the spark is a flame (`dry-flame`), so its own drawing stands down. */
+.ult-cinematic[data-cinematic="dry-flood"][data-shot="lip"] .cine-actor[data-role="caster"] .ph-arc-spark {
+  visibility: hidden;
+}

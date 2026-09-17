@@ -1,0 +1,163 @@
+/*
+ * Compound Interest — effects and space.
+ *
+ * Soot, tarnished copper and one raw copper for anything that was lent. No
+ * filters and no keyframes: every coin is a sub-path rebuilt on the combat
+ * clock (`vfx.tsx`), and a glow is a wide translucent stroke or a gradient,
+ * never a blur.
+ */
+
+/* ---- the sink ---- */
+.usury-sink-rock {
+  fill: #1c110b;
+  stroke: #33201a;
+  stroke-width: 8;
+  stroke-linejoin: round;
+}
+.usury-sink-crust-deep {
+  fill: #3a2216;
+  stroke: #120a06;
+  stroke-width: 1.4;
+  opacity: 0.9;
+}
+.usury-sink-crust-body {
+  fill: #8a4e2a;
+  stroke: #120a06;
+  stroke-width: 2.2;
+}
+.usury-sink-crust-lit {
+  fill: #e8a35a;
+  opacity: 0.5;
+}
+.usury-sink-drip {
+  fill: #2e1b12;
+  stroke: #160d08;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.usury-sink-borrower {
+  fill: #241510;
+  stroke: #140c08;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+.usury-sink-shingle {
+  fill: #7a4a2c;
+  stroke: #160d08;
+  stroke-width: 1.6;
+}
+.usury-sink-shingle-lit {
+  fill: #d89355;
+  opacity: 0.5;
+}
+
+/* ---- coins, everywhere ---- */
+.usury-box {
+  overflow: visible;
+}
+.cine-vfx > .usury-box {
+  left: -500px;
+  top: -500px;
+  width: 1000px;
+  height: 1000px;
+  transform: none;
+}
+.cine-vfx > .usury-world {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none !important;
+}
+.usury-coin-shadow {
+  fill: #0e0a08;
+  opacity: 0.5;
+}
+.usury-coin-edge {
+  fill: none;
+  stroke: #160d08;
+  stroke-width: 3.2;
+  stroke-linejoin: round;
+}
+.usury-coin-body {
+  fill: #e08a3c;
+}
+.usury-coin-lit {
+  fill: #ffd9a0;
+  opacity: 0.5;
+}
+.usury-coin-notch {
+  fill: #160d08;
+  opacity: 0.85;
+}
+
+/* The single coin: big enough to show its edge and its bite. */
+.usury-coin .usury-coin-edge {
+  stroke-width: 6;
+}
+.usury-coin-ring {
+  fill: none;
+  stroke: #e08a3c;
+  stroke-width: calc(3px + var(--seat, 0) * 9px);
+  opacity: calc(0.2 + var(--seat, 0) * 0.7);
+}
+.usury-coin-spark {
+  fill: #ffd9a0;
+}
+
+/* The crust breeding on a figure: a hard ink edge, so it reads on a hide. */
+.usury-brood .usury-coin-edge {
+  stroke-width: 4;
+}
+
+/* The walls answering. */
+.usury-stir-band {
+  fill: #ffd9a0;
+  stroke: #160d08;
+  stroke-width: 2;
+  opacity: 0;
+}
+
+/* The film's own occlusion. */
+.cine-screen > .cine-vfx > .usury-creep {
+  width: 100%;
+  height: 100%;
+}
+.usury-creep-mass {
+  fill: #17100b;
+}
+.usury-creep .usury-coin-edge {
+  stroke-width: 5;
+}
+
+/* The shingle wave off the fist. */
+.usury-rush-wave {
+  fill: none;
+  stroke: #e08a3c;
+  stroke-width: 7;
+  stroke-linecap: round;
+  opacity: 0.5;
+}
+
+/* The pact's cut, on the board. */
+.usury-ring {
+  fill: none;
+  stroke: #e08a3c;
+  stroke-width: 5;
+  opacity: 0;
+}
+.usury-dividend .usury-coin-edge {
+  stroke-width: 5;
+}
+
+/* The light behind the target on the impact: a gradient, never a blur. */
+.cine-vfx > .usury-glow {
+  left: 0;
+  top: calc(var(--ah, 160px) * -0.45);
+  width: calc(var(--ah, 160px) * 2.6);
+  height: calc(var(--ah, 160px) * 1.9);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 55%, #ffd9a0 0%, #e08a3c 34%, rgba(224, 138, 60, 0) 70%);
+  opacity: 0.92;
+}

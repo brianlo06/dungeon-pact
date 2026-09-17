@@ -1,0 +1,1140 @@
+/* ------------------------------------------------------ Ultimate cinematic -- */
+/*
+ * A short-lived film over the whole combat view. The battle stage's frame-rate
+ * rules (no filters on moving figures, nothing that lays the page out per
+ * frame) are relaxed here on purpose and within limits: a cinematic lives for
+ * four seconds and owns the screen while it does, so a rim light or a two-tone
+ * frame may cost a filter pass. Everything expensive is scoped to a shot or an
+ * accent, and nothing here outlives the run.
+ *
+ * Positions and progress are written by the player as custom properties and
+ * transforms; nothing animates with CSS keyframes, so the whole film pauses,
+ * slows and holds for hit-stop on the combat clock.
+ */
+
+.ult-cinematic {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  contain: strict;
+  isolation: isolate;
+  pointer-events: auto;
+  --bars: 0;
+  --tint: 0;
+  --tint-c: #07060a;
+  color: #f7eedc;
+}
+.ult-cinematic .cine-tint {
+  position: absolute;
+  inset: 0;
+  background: var(--tint-c);
+  opacity: var(--tint);
+  pointer-events: none;
+}
+.ult-cinematic[data-space="battlefield"] {
+  pointer-events: none;
+}
+.ult-cinematic[data-space="battlefield"] .cine-skip {
+  pointer-events: auto;
+}
+
+/* ---- the film: an isolated stage with its own camera ---- */
+.cine-film {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #050407;
+  --exposure: 1;
+  --vignette: 0;
+  --under: 0;
+  --back: 0;
+  --rim-a: 0;
+  --rim-dir: 1;
+  --rim-c: #ffd98a;
+  --under-c: #ffcf6b;
+  --back-c: #ffcf6b;
+  --figure: 1;
+}
+.ult-cinematic[data-space="battlefield"] .cine-film {
+  visibility: hidden;
+}
+.cine-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.cine-bg {
+  position: absolute;
+  left: -800px;
+  top: -450px;
+  width: 3200px;
+  height: 1800px;
+}
+.cine-bg-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* The lantern hall: each lantern lights as `--lit` passes its rank. */
+.lv-halo,
+.lv-flame {
+  opacity: clamp(0, calc((var(--lit, 1) * 1.15 - var(--order)) * 7), 1);
+}
+.lv-sigil-core {
+  opacity: calc(0.25 + var(--lit, 1) * 0.75);
+}
+.bf-slit {
+  opacity: 0.85;
+}
+/* The storm ledger: drifting cloud, a sky lit from inside by the bolt. */
+.sl-cloud {
+  transform: translateX(calc(var(--bgt, 0) * var(--drift) * 6));
+}
+.sl-flash {
+  opacity: calc(var(--storm, 0) * 0.9);
+}
+.sl-seal {
+  opacity: calc(0.6 + var(--storm, 0) * 1.6);
+}
+.cine-bg-void {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 52% 40%, #1a120a 0%, #050407 55%);
+}
+.cine-exposure {
+  position: absolute;
+  left: -2400px;
+  top: -1350px;
+  width: 6400px;
+  height: 3600px;
+  background: #000;
+  opacity: calc(1 - var(--exposure));
+  pointer-events: none;
+}
+.cine-world::after {
+  /* The back light: a glow behind the actors that eats their edges. */
+  content: "";
+  position: absolute;
+  left: -400px;
+  top: -300px;
+  width: 2400px;
+  height: 1500px;
+  background: radial-gradient(
+    ellipse 38% 44% at 50% 48%,
+    var(--back-c) 0%,
+    transparent 70%
+  );
+  opacity: var(--back);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 1;
+}
+.cine-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.cine-world > .cine-layer {
+  inset: auto;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+}
+.cine-back {
+  z-index: 2;
+}
+.cine-actors {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  z-index: 3;
+}
+.cine-front {
+  z-index: 4;
+}
+
+/* ---- actors: presentation copies of the real rigs ---- */
+.cine-actor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100px;
+  height: 100px;
+  margin-left: -50px;
+  margin-top: -97px;
+  transform-origin: 50px 97px;
+  will-change: transform;
+}
+.cine-rig {
+  /* Positioned, so it paints over the rim glow behind it, not under. */
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 92%;
+  /* A clip's root flash is an inline filter; on a figure that fills the screen
+     it is an offscreen pass every frame. Films flash with screen accents. */
+  filter: none !important;
+}
+.cine-look {
+  width: 100%;
+  height: 100%;
+}
+.cine-sprite {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/*
+ * Figures are lit without filters. A filter on a rig whose parts move is a
+ * fresh offscreen pass every frame, and at a close-up's scale that pass is
+ * the size of the screen: measured, one drop-shadow on the caster doubled the
+ * film's frame time. So a rim is light *behind* the figure — a glow that
+ * shows round its edge — and a silhouette is its fills turned to ink, which is
+ * one style change when the shot starts and nothing per frame.
+ */
+.cine-actor::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  width: 84px;
+  height: 92px;
+  border-radius: 45% 45% 30% 30%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--rim-c) 85%, transparent) 55%,
+    transparent 100%
+  );
+  transform: translateX(calc(var(--rim-dir) * -3px)) scale(1.08, 1.02);
+  opacity: 0;
+  pointer-events: none;
+}
+.cine-actor[data-look="rim"]::before {
+  opacity: calc(var(--rim-a) * 0.75);
+}
+.cine-actor[data-look="lit"]::before {
+  opacity: calc(var(--rim-a) * 0.35);
+}
+.cine-actor[data-look="silhouette"]::before {
+  opacity: 0.55;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--back-c) 70%, transparent) 50%,
+    transparent 100%
+  );
+}
+.cine-actor[data-look="silhouette"] .cine-look :where(path, rect, circle, ellipse, polygon, line) {
+  fill: #07050a !important;
+  stroke: #07050a !important;
+}
+.cine-actor[data-look="ghost"] .cine-look {
+  opacity: 0.35;
+}
+.cine-anchor {
+  position: absolute;
+  left: 50px;
+  top: 97px;
+  width: 6px;
+  height: 6px;
+  margin: -3px;
+  background: #3cf;
+  outline: 1px solid #fff;
+}
+.cine-actor:has(.cine-anchor) {
+  outline: 1px dashed rgba(60, 200, 255, 0.7);
+}
+.cine-bounds {
+  position: absolute;
+  inset: 0;
+  outline: 3px dashed rgba(60, 200, 255, 0.85);
+  outline-offset: -3px;
+  z-index: 9;
+  pointer-events: none;
+}
+
+/* ---- lighting on the lens ---- */
+.cine-light {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.cine-under {
+  background: radial-gradient(
+    ellipse 70% 55% at 55% 105%,
+    var(--under-c) 0%,
+    transparent 70%
+  );
+  opacity: var(--under);
+  mix-blend-mode: screen;
+}
+.cine-back-light {
+  display: none;
+}
+.cine-vignette {
+  background: radial-gradient(
+    ellipse 75% 70% at 50% 50%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.96) 100%
+  );
+  opacity: var(--vignette);
+}
+.cine-twotone {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  mix-blend-mode: multiply;
+  display: none;
+  pointer-events: none;
+}
+.ult-cinematic[data-two-tone] .cine-twotone {
+  display: block;
+}
+
+/* ---- screen accents and transitions ---- */
+.cine-screen {
+  z-index: 20;
+}
+.cine-accent {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.cine-accent-flash {
+  background: var(--c);
+  mix-blend-mode: screen;
+}
+.cine-accent-black {
+  background: #000;
+}
+.cine-accent-radial {
+  background: repeating-conic-gradient(
+    from 0deg at 62% 48%,
+    color-mix(in srgb, var(--c) 70%, transparent) 0deg 1.2deg,
+    transparent 1.2deg 7deg
+  );
+  -webkit-mask: radial-gradient(circle at 62% 48%, transparent 12%, #000 42%);
+  mask: radial-gradient(circle at 62% 48%, transparent 12%, #000 42%);
+  mix-blend-mode: screen;
+}
+.cine-accent-two-tone,
+.cine-accent-invert,
+.cine-accent-desaturate {
+  display: none;
+}
+/*
+ * Chromatic split, faked: a red and a cyan fringe on opposite edges of the
+ * frame. A real split is two offset copies of the whole film through filters,
+ * which is exactly the cost the figures were rid of; at impact speed, fringes
+ * read the same.
+ */
+.cine-accent-chromatic {
+  background:
+    linear-gradient(90deg, rgba(255, 40, 70, 0.42), transparent 9%, transparent 91%, rgba(40, 220, 255, 0.42)),
+    linear-gradient(0deg, rgba(40, 220, 255, 0.22), transparent 12%, transparent 88%, rgba(255, 40, 70, 0.22));
+  mix-blend-mode: screen;
+}
+.cine-transition {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: #fff8e8;
+}
+.cine-transition[data-kind="black"] {
+  background: #000;
+}
+.cine-whip {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 9px,
+    color-mix(in srgb, var(--accent) 40%, transparent) 9px 11px,
+    transparent 11px 23px
+  );
+  mix-blend-mode: screen;
+}
+.cine-occluder {
+  position: absolute;
+  top: -5%;
+  left: 0;
+  width: 70%;
+  height: 110%;
+  will-change: transform;
+}
+
+/* ---- letterbox ---- */
+.cine-bars i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 20%;
+  background: #030204;
+  z-index: 30;
+  transform: scaleY(var(--bars));
+  pointer-events: none;
+}
+.cine-bars .top {
+  top: 0;
+  transform-origin: top;
+}
+.cine-bars .bottom {
+  bottom: 0;
+  transform-origin: bottom;
+}
+
+/* ---- typography ---- */
+.cine-texts {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+.cine-text {
+  position: absolute;
+  --p: 0;
+  --pe: 0;
+  --pb: 0;
+}
+.cine-text-name {
+  font-family: var(--pixel, monospace);
+  font-size: clamp(34px, 7.2cqh, 92px);
+  line-height: 0.9;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translate3d(calc((1 - var(--pe)) * -70px), -50%, 0)
+    skewX(calc(-10deg + var(--pe) * 4deg)) rotate(var(--rot, 0deg));
+  opacity: min(1, calc(var(--p) * 6));
+  text-shadow:
+    0 0 24px color-mix(in srgb, var(--accent) 60%, transparent),
+    4px 4px 0 #0a0706,
+    -2px -2px 0 #0a0706;
+}
+.cine-text-name::after {
+  content: "";
+  display: block;
+  height: 5px;
+  margin-top: 0.18em;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  transform-origin: left;
+  transform: scaleX(var(--pe));
+}
+.cine-text-name[style*="left: 50%"],
+.ult-cinematic[data-reduced] .cine-text-name,
+.ult-cinematic[data-reduced] .cine-text-epithet {
+  text-align: center;
+}
+.ult-cinematic[data-reduced] .cine-text {
+  translate: -50% 0;
+}
+.cine-text-epithet {
+  font-size: clamp(12px, 2.2cqh, 22px);
+  font-style: italic;
+  letter-spacing: 0.05em;
+  color: #f4e7cc;
+  white-space: nowrap;
+  opacity: calc(var(--pe) * 0.95);
+  transform: translate3d(calc((1 - var(--pe)) * -30px), -50%, 0)
+    rotate(var(--rot, 0deg));
+  text-shadow: 2px 2px 0 #0a0706;
+}
+.cine-text-voice {
+  left: 50%;
+  bottom: 3.2%;
+  font-size: clamp(13px, 2.4cqh, 22px);
+  color: #fff3d8;
+  white-space: nowrap;
+  transform: translate(-50%, 0);
+  opacity: min(1, calc(var(--p) * 5));
+  text-shadow: 0 2px 0 #000;
+}
+/* Over the real board the bars are open and the line lands on the hand tray.
+   Lifting it would cover the result chips the return exists to show, so it
+   stays on the tray, on a plate that hides the card text under it. */
+.ult-cinematic[data-space="battlefield"] .cine-text-voice {
+  padding: 0.3em 0.9em;
+  border-radius: 0.3em;
+  background: rgb(8 6 10 / 0.94);
+  box-shadow: 0 0 0 1px rgb(255 243 216 / 0.12);
+}
+.cine-text-voice span::before {
+  content: "“";
+}
+.cine-text-voice span::after {
+  content: "”";
+}
+.cine-text-impact {
+  font-family: var(--pixel, monospace);
+  font-size: clamp(40px, 10cqh, 120px);
+  line-height: 1;
+  color: #fff8e6;
+  transform: translate(-50%, -50%)
+    scale(calc(2.2 - var(--pb) * 1.2)) rotate(var(--rot, 0deg));
+  opacity: calc(1 - max(0, var(--p) - 0.75) * 4);
+  text-shadow:
+    0 0 30px var(--accent),
+    6px 6px 0 #140c08,
+    -3px -3px 0 var(--accent);
+}
+.ult-cinematic {
+  container-type: size;
+}
+
+.cine-skip {
+  position: absolute;
+  right: 18px;
+  top: 14px;
+  z-index: 50;
+  font-family: var(--pixel, monospace);
+  font-size: 12px;
+  padding: 6px 12px;
+  color: #f7eedc;
+  background: rgba(10, 7, 6, 0.72);
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  cursor: pointer;
+}
+.cine-debug-label {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  z-index: 50;
+  font: 12px/1.3 monospace;
+  background: rgba(0, 0, 0, 0.7);
+  color: #6cf;
+  padding: 4px 8px;
+}
+
+/* ---- effects ---- */
+.cine-vfx {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  --p: 0;
+  --pe: 0;
+  --pi: 0;
+  --pb: 0;
+  --s: 1;
+  --rot: 0deg;
+}
+.cine-screen > .cine-vfx {
+  width: 100%;
+  height: 100%;
+}
+.cine-vfx > * {
+  position: absolute;
+  transform: translate(-50%, -50%) rotate(var(--rot)) scale(var(--s));
+}
+.cine-screen > .cine-vfx > * {
+  transform: none;
+  inset: 0;
+}
+
+/* floor cracks */
+.fx-cracks {
+  width: 600px;
+  height: 600px;
+  overflow: visible;
+}
+.fx-crack,
+.fx-crack-glow {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: var(--len) 999;
+  stroke-dashoffset: calc(var(--len) * (1 - min(1, max(0, (var(--pe) - var(--delay)) * 1.6))));
+}
+.fx-cracks[data-inward] .fx-crack,
+.fx-cracks[data-inward] .fx-crack-glow {
+  stroke-dasharray: 0 calc(var(--len) * (1 - var(--pi))) var(--len) 999;
+  stroke-dashoffset: 0;
+}
+.fx-crack {
+  stroke-width: 4;
+}
+.fx-crack-glow {
+  stroke-width: 16;
+  opacity: 0.55;
+}
+.fx-crack-pool {
+  opacity: calc(0.5 * (1 - var(--p)));
+  transform: scale(calc(0.4 + var(--pe) * 1.6));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* dust */
+.fx-dust {
+  width: 0;
+  height: 0;
+}
+.fx-dust i {
+  position: absolute;
+  width: 70px;
+  height: 36px;
+  margin: -18px -35px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(196, 170, 130, 0.55), transparent);
+  transform: translate(calc(var(--pe) * var(--dx)), calc(var(--pe) * var(--dy)))
+    scale(calc(var(--s) * (0.4 + var(--pe) * 1.4)));
+  opacity: calc(1 - var(--p));
+}
+
+/* motes */
+.fx-motes i {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 5px;
+  height: 5px;
+  margin: -2.5px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 8px var(--c);
+  opacity: calc(var(--o) * min(1, var(--p) * 4) * (1 - max(0, var(--p) - 0.8) * 5));
+  transform: translate(calc(var(--sway) * var(--p)), calc(var(--rise) * var(--p)))
+    scale(var(--s));
+}
+.fx-motes[data-still] i {
+  transform: translate(calc(var(--sway) * 0.4), calc(var(--rise) * 0.4)) scale(var(--s));
+  opacity: var(--o);
+}
+
+/* glint and visor */
+.fx-glint {
+  width: 120px;
+  height: 120px;
+  transform: translate(-50%, -50%) scale(calc(var(--s) * sin(var(--p) * 3.14159)))
+    rotate(calc(var(--p) * 90deg)) !important;
+  mix-blend-mode: screen;
+}
+.fx-visor {
+  width: 0;
+  height: 0;
+}
+.fx-visor i {
+  position: absolute;
+  left: -9px;
+  top: -1.6px;
+  width: 18px;
+  height: 3.2px;
+  background: #fff6d6;
+  box-shadow:
+    0 0 4px var(--c),
+    0 0 10px var(--c),
+    0 0 22px var(--c);
+  transform: scaleX(calc(0.2 + var(--pe) * 0.8));
+  opacity: calc(min(1, var(--p) * 3) * (0.82 + 0.06 * var(--f)));
+}
+
+/* gather: a ring contracting, then the burst */
+.fx-gather {
+  width: 400px;
+  height: 400px;
+  overflow: visible;
+  mix-blend-mode: screen;
+}
+.fx-gather-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(calc(1.6 - var(--pi) * 1.4));
+  opacity: calc(0.2 + var(--p) * 0.8);
+}
+.fx-gather-ring.b {
+  transform: scale(calc(2 - var(--pi) * 1.9));
+}
+.fx-gather-core {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(calc(0.2 + var(--pi) * 1.3));
+}
+
+/* the call: on the battlefield, around the real unit */
+.cine-anchored {
+  --unit-w: 120px;
+  --unit-h: 150px;
+}
+.fx-call {
+  width: 0;
+  height: 0;
+}
+.fx-call i {
+  position: absolute;
+  pointer-events: none;
+}
+.fx-call-pillar {
+  left: calc(var(--unit-w) * -0.45);
+  bottom: 0;
+  width: calc(var(--unit-w) * 0.9);
+  height: calc(var(--unit-h) * 2.4);
+  background: linear-gradient(0deg, color-mix(in srgb, var(--c) 70%, transparent), transparent);
+  transform-origin: bottom;
+  transform: scaleX(calc(1.3 - var(--pe) * 0.7)) scaleY(var(--pe));
+  opacity: calc(0.9 - var(--p) * 0.3);
+  mix-blend-mode: screen;
+}
+.fx-call-ring {
+  left: calc(var(--unit-w) * -0.8);
+  top: calc(var(--unit-w) * -0.22);
+  width: calc(var(--unit-w) * 1.6);
+  height: calc(var(--unit-w) * 0.44);
+  border-radius: 50%;
+  border: 3px solid var(--c);
+  box-shadow: 0 0 18px var(--c);
+  transform: scale(calc(0.3 + var(--pe) * 0.9));
+  opacity: calc(1 - var(--p) * 0.5);
+}
+.fx-call-glow {
+  left: calc(var(--unit-w) * -1);
+  bottom: calc(var(--unit-h) * -0.1);
+  width: calc(var(--unit-w) * 2);
+  height: calc(var(--unit-h) * 1.4);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--c) 55%, transparent), transparent);
+  opacity: var(--pe);
+  mix-blend-mode: screen;
+}
+
+/* ward dome */
+.fx-ward {
+  width: calc(var(--unit-w) * 1.55);
+  height: calc(var(--unit-w) * 1.55 * 160 / 260);
+  overflow: visible;
+  transform: translate(-50%, -88%) !important;
+}
+.fx-ward > * {
+  transform-box: view-box;
+  transform-origin: 130px 140px;
+}
+.fx-ward-shell {
+  opacity: calc(0.34 * var(--pe) - max(0, var(--p) - 0.7) * 0.6 + (1 - min(1, var(--p) * 8)) * 0.5);
+  transform: scaleY(var(--pb));
+}
+.fx-ward-rim {
+  stroke-dasharray: 420;
+  stroke-dashoffset: calc(420 * (1 - var(--pe)));
+  opacity: calc(1 - max(0, var(--p) - 0.75) * 3);
+}
+.fx-ward-hex {
+  transform: scaleY(var(--pb));
+  opacity: calc(var(--pe) * 0.9 - max(0, var(--p) - 0.7) * 2);
+}
+.fx-ward-lamp {
+  transform: translateY(calc((1 - var(--pb)) * 40px));
+  opacity: calc(var(--pe) - max(0, var(--p) - 0.8) * 5);
+}
+.fx-ward-floor {
+  transform: translate(130px, 140px) scale(calc(0.3 + var(--pe) * 0.8)) translate(-130px, -140px);
+  opacity: calc(0.45 * (1 - var(--p)));
+}
+
+/* trail */
+.fx-trail {
+  width: 0;
+  height: 0;
+}
+.fx-trail i {
+  position: absolute;
+  right: 0;
+  top: -26px;
+  width: calc(80px + var(--pi) * 900px);
+  height: 52px;
+  border-radius: 26px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--c) 75%, transparent) 70%, #fff6dc);
+  opacity: min(1, calc(var(--p) * 4));
+  mix-blend-mode: screen;
+}
+.fx-trail i.b {
+  top: -8px;
+  height: 16px;
+  width: calc(60px + var(--pi) * 1200px);
+  background: linear-gradient(90deg, transparent, #fff7e0);
+  filter: none;
+}
+
+/* speed lines */
+.fx-speed {
+  overflow: hidden;
+}
+.fx-speed i {
+  position: absolute;
+  left: 0;
+  height: var(--h);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--c) 80%, #fff), transparent);
+  opacity: calc(var(--o) * min(1, var(--p) * 5));
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
+/* impact star */
+.fx-star {
+  width: 480px;
+  height: 480px;
+  overflow: visible;
+  transform: translate(-50%, -50%) scale(calc(var(--s) * (0.55 + var(--pb) * 0.55))) !important;
+  /* Holds full, then drops hard: a drawn frame, not a fade. */
+  opacity: calc(1 - clamp(0, (var(--p) - 0.72) * 100, 1) * 0.8);
+}
+.fx-star-frame {
+  display: none;
+}
+.fx-impact-star-wrap[data-k="0"] .fx-star-frame[data-k="0"],
+.fx-impact-star-wrap[data-k="1"] .fx-star-frame[data-k="1"],
+.fx-impact-star-wrap[data-k="2"] .fx-star-frame[data-k="2"],
+.fx-impact-star-wrap:not([data-k]) .fx-star-frame[data-k="0"] {
+  display: inline;
+}
+
+/* shockwave */
+.fx-shock {
+  width: 400px;
+  height: 400px;
+  overflow: visible;
+}
+.fx-shock ellipse {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.fx-shock-a {
+  stroke-width: calc(16 - var(--pe) * 14);
+  transform: scale(calc(0.1 + var(--pe) * 1));
+  opacity: calc(1 - var(--p));
+}
+.fx-shock-b {
+  stroke-width: calc(8 - var(--pe) * 7);
+  transform: scale(calc(0.05 + var(--pi) * 1.1));
+  opacity: calc(1 - var(--p));
+}
+.fx-shock-line {
+  width: 0;
+  height: 0;
+}
+.fx-shock-line i {
+  position: absolute;
+  left: calc(-900px * var(--pe));
+  width: calc(1800px * var(--pe));
+  top: -14px;
+  height: 28px;
+  background: linear-gradient(90deg, transparent, var(--c), #fff4e0, var(--c), transparent);
+  opacity: calc(1 - var(--p));
+  mix-blend-mode: screen;
+}
+.fx-shock-line i.b {
+  top: -60px;
+  height: 120px;
+  opacity: calc(0.35 * (1 - var(--p)));
+}
+
+/* debris */
+.fx-debris i {
+  position: absolute;
+  width: var(--w);
+  height: var(--h);
+  margin: calc(var(--h) / -2) calc(var(--w) / -2);
+  clip-path: polygon(0 20%, 60% 0, 100% 55%, 40% 100%);
+  transform: translate(
+      calc(var(--pe) * var(--dx)),
+      calc(var(--pe) * var(--dy) + var(--pi) * 260px)
+    )
+    rotate(calc(var(--p) * var(--r)))
+    scale(calc(1 + (var(--grow) - 1) * var(--pi)));
+  opacity: calc(1 - max(0, var(--p) - 0.6) * 2.5);
+}
+
+/* sparks */
+.fx-sparks i {
+  position: absolute;
+  width: var(--l);
+  height: 3px;
+  margin-top: -1.5px;
+  background: linear-gradient(90deg, transparent, #fff5d6);
+  box-shadow: 0 0 6px var(--c);
+  transform-origin: 100% 50%;
+  transform: translate(
+      calc(var(--pe) * var(--dx)),
+      calc(var(--pe) * var(--dy) + var(--pi) * 180px)
+    )
+    rotate(var(--r));
+  opacity: calc(1 - var(--p));
+}
+
+/* embers */
+.fx-embers i {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  margin: -3px;
+  border-radius: 50%;
+  background: #ffd18a;
+  box-shadow: 0 0 10px var(--c);
+  transform: translate(calc(var(--x) * (1 - var(--pi))), calc(var(--y) * (1 - var(--pi))))
+    scale(var(--s));
+  opacity: calc(var(--o) * (0.3 + var(--p) * 0.7));
+}
+.fx-embers[data-burst] i {
+  transform: translate(calc(var(--x) * var(--pe) * 1.6), calc(var(--y) * var(--pe) * 1.6 - var(--p) * 90px))
+    scale(var(--s));
+  opacity: calc(var(--o) * (1 - var(--p)));
+}
+
+/* molten seam */
+.fx-seam {
+  width: 80px;
+  height: 320px;
+  overflow: visible;
+  mix-blend-mode: screen;
+}
+.fx-seam path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 320;
+  stroke-dashoffset: calc(320 * (1 - var(--pe)));
+}
+.fx-seam-glow {
+  stroke-width: 22;
+  opacity: calc(0.5 + 0.08 * var(--f));
+}
+.fx-seam-core {
+  stroke-width: 5;
+}
+
+/* the vault gate */
+.fx-gate {
+  width: 520px;
+  height: 700px;
+  overflow: visible;
+  transform: translate(-50%, -100%) scale(var(--s)) !important;
+  transform-origin: 50% 100%;
+}
+.fx-gate-plate,
+.fx-gate-wheel {
+  transform-box: view-box;
+  transform-origin: 260px 360px;
+}
+.fx-gate[data-broken] .fx-gate-plate {
+  transform: translate(calc(var(--dx) * var(--pe)), calc(var(--dy) * var(--pe) + var(--pi) * 240px))
+    rotate(calc(var(--r) * var(--pe)));
+  opacity: calc(1 - max(0, var(--p) - 0.5) * 2);
+}
+.fx-gate[data-broken] .fx-gate-wheel {
+  transform: translate(calc(var(--pe) * 60px), calc(var(--pi) * 300px)) rotate(calc(var(--pe) * 200deg));
+}
+.fx-gate-glow {
+  opacity: 0.4;
+}
+
+/* the reflection in the shield */
+.fx-reflection {
+  width: 120px;
+  height: 150px;
+  transform: translate(-50%, -50%) scale(var(--s)) !important;
+  clip-path: path("M0 0 H120 V70 C120 110 90 135 60 150 C30 135 0 110 0 70 Z");
+  opacity: calc(min(1, var(--p) * 3) * 0.8);
+}
+.fx-reflection-slot {
+  position: absolute;
+  inset: -10px -40px;
+  transform: scaleX(-1) scale(calc(0.9 + var(--p) * 0.12));
+  mix-blend-mode: luminosity;
+  opacity: 0.55;
+}
+.fx-reflection-sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent calc(var(--p) * 100% - 20%),
+    rgba(255, 245, 220, 0.55) calc(var(--p) * 100%),
+    transparent calc(var(--p) * 100% + 20%)
+  );
+}
+
+/* rain: streaks placed by the frame function, wrapping round the frame */
+.fx-rain {
+  overflow: hidden;
+}
+.fx-rain i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: var(--l);
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--c) 70%, #fff));
+  opacity: calc(var(--o) * min(1, var(--p) * 6) * (1 - max(0, var(--p) - 0.9) * 10));
+  will-change: transform;
+}
+.fx-rain[data-heavy] i {
+  width: 3px;
+}
+
+/* the bolt: drawn from the sky down to its foot */
+.fx-bolt {
+  width: 800px;
+  height: 1260px;
+  overflow: visible;
+  transform: translate(-50%, calc(-1200px / 1260px * 100%)) scale(var(--s)) !important;
+  transform-origin: 50% 95%;
+  mix-blend-mode: screen;
+}
+.cine-vfx > .fx-bolt {
+  transform: translate(-400px, -1200px) scale(var(--s)) !important;
+  transform-origin: 400px 1200px;
+}
+.fx-bolt path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.fx-bolt-glow {
+  stroke-width: 80;
+  opacity: 0.4;
+}
+.fx-bolt-branch {
+  stroke-width: 10;
+  opacity: 0.75;
+}
+.fx-bolt-core {
+  stroke-width: 20;
+}
+.fx-bolt-foot {
+  opacity: calc(0.8 - var(--p) * 0.6);
+  transform: scale(calc(0.6 + var(--pe) * 1.4));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* arcs, drawn in world units over the whole stage */
+.cine-vfx > .fx-arcs {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  transform: none !important;
+  overflow: visible;
+  mix-blend-mode: screen;
+}
+.fx-arcs path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.fx-arc-glow {
+  stroke-width: 26;
+  opacity: 0.3;
+}
+.fx-arc-core {
+  stroke-width: 6;
+  opacity: calc(1 - max(0, var(--p) - 0.75) * 4);
+}
+
+/* wet: a sheen over the figure and water running off it */
+.fx-wet {
+  width: 0;
+  height: 0;
+}
+.fx-wet-sheen {
+  position: absolute;
+  left: calc(var(--ah) * -0.32);
+  top: calc(var(--ah) * -1.02);
+  width: calc(var(--ah) * 0.64);
+  height: calc(var(--ah) * 1.02);
+  border-radius: 45% 45% 20% 20%;
+  background: linear-gradient(
+    160deg,
+    transparent 20%,
+    color-mix(in srgb, var(--c) 40%, transparent) 45%,
+    transparent 60%,
+    color-mix(in srgb, var(--c) 25%, transparent) 75%,
+    transparent 90%
+  );
+  mix-blend-mode: screen;
+  opacity: calc(min(1, var(--p) * 4) * 0.8);
+}
+.fx-wet b {
+  position: absolute;
+  left: calc(var(--x) * 0.3);
+  top: calc(var(--ah) * -0.9);
+  width: 4px;
+  height: 14px;
+  border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+  background: color-mix(in srgb, var(--c) 80%, #fff);
+  transform: translateY(calc(var(--ah) * (0.1 + mod(var(--p) * 2.2 + var(--d), 1) * 0.8)));
+  opacity: 0.8;
+}
+.fx-wet-pool {
+  position: absolute;
+  left: calc(var(--ah) * -0.45);
+  top: -8px;
+  width: calc(var(--ah) * 0.9);
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--c) 60%, transparent);
+  transform: scale(calc(0.4 + var(--pe) * 0.8));
+  opacity: calc(0.7 - var(--p) * 0.3);
+}
+
+/* pages tearing loose and climbing */
+.fx-pages i {
+  position: absolute;
+  width: 34px;
+  height: 42px;
+  margin: -21px -17px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 7px, rgba(90, 120, 170, 0.5) 7px 8px),
+    #efe2c2;
+  outline: 2px solid #171420;
+  --k: clamp(0, calc((var(--p) - var(--d)) / (1 - var(--d))), 1);
+  transform: translate(calc(var(--dx) * var(--k)), calc(var(--dy) * var(--k) * var(--k)))
+    rotate(calc(var(--r) * var(--k))) scale(calc(var(--s) * (1 - var(--k) * 0.6)));
+  opacity: calc(min(1, var(--k) * 8) * (1 - var(--k)));
+}
+
+/* drops: hanging, or falling */
+.fx-drops i {
+  position: absolute;
+  left: var(--x);
+  top: 0;
+  width: calc(7px * var(--s));
+  height: calc(11px * var(--s));
+  border-radius: 50% 50% 50% 50% / 35% 35% 65% 65%;
+  background: radial-gradient(circle at 35% 35%, #fff, color-mix(in srgb, var(--c) 80%, #fff) 45%, color-mix(in srgb, var(--c) 60%, #000));
+  transform: translateY(calc(var(--hang) + var(--fall) * var(--pi) * var(--d)));
+}
+.fx-drops[data-still] i {
+  transform: translateY(calc(var(--hang) + 6px * var(--p)));
+}
+
+/* a seal written in the sky */
+.fx-rune {
+  width: 600px;
+  height: 600px;
+  overflow: visible;
+  mix-blend-mode: screen;
+}
+.fx-rune > * {
+  transform-box: view-box;
+  transform-origin: 300px 300px;
+}
+.fx-rune-outer {
+  transform: rotate(calc(var(--p) * 40deg)) scale(calc(0.7 + var(--pe) * 0.3));
+  opacity: calc(var(--pe) * 0.8);
+}
+.fx-rune-inner {
+  transform: rotate(calc(var(--p) * -70deg));
+  opacity: calc(var(--pi) * 0.9 + 0.1);
+}
+.fx-rune-core {
+  transform: scale(calc(0.2 + var(--pi) * 1.2));
+  opacity: var(--pi);
+}

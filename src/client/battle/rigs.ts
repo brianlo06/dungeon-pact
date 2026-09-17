@@ -3,6 +3,7 @@ import { GENERIC } from "./animation";
 import { FORGE_RIGS } from "./rigs-forge";
 import { DEBT_RIGS } from "./rigs-debt";
 import { PARTY_RIGS } from "./rigs-party";
+import { ULTIMATE_RIGS } from "./rigs-ultimate";
 
 /**
  * Character rigs.
@@ -799,6 +800,28 @@ const strongbox: Rig = {
     ],
   },
 };
+
+// A hero's Ultimate performances join its rig under `ult:` names. Merged into
+// the one rig object rather than copied, so the rig a combatant animates with
+// is still the party rig itself.
+// Poses written beside the Ultimate they belong to, in
+// `src/client/ultimates/<id>/poses.ts`, each exporting `poses` by hero.
+const folderPoses = import.meta.glob<{ poses: Record<string, Rig> }>(
+  "../ultimates/*/poses.ts",
+  { eager: true },
+);
+for (const source of [
+  ["rigs-ultimate.ts", ULTIMATE_RIGS] as const,
+  ...Object.entries(folderPoses).map(([path, m]) => [path, m.poses] as const),
+])
+  for (const [id, clips] of Object.entries(source[1] ?? {})) {
+    const rig = PARTY_RIGS[id];
+    if (!rig) continue;
+    for (const name of Object.keys(clips))
+      if (name.startsWith("ult:") && rig[name as keyof Rig])
+        throw Error(`Pose ${name} for ${id} is defined twice (${source[0]})`);
+    Object.assign(rig, clips);
+  }
 
 const RIGS: Record<string, Rig> = {
   ...PARTY_RIGS,

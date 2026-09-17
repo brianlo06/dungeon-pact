@@ -31,7 +31,22 @@ import {
  * bent back and drooping; a bell of robe; a long sleeve hanging from the
  * outstretched arm. Nobody else in the line has a hat.
  */
-const PARTS = ["book", "legs", "body", "head", "hat", "hand", "spark"] as const;
+/*
+ * `tome` and `pages` never move in an ordinary round: the tome is carried
+ * shut and the pages are tucked behind its cover. They exist for the
+ * Ultimate, where the book opens and tears itself into a storm.
+ */
+const PARTS = [
+  "book",
+  "tome",
+  "pages",
+  "legs",
+  "body",
+  "head",
+  "hat",
+  "hand",
+  "spark",
+] as const;
 
 /** A four-point star, for embroidery. */
 const star = (x: number, y: number, r: number) =>
@@ -69,7 +84,32 @@ export function Arcanist({ unitId, animators, className, viewBox }: HeroProps) {
           fill={RAMP.blue[1]}
           width={8}
         />
+        <g ref={hold("tome")} data-part="tome" style={at(24, 63)}>
         <g transform="translate(24 63) rotate(-12)">
+          {/* the pages, tucked behind the cover until a storm needs them */}
+          <g ref={hold("pages")} data-part="pages" style={at(5, 9)}>
+            {[-6, 0, 6].map((turn) => (
+              <g key={turn} transform={`rotate(${turn} 5 9)`}>
+                <path
+                  d="M-6.5 -7.5 H6 V8.5 H-6.5 Z"
+                  fill="#efe2c2"
+                  stroke={INK}
+                  strokeWidth={0.9}
+                />
+                <path
+                  d="M-4.5 -4.5 H3.5 M-4.5 -1.5 H2.5 M-4.5 1.5 H3.5 M-4.5 4.5 H1.5"
+                  stroke="#7a8fb8"
+                  strokeWidth={0.7}
+                />
+              </g>
+            ))}
+            <path
+              className="ph-arc-rune"
+              d={star(-0.5, 0.5, 3.4)}
+              fill="#bfe8ff"
+              opacity={0.9}
+            />
+          </g>
           <rect
             x={-8}
             y={-8.5}
@@ -92,6 +132,7 @@ export function Arcanist({ unitId, animators, className, viewBox }: HeroProps) {
             stroke={RAMP.gold[1]}
             strokeWidth={1.6}
           />
+        </g>
         </g>
         <circle
           cx={29.5}

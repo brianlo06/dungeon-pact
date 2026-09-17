@@ -1,0 +1,259 @@
+/*
+ * Elbow Room — effects and space.
+ *
+ * No filters, no blurs and no keyframes: flecks fly on `--p`, the lane slides
+ * on `--pe`/`--pi`, and the swing and the gouge are paths rewritten in frame
+ * functions (see `vfx.tsx`).
+ */
+
+/* ---- world-sized drawings ---- */
+.cine-vfx > .elbow-world {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none !important;
+}
+
+/* ---- the lane closing in over the board ---- */
+.cine-screen > .cine-vfx > .elbow-lane {
+  overflow: hidden;
+}
+.elbow-lane-side {
+  position: absolute;
+  top: -4%;
+  width: 19%;
+  height: 108%;
+  overflow: visible;
+}
+.elbow-lane-side.left {
+  left: 0;
+  transform: translateX(calc(-104% * (1 - var(--k))));
+}
+.elbow-lane-side.right {
+  right: 0;
+  transform: translateX(calc(104% * (1 - var(--k)))) scaleX(-1);
+}
+.elbow-lane[data-phase="in"] {
+  --k: var(--pe);
+}
+.elbow-lane[data-phase="out"] {
+  --k: calc(1 - var(--pe));
+}
+
+/* ---- the beam over the head ---- */
+.cine-vfx > .elbow-eaves {
+  overflow: visible;
+}
+
+/* ---- plaster knocked off ---- */
+.cine-vfx > .elbow-plaster {
+  width: 0;
+  height: 0;
+}
+.elbow-plaster b {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--sz);
+  height: calc(var(--sz) * 0.7);
+  margin: calc(var(--sz) * -0.35) 0 0 calc(var(--sz) / -2);
+  background: var(--pc);
+  border: 2px solid #0b0809;
+  border-radius: var(--shape);
+  --k: clamp(0, calc((var(--p) - var(--d)) / (1 - var(--d))), 1);
+  --ke: calc(1 - (1 - var(--k)) * (1 - var(--k)) * (1 - var(--k)));
+  transform: translate(calc(var(--dx) * var(--ke)), calc(var(--dy) * var(--ke) + var(--fall) * var(--k) * var(--k)))
+    rotate(calc(var(--sp) * var(--k)));
+  opacity: calc(clamp(0, (var(--p) - var(--d)) * 30, 1) * (1 - clamp(0, (var(--k) - 0.75) * 4, 1)));
+}
+.elbow-plaster .elbow-puff {
+  position: absolute;
+  left: calc(var(--pr) * -1);
+  top: calc(var(--pr) * -1);
+  width: calc(var(--pr) * 2);
+  height: calc(var(--pr) * 2);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(226, 196, 170, 0.55), rgba(226, 196, 170, 0.2) 60%, rgba(226, 196, 170, 0));
+  transform: scale(calc(0.3 + var(--pe) * 0.9));
+  opacity: calc(clamp(0, var(--p) * 20, 1) * (1 - var(--p)));
+}
+
+/* ---- the post the wind-up bites ---- */
+.cine-vfx > .elbow-post {
+  width: 240px;
+  height: var(--ph);
+  overflow: visible;
+  transform: translate(-50%, -100%) scale(var(--s)) !important;
+  transform-origin: 50% 100%;
+}
+.elbow-post-bite {
+  opacity: clamp(0, calc((var(--p) - var(--hit)) * 60), 1);
+}
+
+/* ---- the lane cat ---- */
+.cine-screen > .cine-vfx > .elbow-cat svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.elbow-cat g {
+  transform-box: view-box;
+}
+/* Ears back at 0.3, the body pressed down by 0.65; the eyes never leave the lens. */
+.elbow-cat-body {
+  --down: clamp(0, calc((var(--p) - 0.36) / 0.3), 1);
+  --downe: calc(1 - (1 - var(--down)) * (1 - var(--down)));
+  transform-origin: 0px 540px;
+  transform: translateY(calc(var(--downe) * 70px)) scale(calc(1 + var(--downe) * 0.06), calc(1 - var(--downe) * 0.2));
+}
+.elbow-cat-ear {
+  --back: clamp(0, calc((var(--p) - 0.24) / 0.1), 1);
+}
+.elbow-cat-ear.left {
+  transform-origin: 300px 70px;
+  transform: rotate(calc(var(--back) * -62deg)) scaleY(calc(1 - var(--back) * 0.3));
+}
+.elbow-cat-ear.right {
+  transform-origin: 410px 70px;
+  transform: rotate(calc(var(--back) * 58deg)) scaleY(calc(1 - var(--back) * 0.3));
+}
+/* Pupils go round as it gets down. */
+.elbow-cat-pupil {
+  transform: scaleX(calc(1 + clamp(0, (var(--p) - 0.2) / 0.3, 1) * 1.6)) scaleY(calc(1 - clamp(0, (var(--p) - 0.2) / 0.3, 1) * 0.2));
+}
+.elbow-cat-tail {
+  transform-origin: -400px 520px;
+  transform: rotate(calc(clamp(0, (var(--p) - 0.3) / 0.4, 1) * 18deg));
+}
+.elbow-cat-glow {
+  opacity: calc(0.7 + clamp(0, (var(--p) - 0.3) / 0.4, 1) * 0.3);
+}
+
+/* ---- the swing ---- */
+.elbow-sweep-body {
+  fill: #d4fbf1;
+  opacity: 0.88;
+}
+.elbow-sweep-hatch {
+  fill: none;
+  stroke: #5fd9c4;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+.elbow-sweep-edge {
+  fill: none;
+  stroke: #0b0809;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.half-far .elbow-sweep-body {
+  opacity: 0.8;
+}
+
+/* ---- the gouge ---- */
+.elbow-gouge-rim {
+  fill: #d7b29b;
+  stroke: #0b0809;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.elbow-gouge-cut {
+  fill: #0d0a0b;
+}
+.elbow-gouge-lath {
+  fill: none;
+  stroke: #6b4a36;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+/* ---- sawdust ---- */
+.cine-vfx > .elbow-sawdust {
+  width: 0;
+  height: 0;
+}
+.elbow-sawdust i {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--sz);
+  height: calc(var(--sz) * 0.45);
+  margin: calc(var(--sz) * -0.22) 0 0 calc(var(--sz) / -2);
+  background: var(--pc);
+  --k: clamp(0, calc((var(--p) - var(--d)) / (1 - var(--d))), 1);
+  --ke: calc(1 - (1 - var(--k)) * (1 - var(--k)) * (1 - var(--k)));
+  transform: translate(calc(var(--dx) * var(--ke)), calc(var(--dy) * var(--ke) * (1 - var(--k)) * 1.6 + var(--dy) * -0.25 * var(--k) * var(--k)))
+    rotate(calc(var(--sp) * var(--k)));
+  opacity: calc(clamp(0, (var(--p) - var(--d)) * 40, 1) * (1 - clamp(0, (var(--k) - 0.7) * 3.3, 1)));
+}
+
+/* ---- a post splintered past the lens ---- */
+.cine-screen > .cine-vfx > .elbow-splinter {
+  overflow: hidden;
+}
+.elbow-splinter svg {
+  position: absolute;
+  left: var(--sx);
+  top: var(--sy);
+  width: calc(var(--len) * 0.14);
+  height: var(--len);
+  overflow: visible;
+  --k: clamp(0, calc((var(--p) - var(--d)) / 0.6), 1);
+  --ke: calc(1 - (1 - var(--k)) * (1 - var(--k)));
+  transform: translate(calc(var(--tx) * var(--ke)), calc(var(--ty) * var(--ke))) rotate(calc(var(--r0) + var(--sp) * var(--k)));
+  opacity: calc(clamp(0, (var(--p) - var(--d)) * 40, 1) * (1 - clamp(0, (var(--k) - 0.8) * 5, 1)));
+}
+
+/* ---- the row swept back: its bow waves of sawdust ---- */
+.elbow-knock-wave {
+  fill: #e4c58c;
+  stroke: #5b4329;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.elbow-knock-wave-dark {
+  fill: #8a6a44;
+}
+
+/* ---- the glare behind the row ---- */
+.cine-vfx > .elbow-glare {
+  width: var(--gw);
+  height: var(--gh);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(212, 251, 241, 0.95), rgba(212, 251, 241, 0.7) 55%, rgba(212, 251, 241, 0));
+  opacity: calc(1 - clamp(0, var(--p) / 0.35, 1) * (1 - var(--hold)));
+}
+
+/* ---- on the board ---- */
+.cine-anchored > .elbow-board {
+  /* Sized from the unit, but a boss's bank stays the size of a row's. */
+  --bw: min(calc(var(--unit-w) * 1.7), 190px);
+  width: var(--bw);
+  height: var(--bw);
+  left: calc(var(--bw) * -0.5);
+  top: calc(var(--bw) * -0.1667);
+  transform: none;
+}
+.elbow-board svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.elbow-board g {
+  transform-box: view-box;
+}
+/* The furrows drawn back from the front to the heels, as the row was swept. */
+.elbow-board-skid {
+  --k: clamp(0, calc(var(--p) / 0.35), 1);
+  clip-path: inset(calc((1 - var(--k)) * 100%) 0 0 0);
+  opacity: calc(1 - clamp(0, (var(--p) - 0.85) * 4, 0.4));
+}
+.elbow-board-bank {
+  transform-origin: 0 0.06px;
+  transform: scale(calc(0.3 + clamp(0, (var(--p) - 0.1) / 0.3, 1) * 0.7));
+  opacity: clamp(0, calc((var(--p) - 0.1) * 8), 1);
+}

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.15 picks at the table and chance events — 2026-09-13
+## 0.16 picks at the table and chance events — 2026-09-13
 
 Two requests from the table: seeing who picked what meant scrolling to the
 bottom of the lobby, and the events were all sure things.
@@ -42,6 +42,27 @@ bottom of the lobby, and the events were all sure things.
   unchanged within noise: duos 80→79%, trios 94→95%, quartets 91→92%. The
   bots price each chance choice by its expected value.
 
+## 0.15 Ultimates — 2026-09-12
+
+The benchmark for a new system; see `ULTIMATES.md` for all of it.
+
+- **Pact Charge and Ultimates.** Every hero has a charged Ultimate, queued as an
+  extra action beside the round's plan and resolved before anyone else acts.
+  Charge is earned by doing a class's job — damage, being hit and intercepting,
+  healing, reactions, control — carries between chambers, survives training
+  and being downed, and is checked by the server on queue and on resolution.
+- **Evolutions change the Ultimate.** Every path has its own Ultimate, with
+  different gameplay from its class's and a film that shares nothing with it.
+- **Cinematics.** A shot-based film per Ultimate on the combat's own clock and
+  rigs: isolated stage, camera cuts and transitions, lighting, backgrounds,
+  real target and real equipment, effects, two-tone impact frame, hit-stop,
+  synthesised motif and impact, and a return over the real battlefield. FULL,
+  FAST and first-view settings, a still-card cut for reduced motion, skip.
+  All 32 are authored, one per class and one per path (2026-09-16).
+- **Bosses are priced for Ultimates** (HP ×1.2, +2 damage per hero) in rooms
+  that have them: without it Ultimates took the matrix from 89% to 98%. With
+  it: 90% → 91% (Unbroken), 90% → 90% (Gilded), duos +6.
+- **Ultimate lab** at `/dev/ultimates.html`.
 ## 0.14 floors, chambers and a readable route — 2026-09-12
 
 The second playtest round: the run ended too soon, the route screen was hard

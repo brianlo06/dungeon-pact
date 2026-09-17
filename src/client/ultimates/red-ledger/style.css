@@ -1,0 +1,149 @@
+/*
+ * Red Ledger — effects and space.
+ *
+ * No filters, no blurs and no keyframes: strokes are revealed by moving
+ * their paint along their own axis, drops fall on `--p`, and every glow is a
+ * gradient (see `cinematic/vfx.tsx`).
+ */
+
+/* ---- world-sized drawings ---- */
+.cine-vfx > .ledger-world {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none !important;
+}
+
+/* ---- on the board: the pit's light ---- */
+.cine-vfx > .ledger-pool {
+  width: 0;
+  height: 0;
+  transform: none;
+}
+.ledger-pool i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+.ledger-pool-floor {
+  width: calc(var(--unit-w) * 2.3);
+  height: calc(var(--unit-w) * 0.62);
+  margin: calc(var(--unit-w) * -0.31) 0 0 calc(var(--unit-w) * -1.15);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 248, 232, 0.62), rgba(255, 244, 222, 0.34) 62%, transparent 100%);
+  transform: scale(calc(0.4 + var(--pe) * 0.6));
+  opacity: min(1, calc(var(--p) * 4));
+}
+.ledger-pool-edge {
+  width: calc(var(--unit-w) * 2.3);
+  height: calc(var(--unit-w) * 0.62);
+  margin: calc(var(--unit-w) * -0.31) 0 0 calc(var(--unit-w) * -1.15);
+  border-radius: 50%;
+  border: 2px solid rgba(255, 246, 228, 0.55);
+  box-sizing: border-box;
+  transform: scale(calc(0.4 + var(--pe) * 0.6));
+  opacity: min(0.8, calc(var(--p) * 3));
+}
+.ledger-pool-shaft {
+  width: calc(var(--unit-w) * 1.8);
+  height: calc(var(--unit-h) * 3.2);
+  margin: calc(var(--unit-h) * -3.2) 0 0 calc(var(--unit-w) * -0.9);
+  background: linear-gradient(180deg, transparent, rgba(255, 246, 228, 0.1) 40%, rgba(255, 246, 228, 0.26));
+  clip-path: polygon(34% 0, 66% 0, 100% 100%, 0 100%);
+  transform-origin: 50% 100%;
+  transform: scaleY(calc(0.2 + var(--pe) * 0.8));
+  opacity: min(1, calc(var(--p) * 3));
+}
+
+/* ---- drops ---- */
+.cine-vfx > .ledger-drops {
+  width: 0;
+  height: 0;
+  transform: scale(var(--s));
+}
+.ledger-drops i {
+  position: absolute;
+  left: var(--x);
+  top: 0;
+  width: 9px;
+  height: 9px;
+  margin: -4px 0 0 -4.5px;
+  background: #b3172f;
+  border: 1.5px solid #3a0710;
+  border-radius: 0 50% 50% 50%;
+  --k: clamp(0, calc((var(--p) - var(--d)) / (1 - var(--d))), 1);
+  transform: translateY(calc(var(--k) * var(--k) * var(--fall))) rotate(45deg) scale(calc(var(--s) * (1 + var(--k) * 0.3)), var(--s));
+  opacity: calc(clamp(0, (var(--p) + 0.2 - var(--d) * 0.5) * 6, 1) * (1 - clamp(0, (var(--k) - 0.85) * 7, 1)));
+}
+.ledger-drops[data-single] i {
+  /* Hangs, swelling, before it lets go. */
+  --swell: clamp(0, calc(var(--p) / var(--d)), 1);
+  transform: translateY(calc(var(--k) * var(--k) * var(--fall) + var(--swell) * 6px)) rotate(45deg)
+    scale(calc(var(--s) * (0.5 + var(--swell) * 0.5)), calc(var(--s) * (0.5 + var(--swell) * 0.5 + var(--k) * 0.4)));
+  opacity: calc(1 - clamp(0, (var(--k) - 0.85) * 7, 1));
+}
+
+/* ---- the groove in the sand ---- */
+.ledger-groove path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ledger-groove-shadow {
+  stroke: rgba(52, 34, 20, 0.45);
+  stroke-width: 26px;
+}
+.ledger-groove-cut {
+  stroke: #1c110c;
+  stroke-width: 9px;
+}
+.ledger-groove-lip {
+  stroke: #fff3d8;
+  stroke-width: 3px;
+  transform: translateY(-6px);
+  opacity: 0.8;
+}
+
+/* ---- the impact frame ---- */
+.cine-screen > .fx-ledger-cut-wrap {
+  /* Over the black frame, which is the point of it. */
+  z-index: 2;
+}
+.cine-screen > .cine-vfx > .ledger-cut {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- on the board after: the stroke on a real unit ---- */
+.cine-anchored > .ledger-mark {
+  width: calc(var(--unit-w) * 0.95);
+  height: calc(var(--unit-w) * 0.95);
+  top: calc(var(--unit-h) * -0.52);
+  left: 0;
+}
+.cine-anchored > .ledger-mark[data-price] {
+  width: calc(var(--unit-w) * 0.7);
+  height: calc(var(--unit-w) * 0.7);
+}
+.ledger-mark svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.ledger-mark-drip {
+  position: absolute;
+  left: 38%;
+  top: 56%;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  background: #b3172f;
+  border: 1.5px solid #3a0710;
+  border-radius: 0 50% 50% 50%;
+  --k: clamp(0, calc((var(--p) - 0.35) * 1.6), 1);
+  transform: translateY(calc(var(--k) * var(--k) * 60px)) rotate(45deg);
+  opacity: calc(clamp(0, (var(--p) - 0.25) * 10, 1) * (1 - var(--k)));
+}

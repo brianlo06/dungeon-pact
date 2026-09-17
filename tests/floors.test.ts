@@ -3,6 +3,7 @@
  * where the rest of it was. A run is now two floors, each ending at its own
  * boss, with the second floor built harder than the first.
  */
+import { BOSS_PRICING } from "../src/content/ultimates";
 import { expect, it } from "vitest";
 import { createRun, addPlayer, reduce } from "../src/engine/game";
 import {
@@ -97,7 +98,9 @@ it("builds floor two's enemies a quarter harder", () => {
   const miser = enemies.find((d) => d.id === "miser")!;
   // The boss weighting, exactly as `enterCombat` applies it, then the floor.
   const duo = BOSS_BASE + s.players.length * BOSS_PER_HERO;
-  expect(s.enemies[0].maxHp).toBe(Math.round(miser.hp * duo * 1.25));
+  // A room with Ultimates prices its bosses for them (see `BOSS_PRICING`).
+  const priced = s.ultimateVersion === 1 ? BOSS_PRICING.hp : 1;
+  expect(s.enemies[0].maxHp).toBe(Math.round(miser.hp * duo * 1.25 * priced));
   expect(s.enemies[0].power).toBe(Math.round(miser.power * 1.25));
 });
 

@@ -1,6 +1,7 @@
 import { IllustratedHead, Neck, Tailoring } from "./Illustration";
 import { BaseWeapon, GearMount } from "../../equipment/Equipment";
-import { useRigParts } from "../../battle/useRigParts";
+import { useContext } from "react";
+import { CloseUpContext, useRigParts } from "../../battle/useRigParts";
 import {
   at,
   BODY,
@@ -31,6 +32,8 @@ import {
  * spreads wide and torn. Nothing else carries a light.
  */
 const PARTS = ["staff", "lantern", "legs", "body", "head", "hand"] as const;
+/** The face, moved only in an Ultimate close-up (see `CloseUpContext`). */
+const FACE_PARTS = ["brow", "eyes", "mouth"] as const;
 
 /**
  * The oldest face in the party: longer than anyone's, the chin running down
@@ -38,6 +41,27 @@ const PARTS = ["staff", "lantern", "legs", "body", "head", "hand"] as const;
  */
 const FACE =
   "M48 12.5 C58 12.5 64 19 64.2 28.5 C64.5 36 63 43 58.5 47 C55.5 49.5 50 49.5 46 48 C38 45.5 33 39 33 29 C33 19.5 38.5 12.5 48 12.5 Z";
+
+/**
+ * The open hand closing, in three drawings stepped on `--wdn-grasp` (0 open,
+ * about a half curled, 1 shut), so a film can close it like a drawn frame
+ * rather than a cross-fade. Used only in an Ultimate's close-up.
+ */
+const GRASP_OPEN = "clamp(0, (0.34 - var(--wdn-grasp, 0)) * 1000, 1)";
+const GRASP_CURL =
+  "clamp(0, min((var(--wdn-grasp, 0) - 0.34) * 1000, (0.67 - var(--wdn-grasp, 0)) * 1000), 1)";
+const GRASP_FIST = "clamp(0, (var(--wdn-grasp, 0) - 0.67) * 1000, 1)";
+
+/**
+ * The front antler's beam, in two pieces: the beam and its two tines, kept,
+ * and the forward tine with its curling tip, which the Lifebinder breaks
+ * off. The beam's curve is split on itself (de Casteljau at 0.65), so the
+ * two pieces drawn end to end are the one curve they used to be.
+ */
+const ANTLER_KEPT =
+  "M55 17.5 C58.9 15.55 64.07 14.45 70.23 14.46 M62 15.2 L64 10.4 M69.5 14.2 L73.5 10.4";
+export const ANTLER_SHED =
+  "M70.23 14.46 C73.55 14.47 77.15 14.8 81 15.5 C84 16.5 86 18.5 87 21.5";
 
 /** A pointed leaf, `r` half its length, in local space. */
 const leafD = (r: number) =>
@@ -76,6 +100,13 @@ function Leaf({
 
 export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
   const hold = useRigParts(unitId, animators, PARTS);
+  // The face only acts in a close-up; in a round it is never registered, so
+  // it costs the stage nothing.
+  const closeUp = useContext(CloseUpContext);
+  const face = useRigParts(unitId, closeUp ? animators : undefined, FACE_PARTS);
+  // Held (and so named as parts) only where they are driven, so a round's
+  // figure has no part the animator is not writing.
+  const facePart = (name: (typeof FACE_PARTS)[number]) => (closeUp ? face(name) : undefined);
   const g = useShades("wdn");
   const [bx, by] = BODY.shoulderBack;
   const [fx, fy] = BODY.shoulderFront;
@@ -251,8 +282,9 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
           {[
             // back antler: a long beam raking out behind, three tines up
             "M42 18.5 C36 15 27 14 15 16.5 M36.5 15.8 L33.5 10.5 M29 14.6 L24.5 10.4 M21 15 L14.5 11 M15 16.5 C12 17.5 10 19.5 9 22.5",
-            // front antler: shorter, forward, curling at the tip
-            "M55 17.5 C61 14.5 70 13.5 81 15.5 M62 15.2 L64 10.4 M69.5 14.2 L73.5 10.4 M81 15.5 C84 16.5 86 18.5 87 21.5",
+            // front antler: shorter, forward, curling at the tip — its beam
+            // is drawn in two pieces below, split where the Lifebinder breaks it
+            ANTLER_KEPT,
           ].map((d) => (
             <g key={d}>
               <path
@@ -263,6 +295,26 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
+              {/*
+               * The forward tine of the front antler. At rest it is drawn
+               * exactly as the one path it used to be part of (the beam is
+               * split on its own curve, and its ink goes under the kept
+               * beam's wood so the joint has no seam). In an Ultimate's
+               * close-up a film can take it off the crown (`--wdn-tine`,
+               * Living Bone), and a stump is drawn where it was.
+               */}
+              {d === ANTLER_KEPT && (
+                <g className="ph-wdn-tine" style={closeUp ? { opacity: "calc(1 - var(--wdn-tine, 0))" } : undefined}>
+                  <path
+                    d={ANTLER_SHED}
+                    fill="none"
+                    stroke={INK}
+                    strokeWidth={5.6}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+              )}
               <path
                 d={d}
                 fill="none"
@@ -271,6 +323,49 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
+              {d === ANTLER_KEPT && (
+                <g className="ph-wdn-tine" style={closeUp ? { opacity: "calc(1 - var(--wdn-tine, 0))" } : undefined}>
+                  <path
+                    d={ANTLER_SHED}
+                    fill="none"
+                    stroke={RAMP.wood[0]}
+                    strokeWidth={2.8}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+              )}
+              {d === ANTLER_KEPT && closeUp && (
+                <g className="ph-wdn-stump" style={{ opacity: "var(--wdn-tine, 0)" }}>
+                  {/* the break: splintered bone, marrow in the middle */}
+                  <path
+                    d="M68.7 12.2 L71.3 11.5 L72.7 12.8 L71.9 14.3 L73 15.8 L71.5 16.9 L69.6 16.6 L68.4 14.7 Z"
+                    fill={RAMP.bone[0]}
+                    stroke={INK}
+                    strokeWidth={1}
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M69.6 13 L71.2 13.7 M69.8 15.5 L71.3 15.1"
+                    stroke={RAMP.wood[1]}
+                    strokeWidth={0.7}
+                    fill="none"
+                    strokeLinecap="round"
+                  />
+                  <circle cx={70.9} cy={14.3} r={0.8} fill={RAMP.wood[0]} />
+                  {/* velvet bleeds: one bead at the break (`--wdn-bead`) */}
+                  <circle
+                    className="ph-wdn-bead"
+                    cx={72.5}
+                    cy={16.6}
+                    r={1.15}
+                    fill="#c4573f"
+                    stroke={INK}
+                    strokeWidth={0.5}
+                    style={{ opacity: "var(--wdn-bead, 0)" }}
+                  />
+                </g>
+              )}
             </g>
           ))}
           {/* a long, weathered face, the jaw running down into the beard */}
@@ -292,14 +387,39 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
             <path d="M49.3 31.2 l-2 -0.9 M49.3 32 l-2.2 0.3 M49.6 32.8 l-1.8 1.3" />
             <path d="M51 34.4 Q53.2 35.4 55.4 34.3 M58.6 34.2 Q60.2 35 61.8 34.1" />
           </g>
-          {/* eyes closed, the lids heavy and at rest */}
-          <path
-            d="M50.3 31.3 Q53 33.8 55.8 31.2 M58.2 31 Q60.1 33.2 62 31"
-            stroke={INK}
-            strokeWidth={1.5}
-            fill="none"
-            strokeLinecap="round"
-          />
+          <g ref={facePart("eyes")} style={at(56, 32)}>
+            {/* eyes closed, the lids heavy and at rest */}
+            <path
+              d="M50.3 31.3 Q53 33.8 55.8 31.2 M58.2 31 Q60.1 33.2 62 31"
+              stroke={INK}
+              strokeWidth={1.5}
+              fill="none"
+              strokeLinecap="round"
+              style={closeUp ? { opacity: "calc(1 - var(--wdn-eyes, 0))" } : undefined}
+            />
+            {/*
+             * Open. Drawn only in an Ultimate's close-up, and even there
+             * invisible unless the film sets `--wdn-eyes` (Green Reckoning
+             * opens them once), so the Warden a round draws is unchanged.
+             */}
+            {closeUp && (
+              <g style={{ opacity: "var(--wdn-eyes, 0)" }}>
+                <circle cx={53} cy={31.5} r={4.2} fill={g.url("mote")} opacity={0.75} />
+                <circle cx={60.2} cy={31.2} r={3.6} fill={g.url("mote")} opacity={0.65} />
+                <path
+                  d="M50.1 31.6 Q53 28.7 56 31.4 Q53 34 50.1 31.6 Z M58 31.2 Q60.1 28.9 62.2 31.1 Q60.1 33.3 58 31.2 Z"
+                  fill="#effbe0"
+                  stroke={INK}
+                  strokeWidth={1}
+                  strokeLinejoin="round"
+                />
+                <circle cx={53.3} cy={31.45} r={1.35} fill="#6fcf5a" />
+                <circle cx={60.45} cy={31.15} r={1.15} fill="#6fcf5a" />
+                <circle cx={53.4} cy={31.45} r={0.55} fill={INK} />
+                <circle cx={60.55} cy={31.15} r={0.48} fill={INK} />
+              </g>
+            )}
+          </g>
           {/* a leaf marked on the cheek */}
           <path
             d={leafD(1.6)}
@@ -322,21 +442,23 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
             fill="none"
             strokeLinecap="round"
           />
-          {/* a drooping moustache, and a small smile under it */}
-          <path
-            d="M54.5 39.5 C56.5 37.3 60.5 37 63.6 37.8 C64.6 39 64.4 41 63 42.4 C62 40.6 59.5 39.8 57.3 40.6 C56.3 41 55.2 40.8 54.5 39.5 Z"
-            fill={RAMP.silver[0]}
-            stroke={INK}
-            strokeWidth={DETAIL}
-            strokeLinejoin="round"
-          />
-          <path
-            d="M57.5 42.6 Q59.6 43.6 61.6 42.4"
-            stroke={INK}
-            strokeWidth={1}
-            fill="none"
-            strokeLinecap="round"
-          />
+          <g ref={facePart("mouth")} style={at(59, 41)}>
+            {/* a drooping moustache, and a small smile under it */}
+            <path
+              d="M54.5 39.5 C56.5 37.3 60.5 37 63.6 37.8 C64.6 39 64.4 41 63 42.4 C62 40.6 59.5 39.8 57.3 40.6 C56.3 41 55.2 40.8 54.5 39.5 Z"
+              fill={RAMP.silver[0]}
+              stroke={INK}
+              strokeWidth={DETAIL}
+              strokeLinejoin="round"
+            />
+            <path
+              d="M57.5 42.6 Q59.6 43.6 61.6 42.4"
+              stroke={INK}
+              strokeWidth={1}
+              fill="none"
+              strokeLinecap="round"
+            />
+          </g>
           {/* a long straight nose, past the line of the cheek */}
           <path
             d="M62.4 29.8 C63.4 32 65.6 33.6 66.4 35.6 C66.8 37.2 65.2 38 63.6 37.4 C62.8 37.8 61.9 37.5 61.6 36.8"
@@ -346,14 +468,16 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          {/* white brows, bushy, drooping at the ends */}
-          <path
-            d="M49 29 C50.2 26.6 54 26 56.3 27.4 C54.8 27.9 53 28 51.6 28.7 C50.6 29.2 49.6 29.6 49 29 Z M58 27.3 C59.6 26 62.3 26.2 63.6 28 C62.2 28 60.4 28.2 59 28.8 C58.3 28.7 57.9 28 58 27.3 Z"
-            fill={RAMP.silver[0]}
-            stroke={INK}
-            strokeWidth={DETAIL}
-            strokeLinejoin="round"
-          />
+          <g ref={facePart("brow")} style={at(56, 27.5)}>
+            {/* white brows, bushy, drooping at the ends */}
+            <path
+              d="M49 29 C50.2 26.6 54 26 56.3 27.4 C54.8 27.9 53 28 51.6 28.7 C50.6 29.2 49.6 29.6 49 29 Z M58 27.3 C59.6 26 62.3 26.2 63.6 28 C62.2 28 60.4 28.2 59 28.8 C58.3 28.7 57.9 28 58 27.3 Z"
+              fill={RAMP.silver[0]}
+              stroke={INK}
+              strokeWidth={DETAIL}
+              strokeLinejoin="round"
+            />
+          </g>
           {/* the hood */}
           <path
             d="M48 12 C58 12 66 18 66 28 C63 23 58 21 51 21 C44 21 40 25 39 33 C39 38 40.5 42 43 45.5 L35 45.5 C31.5 40 30.5 34 31.5 27 C33 17.5 39 12 48 12 Z"
@@ -380,28 +504,114 @@ export function Warden({ unitId, animators, className, viewBox }: HeroProps) {
           strokeWidth={DETAIL + 0.3}
           strokeLinejoin="round"
         />
-        {/* palm up, fingers open */}
-        <path
-          d="M70 58.5 C70 55 73 54 75.5 55 L78 53 L78.8 54.8 L77 56.3 L79.5 56.5 L79 58.3 L76.5 58.4 C76 61 72 62 70 58.5 Z"
-          fill={g.url("skin")}
-          stroke={INK}
-          strokeWidth={DETAIL + 0.5}
-          strokeLinejoin="round"
-        />
-        <circle
-          className="ph-wdn-mote ph-glow"
-          cx={75.5}
-          cy={49.5}
-          r={5}
-          fill={g.url("mote")}
-        />
-        <g className="ph-wdn-mote">
+        {/*
+         * The open hand, with its light. In an Ultimate's close-up it can
+         * close (`--wdn-grasp`, Mourning Water): the palm and its light give
+         * way to a curl and then a fist. Unset, only the open hand is drawn.
+         */}
+        <g style={closeUp ? { opacity: GRASP_OPEN } : undefined}>
+          {/* palm up, fingers open */}
           <path
-            d={leafD(1.6)}
-            transform={place(73.5, 51, -46)}
-            fill="#c9f59b"
+            d="M70 58.5 C70 55 73 54 75.5 55 L78 53 L78.8 54.8 L77 56.3 L79.5 56.5 L79 58.3 L76.5 58.4 C76 61 72 62 70 58.5 Z"
+            fill={g.url("skin")}
+            stroke={INK}
+            strokeWidth={DETAIL + 0.5}
+            strokeLinejoin="round"
+            style={closeUp ? { opacity: "calc(1 - var(--wdn-palm, 0))" } : undefined}
           />
+          {/*
+           * The same open hand drawn for a close-up that looks into it
+           * (`--wdn-palm`, Mourning Water): cupped, palm up, the thumb raised
+           * and the fingers curling up at the tips, so it reads as a hand
+           * holding something rather than a shape at the end of an arm.
+           */}
+          {closeUp && (
+            <g style={{ opacity: "var(--wdn-palm, 0)" }}>
+              {/* the far fingers, behind the palm */}
+              <path
+                d="M77.4 55.6 C79.2 53.4 81.4 51.6 83.2 51.4 C84.2 51.3 84.6 52.3 83.9 53 C82.6 54.2 81.2 55.6 80.4 57 Z"
+                fill={g.url("skin")}
+                stroke={INK}
+                strokeWidth={DETAIL}
+                strokeLinejoin="round"
+              />
+              {/* the back of the hand and the heel, the palm hollow on top */}
+              <path
+                d="M69.4 56.2 C71.2 55.2 73 56.4 75.2 56.6 C77.2 56.8 79 55.8 80.8 55.6 C82.8 55.4 85 54.4 86 53.6 C87 53 87.8 53.8 87.2 54.8 C85.8 57.4 83 59.8 79.6 60.8 C76.2 61.8 72.2 61.4 69.8 60 Z"
+                fill={g.url("skin")}
+                stroke={INK}
+                strokeWidth={DETAIL}
+                strokeLinejoin="round"
+              />
+              {/* the hollow of the palm, in shadow */}
+              <path
+                d="M71.6 56.4 C73.4 57.6 76.4 58 79 57.4 C80.6 57 82.2 56.4 83.6 55.6"
+                stroke={RAMP.skinUmber[2]}
+                strokeWidth={0.8}
+                fill="none"
+                strokeLinecap="round"
+              />
+              {/* the near fingers' tips, curling up, parted */}
+              <path
+                d="M83.8 56.6 C84.8 55.2 85.4 53.6 85.4 52.6 M81.6 57.6 C82.6 56.4 83.2 55.2 83.4 54.2"
+                stroke={INK}
+                strokeWidth={DETAIL - 0.4}
+                fill="none"
+                strokeLinecap="round"
+              />
+              {/* the thumb, raised */}
+              <path
+                d="M70.8 56.6 C70.6 54.4 71.4 52.2 72.8 51.2 C73.8 50.6 74.8 51.2 74.4 52.2 C73.8 53.8 73.6 55.2 73.8 56.8 Z"
+                fill={g.url("skin")}
+                stroke={INK}
+                strokeWidth={DETAIL}
+                strokeLinejoin="round"
+              />
+            </g>
+          )}
+          <circle
+            className="ph-wdn-mote ph-glow"
+            cx={75.5}
+            cy={49.5}
+            r={5}
+            fill={g.url("mote")}
+          />
+          <g className="ph-wdn-mote">
+            <path
+              d={leafD(1.6)}
+              transform={place(73.5, 51, -46)}
+              fill="#c9f59b"
+            />
+          </g>
         </g>
+        {closeUp && (
+          <>
+            {/* the fingers curling up over the palm */}
+            <g style={{ opacity: GRASP_CURL }}>
+              <path
+                d="M70 58.5 C70 55.2 72.6 54.2 75 54.6 C75.6 52.6 77.6 51.8 78.9 52.9 C79.8 53.7 79.4 55.2 78.3 55.6 C79.7 56 80.1 57.8 78.9 58.6 L76.6 58.6 C76 61 72 62 70 58.5 Z"
+                fill={g.url("skin")}
+                stroke={INK}
+                strokeWidth={DETAIL + 0.5}
+                strokeLinejoin="round"
+              />
+              <path d="M75.4 55.6 C76.4 55.2 77.4 55.4 78.2 55.8" stroke={INK} strokeWidth={DETAIL} fill="none" strokeLinecap="round" />
+            </g>
+            {/* shut */}
+            <g style={{ opacity: GRASP_FIST }}>
+              <path
+                d="M69.8 58.6 C69.4 55.4 71.8 53.6 74.6 53.7 C77.2 53.8 79.3 55.3 79.3 57.6 C79.3 60 77.2 61.6 74.4 61.6 C72.2 61.6 70.1 60.6 69.8 58.6 Z"
+                fill={g.url("skin")}
+                stroke={INK}
+                strokeWidth={DETAIL + 0.5}
+                strokeLinejoin="round"
+              />
+              {/* knuckles, and the thumb laid across them */}
+              <path d="M76.9 54.4 C77.6 55.5 77.7 56.6 77.2 57.6 M78.8 56 C79.3 57 79.1 58.2 78.3 59" stroke={INK} strokeWidth={DETAIL} fill="none" strokeLinecap="round" />
+              <path d="M71.6 57.6 C73.4 56.8 75.6 57 77.4 58.4" stroke={INK} strokeWidth={DETAIL + 0.2} fill="none" strokeLinecap="round" />
+            </g>
+          </>
+        )}
       </g>
     </HeroFrame>
   );

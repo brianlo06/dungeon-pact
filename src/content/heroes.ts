@@ -100,6 +100,8 @@ export const heroes: HeroDef[] = [
     speed: 4,
     resource: "Resolve",
     maxResource: 6,
+    // Earned by standing in the way: being hit, blocking, and taking hits meant for others.
+    chargeAffinity: { intercept: 2, hurt: 1.4, blocked: 1.5, shield: 1.3 },
     abilities: [
       a("bash", "Shieldbreaker", "Strike for 15. Gain 1 Resolve.", "enemy", [
         { kind: "damage", amount: 15 },
@@ -148,6 +150,8 @@ export const heroes: HeroDef[] = [
     speed: 5,
     resource: "Mana",
     maxResource: 8,
+    // Earned by setting up and setting off elemental reactions.
+    chargeAffinity: { reaction: 2, interrupt: 1.5, setup: 1.5 },
     abilities: [
       a("spark", "Arcane spark", "Strike for 15. Recover 1 Mana.", "enemy", [
         { kind: "damage", amount: 15, damageType: "arcane" },
@@ -204,6 +208,8 @@ export const heroes: HeroDef[] = [
     speed: 8,
     resource: "Focus",
     maxResource: 6,
+    // Earned by marking a quarry and cashing the mark in.
+    chargeAffinity: { reaction: 2, setup: 1.5 },
     abilities: [
       a(
         "arrow",
@@ -257,6 +263,8 @@ export const heroes: HeroDef[] = [
     speed: 6,
     resource: "Growth",
     maxResource: 7,
+    // Earned by healing that lands and afflictions cleared.
+    chargeAffinity: { heal: 2.2, cleanse: 2, setup: 1.5 },
     abilities: [
       a("thorn", "Thorn lash", "Deal 14. Gain 1 Growth.", "enemy", [
         { kind: "damage", amount: 14 },
@@ -321,6 +329,8 @@ export const heroes: HeroDef[] = [
     speed: 5,
     resource: "Credit",
     maxResource: 6,
+    // Earned by moving the treasury and stripping what enemies hide behind.
+    chargeAffinity: { trade: 2, cleanse: 2, shield: 1.3 },
     abilities: [
       a("appraise", "Appraise", "Deal 14 and earn 10 team gold.", "enemy", [
         { kind: "damage", amount: 14 },
@@ -373,6 +383,8 @@ export const heroes: HeroDef[] = [
     speed: 7,
     resource: "Verse",
     maxResource: 7,
+    // Earned by lifting the rest of the party.
+    chargeAffinity: { empower: 2, shield: 1.4, cleanse: 1.5 },
     abilities: [
       a("rally", "Rallying note", "Deal 15. Gain 1 Verse.", "enemy", [
         { kind: "damage", amount: 15 },
@@ -427,6 +439,8 @@ export const heroes: HeroDef[] = [
     speed: 6,
     resource: "Fury",
     maxResource: 6,
+    // Earned in blood, spent or taken.
+    chargeAffinity: { sacrifice: 2, hurt: 1.8 },
     abilities: [
       a("rend", "Rend", "Deal 18. Gain 2 Fury.", "enemy", [
         { kind: "damage", amount: 18 },
@@ -478,6 +492,8 @@ export const heroes: HeroDef[] = [
     speed: 7,
     resource: "Sway",
     maxResource: 7,
+    // Earned when enemies turn on each other.
+    chargeAffinity: { control: 2.5, setup: 2 },
     abilities: [
       a("whisper", "Ill whisper", "Deal 13. Gain 1 Sway.", "enemy", [
         { kind: "damage", amount: 13, damageType: "arcane" },

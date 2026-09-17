@@ -1,0 +1,507 @@
+/* ---------------------------------------------------------- False Footing -- */
+/*
+ * Everything the Pathfinder's Ultimate draws. Progress arrives as the film's
+ * variables (`--p`, `--pe`, `--pi`, `--f`) and a few set by frame functions
+ * (`--d` per print, `--cord`, `--taut`, `--rp`); nothing animates by itself,
+ * nothing filters, and softness is gradients.
+ *
+ * Palette: peat mud #45372a, hollow #1d150f, a squeezed lip catching the
+ * smoky sky #8a775b, ink #0f0c09, and one warm colour, amber #f2a93b, for
+ * what the Pathfinder knows.
+ */
+
+.cine-vfx > .ff-world {
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  overflow: visible;
+  transform: none;
+}
+
+/* ---- a print ---- */
+.ff-print {
+  overflow: visible;
+  --r: clamp(0, calc((var(--p) - var(--ra)) / (var(--rb) - var(--ra))), 1);
+}
+.ff-dent-lip {
+  fill: #a08a68;
+}
+.ff-dent-hollow {
+  fill: #1d150f;
+}
+.ff-dent-floor {
+  fill: #34281d;
+}
+.ff-dent-warm {
+  fill: #f2a93b;
+  opacity: calc(var(--r, 0) * 0.55);
+}
+.ff-dent-claw {
+  fill: none;
+  stroke: #1d150f;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+.ff-dent-read {
+  fill: none;
+  stroke: #f2a93b;
+  stroke-width: 3.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: calc(1 - var(--r, 0));
+  opacity: min(1, calc(var(--r, 0) * 6));
+}
+.ff-dent-read-claw {
+  stroke-width: 4;
+}
+.ff-crumbs circle {
+  fill: #6f5d47;
+  --k: clamp(0, calc((var(--p) - var(--d)) * 3), 1);
+  transform: translateY(calc(var(--dy) * var(--k)));
+  opacity: calc(1 - var(--k) * 0.9);
+}
+
+/* ---- the trail, from above ---- */
+.ff-trail .ff-step {
+  --r: clamp(0, calc((var(--p) - var(--d)) * 7), 1);
+}
+.ff-trail .ff-trail-one:not([data-primary]) .ff-dent-read {
+  stroke-width: 2.4;
+}
+.ff-trail .ff-trail-one:not([data-primary]) .ff-dent-warm {
+  opacity: calc(var(--r, 0) * 0.3);
+}
+.ff-next {
+  --r: clamp(0, calc((var(--p) - var(--d)) * 6), 1);
+  --r2: clamp(0, calc((var(--p) - var(--d) - 0.12) * 5), 1);
+}
+.ff-ghost-line {
+  fill: none;
+  stroke: #f2a93b;
+  stroke-width: 5.5;
+  stroke-dasharray: 7 6;
+  stroke-linecap: round;
+  opacity: var(--r);
+}
+.ff-trail-one:not([data-primary]) .ff-ghost-line {
+  opacity: calc(var(--r) * 0.7);
+}
+.ff-next-loop {
+  opacity: var(--r2);
+}
+.ff-loop-under {
+  fill: none;
+  stroke: #140f0b;
+  stroke-width: 12;
+  opacity: 0.45;
+}
+.ff-loop-cord {
+  fill: none;
+  stroke: #f2a93b;
+  stroke-width: 5;
+  stroke-dasharray: 16 14;
+  stroke-linecap: round;
+}
+.ff-loop-knot {
+  fill: #f2a93b;
+  stroke: #0f0c09;
+  stroke-width: 2;
+}
+.ff-trail .ff-cord-shadow,
+.ff-trail .ff-cord-line,
+.ff-trail .ff-cord-glint {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: calc(-1 + var(--cord, 0));
+}
+
+/* ---- a cord, wherever it runs ---- */
+.ff-cord-shadow {
+  fill: none;
+  stroke: #0f0b08;
+  stroke-width: calc(7px * var(--w, 1));
+  stroke-linecap: round;
+  opacity: 0.45;
+}
+.ff-cord-line {
+  fill: none;
+  stroke: #2b1d12;
+  stroke-width: calc(6px * var(--w, 1));
+  stroke-linecap: round;
+}
+.ff-cord-glint {
+  fill: none;
+  stroke: #f2a93b;
+  stroke-width: calc(2.6px * var(--w, 1));
+  stroke-linecap: round;
+}
+.ff-cord .ff-cord-shadow {
+  stroke-width: calc(9px * var(--cw, 1));
+  opacity: calc(0.45 * (1 - var(--taut, 0)));
+}
+.ff-cord .ff-cord-line {
+  stroke-width: calc(7px * var(--cw, 1));
+}
+.ff-cord .ff-cord-glint {
+  stroke: #ffd48a;
+  stroke-width: calc((2.6px + var(--taut, 0) * 1.6px) * var(--cw, 1));
+}
+.ff-rip ellipse {
+  fill: #55442f;
+  stroke: #0f0c09;
+  stroke-width: 3;
+  --k: clamp(0, calc((var(--rp, 0) - var(--d)) * 4), 1);
+  transform: translate(calc(var(--dx) * var(--k)), calc(var(--dy) * var(--k) + var(--k) * var(--k) * 70px));
+  opacity: calc(min(1, var(--k) * 12) * (1 - var(--k)));
+}
+
+/* ---- the noose ---- */
+.ff-loop {
+  width: 320px;
+  height: 240px;
+  overflow: visible;
+}
+.ff-loop-shadow {
+  fill: none;
+  stroke: #140f0b;
+  stroke-width: 16;
+  opacity: 0.4;
+}
+.ff-loop-rope {
+  fill: none;
+  stroke: #2b1d12;
+  stroke-width: 10;
+}
+.ff-loop-glow {
+  fill: none;
+  stroke: #f2a93b;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+}
+.ff-loop-tie {
+  fill: #f2a93b;
+  stroke: #0f0c09;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.ff-loop[data-mode="hidden"] .ff-loop-glow {
+  opacity: 0.8;
+  stroke-width: 3;
+  stroke-dasharray: 0.12 0.88;
+  stroke-dashoffset: calc(var(--p) * -0.7);
+}
+.ff-loop[data-mode="hidden"] .ff-loop-rope {
+  opacity: 0.35;
+}
+.ff-loop[data-mode="hidden"] .ff-loop-shadow {
+  opacity: 0.2;
+}
+.ff-loop-mud ellipse {
+  fill: #3a2d21;
+  opacity: 0.85;
+}
+.cine-vfx > .ff-loop[data-mode="cinch"] {
+  transform: translate(-50%, -50%) translateY(calc(var(--pe) * -30px)) scale(calc(var(--s) * (1.3 - var(--pe) * 0.75)), calc(var(--s) * (1.3 - var(--pe) * 0.5)));
+}
+.ff-loop[data-mode="cinch"] .ff-loop-rope,
+.ff-loop[data-mode="held"] .ff-loop-rope {
+  stroke-width: 24;
+}
+.ff-loop[data-mode="cinch"] .ff-loop-glow,
+.ff-loop[data-mode="held"] .ff-loop-glow {
+  stroke-width: 11;
+}
+.ff-loop[data-mode="cinch"] .ff-loop-shadow,
+.ff-loop[data-mode="held"] .ff-loop-shadow {
+  display: none;
+}
+.cine-vfx > .ff-loop[data-mode="held"] {
+  transform: translate(-50%, -50%) translateY(-30px) scale(calc(var(--s) * 0.55), calc(var(--s) * 0.8));
+}
+
+/* ---- the bite ---- */
+.ff-burst {
+  width: 0;
+  height: 0;
+}
+.ff-burst-art {
+  position: absolute;
+  left: -280px;
+  top: -300px;
+  width: 560px;
+  height: 340px;
+  overflow: visible;
+  transform-origin: 280px 300px;
+  transform: scale(calc(0.85 + var(--pe) * 0.4));
+  opacity: calc(1 - clamp(0, calc((var(--p) - 0.5) * 2.2), 1));
+}
+.ff-burst-ground {
+  fill: #3a2d21;
+  stroke: #0f0c09;
+  stroke-width: 5;
+  opacity: calc(1 - clamp(0, calc(var(--p) * 2.5), 1));
+}
+.ff-burst-clump {
+  stroke: #0f0c09;
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+.ff-burst-frame {
+  display: none;
+}
+.ff-burst-art:not([data-k]) .ff-burst-frame[data-k="0"],
+.ff-burst-art[data-k="0"] .ff-burst-frame[data-k="0"],
+.ff-burst-art[data-k="1"] .ff-burst-frame[data-k="1"],
+.ff-burst-art[data-k="2"] .ff-burst-frame[data-k="2"] {
+  display: inline;
+}
+.ff-chunks i {
+  position: absolute;
+  left: 0;
+  top: -40px;
+  width: var(--w);
+  height: var(--h);
+  margin: calc(var(--h) * -0.5) 0 0 calc(var(--w) * -0.5);
+  background: #3d3024;
+  border: 3px solid #0f0c09;
+  border-radius: 45% 55% 40% 50%;
+  transform: translate(calc(var(--dx) * var(--pe)), calc(var(--dy) * var(--pe) + var(--p) * var(--p) * 300px)) rotate(calc(var(--r) * var(--p)));
+  opacity: calc(1 - var(--pi));
+}
+
+/* ---- midges ---- */
+.ff-midges {
+  position: absolute;
+  inset: 0;
+}
+.ff-midges i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(5px * var(--s));
+  height: calc(5px * var(--s));
+  margin: calc(-2.5px * var(--s));
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #120e0a 45%, rgba(18, 14, 10, 0));
+  box-shadow: calc(1px * var(--s)) calc(-1px * var(--s)) 0 0 rgba(216, 203, 166, 0.35);
+  opacity: var(--o);
+  will-change: transform;
+}
+
+/* ---- the bank the kid is low behind ---- */
+.ff-bank {
+  overflow: visible;
+}
+
+/* ---- mud flung across the lens ---- */
+.ff-spray {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.ff-spray[data-mode="in"] {
+  --edge: calc(-30% + var(--p) * 150%);
+}
+.ff-spray[data-mode="out"] {
+  --edge: calc(120% + var(--pe) * 150%);
+}
+/* The body of the flung mud, behind its clotted leading edge. */
+.ff-spray-sheet {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  width: 200%;
+  left: calc(var(--edge) - 200% - 8vw);
+  background: #2a2019;
+}
+.ff-spray b {
+  position: absolute;
+  left: var(--edge);
+  top: var(--y);
+  width: calc(26vh * var(--s));
+  height: calc(22vh * var(--s));
+  border-radius: 50%;
+  transform: translate(calc(-75% + var(--x)), -50%);
+  background: radial-gradient(closest-side, #2a2019 0%, #2a2019 70%, rgba(42, 32, 25, 0.5) 86%, rgba(42, 32, 25, 0));
+  opacity: var(--o);
+}
+/* Spatter flung ahead of it. */
+.ff-spray u {
+  position: absolute;
+  left: var(--edge);
+  top: var(--y);
+  width: calc(4vh * var(--s));
+  height: calc(3vh * var(--s));
+  border-radius: 50%;
+  background: #6f5d47;
+  box-shadow: inset -3px -3px 0 #2a2019;
+  transform: translate(var(--x), -50%);
+}
+
+/* ---- on the battlefield ---- */
+.ff-board {
+  width: 0;
+  height: 0;
+}
+.ff-board-art {
+  position: absolute;
+  width: calc(var(--unit-w) * 2.2);
+  height: calc(var(--unit-w) * 0.88);
+  left: calc(var(--unit-w) * -1.1);
+  top: calc(var(--unit-w) * -0.66);
+  overflow: visible;
+}
+.ff-board .ff-dent-lip {
+  fill: #9b8666;
+  opacity: 0.85;
+}
+.ff-board .ff-dent-hollow {
+  fill: #231a12;
+}
+.ff-board .ff-dent-floor {
+  fill: #3d3024;
+}
+.ff-board-step {
+  --r: clamp(0, calc((var(--p) - var(--d)) * 5), 1);
+  opacity: min(1, calc((var(--p) - var(--d) + 0.12) * 8));
+}
+.ff-board-puff {
+  fill: #6f5d47;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(calc(0.5 + var(--pe) * 1.1));
+  opacity: calc((1 - var(--pe)) * 0.9);
+}
+.ff-board-noose {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(calc(1.7 - min(1, calc(var(--p) * 4)) * 0.7));
+  opacity: min(1, calc(var(--p) * 10));
+}
+.ff-board-loop,
+.ff-board-loop-ink,
+.ff-board-loop-back {
+  fill: none;
+  stroke: #f2a93b;
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+.ff-board-loop-ink {
+  stroke: #1a120b;
+  stroke-width: 17;
+}
+.ff-board-loop-back {
+  stroke: #8a5d22;
+  stroke-width: 8;
+}
+.ff-board-knot,
+.ff-board-tag {
+  fill: #f2a93b;
+  stroke: #0f0c09;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.ff-board-tag {
+  fill: #ffe2a8;
+}
+.ff-board:not([data-primary]) .ff-board-tag,
+.ff-board:not([data-primary]) .ff-board-loop.b,
+.ff-board:not([data-primary]) .ff-board-loop-ink.b {
+  display: none;
+}
+.ff-board-stake-cord {
+  fill: none;
+  stroke: #f2a93b;
+  stroke-width: 5;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: calc(1 - min(1, calc(var(--p) * 3)));
+}
+.ff-board-stake {
+  fill: #5b4c3d;
+  stroke: #0f0c09;
+  stroke-width: 2.5;
+  opacity: min(1, calc((var(--p) - 0.25) * 8));
+}
+.ff-print .ff-ghost-line {
+  opacity: var(--r);
+  stroke-width: 3;
+  stroke-dasharray: 9 5;
+}
+
+/* ---- the reading hand (Ranger.tsx draws it in a close-up copy) ---- */
+.ult-cinematic[data-cinematic="false-footing"][data-shot="read"] .cine-actor[data-role="caster"] {
+  --ff-reach: 1;
+}
+
+/* ---- the snare, sprung round the legs ---- */
+.ff-hobble {
+  width: calc(var(--ah, 300px) * 0.62);
+  height: calc(var(--ah, 300px) * 0.24);
+  overflow: visible;
+}
+.cine-vfx > .ff-hobble {
+  transform: translate(-50%, -86%) rotate(var(--rot)) scale(var(--s));
+}
+.ff-hobble g {
+  --k: clamp(0, calc((var(--p) - var(--i) * 0.03) * 7), 1);
+}
+.ff-hobble-rope,
+.ff-hobble-back,
+.ff-hobble-glint {
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: calc(1 - var(--k));
+  vector-effect: non-scaling-stroke;
+}
+.ff-hobble-back {
+  stroke: #5a3b1d;
+  stroke-width: calc(var(--ah, 300px) * 0.022);
+}
+.ff-hobble-rope {
+  stroke: #1a120b;
+  stroke-width: calc(var(--ah, 300px) * 0.036);
+}
+.ff-hobble-glint {
+  stroke: #f2a93b;
+  stroke-width: calc(var(--ah, 300px) * 0.018);
+}
+.ff-hobble-knot,
+.ff-hobble-tag {
+  fill: #f2a93b;
+  stroke: #1a120b;
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+  opacity: min(1, calc((var(--p) - 0.1) * 12));
+}
+.ff-hobble-tag {
+  fill: #ffe2a8;
+}
+/* Leaving: the mud's trailing edge is its left, and it goes off the right. */
+.ff-spray[data-mode="out"] {
+  --edge: calc(-25% + var(--pe) * 160%);
+}
+.ff-spray[data-mode="out"] .ff-spray-sheet {
+  left: calc(var(--edge) + 8vw);
+}
+.ff-spray[data-mode="out"] b {
+  transform: translate(calc(-25% + var(--x)), -50%);
+}
+.ff-spray[data-mode="out"] u {
+  transform: translate(calc(-1 * var(--x)), -50%);
+}
+/* A small print warms its hollow instead of a floor it does not draw. */
+.ff-trail .ff-step .ff-dent-hollow {
+  fill: color-mix(in srgb, #f2a93b calc(var(--r, 0) * 45%), #1d150f);
+}
+
+/* ---- the glare behind the bite ---- */
+.cine-vfx > .ff-glare {
+  width: calc(var(--ah, 300px) * 2.6);
+  height: calc(var(--ah, 300px) * 1.9);
+  transform: translate(-50%, -62%) scale(var(--s));
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #f1e6c6 0%, #e2d4ac 45%, rgba(216, 203, 166, 0.55) 70%, rgba(216, 203, 166, 0));
+  opacity: calc(1 - var(--pe) * 0.85);
+}

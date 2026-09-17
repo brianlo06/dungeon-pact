@@ -1,6 +1,7 @@
 import { IllustratedHead, Neck, Tailoring } from "./Illustration";
 import { BaseWeapon, GearMount, GearArrow } from "../../equipment/Equipment";
-import { useRigParts } from "../../battle/useRigParts";
+import { useContext } from "react";
+import { CloseUpContext, useRigParts } from "../../battle/useRigParts";
 import {
   at,
   BODY,
@@ -42,6 +43,17 @@ const PARTS = [
   "stringTop",
   "stringBottom",
 ] as const;
+/** The face, moved only in an Ultimate close-up (see `CloseUpContext`). */
+const FACE_PARTS = ["brow", "eyes", "mouth"] as const;
+/**
+ * The drawing hand, opened or closed for an Ultimate close-up only: `open`
+ * (fingers spread, letting grit go to read the wind) and `thumb` (a fist with
+ * the thumb up at arm's length, which is how far away a thing is). Drawn
+ * over the mitten, shown only where a film sets `--ps-open` / `--ps-thumb`
+ * (Proof Shot), and scaled by its clips, so a round's Ranger and every other
+ * film keep the mitten.
+ */
+const HAND_PARTS = ["open", "thumb"] as const;
 
 /**
  * The youngest face in the party: a round cranium, full cheeks and a small
@@ -52,6 +64,14 @@ const FACE = "M45 14L56 16L63 23L64 33L58 43L50 46L39 40L34 29L37 19Z";
 
 export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
   const hold = useRigParts(unitId, animators, PARTS);
+  // The face only acts in a close-up; in a round it is never registered, so
+  // it costs the stage nothing.
+  const closeUp = useContext(CloseUpContext);
+  const face = useRigParts(unitId, closeUp ? animators : undefined, FACE_PARTS);
+  // Held (and so named as parts) only where they are driven, so a round's
+  // figure has no part the animator is not writing.
+  const facePart = (name: (typeof FACE_PARTS)[number]) => (closeUp ? face(name) : undefined);
+  const hand = useRigParts(unitId, closeUp ? animators : undefined, HAND_PARTS);
   const g = useShades("rng");
   const [bx, by] = BODY.shoulderBack;
   const [fx, fy] = BODY.shoulderFront;
@@ -244,25 +264,29 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
             strokeWidth={DETAIL}
             strokeLinejoin="round"
           />
-          {/* brows up: something moved out there */}
-          <path
-            d="M50.4 26.9 Q53 25.1 55.6 26.5 M57.9 26.2 Q60.3 24.8 62.5 26.3"
-            stroke="#7a2e18"
-            strokeWidth={1.4}
-            fill="none"
-            strokeLinecap="round"
-          />
-          {/*
+          <g ref={facePart("brow")} style={at(56.5, 26)}>
+            {/* brows up: something moved out there */}
+            <path
+              d="M50.4 26.9 Q53 25.1 55.6 26.5 M57.9 26.2 Q60.3 24.8 62.5 26.3"
+              stroke="#7a2e18"
+              strokeWidth={1.4}
+              fill="none"
+              strokeLinecap="round"
+            />
+          </g>
+          <g ref={facePart("eyes")} style={at(56.5, 30.5)}>
+            {/*
           Big dark eyes, wide open, with a lot of light in them. Not whites:
           at portrait size a white ring round each eye reads as spectacles,
           and spectacles are the Broker's.
         */}
-          <path
-            d="M50 30L55 29L55 32L51 32ZM58 29L63 28L62 31L59 31Z"
-            fill={INK}
-          />
-          <g fill="#fff6e2">
-            <path d="M52 30H54M60 29H62" stroke="#d9dec4" strokeWidth=".7" />
+            <path
+              d="M50 30L55 29L55 32L51 32ZM58 29L63 28L62 31L59 31Z"
+              fill={INK}
+            />
+            <g fill="#fff6e2">
+              <path d="M52 30H54M60 29H62" stroke="#d9dec4" strokeWidth=".7" />
+            </g>
           </g>
           {/* a button nose, turned up, just past the cheek */}
           <path
@@ -273,14 +297,16 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          {/* lips parted, about to say so */}
-          <path
-            d="M55.4 39.3 Q58.4 42.4 61.2 38.8 Q58.2 39.9 55.4 39.3 Z"
-            fill="#7a2b2a"
-            stroke={INK}
-            strokeWidth={1}
-            strokeLinejoin="round"
-          />
+          <g ref={facePart("mouth")} style={at(58.3, 40)}>
+            {/* lips parted, about to say so */}
+            <path
+              d="M55.4 39.3 Q58.4 42.4 61.2 38.8 Q58.2 39.9 55.4 39.3 Z"
+              fill="#7a2b2a"
+              stroke={INK}
+              strokeWidth={1}
+              strokeLinejoin="round"
+            />
+          </g>
           {/* the hood itself, framing the face */}
           <path
             d="M47 11.5 C57 11.5 65 18 65.5 27 C63 22 58 19.5 51 19.5 C43 19.5 39 24 38 33 C38 38 40 42 43 45 L35 45 C32 40 31 34 32 27 C33 17 38.5 11.5 47 11.5 Z"
@@ -414,7 +440,82 @@ export function Ranger({ unitId, animators, className, viewBox }: HeroProps) {
           fill={RAMP.leather[1]}
           stroke={INK}
           strokeWidth={LINE}
+          style={closeUp ? { opacity: "calc(1 - var(--ff-reach, 0))" } : undefined}
         />
+        {/*
+          A reading hand, for an Ultimate close-up only: a fingerless glove
+          with two fingers out, the way a tracker touches a print. Drawn only
+          in a close-up copy and shown only where a film sets `--ff-reach`
+          (False Footing's read), so a round's Ranger and every other film
+          keep the mitten above.
+        */}
+        {closeUp && (
+          <g className="rng-reach" style={{ opacity: "var(--ff-reach, 0)" }}>
+            <path
+              d="M38.6 62.6 C41 62.8 41.8 65.6 40.6 68.2 C40 69.4 38.8 69.3 38.5 68.2 C38.2 66.4 37.6 64.8 38.6 62.6 Z"
+              fill={RAMP.leather[1]}
+              stroke={INK}
+              strokeWidth={DETAIL}
+              strokeLinejoin="round"
+            />
+            <path
+              d="M33.6 67.4 C33.2 70.6 33.2 73.2 34.1 75 C34.8 76.2 36.2 75.9 36.3 74.6 C36.5 72.6 36.3 70.2 36.2 67.6 Z"
+              fill={RAMP.skinFair[1]}
+              stroke={INK}
+              strokeWidth={DETAIL}
+              strokeLinejoin="round"
+            />
+            <path
+              d="M36.4 67.8 C36.8 71 37.4 73.8 38.6 75.4 C39.4 76.4 40.8 75.8 40.6 74.5 C40.3 72.4 39.6 70 39 67.4 Z"
+              fill={RAMP.skinFair[0]}
+              stroke={INK}
+              strokeWidth={DETAIL}
+              strokeLinejoin="round"
+            />
+            <path
+              d="M30.6 61.2 C30.4 58.4 33.2 57.2 36 57.6 C39 58 40.2 60.4 39.8 63.4 C39.5 66.4 38.6 69.4 36.2 70 C33.6 70.6 31.4 69.6 31 67.6 C30.7 66 30.8 63.4 30.6 61.2 Z"
+              fill={RAMP.leather[1]}
+              stroke={INK}
+              strokeWidth={LINE}
+              strokeLinejoin="round"
+            />
+            <path d="M33.8 67.8 H39.4" stroke={RAMP.leather[2]} strokeWidth={1.2} strokeLinecap="round" />
+            <path d="M31.6 62 C32.4 60 34 59.2 35.6 59.4" stroke={RAMP.leather[0]} strokeWidth={1.1} fill="none" strokeLinecap="round" />
+            <path d="M30.4 67.8 C29.6 69.4 30.6 70.8 32.2 70.4 C33.2 70.1 33.4 69 33 68.2" fill={RAMP.leather[1]} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+          </g>
+        )}
+        {/*
+          The same fingerless glove, opened: the fingers spread and the thumb
+          out, for letting a pinch of grit go into the wind (Proof Shot's
+          read). Over the mitten; shown only where `--ps-open` is set, and
+          scaled up by the clip that opens it.
+        */}
+        {closeUp && (
+          <g ref={hand("open")} data-part="open" className="rng-open" style={{ ...at(35.5, 64), opacity: "var(--ps-open, 0)" }}>
+            <path d="M30.5 61 C30 58.5 33 57 36 57.5 C39.5 58 41 60 40.8 63 L40.5 67 C40.5 69 38 70 35.5 70 C32.5 70 30.5 68.5 30.6 66 Z" fill={RAMP.leather[1]} stroke={INK} strokeWidth={LINE} strokeLinejoin="round" />
+            <path d="M40.6 61 C42.5 59.6 44.8 61 44.6 63.2 C44.4 64.9 42.6 65.8 41 65.2 Z" fill={RAMP.skinFair[1]} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+            <path d="M31 69 L30 76.5 L32.2 76.8 L33.2 69.5 Z" fill={RAMP.skinFair[1]} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+            <path d="M33.6 70 L33.4 77.8 L35.6 77.9 L35.9 70 Z" fill={RAMP.skinFair[0]} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+            <path d="M36.4 70 L37 77.6 L39.1 77.2 L38.6 69.8 Z" fill={RAMP.skinFair[1]} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+            <path d="M39 69.2 L40.6 75.8 L42.5 75 L40.9 68.8 Z" fill={RAMP.skinFair[0]} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+            <path d="M31.4 69.3 H39.8" stroke={RAMP.leather[2]} strokeWidth={1.2} strokeLinecap="round" />
+            <path d="M31.6 61.2 C32.6 59.4 34.4 58.6 36.2 58.8" stroke={RAMP.leather[0]} strokeWidth={1.1} fill="none" strokeLinecap="round" />
+          </g>
+        )}
+        {/*
+          The glove closed to a fist with the thumb out along the front, so
+          with the arm held straight out the thumb stands up: ranging a far
+          thing against a thumbnail. Shown only where `--ps-thumb` is set.
+        */}
+        {closeUp && (
+          <g ref={hand("thumb")} data-part="thumb" className="rng-thumb" style={{ ...at(35.5, 64), opacity: "var(--ps-thumb, 0)" }}>
+            <path d="M30.6 60.4 C30.4 58.2 32.6 57 35.4 57.2 C38.6 57.4 40.4 59 40.4 61.6 L40.4 66.4 C40.4 68.8 38.2 70 35.4 70 C32.4 70 30.4 68.6 30.5 66.2 Z" fill={RAMP.leather[1]} stroke={INK} strokeWidth={LINE} strokeLinejoin="round" />
+            <path d="M33.8 62.6 V68.6 M36.8 62.4 V69" stroke={RAMP.leather[2]} strokeWidth={1.1} strokeLinecap="round" />
+            <path d="M40.2 60.6 C41.6 58.6 44.2 58.2 46.6 59.6 C48.6 60.8 48.4 63 46.8 63.6 C45.2 64.2 42.6 63.6 40.4 64.4 Z" fill={RAMP.skinFair[1]} stroke={INK} strokeWidth={DETAIL} strokeLinejoin="round" />
+            <path d="M44.6 60.2 C45.8 60.4 46.8 61.2 46.9 62.2" stroke={RAMP.skinFair[0]} strokeWidth={0.9} fill="none" strokeLinecap="round" />
+            <path d="M31.8 60.8 C32.8 59.2 34.4 58.4 36.2 58.6" stroke={RAMP.leather[0]} strokeWidth={1.1} fill="none" strokeLinecap="round" />
+          </g>
+        )}
       </g>
     </HeroFrame>
   );

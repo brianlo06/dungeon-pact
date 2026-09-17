@@ -1,0 +1,190 @@
+/* ------------------------------------------------------ Ultimate controls -- */
+/*
+ * Pact Charge and the Ultimate, on the combat screen. Quiet while it fills,
+ * insistent when it is full, and never more than a slip and a ring: the
+ * Ultimate is exciting, but the board is still the thing being read.
+ */
+
+/*
+ * The meter, at the end of the name plate's resource row: a small ring that
+ * fills clockwise. On a row, not a row of its own, because a plate is
+ * measured for collisions. It brightens near full and lights when ready;
+ * nothing on it animates, so it costs the planning phase nothing.
+ */
+.combatant-charge {
+  --charge: 0;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #d8a948 calc(var(--charge) * 360deg),
+    rgba(20, 16, 24, 0.85) 0
+  );
+  box-shadow: 0 0 0 1.5px #17151f;
+}
+.combatant-charge[data-near] {
+  box-shadow:
+    0 0 0 1.5px #17151f,
+    0 0 5px rgba(255, 207, 107, 0.7);
+}
+.combatant-charge[data-ready] {
+  background: #ffe39a;
+  box-shadow:
+    0 0 0 1.5px #17151f,
+    0 0 7px rgba(255, 207, 107, 0.95);
+}
+@keyframes ult-fill {
+  0% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(255, 207, 107, 0.9);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 10px rgba(255, 207, 107, 0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* The slip above the fan: the Ultimate, ready to call. */
+.ult-slip {
+  display: grid;
+  gap: 1px;
+  width: 100%;
+  min-width: 150px;
+  margin-bottom: 6px;
+  padding: 6px 10px 7px;
+  text-align: left;
+  color: #fff4d6;
+  background: linear-gradient(135deg, #3b2410, #1f140c 60%, #3b2410);
+  border: 2px solid #ffcf6b;
+  box-shadow:
+    0 3px #17151f,
+    0 0 18px rgba(255, 207, 107, 0.45),
+    inset 0 0 12px rgba(255, 207, 107, 0.25);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  /* The fan passes clicks through to the stage everywhere but its slips. */
+  pointer-events: auto;
+}
+button.ult-slip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 244, 214, 0.35) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  animation: ult-sheen 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ult-sheen {
+  60%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+.ult-slip b {
+  font-family: var(--pixel);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: #ffcf6b;
+}
+.ult-slip strong {
+  font-family: var(--pixel);
+  font-size: 13px;
+  line-height: 1.1;
+}
+.ult-slip small {
+  font-size: 10px;
+  opacity: 0.85;
+}
+/* The moment the meter fills: one ring out of the slip, once. */
+.ult-slip[data-fresh] {
+  animation: ult-fill 0.9s ease-out 1;
+}
+.ult-slip[data-aiming] {
+  border-color: #fff4d6;
+  background: linear-gradient(135deg, #5a3814, #2a1a0c);
+}
+.ult-slip[data-queued] {
+  cursor: default;
+  border-style: dashed;
+  box-shadow: 0 3px #17151f;
+  grid-template-columns: 1fr auto;
+}
+.ult-slip[data-queued] strong,
+.ult-slip[data-queued] small {
+  grid-column: 1;
+}
+.ult-slip[data-queued] button {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: 10px;
+  padding: 3px 7px;
+}
+.ult-slip:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.commit-bar[data-mode="ultimate"] {
+  border-color: #ffcf6b;
+  box-shadow: inset 0 0 0 1px rgba(255, 207, 107, 0.4);
+}
+.commit-bar[data-mode="ultimate"] .commit-what strong {
+  color: #ffcf6b;
+}
+.commit-bar[data-mode="ultimate"] .commit-what small:nth-of-type(1) {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ult-lock {
+  background: #ffcf6b;
+  color: #17151f;
+}
+
+/* The party HUD: a thin line under the resource. */
+.hud-charge i {
+  background: linear-gradient(90deg, #b8862e, #ffcf6b);
+}
+.hud-charge[data-ready] {
+  box-shadow: 0 0 8px rgba(255, 207, 107, 0.8);
+}
+.hud-charge[data-ready] i {
+  background: #fff1c2;
+}
+.hud-charge[data-queued] i {
+  background: repeating-linear-gradient(90deg, #fff1c2 0 4px, #ffcf6b 4px 8px);
+}
+
+/*
+ * Ready, on the battlefield: a low lantern glow at the hero's feet. A
+ * gradient on the shadow, not a filter on the figure, so it costs the stage
+ * nothing it does not already draw.
+ */
+.combatant[data-ult-ready] .combatant-shadow {
+  box-shadow: 0 0 22px 8px rgba(255, 207, 107, 0.45);
+  background: radial-gradient(closest-side, rgba(255, 207, 107, 0.55), transparent);
+}
+
+:root[data-motion="reduced"] .ult-slip,
+:root[data-motion="reduced"] button.ult-slip::after {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ult-slip,
+  button.ult-slip::after {
+    animation: none;
+  }
+}

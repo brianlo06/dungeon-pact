@@ -103,9 +103,14 @@ export class ScorePlayer {
     this.bus.gain.value = 0;
     this.bus.connect(ctx.destination);
   }
+  private volume = 0;
+  private active = false;
+  private ducked = 1;
   set(id: ScoreId, volume: number, active: boolean) {
+    this.volume = volume;
+    this.active = active;
     this.bus.gain.setTargetAtTime(
-      active ? volume : 0,
+      active ? volume * this.ducked : 0,
       this.ctx.currentTime,
       0.08,
     );
@@ -116,6 +121,19 @@ export class ScorePlayer {
     this.next = this.ctx.currentTime + 0.04;
     this.tick();
     this.timer = setInterval(() => this.tick(), 80);
+  }
+  /**
+   * Dip under an important moment and come back: an Ultimate's impact, its
+   * held breath. `level` multiplies the set volume; `seconds` is how long.
+   */
+  duck(level: number, seconds: number) {
+    const t = this.ctx.currentTime;
+    this.ducked = Math.max(0, Math.min(1, level));
+    const g = this.bus.gain;
+    g.cancelScheduledValues(t);
+    g.setTargetAtTime(this.active ? this.volume * this.ducked : 0, t, 0.03);
+    this.ducked = 1;
+    g.setTargetAtTime(this.active ? this.volume : 0, t + seconds, 0.18);
   }
   private tick() {
     // Returning from a suspended context must not schedule a backlog.

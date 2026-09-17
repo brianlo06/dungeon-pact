@@ -73,7 +73,16 @@ export type Effect =
    * carrying a working balance, not a hoard, and should not be taxed for it.
    */
   | { kind: "bank"; per: number; free: number }
-  | { kind: "conditional"; status: StatusId; effects: Effect[] };
+  | { kind: "conditional"; status: StatusId; effects: Effect[] }
+  /**
+   * Scopes, so one action can reach past its own target: every standing ally
+   * (optionally the actor, optionally the downed but not yet fallen), or every
+   * living enemy (optionally only the target's row, optionally not the target).
+   * Written for Ultimates, which are the purest version of a kit and rarely
+   * touch only one unit, but nothing about them is Ultimate-specific.
+   */
+  | { kind: "allies"; effects: Effect[]; self?: boolean; downed?: boolean }
+  | { kind: "enemies"; effects: Effect[]; row?: boolean; others?: boolean };
 export interface Ability {
   reach?: "melee" | "reach" | "ranged";
   /** How this action looks. Never how it resolves. */
@@ -102,7 +111,46 @@ export interface HeroDef {
   resource: string;
   maxResource: number;
   abilities: Ability[];
+  /**
+   * How this class earns Pact Charge beyond the shared baseline: multipliers
+   * on named charge sources. Content, so the engine never asks which hero
+   * this is. See `content/ultimates.ts`.
+   */
+  chargeAffinity?: Partial<Record<ChargeSource, number>>;
 }
+/** Everything that fills Pact Charge. The rates live in `content/ultimates.ts`. */
+export type ChargeSource =
+  /** Resolving any action at all. */
+  | "action"
+  /** Health taken off an enemy. */
+  | "damage"
+  /** Health lost to an enemy. */
+  | "hurt"
+  /** Health paid on purpose: a blood cost. */
+  | "sacrifice"
+  /** An enemy hit absorbed by Barrier. */
+  | "blocked"
+  /** Health restored to anyone. */
+  | "heal"
+  /** Barrier given to another hero. */
+  | "shield"
+  /** Taking an ally's hit through a guard link. */
+  | "intercept"
+  | "interrupt"
+  /** EXPLOIT or CHAIN SHOCK, set off by this hero. */
+  | "reaction"
+  /** An enemy this hero confused striking its own side. */
+  | "control"
+  /** Empowering another hero. */
+  | "empower"
+  /** An affliction stripped from an ally, or Barrier stripped from an enemy. */
+  | "cleanse"
+  /** Treasury moved by this hero's own action, per 10 gold. */
+  | "trade"
+  /** Marking, soaking or exposing an enemy for someone else. */
+  | "setup"
+  | "kill"
+  | "revive";
 export interface ItemDef {
   visual?: import("./equipment").EquipmentVisual;
   id: string;
@@ -159,6 +207,12 @@ export interface Player extends Unit {
   /** Worn items this hero has had reforged at a workbench, by item id. */
   reforged?: string[];
   resource: number;
+  /**
+   * Pact Charge, 0 to `ULTIMATE_MAX`. Always on that scale whatever the
+   * Ultimate costs, so an evolution changes the move and never the meter.
+   * Absent in saves written before Ultimates existed, which read as empty.
+   */
+  ultimateCharge?: number;
   items: string[];
   cooldowns: Record<string, number>;
   downedRounds: number;
@@ -238,6 +292,10 @@ export interface Plan {
   ability: string;
   target: string;
 }
+/** A queued Ultimate. It is an extra action: it never replaces the plan. */
+export interface UltimatePlan {
+  target: string;
+}
 export interface Auction {
   mode?: "ascending" | "descending";
   floor?: number;
@@ -265,7 +323,21 @@ export interface Auction {
  */
 export interface Beat {
   equipment?: import("./equipment").EquipmentCue[];
-  kind: "cast" | "damage" | "heal" | "block" | "combo" | "defeat" | "equipment";
+  kind:
+    | "cast"
+    | "damage"
+    | "heal"
+    | "block"
+    | "combo"
+    | "defeat"
+    | "equipment"
+    /** Barrier granted. Only an Ultimate reports it; ordinary replays never see one. */
+    | "ward";
+  /**
+   * On a `cast`: the Ultimate being performed, by content id. The client
+   * looks its cinematic up from content; nothing branches on the id itself.
+   */
+  ultimate?: string;
   actor?: string;
   target?: string;
   label?: string;
@@ -316,6 +388,13 @@ export interface RunState {
   /** Missing means legacy random formations; new rooms use authored v2 packs. */
   encounterVersion?: 2;
   combatVersion?: 2;
+  /**
+   * Missing means a room created before Ultimates: nobody earns Pact Charge
+   * and nobody may queue one, so an old save plays exactly as it did.
+   */
+  ultimateVersion?: 1;
+  /** Ultimates queued this round, by player. Hidden like plans. */
+  ultimates?: Record<string, UltimatePlan>;
   /** Battlefield revivals already bought this run; each one raises the price. */
   revivals?: number;
   schemaVersion: 1;
@@ -399,8 +478,11 @@ export type PublicAuction = Omit<Auction, "itemId" | "offered"> & {
 };
 export interface Snapshot extends Omit<
   RunState,
-  "seed" | "rng" | "auction" | "plans"
+  "seed" | "rng" | "auction" | "plans" | "ultimates"
 > {
+  /** Who has an Ultimate queued this round. Their targets stay private. */
+  ultimateQueued?: string[];
+  myUltimate?: UltimatePlan;
   seed?: string;
   auction: PublicAuction | null;
   locked: string[];

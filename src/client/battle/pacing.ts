@@ -58,7 +58,7 @@ const BANNER: Record<"combo" | "defeat", Span> = {
   combo: { natural: 760, floor: 480 },
   defeat: { natural: 620, floor: 480 },
 };
-const NATURAL = { damage: 420, heal: 420, block: 340 } as const;
+const NATURAL = { damage: 420, heal: 420, block: 340, ward: 340 } as const;
 
 export function spans(beats: Beat[], opts: PaceOptions = {}): Span[] {
   let struck = false;

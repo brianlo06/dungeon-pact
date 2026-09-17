@@ -13,6 +13,7 @@ import { items } from "../../content/items";
 import { hero as heroDef } from "../../content/heroes";
 import { resourceCap } from "../../content/evolutions";
 import { holdsWindup } from "../battle/hero-clips";
+import { ULTIMATE_MAX } from "../../content/ultimates";
 
 export type Impact = "damage" | "heal" | "block" | "combo" | "defeat" | null;
 
@@ -141,6 +142,11 @@ export function BattleUnit({
       data-down={down ? "" : undefined}
       data-phase={enemy?.phase === 2 ? "2" : undefined}
       data-you={you ? "" : undefined}
+      data-ult-ready={
+        player && !down && (player.ultimateCharge ?? 0) >= ULTIMATE_MAX
+          ? ""
+          : undefined
+      }
       data-marked={marked ? "" : undefined}
       style={
         {
@@ -280,6 +286,25 @@ export function BattleUnit({
               <i key={i} data-filled={i < player.resource || undefined} />
             ))}
             <em>{heroDef(player.heroId).resource}</em>
+            {/* Pact Charge rides the resource row, not a row of its own: a
+                plate is measured for collisions, and every row pushes. */}
+            {player.ultimateCharge !== undefined && (
+              <b
+                className="combatant-charge"
+                data-ready={player.ultimateCharge >= ULTIMATE_MAX || undefined}
+                data-near={
+                  (player.ultimateCharge < ULTIMATE_MAX &&
+                    player.ultimateCharge >= ULTIMATE_MAX * 0.75) ||
+                  undefined
+                }
+                title={`Pact Charge ${Math.floor(player.ultimateCharge)}/${ULTIMATE_MAX}`}
+                style={
+                  {
+                    "--charge": Math.min(1, player.ultimateCharge / ULTIMATE_MAX),
+                  } as React.CSSProperties
+                }
+              />
+            )}
           </span>
         )}
         {enemy?.phase === 2 && <span className="combatant-tag">ENRAGED</span>}

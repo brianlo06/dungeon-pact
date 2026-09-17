@@ -4,6 +4,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import type { Ability, Player } from "../../shared/model";
 import { hero, supplyFor } from "../../content/heroes";
@@ -46,6 +47,7 @@ export function ActionFan({
   mode,
   disabled,
   occupied,
+  top,
 }: {
   me: Player;
   place: Placement;
@@ -58,6 +60,8 @@ export function ActionFan({
   /** "ability" fans everything out; "target" collapses to the chosen slip. */
   mode: "ability" | "target";
   disabled: boolean;
+  /** Above the slips: the Ultimate, when there is one to call. */
+  top?: ReactNode;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const usable = options.filter((o) => !o.blocked);
@@ -128,7 +132,7 @@ export function ActionFan({
       cancelAnimationFrame(frame);
       watch?.disconnect();
     };
-  }, [place_, mode, options.length, place.x, place.y, occupied.length]);
+  }, [place_, mode, options.length, place.x, place.y, occupied.length, !!top]);
   const side = spot?.side ?? "right";
   const cols = mode === "target" ? 1 : (spot?.cols ?? 1);
   const rows = Math.max(1, Math.ceil(primary.length / cols));
@@ -208,6 +212,7 @@ export function ActionFan({
           } as React.CSSProperties
         }
       >
+        {top}
         <ul
           className="fan-slips"
           role="listbox"

@@ -12,6 +12,7 @@ import { statuses } from "../content/statuses";
 import { items } from "../content/items";
 import { enemies as definitions } from "../content/enemies";
 import { resourceCap } from "../content/evolutions";
+import { charge, resolvingUltimate } from "./charge";
 /** Mark + Precision bonus. Setting up an Exploit costs a whole action, so the
  * payoff has to beat simply attacking twice. */
 export const EXPLOIT = 20;
@@ -161,6 +162,7 @@ function hurt(
     barrier.stacks -= blocked;
     n -= blocked;
     target.statuses = target.statuses.filter((x) => x.stacks > 0);
+    if (blocked && source.id !== target.id) charge(s, target, "blocked", blocked);
     if (blocked)
       log(s, `${target.name} blocks ${blocked}.`, "info", {
         kind: "block",
@@ -173,6 +175,8 @@ function hurt(
   const actual = Math.min(target.hp, n);
   target.hp -= actual;
   if (isPlayer(source)) source.damage += actual;
+  if (isPlayer(source) && !isPlayer(target)) charge(s, source, "damage", actual);
+  if (isPlayer(target) && !isPlayer(source)) charge(s, target, "hurt", actual);
   log(s, `${source.name} → ${target.name}: ${actual} damage`, "damage", {
     kind: "damage",
     actor: source.id,
@@ -190,6 +194,9 @@ function hurt(
     if (isPlayer(target)) target.downedRounds = 3;
     else {
       if (isEnemy(target) && target.holding?.length) release(s, target);
+      // A container opened is a choice, not a kill.
+      if (isPlayer(source) && !definitions.find((d) => d.id === (target as Enemy).definition)?.object)
+        charge(s, source, "kill");
       if (isPlayer(source)) trigger(s, source, target, "onKill", depth + 1);
     }
   }
@@ -280,9 +287,25 @@ export function effects(
   for (const e of list) {
     // A reflected hit can defeat a multi-attacker between strikes.
     if (s.combatVersion === 2 && actor.hp <= 0) break;
+    if (e.kind === "allies" || e.kind === "enemies") {
+      const side = isPlayer(actor) === (e.kind === "allies") ? s.players : s.enemies;
+      const reached = side.filter((u) => {
+        if (u.id === actor.id) return e.kind === "allies" && !!e.self;
+        if (isPlayer(u))
+          return !u.fallen && (u.hp > 0 || (e.kind === "allies" && !!e.downed));
+        if (u.hp <= 0) return false;
+        if (e.kind === "enemies" && e.others && u.id === target.id) return false;
+        if (e.kind === "enemies" && e.row && u.row !== target.row) return false;
+        return true;
+      });
+      for (const u of reached) effects(s, actor, u, e.effects, depth + 1);
+      continue;
+    }
     if (e.kind === "removeStatus") {
       const removed = status(target, e.status);
       target.statuses = target.statuses.filter((st) => st.id !== e.status);
+      if (removed && isPlayer(actor) && isPlayer(target) !== (e.status === "barrier"))
+        charge(s, actor, "cleanse");
       if (removed)
         log(
           s,
@@ -300,6 +323,7 @@ export function effects(
       applyStatus(actor, "barrier", e.barrier, 1);
       applyStatus(target, "guarded", 1, 1);
       status(target, "guarded")!.sourceId = actor.id;
+      charge(s, actor, "shield", e.barrier);
       log(s, `${actor.name} will intercept ${target.name}’s next direct hit.`);
     }
     if (
@@ -309,6 +333,7 @@ export function effects(
       target.intent.ability.interruptible
     ) {
       applyStatus(target, "interrupted", 1, 1);
+      charge(s, actor, "interrupt");
       log(
         s,
         `${actor.name} breaks ${target.name}’s ${target.intent.ability.name}!`,
@@ -322,8 +347,10 @@ export function effects(
       );
     }
     if (e.kind === "gold") {
-      if (e.amount < 0) spend(s, Math.min(s.gold, -e.amount));
+      const moved = e.amount < 0 ? Math.min(s.gold, -e.amount) : e.amount;
+      if (e.amount < 0) spend(s, moved);
       else gain(s, e.amount);
+      charge(s, actor, "trade", moved / 10);
     }
     // Equipment is taken, not destroyed. The party can have it back, but only
     // by spending actions on a container instead of on the boss.
@@ -397,6 +424,38 @@ export function effects(
       if (recipient.hp > 0) {
         applyStatus(recipient, e.status, e.stacks, e.duration);
         log(s, `${recipient.name}: ${statuses[e.status].name} +${e.stacks}`);
+        if (isPlayer(actor)) {
+          const ally = isPlayer(recipient);
+          // Who set a confusion, so its turned blow can be credited to them.
+          if (e.status === "confused" && !ally)
+            status(recipient, "confused")!.sourceId = actor.id;
+          if (ally && recipient.id !== actor.id && e.status === "barrier")
+            charge(s, actor, "shield", e.stacks);
+          if (ally && recipient.id !== actor.id && e.status === "empowered")
+            charge(s, actor, "empower");
+          if (
+            !ally &&
+            ["marked", "wet", "vulnerable", "weak", "burn", "poison"].includes(
+              e.status,
+            )
+          )
+            charge(s, actor, "setup");
+        }
+        // An Ultimate reports the Barrier it raises, so its cinematic can
+        // show it landing. Ordinary actions never do: a beat is time in a
+        // replay, and the round's pacing was measured without these.
+        if (
+          e.status === "barrier" &&
+          isPlayer(recipient) &&
+          resolvingUltimate() === actor.id
+        )
+          log(s, `${recipient.name} is warded.`, "info", {
+            kind: "ward",
+            actor: actor.id,
+            target: recipient.id,
+            amount: e.stacks,
+            hp: recipient.hp,
+          });
       }
     }
     if (e.kind === "conditional" && status(target, e.status))
@@ -408,9 +467,13 @@ export function effects(
       const healed = Math.min(patient.maxHp - patient.hp, e.amount);
       patient.hp += healed;
       if (isPlayer(actor)) actor.healing += healed;
+      if (isPlayer(patient)) charge(s, actor, "heal", healed);
       if (down && isPlayer(patient)) {
         patient.downedRounds = 0;
-        if (isPlayer(actor) && actor.id !== patient.id) actor.revives++;
+        if (isPlayer(actor) && actor.id !== patient.id) {
+          actor.revives++;
+          charge(s, actor, "revive");
+        }
         log(s, `${patient.name} returns to the pact!`);
       }
       log(s, `${actor.name} heals ${patient.name} for ${healed}.`, "heal", {
@@ -423,7 +486,9 @@ export function effects(
     }
     // A blood cost is paid flat: no power scaling, no armour, no combos.
     if (e.kind === "damage" && e.self) {
+      const before = actor.hp;
       hurt(s, actor, actor, e.amount, depth + 1);
+      charge(s, actor, "sacrifice", before - actor.hp);
       continue;
     }
     if (e.kind === "damage") {
@@ -443,6 +508,7 @@ export function effects(
         if (protector) {
           target.statuses = target.statuses.filter((st) => st.id !== "guarded");
           victim = protector;
+          charge(s, protector, "intercept");
           log(
             s,
             `${protector.name} intercepts the hit meant for ${target.name}!`,
@@ -466,6 +532,7 @@ export function effects(
       if (e.precision && status(victim, "marked")) {
         amount += EXPLOIT;
         victim.statuses = victim.statuses.filter((x) => x.id !== "marked");
+        charge(s, actor, "reaction");
         log(s, "EXPLOIT · Mark + Precision", "combo", {
           kind: "combo",
           label: "EXPLOIT",
@@ -476,6 +543,7 @@ export function effects(
       const chain = e.damageType === "lightning" && status(victim, "wet");
       if (chain) {
         victim.statuses = victim.statuses.filter((x) => x.id !== "wet");
+        charge(s, actor, "reaction");
         log(s, "CHAIN SHOCK · Wet + Lightning", "combo", {
           kind: "combo",
           label: "CHAIN SHOCK",
