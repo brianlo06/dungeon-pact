@@ -1,9 +1,20 @@
 import { DurableObject } from "cloudflare:workers";
 import { validateContent } from "../content/validate";
 validateContent();
-import { commandSchema, joinSchema, epoch } from "../shared/protocol";
+import {
+  commandSchema,
+  joinSchema,
+  leaveSchema,
+  epoch,
+} from "../shared/protocol";
 import type { RunState } from "../shared/model";
-import { createRun, addPlayer, reduce, snapshot } from "../engine/game";
+import {
+  createRun,
+  addPlayer,
+  removePlayer,
+  reduce,
+  snapshot,
+} from "../engine/game";
 type Session = { player: string; hash: string; connection: string };
 /**
  * Retention. A room is a scratch space, not an archive: it holds guest names
@@ -198,6 +209,40 @@ export class PactRoom extends DurableObject<Env> {
     this.publish(s);
     return { player: id, token: bearer, room: s.room };
   }
+  /**
+   * A player leaves the room. Before the run starts their seat is given back
+   * and their token stops working; after it, the hero stays with the party and
+   * only this device lets go. Either way their open sockets are closed with
+   * 4002, which the client treats as final rather than reconnecting.
+   */
+  async leave(bearer: string) {
+    const hash = await digest(bearer);
+    const session = this.ctx.storage.sql
+      .exec<Session>("SELECT * FROM sessions WHERE hash=?", hash)
+      .toArray()[0];
+    if (!session) return { left: false };
+    const s = this.read();
+    const removed = removePlayer(s, session.player);
+    if (removed)
+      this.ctx.storage.transactionSync(() => {
+        this.save(s);
+        this.ctx.storage.sql.exec(
+          "DELETE FROM sessions WHERE player=?",
+          session.player,
+        );
+        this.ctx.storage.sql.exec(
+          "DELETE FROM receipts WHERE player=?",
+          session.player,
+        );
+      });
+    for (const ws of this.ctx.getWebSockets(session.player))
+      ws.close(4002, "Left the pact");
+    if (removed) {
+      await this.touch();
+      this.publish(s);
+    }
+    return { left: removed };
+  }
   async fetch(request: Request) {
     if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket")
       return new Response("WebSocket required", { status: 426 });
@@ -374,7 +419,7 @@ export default {
         return Response.json({ room: code });
       }
       const match = url.pathname.match(
-        /^\/api\/rooms\/([A-Z2-9]{8})\/(join|socket)$/,
+        /^\/api\/rooms\/([A-Z2-9]{8})\/(join|leave|socket)$/,
       );
       if (!match) return new Response("Not found", { status: 404 });
       const room = env.ROOMS.getByName(match[1]);
@@ -394,6 +439,10 @@ export default {
           return new Response("Body too large", { status: 413 });
         }
       }
+      if (match[2] === "leave")
+        return Response.json(
+          await room.leave(leaveSchema.parse(JSON.parse(body)).token),
+        );
       const input = joinSchema.parse(JSON.parse(body));
       return Response.json(await room.join(input.name));
     } catch (e) {

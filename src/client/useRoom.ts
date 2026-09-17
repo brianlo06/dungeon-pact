@@ -14,6 +14,31 @@ export function savedCredentials(): Credentials | null {
     return null;
   }
 }
+/**
+ * The saved pact this page should resume, if any. An invite link to a
+ * different room wins over it: opening a friend's link must take you to their
+ * room, not back to one you made earlier.
+ */
+export function resumableCredentials(
+  search = location.search,
+): Credentials | null {
+  const saved = savedCredentials();
+  const linked = new URLSearchParams(search).get("room")?.toUpperCase();
+  return saved && linked && linked !== saved.room ? null : saved;
+}
+/**
+ * Tell the room this player is leaving. Before the run starts it gives their
+ * seat back; after, the hero stays with the party. Best effort: a room that
+ * has expired, or a network that is down, leaves nothing to undo.
+ */
+export function leaveRoom(credentials: Credentials) {
+  void fetch(`/api/rooms/${credentials.room}/leave`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: credentials.token }),
+    keepalive: true,
+  }).catch(() => {});
+}
 export function useRoom(credentials: Credentials | null) {
   const [state, setState] = useState<Snapshot | null>(null);
   const [connection, setConnection] = useState("offline");
@@ -78,6 +103,10 @@ export function useRoom(credentials: Credentials | null) {
         if (disposed) return;
         if (e.code === 4001) {
           setConnection("superseded");
+          return;
+        }
+        if (e.code === 4002) {
+          setConnection("left");
           return;
         }
         setConnection("reconnecting");

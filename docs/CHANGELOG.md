@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.16.1 leaving a pact — 2026-09-16
+
+A player who created a room could not leave it, and a friend who pressed
+Create by mistake could not get to the host's room.
+
+- **Leave pact** in the lobby's top bar takes you back to the hall and gives
+  your seat back, so the rest of the table can ready up and start without you.
+  After the run has started a hero stays with the party.
+- **An invite link wins over a saved room.** Opening a friend's link takes you
+  to the hall with their code filled in instead of back to your own lobby, and
+  joining it leaves the room you were in.
+- Leaving from one tab closes the pact in your other tabs instead of having
+  them reconnect.
+
 ## 0.16 picks at the table and chance events — 2026-09-13
 
 Two requests from the table: seeing who picked what meant scrolling to the
