@@ -59,3 +59,11 @@ Notary's accent and title, and no camera move, flash, shake or stop.
 - **Levels** (`scripts/intro-levels.ts notary`, peak / RMS over 3s): the press
   1.15 / 0.092; the bell 0.43; the seals 0.22; the motif 0.13; the wax drop
   0.08, the quietest thing in it.
+- **The walls were a thousand elements.** Drawn cell by cell the pigeonholes
+  put the film at 4,871 nodes, four times any other intro; they are one SVG
+  pattern now, dimmed towards the top by a gradient, and the film peaks at 756.
+- **Profile** (`scripts/profile-ultimate.ts`, 1920×1080 headless, measured back
+  to back with the Collector on a machine at load 13–25): peak 756 film nodes,
+  no filtered elements, and frame times in the same band as the Collector's on
+  the same run — headless software rendering under that load, so read them
+  only as a comparison.

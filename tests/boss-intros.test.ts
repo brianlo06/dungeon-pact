@@ -50,6 +50,10 @@ describe("boss intros", () => {
       expect(bosses.map((b) => b.id), `intro for ${id}`).toContain(id);
   });
 
+  it("has an authored intro for every boss in the game, so none falls back to the generic one", () => {
+    expect(Object.keys(bossIntros).sort()).toEqual(bosses.map((b) => b.id).sort());
+  });
+
   it("stays short enough to see again: authored intros 3–6 seconds, FAST well under", () => {
     for (const film of Object.values(bossIntros)) {
       const full = layout(film, "full", "boss").duration;

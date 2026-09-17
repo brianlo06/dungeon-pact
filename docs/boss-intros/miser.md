@@ -57,3 +57,8 @@ Miser's accent and title, and no camera move, flash, shake or stop.
 - **Levels**, rendered offline with `scripts/intro-levels.ts miser` (peak /
   RMS over 3s): the slam 1.20 / 0.087 (the Collector's 1.30); the motif 0.14;
   the stream 0.25; the rolling coin 0.04, the quietest thing in it.
+- **Profile** (`scripts/profile-ultimate.ts`, 1920×1080 headless, measured back
+  to back with the Collector on a machine at load 13–25): peak 1269 film nodes,
+  no filtered elements, and frame times in the same band as the Collector's on
+  the same run — headless software rendering under that load, so read them
+  only as a comparison.

@@ -52,3 +52,8 @@ Assayer's accent and title, and no camera move, flash, shake or stop.
 - **Levels** (`scripts/intro-levels.ts assayer`, peak / RMS over 3s): the pour
   1.15 / 0.099; the door 0.35; the crack 0.47; the motif 0.12; the gauge ticks
   0.02, the quietest thing in it.
+- **Profile** (`scripts/profile-ultimate.ts`, 1920×1080 headless, measured back
+  to back with the Collector on a machine at load 13–25): peak 1231 film nodes,
+  no filtered elements, and frame times in the same band as the Collector's on
+  the same run — headless software rendering under that load, so read them
+  only as a comparison.

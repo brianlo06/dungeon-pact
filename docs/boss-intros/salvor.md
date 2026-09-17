@@ -59,3 +59,8 @@ Salvor's accent and title, and no camera move, flash, shake or stop.
 - **Levels** (`scripts/intro-levels.ts salvor`, peak / RMS over 3s): the haul
   1.19 / 0.070 (first cut 1.73, brought down); the drip-and-groan call 0.42;
   the plates 0.28; the motif 0.16; the bubble 0.05, the quietest thing in it.
+- **Profile** (`scripts/profile-ultimate.ts`, 1920×1080 headless, measured back
+  to back with the Collector on a machine at load 13–25): peak 855 film nodes,
+  no filtered elements, and frame times in the same band as the Collector's on
+  the same run — headless software rendering under that load, so read them
+  only as a comparison.

@@ -1,5 +1,4 @@
 import type { ComponentType } from "react";
-import { seeded } from "../../cinematic/vfx";
 
 /**
  * The Sealing Room: a tall, narrow chamber of the Archive where everything
@@ -15,9 +14,6 @@ import { seeded } from "../../cinematic/vfx";
 const FLOOR = 800;
 
 function Room() {
-  const rand = seeded(83);
-  const cols = 44;
-  const rows = 24;
   return (
     <svg className="cine-bg-svg nbi-room" viewBox="-800 -450 3200 1800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <defs>
@@ -26,27 +22,34 @@ function Room() {
           <stop offset="0.7" stopColor="#241f28" />
           <stop offset="1" stopColor="#2c2530" />
         </linearGradient>
+        <pattern id="nbi-holes" x={-800} y={-450} width={146} height={104} patternUnits="userSpaceOnUse">
+          {[
+            [0, 0, true],
+            [73, 0, true],
+            [0, 52, true],
+            [73, 52, false],
+          ].map(([x, y, sealed], i) => (
+            <g key={i} transform={`translate(${x} ${y})`}>
+              <rect x={4} y={4} width={65} height={44} fill="#100d12" />
+              <circle cx={36} cy={30} r={13} fill="#cfc2a0" opacity={0.35} />
+              {sealed && <circle cx={36 + (i % 2 ? 2 : -2)} cy={30} r={7} fill="#c0473a" />}
+            </g>
+          ))}
+        </pattern>
+        <linearGradient id="nbi-fade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#07060a" stopOpacity={0.5} />
+          <stop offset="0.8" stopColor="#07060a" stopOpacity={0} />
+        </linearGradient>
         <radialGradient id="nbi-candle" cx="0.5" cy="0.8" r="0.6">
           <stop offset="0" stopColor="#ffcf7a" stopOpacity={0.35} />
           <stop offset="1" stopColor="#ffcf7a" stopOpacity={0} />
         </radialGradient>
       </defs>
       <rect x={-800} y={-450} width={3200} height={1800} fill="url(#nbi-wall)" />
-      {/* Pigeonholes: a grid of dark cells, a deed end and its seal in each. */}
-      {Array.from({ length: rows }, (_, r) =>
-        Array.from({ length: cols }, (_, k) => {
-          const x = -800 + k * 73;
-          const y = -450 + r * 52;
-          const lit = Math.max(0.5, Math.min(1, 0.35 + (y + 450) / 1600));
-          return (
-            <g key={`${r}-${k}`} opacity={lit}>
-              <rect x={x + 4} y={y + 4} width={65} height={44} fill="#100d12" />
-              <circle cx={x + 36} cy={y + 30} r={13} fill="#cfc2a0" opacity={0.35} />
-              {rand() > 0.08 && <circle cx={x + 36 + (rand() - 0.5) * 6} cy={y + 30} r={7} fill="#c0473a" />}
-            </g>
-          );
-        }),
-      )}
+      {/* Pigeonholes: a grid of dark cells, a deed end and its seal in each —
+          a pattern, not a thousand elements, dimmed towards the top. */}
+      <rect x={-800} y={-450} width={3200} height={1800} fill="url(#nbi-holes)" />
+      <rect x={-800} y={-450} width={3200} height={1800} fill="url(#nbi-fade)" />
       <rect x={-800} y={-450} width={3200} height={1800} fill="url(#nbi-candle)" />
       {/* The desk across the room, and its candles. */}
       <path d={`M-800 ${FLOOR - 170} H2400 V${FLOOR - 140} H-800 Z`} fill="#3a2a22" stroke="#0a0708" strokeWidth={8} />

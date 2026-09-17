@@ -112,19 +112,30 @@ test("skipping hands the fight back at once, with nothing of the film left", asy
 });
 
 test("FAST drops the hoard and is well under the full film", async ({ page }) => {
-  // Record every shot the film shows, from inside the page, until it ends.
+  // Record every shot the film shows, and its mode, from inside the page: on
+  // a loaded machine the whole FAST film can be over before `goto` returns.
   await page.addInitScript(() => {
-    const w = window as unknown as { shots: string[] };
+    const w = window as unknown as { shots: string[]; modes: string[] };
     w.shots = [];
+    w.modes = [];
     new MutationObserver(() => {
-      const shot = document.querySelector(".ult-cinematic")?.getAttribute("data-shot");
+      const film = document.querySelector(".ult-cinematic");
+      const shot = film?.getAttribute("data-shot");
+      const mode = film?.getAttribute("data-mode");
       if (shot && w.shots.at(-1) !== shot) w.shots.push(shot);
+      if (mode && !w.modes.includes(mode)) w.modes.push(mode);
     }).observe(document, { subtree: true, attributes: true, childList: true });
   });
   await page.goto(lab({ auto: 1, mode: "fast" }));
-  await expect(film(page)).toHaveAttribute("data-mode", "fast", { timeout: 30_000 });
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { shots: string[] }).shots.at(-1)), { timeout: 30_000 })
+    .toBe("return");
   await expect(film(page)).toHaveCount(0, { timeout: 30_000 });
-  const shots = await page.evaluate(() => (window as unknown as { shots: string[] }).shots);
+  const { shots, modes } = await page.evaluate(() => {
+    const w = window as unknown as { shots: string[]; modes: string[] };
+    return { shots: w.shots, modes: w.modes };
+  });
+  expect(modes).toEqual(["fast"]);
   expect(shots).not.toContain("hoard");
   expect(shots).toEqual(expect.arrayContaining(["shut", "quiet", "loom", "strike", "strongbox", "return"]));
 });
