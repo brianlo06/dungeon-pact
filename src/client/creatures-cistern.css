@@ -1,0 +1,84 @@
+/*
+ * The Cistern's creatures: corroded metal, pressure pipes, wet stone, brine
+ * and glass. These are the faction's colours, so every drawing inherits the
+ * palette rather than inventing one.
+ *
+ * Authored SVG cutout rigs: each part is a <g> the animator transforms, so
+ * every part group needs the view box as its transform box or a rotation would
+ * pivot around the group's own bounds instead of the joint the art was drawn
+ * around. Nothing in here animates — all motion comes from the rigs.
+ */
+.cistern-creature {
+  --brine: #3f7f78;
+  --brine-deep: #1b3b3a;
+  --rust: #7a5a3a;
+  --glass: #9fd8d0;
+  --iron: #4a5254;
+  width: 100%;
+  height: 100%;
+  display: block;
+  /* Piston, hook and jaw all reach past the box on a strike. */
+  overflow: visible;
+}
+.cistern-creature > g {
+  transform-box: view-box;
+}
+.cistern-creature .wet {
+  fill: var(--glass);
+  opacity: 0.85;
+}
+/* The same wetness as a drawn line: a lit top edge, a run of brine, a leak.
+ * Filled shapes use `.wet`; anything stroked uses this instead, because the
+ * class above would otherwise fill the stroke's own path. */
+.cistern-creature .cst-wet-line,
+.cistern-creature .cst-wet-line path {
+  fill: none;
+  stroke: var(--glass);
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+
+/* ------------------------------------------------------------ pressure maw */
+/* Eyeshine over the intake. Small and pale: the mouth is the read, not these. */
+.mw-eye {
+  fill: #cfe9e2;
+  opacity: 0.9;
+}
+
+/* -------------------------------------------------------------- sluice eel */
+/* The charge it gathers in the open jaw, and the eye behind it. */
+.eel-charge {
+  fill: none;
+  stroke: #dff6ef;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  opacity: 0.95;
+}
+.eel-spark {
+  fill: #eafbf6;
+  opacity: 0.45;
+}
+.eel-eye {
+  fill: #d8f0e8;
+  opacity: 0.95;
+}
+
+/* ------------------------------------------------------------ plate tender */
+/* The one glass port it has for a face. */
+.tnd-port {
+  fill: url(#tnd-port);
+}
+
+/* ---------------------------------------------------------------- dredger */
+/* The lamp behind the grating, the only warm thing on the machine. */
+.drd-lamp {
+  fill: #c8a25c;
+  opacity: 0.9;
+}
+
+/* -------------------------------------------------------- pressure engine */
+/* Exhaust standing over the stack. It swells with the stack, not on its own. */
+.eng-steam {
+  fill: #9fd8d0;
+  opacity: 0.3;
+}

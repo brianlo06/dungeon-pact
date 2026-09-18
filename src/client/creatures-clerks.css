@@ -1,0 +1,90 @@
+/*
+ * The Archive's clerks: wax, paper, ink, bindings and pale light. These are
+ * the faction's colours, so a drawing inherits the palette rather than
+ * inventing one.
+ *
+ * Nothing here animates and nothing here filters. Every clerk's motion comes
+ * from its rig (`battle/rigs-clerks.ts`); a CSS animation on a part would
+ * outrank the inline transform the animator writes, and a filter would fight
+ * the tone the stage puts on the sprite. What the classes below do is hold a
+ * colour — a lamp, a lens, a slit of light — that the drawing wants named.
+ * Every class is prefixed by its creature: scr-, snt-, wra-, idx-, stl-.
+ */
+.clerks-creature {
+  --paper: #d8cfb6;
+  --ink: #241f2e;
+  --wax: #a8352a;
+  --brass: #b89a6a;
+  --pale: #9fb6d8;
+}
+.clerks-creature .wax {
+  fill: var(--wax);
+}
+
+/* The authored cutouts fill their combatant box, and parts must overhang it:
+ * a raised stamp or a flared cloak leaves the view box mid-clip. */
+.scribe,
+.sentence-seal,
+.wraith,
+.indexer,
+.stalker {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+/* Parts are moved by the animator; they need their own transform box or the
+ * rotations would pivot around the group's own bounds rather than the joint. */
+.scribe > g,
+.sentence-seal > g,
+.wraith > g,
+.indexer > g,
+.stalker > g {
+  transform-box: view-box;
+}
+
+/* ---------------------------------------------------------- seal scribe -- */
+
+/* The lantern over its shoulder, and everything that lantern touches: the
+ * only light on the creature, so it is the palest value in the drawing. */
+.scr-lamp {
+  fill: #e9f1ff;
+}
+.scr-glow {
+  fill: var(--pale);
+  opacity: 0.16;
+}
+.scr-lit {
+  fill: #eef3fb;
+  opacity: 0.3;
+}
+.scr-eye {
+  fill: var(--pale);
+}
+
+/* -------------------------------------------------------- wax sentence -- */
+
+.snt-shine {
+  opacity: 0.5;
+}
+
+/* -------------------------------------------------------- ledger wraith -- */
+
+/* Two points in an empty hood. Cooler than the Scribe's eyes: the Scribe is
+ * lit from outside, the Wraith is lit from its own page. */
+.wra-eye {
+  fill: #cfe0f6;
+}
+
+/* -------------------------------------------------------------- indexer -- */
+
+.idx-lens {
+  fill: var(--pale);
+}
+
+/* ------------------------------------------------------- margin stalker -- */
+
+/* The slit in the strip it reads through — the only bright mark on it. */
+.stl-eye {
+  fill: #dfe9fa;
+}

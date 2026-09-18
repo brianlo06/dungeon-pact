@@ -90,6 +90,16 @@ describe("new world content", () => {
   });
   it("regional formations follow the authoritative chamber; legacy maps use original encounters", () => {
     const s = fixture();
+    // A room with factions meets each region's own creatures there.
+    for (const [node, faction] of [
+      ["2-0", "cistern"],
+      ["3-0", "archive"],
+    ]) {
+      s.currentNode = node;
+      for (let i = 0; i < 20; i++) expect(chooseEncounter(s).faction).toBe(faction);
+    }
+    // A room from before factions keeps the region's renamed foundry fights.
+    delete s.factionVersion;
     for (const [node, biome] of [
       ["2-0", "cistern"],
       ["3-0", "archive"],
@@ -99,6 +109,7 @@ describe("new world content", () => {
     }
     s.map.forEach((n) => delete n.biome);
     expect(chooseEncounter(s).biome).toBeUndefined();
+    expect(chooseEncounter(s).faction).toBeUndefined();
   });
   it("melee cannot target screened enemies; marked openings require the hero at front", () => {
     const s = fixture(),

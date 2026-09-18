@@ -66,10 +66,9 @@ export function bossFixture(options: FixtureOptions): RunState {
   const classes = options.heroes?.length
     ? options.heroes
     : ["vanguard", "arcanist", "ranger", "warden"];
+  const authored = encounters.find((e) => e.id === options.encounter);
   const formation = options.encounter
-    ? encounters.find((e) => e.id === options.encounter)?.formations[
-        options.size
-      ]
+    ? authored?.formations[options.size]
     : undefined;
   if (options.encounter && !formation)
     throw Error(`No encounter called ${options.encounter}`);
@@ -91,6 +90,9 @@ export function bossFixture(options: FixtureOptions): RunState {
       delete s.combatVersion;
       delete s.encounterVersion;
     }
+    // An encounter from before factions is staged in a room from before
+    // factions, so it draws and behaves exactly as it always did.
+    if (authored && !authored.faction) delete s.factionVersion;
     for (let i = 0; i < options.size; i++) {
       addPlayer(s, `preview-${i}`, names[i]);
       s = reduce(s, `preview-${i}`, { type: "hero", hero: classes[i] }, 0);
@@ -107,7 +109,7 @@ export function bossFixture(options: FixtureOptions): RunState {
       {
         id: "preview-vault",
         depth: 6,
-        biome: encounters.find((e) => e.id === options.encounter)?.biome,
+        biome: authored?.faction ?? authored?.biome,
         lane: 0,
         type: formation ? "combat" : "boss",
         name: formation ? "A Foundry Chamber" : "The Counting House",
@@ -121,7 +123,13 @@ export function bossFixture(options: FixtureOptions): RunState {
       },
     ];
     s.currentNode = "preview-vault";
-    enterCombat(s, !formation);
+    // A faction floor draws the encounter it has not fought yet; with every
+    // other one on the ledger, the requested one is the only draw.
+    if (authored?.faction)
+      s.fought = encounters
+        .filter((e) => e.faction === authored.faction && e.id !== authored.id)
+        .map((e) => e.id);
+    enterCombat(s, !formation, !!authored?.elite);
     if (formation) {
       // The encounter is picked by the run's RNG, so search seeds for it.
       if (s.enemies.map((e) => e.definition).join() !== formation.join())

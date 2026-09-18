@@ -14,7 +14,8 @@ import { enemies as definitions } from "../content/enemies";
 import { resourceCap } from "../content/evolutions";
 import { charge, resolvingUltimate } from "./charge";
 import { floorScale } from "./combat";
-import { hitDamage } from "../shared/damage";
+import { baseAmount, hitDamage } from "../shared/damage";
+import { emit } from "./telemetry";
 export { EXPLOIT, WEAK, EMPOWERED } from "../shared/damage";
 export function log(
   s: RunState,
@@ -114,9 +115,15 @@ function strongbox(s: RunState): Enemy {
  */
 export function spawn(
   s: RunState,
-  owner: Enemy,
+  actor: Enemy,
   e: Extract<Effect, { kind: "spawn" }>,
+  target?: Unit,
 ) {
+  // Spawned onto a target: an ally hosts it (and it answers to them), a hero
+  // has their name on it (and it still answers to the one who made it).
+  const onTarget = e.on === "target" && target && target.hp > 0 ? target : undefined;
+  const owner = onTarget && isEnemy(onTarget) ? onTarget : actor;
+  const bound = onTarget && isPlayer(onTarget) ? onTarget.id : undefined;
   if (
     s.enemies.some(
       (x) => x.owner === owner.id && x.definition === e.object && x.hp > 0,
@@ -126,7 +133,8 @@ export function spawn(
   const def = definitions.find((d) => d.id === e.object)!;
   const deeper = floorScale(s);
   const hp = Math.round(def.hp * s.players.length * 0.35 * deeper);
-  for (const row of e.rows) {
+  const rows = onTarget ? [onTarget.row] : e.rows;
+  for (const row of rows) {
     const made: Enemy = {
       id: `enemy-${def.id}-${s.round}-${s.enemies.length}`,
       definition: def.id,
@@ -141,16 +149,56 @@ export function spawn(
       intent: { ability: def.clock?.waiting ?? def.abilities[0], target: "" },
       phase: 1,
       owner: owner.id,
+      ...(bound ? { bound } : {}),
       ...(e.fuse ? { fuse: { at: s.round, rounds: e.fuse } } : {}),
     };
     s.enemies.push(made);
   }
+  emit(s, { kind: "spawned", actor, object: def.id });
   log(
     s,
-    `${owner.name} brings ${e.rows.length === 1 ? `${def.name}` : `${e.rows.length} × ${def.name}`} into the chamber.`,
+    onTarget
+      ? `${actor.name} sets ${def.name} on ${onTarget.name}.`
+      : `${actor.name} brings ${rows.length === 1 ? `${def.name}` : `${rows.length} × ${def.name}`} into the chamber.`,
     "combo",
-    { kind: "combo", label: def.name.toUpperCase(), actor: owner.id },
+    {
+      kind: "combo",
+      label: def.name.toUpperCase(),
+      actor: actor.id,
+      ...(onTarget ? { target: onTarget.id } : {}),
+    },
   );
+}
+/**
+ * An enemy fell: whatever it was keeping up goes with it. Statuses it tethered
+ * are lifted from everyone carrying them, and tethered objects it owns crumble
+ * without answering for it — they were not broken, their maker was.
+ */
+function releaseTethers(s: RunState, fallen: Enemy) {
+  for (const u of [...s.players, ...s.enemies]) {
+    const lifted = u.statuses.filter(
+      (st) => st.tethered && st.sourceId === fallen.id,
+    );
+    if (!lifted.length) continue;
+    u.statuses = u.statuses.filter((st) => !lifted.includes(st));
+    log(
+      s,
+      `${fallen.name} falls: ${lifted.map((st) => statuses[st.id].name).join(", ")} on ${u.name} is lifted.`,
+      "combo",
+    );
+  }
+  for (const x of s.enemies) {
+    if (x.owner !== fallen.id || x.hp <= 0) continue;
+    if (!definitions.find((d) => d.id === x.definition)?.tethered) continue;
+    x.hp = 0;
+    x.spent = true;
+    emit(s, { kind: "defeated", actor: fallen, target: x });
+    log(s, `${x.name} crumbles without ${fallen.name}.`, "combo", {
+      kind: "defeat",
+      target: x.id,
+      hp: 0,
+    });
+  }
 }
 /**
  * A spawned object broke: it answers to its owner for it, and when it was the
@@ -250,6 +298,7 @@ function hurt(
   }
   const actual = Math.min(target.hp, n);
   target.hp -= actual;
+  if (actual) emit(s, { kind: "hit", actor: source, target, amount: actual });
   // What an enemy has taken this round, Barrier included: what cracks a move.
   if (isEnemy(target) && source.id !== target.id)
     target.taken = (target.taken ?? 0) + actual + soaked;
@@ -264,6 +313,9 @@ function hurt(
     hp: target.hp,
   });
   if (target.hp === 0) {
+    emit(s, { kind: "defeated", actor: source, target });
+    if (isEnemy(target) && target.owner && isPlayer(source))
+      emit(s, { kind: "broken", actor: source, target });
     log(
       s,
       `${target.name} is ${isPlayer(target) ? "downed" : "defeated"}.`,
@@ -274,6 +326,7 @@ function hurt(
     else {
       if (isEnemy(target) && target.holding?.length) release(s, target);
       if (isEnemy(target) && target.owner) answer(s, target, depth + 1);
+      if (isEnemy(target) && s.factionVersion === 1) releaseTethers(s, target);
       // A container opened is a choice, not a kill.
       if (isPlayer(source) && !definitions.find((d) => d.id === (target as Enemy).definition)?.object)
         charge(s, source, "kill");
@@ -413,6 +466,7 @@ export function effects(
       target.intent.ability.interruptible
     ) {
       applyStatus(target, "interrupted", 1, 1);
+      emit(s, { kind: "interrupted", actor, target });
       charge(s, actor, "interrupt");
       log(
         s,
@@ -428,6 +482,7 @@ export function effects(
     }
     if (e.kind === "gold") {
       const moved = e.amount < 0 ? Math.min(s.gold, -e.amount) : e.amount;
+      if (e.amount < 0 && isEnemy(actor)) emit(s, { kind: "gold", actor, amount: moved });
       if (e.amount < 0) spend(s, moved);
       else gain(s, e.amount);
       charge(s, actor, "trade", moved / 10);
@@ -501,7 +556,7 @@ export function effects(
     }
     // A boss can bring things into the fight that answer for it: the Notary's
     // seals. One batch at a time, so a pressing never lands on top of another.
-    if (e.kind === "spawn" && isEnemy(actor)) spawn(s, actor, e);
+    if (e.kind === "spawn" && isEnemy(actor)) spawn(s, actor, e, target);
     // Wealth left in the treasury is collateral the Miser can shield itself
     // with, so arriving rich is a decision and not simply a cushion.
     if (e.kind === "bank") {
@@ -522,11 +577,40 @@ export function effects(
         0,
         Math.min(resourceCap(actor), actor.resource + e.amount),
       );
-    if (e.kind === "move") target.row = e.row;
+    if (e.kind === "move") {
+      const mover = e.self ? actor : target;
+      const row =
+        e.row === "swap" ? (mover.row === "front" ? "back" : "front") : e.row;
+      // A hero pulled or pushed by the other side is a moment the party has to
+      // see happen; a hero's own step is not.
+      const forced = isEnemy(actor) && isPlayer(mover) && mover.row !== row;
+      if (isEnemy(actor) && mover.id !== actor.id && mover.row !== row)
+        emit(s, { kind: "moved", actor, target: mover });
+      if (mover.hp > 0 || !e.self) mover.row = row;
+      if (forced)
+        log(s, `${actor.name} drags ${mover.name} to the ${row} row.`, "combo", {
+          kind: "combo",
+          label: row === "front" ? "PULLED" : "PUSHED",
+          actor: actor.id,
+          target: mover.id,
+        });
+    }
     if (e.kind === "status") {
       const recipient = e.self ? actor : statusRecipient;
       if (recipient.hp > 0) {
         applyStatus(recipient, e.status, e.stacks, e.duration);
+        emit(s, { kind: "status", actor, target: recipient, status: e.status, stacks: e.stacks });
+        // Who put it there, so a delayed consequence can be credited to the
+        // creature that set it even after the status itself is gone.
+        if (isEnemy(actor) && isPlayer(recipient)) {
+          const held = status(recipient, e.status)!;
+          held.sourceId ??= actor.id;
+        }
+        if (e.tether) {
+          const held = status(recipient, e.status)!;
+          held.sourceId = actor.id;
+          held.tethered = true;
+        }
         log(s, `${recipient.name}: ${statuses[e.status].name} +${e.stacks}`);
         if (isPlayer(actor)) {
           const ally = isPlayer(recipient);
@@ -629,7 +713,7 @@ export function effects(
       statusRecipient = victim;
       // The same function the battlefield forecasts intents with.
       const exploit = !!e.precision && !!status(victim, "marked");
-      const amount = hitDamage(e.amount, actor, victim, {
+      const amount = hitDamage(baseAmount(e, actor), actor, victim, {
         pierce: e.pierce,
         precision: e.precision,
       });
@@ -684,7 +768,15 @@ export function scald(s: RunState, u: Unit, amount: number) {
 export function callLien(s: RunState, carrier: Unit, source: Unit, depth = 1) {
   const lien = status(carrier, "lien");
   if (!lien || carrier.hp <= 0) return;
+  const served = lien.sourceId ?? (isEnemy(source) ? source.id : undefined);
   carrier.statuses = carrier.statuses.filter((x) => x.id !== "lien");
+  emit(s, {
+    kind: "due",
+    unit: carrier,
+    what: "lien",
+    amount: lien.stacks,
+    source: served,
+  });
   log(s, `The lien on ${carrier.name} comes due: ${lien.stacks}!`, "combo", {
     kind: "combo",
     label: "LIEN CALLED",
@@ -693,10 +785,31 @@ export function callLien(s: RunState, carrier: Unit, source: Unit, depth = 1) {
   });
   hurt(s, source, carrier, lien.stacks, depth);
 }
+/**
+ * A ledger entry comes due: the pact pays its stacks in gold, and whatever the
+ * treasury cannot cover the carrier takes as damage, through nothing.
+ */
+export function callDebt(s: RunState, carrier: Unit, amount: number) {
+  const wrote = status(carrier, "debt")?.sourceId;
+  carrier.statuses = carrier.statuses.filter((x) => x.id !== "debt");
+  const paid = Math.min(s.gold, amount);
+  const short = amount - paid;
+  emit(s, { kind: "due", unit: carrier, what: "debt", amount, source: wrote });
+  log(
+    s,
+    `The debt on ${carrier.name} comes due: ${amount}.${short ? ` The treasury is ${short} short.` : ""}`,
+    "combo",
+    { kind: "combo", label: "DEBT DUE", target: carrier.id },
+  );
+  if (paid) spend(s, paid);
+  if (short && carrier.hp > 0) hurt(s, carrier, carrier, short, 5);
+}
 export function tickStatuses(s: RunState, u: Unit) {
   // A lien in its last round comes due before anything else ticks.
   const due = status(u, "lien");
   if (due && due.duration <= 1 && u.hp > 0) callLien(s, u, u, 5);
+  const owed = status(u, "debt");
+  if (owed && owed.duration <= 1 && u.hp > 0) callDebt(s, u, owed.stacks);
   if (u.hp > 0) {
     for (const st of [...u.statuses]) {
       if (st.id === "burn" || st.id === "poison") hurt(s, u, u, st.stacks, 5);

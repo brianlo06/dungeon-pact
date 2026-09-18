@@ -96,6 +96,20 @@ export const statuses: Record<
       "A debt served on you. It detonates for its stacks when it runs out — or at once if the other side lands a direct hit on you. Serve it back to hand it on.",
     max: 100,
   },
+  pressure: {
+    name: "Pressure",
+    icon: "◍",
+    description:
+      "Stored pressure. It builds each round towards a release, and the release hits harder for every stack.",
+    max: 4,
+  },
+  debt: {
+    name: "Debt",
+    icon: "¤",
+    description:
+      "A ledger entry. When it runs out the pact pays its stacks in gold, and the carrier takes whatever the treasury cannot cover as damage. Written off if the enemy that entered it falls first.",
+    max: 60,
+  },
   vulnerable: {
     name: "Vulnerable",
     icon: "◇",

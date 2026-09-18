@@ -6,6 +6,8 @@ import { ARCHIVE_RIGS } from "./rigs-archive";
 import { ASSAYER_RIGS } from "./rigs-assayer";
 import { SALVOR_RIGS } from "./rigs-salvor";
 import { BAILIFF_RIGS } from "./rigs-bailiff";
+import { CISTERN_RIGS } from "./rigs-cistern";
+import { CLERK_RIGS } from "./rigs-clerks";
 import { PARTY_RIGS } from "./rigs-party";
 import { ULTIMATE_RIGS } from "./rigs-ultimate";
 
@@ -839,6 +841,8 @@ const RIGS: Record<string, Rig> = {
   ...ASSAYER_RIGS,
   ...SALVOR_RIGS,
   ...BAILIFF_RIGS,
+  ...CISTERN_RIGS,
+  ...CLERK_RIGS,
 };
 
 // A boss's intro performances join its rig under `intro:` names, written

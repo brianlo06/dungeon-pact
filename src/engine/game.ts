@@ -47,6 +47,7 @@ export function createRun(room: string, seed: string): RunState {
     ultimateVersion: 1,
     bossVersion: 1,
     trainingVersion: 1,
+    factionVersion: 1,
     revivals: 0,
     schemaVersion: 1,
     contentVersion: 1,

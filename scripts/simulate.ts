@@ -14,6 +14,18 @@ import {
 } from "./policy";
 import { ultimate as ultimateDef } from "../src/content/ultimates";
 import { TUNING } from "../src/engine/combat";
+import { watcher, report } from "./telemetry";
+
+/** `--telemetry` records what each creature and encounter does. */
+let watching = false;
+export const setWatching = (on: boolean) => {
+  watching = on;
+};
+/** `--factions=off` plays rooms from before the faction creatures. */
+let factions = true;
+export const setFactions = (on: boolean) => {
+  factions = on;
+};
 
 /** `--bosses=legacy` plays the two-floor run from before boss pools, as a baseline. */
 let bossPools = true;
@@ -90,6 +102,9 @@ export function run(
   if (!ultimatesOn) delete s.ultimateVersion;
   // A room from before boss pools: two floors, the Collector then the Miser.
   if (!bossPools) delete s.bossVersion;
+  if (!factions) delete s.factionVersion;
+  const watch = watching ? watcher(roster.length) : null;
+  watch?.begin();
   let steps = 0;
   const bossesMet: string[] = [];
   let bossNode: string | null = null;
@@ -118,6 +133,7 @@ export function run(
     const meters = new Map(s.players.map((p) => [p.id, p.ultimateCharge ?? 0]));
     const seen = s.eventSeq;
     s = reduce(s, id, intent, steps * 1000);
+    watch?.step(s);
     const change = packed() - before;
     if (change > 0) suppliesBought += change;
     else suppliesUsed -= change;
@@ -251,6 +267,7 @@ export function run(
     if (s.gold < 0 || s.players.some((p) => p.hp < 0 || p.hp > p.maxHp))
       throw Error(`Invariant failed on ${seed}`);
   }
+  watch?.end(s);
   if (auctionEntry !== null) auctionSpend += s.spent - auctionEntry;
   if (s.phase !== "COMPLETE")
     throw Error(`Simulation exceeded action budget: ${seed}`);
@@ -438,6 +455,8 @@ if (process.argv[1]?.endsWith("simulate.ts")) {
       const kept = f.bosses.filter((b) => pool.includes(b));
       if (kept.length) f.bosses = kept;
     }
+  if (flag("factions") === "off") setFactions(false);
+  if (args.includes("--telemetry")) setWatching(true);
   const bosses = flag("bosses");
   if (bosses === "legacy") setBossPools(false);
   else if (bosses && bosses !== "pools") throw Error(`Unknown --bosses=${bosses}`);
@@ -513,6 +532,7 @@ if (process.argv[1]?.endsWith("simulate.ts")) {
       console.log("\neasiest compositions");
       table(ranked.slice(-6));
     }
+    if (watching) report();
     const invalid = rows.reduce((n, r) => n + r.invalidPlans, 0);
     if (invalid) console.log(`REJECTED PLANS: ${invalid} — policy bug`);
   }

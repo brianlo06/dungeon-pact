@@ -28,6 +28,8 @@ const statusId = z.enum([
   "heat",
   "encrusted",
   "lien",
+  "pressure",
+  "debt",
 ]);
 export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
   z.discriminatedUnion("kind", [
@@ -43,6 +45,9 @@ export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
       precision: z.boolean().optional(),
       self: z.boolean().optional(),
       pierce: z.boolean().optional(),
+      scale: z
+        .object({ status: statusId, per: z.number().int().min(0).max(100) })
+        .optional(),
     }),
     z.object({
       kind: z.literal("heal"),
@@ -55,12 +60,17 @@ export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
       stacks: z.number().int().positive().max(100),
       duration: z.number().int().positive().max(100),
       self: z.boolean().optional(),
+      tether: z.boolean().optional(),
     }),
     z.object({
       kind: z.literal("resource"),
       amount: z.number().int().min(-100).max(100),
     }),
-    z.object({ kind: z.literal("move"), row: z.enum(["front", "back"]) }),
+    z.object({
+      kind: z.literal("move"),
+      row: z.enum(["front", "back", "swap"]),
+      self: z.boolean().optional(),
+    }),
     z.object({
       kind: z.literal("gold"),
       amount: z.number().int().min(-10000).max(10000),
@@ -77,6 +87,7 @@ export const effectSchema: z.ZodType<Effect> = z.lazy(() =>
       object: z.string().min(1),
       rows: z.array(z.enum(["front", "back"])).min(1).max(4),
       fuse: z.number().int().positive().max(10).optional(),
+      on: z.enum(["actor", "target"]).optional(),
     }),
     z.object({
       kind: z.literal("conditional"),

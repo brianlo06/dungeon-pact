@@ -595,7 +595,9 @@
 /* Intentions ride the creature instead of floating in a detached card. */
 .combatant-intent {
   margin-bottom: 3px;
-  max-width: calc(var(--size) * 2.1);
+  /* Wide enough for a figure, an aim and a rider: the faction creatures say
+   * what they set up as well as what they hit. */
+  max-width: calc(var(--size) * 2.7);
 }
 .intent-chip {
   display: inline-flex;
@@ -664,6 +666,11 @@
 }
 .intent-chip b.intent-crack {
   color: #ff9a5a;
+}
+/* Why a creature chose this move: the state the party can change to stop it. */
+.intent-chip b.intent-why {
+  color: #8fe0ff;
+  text-transform: uppercase;
 }
 .intent-chip b.intent-stopped {
   color: #9fd6a0;
