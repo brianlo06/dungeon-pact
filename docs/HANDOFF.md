@@ -1,15 +1,22 @@
 # Handoff
 
-Latest expansion: see [PHASE1_EXPANSION.md](PHASE1_EXPANSION.md) for the 32-item equipment catalog, eight events, spirit aid, trading, provisions, team relics, descending lots, boss phase changes and onboarding. The inventory and completed-work lists below predate this expansion and the public deployment.
+Updated 2026-09-22 · `attack-choreography` at `5c6b7fd` · production Worker
+version `201a2f59`, deployed 2026-09-18.
 
-Updated 2026-09-12 · `attack-choreography`
-
-> **Ultimates** are on their own branch, `ultimates` (off `a8fb81e`), waiting
-> for the user's judgement of the two benchmark films before anything is
-> propagated. Everything about them — design, measurements, placeholders, the
-> estimate for the other 30 — is in [ULTIMATES.md](ULTIMATES.md). They change
-> boss numbers in new rooms (`BOSS_PRICING`); read that section before
-> measuring anything boss-related on a branch that includes them.
+> **Everything is merged and live.** Ultimates (all 32), three floors and six
+> bosses with cinematic intros, open training, damage on intent chips, and the
+> Cistern and Archive creatures all landed through PRs #7–#12 and are deployed.
+> There is no work-in-progress branch. Each feature is gated on a room flag —
+> `ultimateVersion`, `bossVersion`, `trainingVersion`, `factionVersion` — so a
+> room created before a deploy keeps the rules it started with, and **a change
+> is only visible in a room created after it ships**.
+>
+> Read [ENEMY_DESIGN.md](ENEMY_DESIGN.md) before adding a creature,
+> [ULTIMATES.md](ULTIMATES.md) before touching an Ultimate or a boss number
+> (`BOSS_PRICING`), [BOSSES.md](BOSSES.md) for the six bosses and the
+> difficulty tuning, and [BALANCE.md](BALANCE.md) for every measurement.
+> [PHASE1_EXPANSION.md](PHASE1_EXPANSION.md) covers the equipment catalog,
+> events, trading, provisions and team relics.
 
 ## Read this first: the playtest answers
 
@@ -64,23 +71,39 @@ A second round of feedback followed, and `CHANGELOG.md` 0.14 has the detail:
     were chosen from a brainstorm and built: toll gate, hazard chamber, shrine,
     workbench. `engine/chambers.ts`, and the workbench in `engine/shop.ts`.
 
-`CHANGELOG.md` 0.13 has the detail of the first round. What follows below was written before this
-branch and describes the state at `main`; read it for the reasoning that still
-holds, not for the inventory.
+`CHANGELOG.md` 0.13 and 0.14 have the detail of those rounds. Three rounds of
+work have shipped since: the Ultimates, the three-floor build with six bosses
+and their intros, and the enemy expansion's first wave. **None of that has been
+played by the user and their friends yet** — the next playtest is the most
+valuable thing anyone can do to this project.
 
-**Read this first, then `BALANCE.md`.** Everything below is current as of the
-last commit. Counts come from `validateContent()`, not memory.
+**Read this first, then [BALANCE.md](BALANCE.md).** Inventory counts come from
+`validateContent()`, not memory; balance numbers come from
+`scripts/simulate.ts`, never from recollection.
 
 ## Where the work lives
 
-The playtest answers and four earlier commits (equipment art, the choreography
-system, the expedition expansion, and biomes and music) are on
-`attack-choreography`, not yet merged. Everything before them is on `main`: the route, upgrade and healing work, then boss
-objectives, supplies, the reliability pass and the presentation and art pass,
-merged from `boss-objectives` in PR #1 with a merge commit so each commit's
-reasoning survives. The repository is a private GitHub repo,
-`brianlo06/dungeon-pact`. The old branches are kept but fully merged; start new
-work on a fresh branch off `main` and land it through a pull request.
+**`attack-choreography` is the working line, not `main`.** It is what
+production serves; `main` stopped at PR #4 and has not been updated since.
+Start new work on a branch off `origin/attack-choreography` and land it through
+a pull request into that branch. The repository is a private GitHub repo,
+`brianlo06/dungeon-pact`.
+
+What has landed there, newest first: #12 the Cistern and Archive creatures,
+#11 damage on intent chips, #10 open training, #9 three floors and six bosses
+with intros, #8 leaving a pact, #7 all 32 Ultimates, #6 lobby picks and chance
+events, #5 attack choreography. Every branch is merged with a merge commit, so
+each commit's reasoning survives.
+
+**Deploying** is `npm run build` then `npx wrangler deploy` from a clean
+worktree checked out at the merge commit (`/Users/brianlo/dungeon-pact-deploy`
+is kept for this, with `node_modules` symlinked). The user decides when to
+merge and when to deploy; do not do either without being asked.
+
+Work is done in git worktrees beside the main checkout, never in the main
+checkout itself, because other sessions are usually running there. Each browser
+suite needs its own dev server: pass `PW_PORT` so two checkouts cannot point at
+each other's server.
 
 Codex is working in the same tree on presentation. Its boss preview harness
 (`src/dev/`, `dev/bosses.html`, `docs/BOSS_PREVIEW.md`) is committed alongside
@@ -91,45 +114,94 @@ combat moved onto one battlefield; the objective now sits in the combat strip.
 
 ## What the game is now
 
-An 8-class cooperative roguelite over a 7-depth branching route. Guest lobby →
-hero choice → starting pact → route → chambers → boss → results.
+An 8-class cooperative roguelite over **three floors**, each a branching route
+of six chambers ending in its own boss. Guest lobby → hero choice → starting
+pact → floor → chambers → boss → the next floor down → results.
 
-Chambers: combat, elite, exchange, veiled lot, event, mentor, camp, boss. An
-exchange runs two equipment lots and closes with a consumables tray. Clearing
-a fight opens a branch upgrade for every hero. A mentor teaches one class path.
+Chambers: combat, elite, shop, veiled counter, event, mentor, camp, toll,
+hazard, shrine, workbench, boss. Clearing a fight opens a branch upgrade for
+every hero; a training ground teaches every hero in a party of three or four
+who has not yet taken a path.
 
-Both bosses fight for an objective and state it before the first round: the
-Collector seizes equipment into a breakable Strongbox, the Miser shields itself
-with treasury the party never spent.
+Each floor draws its boss from a pool of two, and each boss fights for a stated
+objective: the Collector seizes equipment into a breakable Strongbox, the
+Assayer pours a crucible that cracks under enough damage, the Miser shields
+itself with the treasury you never spent, the Salvor grows plates that harden
+unless broken soft, the Notary presses wax seals on a countdown, the Bailiff
+serves liens that come due. Every boss opens with a ~5.5s cinematic entrance
+(skippable, with a reduced-motion still).
 
-Content: 8 heroes, 24 class paths across 3 mentors, 48 ability branches, 12
-items and 5 supplies, 8 normal enemies, 2 bosses, 1 container, 2 elite traits,
-12 statuses, 3 events.
+Every hero has an Ultimate on a charge meter, each with its own authored film.
+
+Each region now fields its own creatures (`factionVersion`): the Foundry's
+eight, the Cistern's four plus the elite Pressure Engine, and the Archive's
+four. Enemies choose their intent from rules that read visible state, and the
+chip says what they will do, to whom, for how much, and why.
+
+Content, counted by `validateContent()` rather than memory: 8 heroes, 24 class
+paths across 3 mentors, 48 ability branches, 32 Ultimates, 32 items and 6
+supplies, 16 regular enemies (8 foundry, 4 cistern, 4 archive), 1 elite-only
+creature, 6 bosses, 5 objects, 2 elite traits, 17 statuses, 15 events, 26
+authored encounters (9 foundry, 9 cistern, 8 archive), 3 floors.
 
 Every combatant is now drawn: all eight heroes and every enemy are authored
 SVG cutout rigs with named moving parts. Only the auctioneer and the reward
 chest still come from the generated atlas. `ART_DIRECTION.md` has the direction
 for each figure and why the medium changed.
 
-Verified at the second playtest round (2026-09-12): 385 unit tests across 34
-files, the full browser suite at four resolutions (see the known failure under
-"What is worth doing next"), a production build, 14 real-WebSocket checks, and
-the run matrix at 10 seeds. Verified at the last commit on `main`:
-300 unit tests across 25 files, 493 browser checks across four resolutions (plus three informational frame-time checks
-that run only at 1920×1080), a production build, and 13 real-WebSocket checks
-against a local Worker — the thirteenth added after the room server was found
-throwing on every ordinary socket close, so the party was never told when
-someone left. Both boss fights have
-been driven in a browser many times over through the Battle Lab, which stages
-any fight by URL. **Supplies have not been driven in a browser** — buying one
-happens at an exchange, which the lab does not stage — only by the simulation
-and unit tests.
+Verified at `5c6b7fd`: **675 unit tests across 70 files**, a production build,
+and the browser suite — 1,732 checks across 48 spec files at four resolutions,
+including the faction spec (8 checks) and the boss-intro spec (7). Two browser
+failures are older than any of this work and still fail: see "known failures"
+below. The run matrix was measured at 8 seeds over every second composition
+(1,944 runs) per build compared.
+
+All six boss fights and every authored encounter have been driven in the Battle
+Lab, which stages any fight by URL (`dev/bosses.html?encounter=…` or
+`?boss=…`). **Supplies have still never been driven in a browser** — buying one
+happens at a shop, which the lab does not stage — only by simulation and unit
+tests. **Nor has any of the faction work been played by a human**; see below.
 
 ## What is worth doing next
 
-### 0. The playtest answers, continued
+### 1. Play wave 1, then decide whether the enemies scale
 
-- **The browser suite has two known failures, both older than this work.**
+The enemy expansion shipped one wave on purpose. Eight new creatures, one
+elite and sixteen formations are live; the next ~16 creatures are designed but
+deliberately unbuilt until a table says the new fights are better. The report
+with captures is at
+<https://claude.ai/artifact/HYPKoVjFTsJ2ToUije8SdP>; the questions to ask a
+party are in [ENEMY_DESIGN.md](ENEMY_DESIGN.md) ("Content process", step 4).
+
+Two things the simulation could not settle, both needing humans:
+
+- **The Margin Stalker is the bot's first kill 99% of the time** and almost
+  never survives to cash in the Mark it exists for. Ten Barrier on arrival and
+  a back-row start moved it from 0.7 to 1.2 rounds alive and no further. A
+  table's kill priority is less ruthless and less informed than the bot's.
+- **The Pressure Engine appears 5 times in 1,944 runs.** Elite chambers are
+  rare and the Cistern is one floor, so the elite creature is only verified in
+  the Battle Lab (`?encounter=pressure-engine`), not in the matrix.
+
+Also open from that wave: forced row changes snap rather than travel (the
+choreography layer never moves a unit between rows); early Cistern and Archive
+formations still borrow foundry support until each faction has a simple
+attacker and tank of its own; no new creature has voices; and the art is a
+first pass (the Eel reads shark-like up close, the Wax Sentence like a rosette,
+the Stalker merges into the dark Archive backdrop).
+
+### 2. The class spread is the live balance problem
+
+Measured with all 32 Ultimates and the current bosses, with against without:
+Warden **+23**, Vanguard +15, Reaver +9, Beguiler +9, Broker 0, Ranger −8,
+Herald −15, **Arcanist −18**. The Reaver — the outlier the note below was
+written about — was fixed and is now on the strong side; the Arcanist and the
+Herald took its place, and nobody has looked at why. Overall win rate is 73%
+(duos 69%), which is where it was aimed.
+
+### 3. Still open from the 2026-09-12 playtest round
+
+- **Known failures (still failing at `5c6b7fd`, all older than this work).**
   `boss-moves.spec.ts`, "the wind-up lands as the signature": the Collector's
   held wind-up drops to idle for a moment before its signature, at every
   resolution. `stage-ui.spec.ts`, "chips hold still": at 1280×720 and 1366×768
@@ -141,14 +213,14 @@ and unit tests.
   full parallel run and passes alone. **Read the summary line of a browser run, not its tail** — the
   failure list prints above the pass count, and three runs were misreported as
   green by reading only the last lines.
-- **The Reaver is the new class outlier.** Across two floors parties with a
-  Reaver win 84% against 95% without — an eleven-point hole, larger than the
-  Vanguard's and Warden's +9. Nobody has looked at why.
-- **Two floors are not harder than one was for larger parties.** Trios and
-  quartets win two floors at 94% and 91%, about what they won one floor at.
-  Losses concentrate at the floor-two boss, which is good pacing, but if a
-  group finds it easy, `FLOOR_SCALE` in `engine/combat.ts` is the knob — and
-  expect it to widen the duo gap (see the traps below).
+- ~~**The Reaver is the new class outlier.**~~ Answered: the Reaver was
+  rebalanced during the three-floor work and now sits at +9. The spread moved
+  to the Arcanist and the Herald — see §2.
+- ~~**Two floors are not harder than one was for larger parties.**~~
+  Superseded: there are three floors now, enemies hit ×1.3–1.4 in them
+  (`ENEMY_HIT`), and the matrix sits at 73% overall with trios at 74% and
+  quartets at 73%. `FLOOR_SCALE` is still the knob for making a floor deeper,
+  and still widens the duo gap.
 - **The four new chambers have not been driven by humans.** They are tested,
   simulated and rendered in the lab; nobody has played a toll gate for real.
   The bot walks into all four, so none of them measures as inert, but their
@@ -180,7 +252,7 @@ and unit tests.
   gold sink and the equipment ceiling both changed in the same release as the
   pact, and nothing has separated the two.
 
-### 0a. Presentation loose ends (from before this branch)
+### 4. Presentation loose ends
 
 The art pass is finished and its first round of fixes is in: the bosses hold
 their wind-ups and land signatures, targeting marks legal targets instead of
@@ -235,7 +307,14 @@ What is left, all small:
   be any frog — the hand and the coin crest are what make it the Miser. The
   Acolyte's dark mantle sinks into the dark back wall in colour.
 
-### 1. The Vanguard/Warden gap is now a ceiling problem
+## Older analysis, kept for the reasoning
+
+The four sections below were written when the game was one or two floors, two
+bosses and no Ultimates. The measurements in them are superseded by
+[BALANCE.md](BALANCE.md) — read them for how a question was answered, not for
+what is true now. The Reaver outlier they chase was fixed; see §2.
+
+### 5. The Vanguard/Warden gap is a ceiling problem
 
 Supplies took the Vanguard gap from +17 to +11 and the Warden's from +21 to
 +17, and every point came from lifting parties that field neither: parties with
@@ -250,7 +329,7 @@ lever is not healing. Consider whether the boss layer should have an objective
 that a healer specifically cannot answer, the way the Strongbox is one that a
 tank cannot.
 
-### 2. Two-hero parties still trail, and the container was not why
+### 6. Two-hero parties still trail, and the container was not why
 
 **Answered, 2026-09-12, by measuring it.** The runner now records where every
 lost run ended (`lostAt`, printed per party size under `--matrix`). At every
@@ -278,7 +357,7 @@ cause. Whatever is hurting duos is somewhere else, and the next person should
 measure before designing. Start by splitting duo losses by chamber type rather
 than assuming the boss.
 
-### 3. Economy
+### 7. Economy
 
 Supplies are the gold sink the notebook wanted, and mean final treasury fell
 from 253 to 245 — barely. Parties still reach the boss with 50–95 gold in hand.
@@ -287,7 +366,7 @@ House, so the Miser's shield remains a penalty on hoarding rather than a
 decision on the route. A supply seller somewhere other than an exchange would
 fix both.
 
-### 4. Reliability, continued
+### 8. Reliability, continued
 
 The concurrency model, room expiry, idle disconnection and creation limits are
 done and documented in `NETWORK_PROTOCOL.md`. What is left before strangers
@@ -332,29 +411,66 @@ knows nothing about sides, so an enemy's strike travels towards negative x.
 The first three creatures got this backwards and lunged away from the party;
 a test now holds every rig to its side.
 
-**Save compatibility is deliberate.** Rooms without `combatVersion: 2` keep
-legacy skills, intentions, generation, flat revival prices and unbounded combat,
-never see the upgrade or mentor phases, get bosses with no objectives, and are
-never granted a supply action. Schema and content versions remain 1.
+**Save compatibility is deliberate, and there are now six flags.** Rooms
+without `combatVersion: 2` keep legacy skills, intentions, generation, flat
+revival prices and unbounded combat, never see the upgrade or mentor phases,
+get bosses with no objectives, and are never granted a supply action. On top of
+that: no `ultimateVersion` means no charge meter and the old boss price; no
+`bossVersion` means two floors with fixed bosses, the old enemy damage and
+purchased revival; no `trainingVersion` means one class per training ground; no
+`factionVersion` means the Cistern and the Archive draw the foundry's
+encounters and no creature uses a `behavior`. A golden test pins the legacy
+path's dice. Schema and content versions remain 1.
+
+**Enemies choose by rules, and the engine names no creature.** A creature's
+`behavior` is content (`EnemyDef.behavior`, evaluated by
+`src/engine/intents.ts`); a test fails if any engine, shared or server file
+mentions a faction creature by id. Anything that needs "this creature is
+special" belongs in a field on the definition, as `prefers`, `targets`,
+`hoard`, `clock`, `broken`, `busy`, `starts` and `tethered` already are.
+
+**Telemetry is a measurement probe, not a game system.** `engine/telemetry.ts`
+reports what happened to whoever attaches a sink (only `scripts/simulate.ts`
+does, behind `--telemetry`). Nothing it reports changes state, logs or beats,
+so a replay is identical with it on.
 
 ## How to check anything
 
 ```sh
 npm run build
 npm test
-npm run simulate -- 25 --matrix                         # all 486 combinations
-npm run simulate -- 25 --matrix --policy=tactical,hoard  # ...and the hoarder
+npm run simulate -- 25 --matrix                          # all 486 combinations
+npm run simulate -- 8 --matrix --sample=2 --policy=tactical --telemetry
+npm run simulate -- 20 --matrix --sample=1 --size=2 --policy=tactical
 npm run dev:server                                       # then npm run test:network
 npm run test:browser                                     # PW_PORT=… to run two checkouts at once
 ```
+
+The three simulate lines are the ones this project actually uses: the full
+matrix when a change could touch anything, every second composition at 8 seeds
+(1,944 runs, about two minutes) for a balance comparison, and duos alone at 20
+seeds (720 runs) whenever a duo number looks like it moved — at 144 runs a
+seven-point duo swing is noise, and has been mistaken for a regression.
+
+Flags worth knowing: `--telemetry` prints what every creature and encounter
+did; `--factions=off`, `--bosses=legacy` and `--ultimates=off` play the builds
+from before each of those waves, which is how "on against off" is measured;
+`--hit=`, `--pool=`, `--pact=` and `--policy=hoard` reach the rest.
 
 Run `npm test` on its own. Its simulation tests are CPU-bound and time out
 when the browser suite is running beside them; that is starvation, not a
 regression, and a rerun on a quiet machine settles it.
 
-The Battle Lab (`/dev/bosses.html`) stages any fight by URL: `boss=collector`
-or `boss=miser`, or `encounter=<id>` for any ordinary encounter, with
-`party=2|3|4`, `heroes=a,b,c,d`, `stage=` and `motion=1&tempo=0.25`.
+The Battle Lab (`/dev/bosses.html`) stages any fight by URL: `boss=` any of
+the six, or `encounter=<id>` for any of the 26 authored encounters, with
+`party=2|3|4`, `heroes=a,b,c,d`, `stage=`, `intro=1` for a boss entrance, and
+`motion=1&tempo=0.25`. The Ultimate lab (`/dev/ultimates.html`) stages any of
+the 32 films, and `film=intro` stages a boss's entrance there.
+
+Captures: `scripts/capture-encounter.ts <out> <port> <encounter>[:size][:stage]`
+for formations, `scripts/capture-ultimate.ts` for films (`SHEET=` tiles a
+contact sheet), `scripts/intro-levels.ts <boss>` measures an intro's sound
+levels, and `scripts/profile-ultimate.ts` its frame times.
 
 To compare a change against a previous commit, put a worktree beside the repo,
 symlink `node_modules`, and copy `scripts/policy.ts` across so both builds are
@@ -368,15 +484,18 @@ number from that run is worthless. It also counts supplies bought and used.
 ### Five traps, recorded because each one cost real time
 
 **An instrument that cannot reach a system reports that the system does
-nothing.** This has now happened five times: the route branching hid evolutions;
+nothing.** This has now happened six times: the route branching hid evolutions;
 the tactical bot arrives broke, so a treasury-scaled shield read as inert until
 the `hoard` policy was written; the bot knew only the Warden's Unravel by name,
 so the Broker's Liquidate did not count as counterplay; and supplies mixed into
 the general lot pool were bought once a run and moved nothing until the tray and
 the case made them reachable; and both policies hard-coded the Unbroken pact,
 so the Gilded pact was never once measured and stayed strictly worse for as
-long as it existed. Whenever a new system measures as doing nothing, suspect
-the instrument first — and when a system has never been measured _at all_,
+long as it existed; and the enemy telemetry read a debt's writer off the status
+_after_ the status was lifted, so every debt that came due was credited to
+nobody and the mechanic measured as dead across 1,944 runs. Whenever a new system measures as doing nothing, check three things in
+order — does the bot understand it, does the encounter create the situation,
+does the probe count it — and suspect the instrument first — and when a system has never been measured _at all_,
 that is the same failure wearing a better disguise.
 
 **Never read a fight's history out of `s.logs`.** The chronicle is capped at 100
