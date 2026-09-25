@@ -28,7 +28,7 @@ export function resumableCredentials(
 }
 /**
  * Tell the room this player is leaving. Before the run starts it gives their
- * seat back; after, the hero stays with the party. Best effort: a room that
+ * seat back; after, their hero leaves the run too. Best effort: a room that
  * has expired, or a network that is down, leaves nothing to undo.
  */
 export function leaveRoom(credentials: Credentials) {
@@ -105,7 +105,8 @@ export function useRoom(credentials: Credentials | null) {
           setConnection("superseded");
           return;
         }
-        if (e.code === 4002) {
+        // 4004, not 4002: the idle sweep closes with 4002 and means "reconnect".
+        if (e.code === 4004) {
           setConnection("left");
           return;
         }

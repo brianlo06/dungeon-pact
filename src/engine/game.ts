@@ -23,6 +23,7 @@ import {
   enterForge,
   proposePurchase,
   approvePurchase,
+  decidePurchase,
 } from "./shop";
 import { continueEvent, enterEvent, eventChoices, resolveEvent } from "./luck";
 import {
@@ -112,19 +113,131 @@ export function addPlayer(s: RunState, id: string, name: string) {
   log(s, `${name} joins the pact.`);
 }
 /**
- * A player who leaves before the run starts gives their seat back. Left in
- * the room they would hold it and, never ready, stop anyone starting. Once the
- * run has begun a hero stays with the party, so a departure changes nothing.
+ * A player leaves the pact. Before the run starts they give their seat back;
+ * left in the room they would hold it and, never ready, stop anyone starting.
+ *
+ * Once the run has begun the hero walks out with them. Every party decision
+ * waits on the whole party, so a hero kept on after their player had gone
+ * held everyone else at the next vote forever. Anything that named them is
+ * cleared, and whatever the rest were waiting on is settled: the votes
+ * already cast may now be enough. The treasury stays with the party; the
+ * hero's gear goes with them. A finished run is left whole, so the results
+ * still show everyone who played it.
+ *
  * Returns whether the player was removed.
  */
-export function removePlayer(s: RunState, id: string) {
-  if (s.phase !== "LOBBY") return false;
+export function removePlayer(s: RunState, id: string, now = Date.now()) {
+  if (s.phase === "COMPLETE") return false;
   const i = s.players.findIndex((p) => p.id === id);
   if (i < 0) return false;
   const [p] = s.players.splice(i, 1);
   s.revision++;
-  log(s, `${p.name} leaves the pact.`);
+  if (s.phase === "LOBBY") {
+    log(s, `${p.name} leaves the pact.`);
+    return true;
+  }
+  log(s, `${p.name} leaves the pact. The party presses on without them.`);
+  if (!s.players.length) return true;
+  delete s.votes[id];
+  delete s.plans[id];
+  if (s.ultimates) delete s.ultimates[id];
+  // A plan aimed at the leaver would only fizzle; hand the choice back.
+  for (const [who, plan] of Object.entries(s.plans))
+    if (plan.target === id) delete s.plans[who];
+  for (const [who, plan] of Object.entries(s.ultimates ?? {}))
+    if (plan.target === id) delete s.ultimates![who];
+  if (s.serviceVote) delete s.serviceVote.votes[id];
+  if (s.trades) s.trades = s.trades.filter((t) => t.from !== id && t.to !== id);
+  if (s.trained) s.trained = s.trained.filter((x) => x !== id);
+  if (s.shrine) s.shrine.answered = s.shrine.answered.filter((x) => x !== id);
+  if (s.shop) {
+    s.shop.leaving = s.shop.leaving.filter((x) => x !== id);
+    if (s.shop.proposal?.recipient === id) {
+      delete s.shop.proposal;
+      s.shop.sequence++;
+    } else if (s.shop.proposal) delete s.shop.proposal.votes[id];
+  }
+  s.tieCursor %= s.players.length;
+  // Settling runs the same rules a vote would. If one of them refuses, the
+  // hero has still gone and the party finishes the decision by hand.
+  try {
+    const settled = structuredClone(s);
+    settle(settled, id);
+    for (const key of Object.keys(s) as (keyof RunState)[])
+      if (!(key in settled)) delete s[key];
+    Object.assign(s, settled);
+  } catch {
+    // Unsettled is still consistent: nothing the leaver held remains.
+  }
+  // Settling can end the run; the narrowing above predates it.
+  if ((s.phase as RunState["phase"]) === "COMPLETE" && !s.endedAt)
+    s.endedAt = now;
   return true;
+}
+/** Finishes whichever party decision the remaining heroes have already made. */
+function settle(s: RunState, left: string) {
+  switch (s.phase) {
+    case "PACT":
+    case "MAP":
+    case "EVENT":
+    case "CAMP":
+    case "TOLL": {
+      if (s.serviceVote) settleService(s);
+      if (s.serviceVote) return;
+      const result = voteResult(s);
+      if (result) finishVote(s, result);
+      return;
+    }
+    case "COMBAT": {
+      const up = standing(s);
+      if (!up.length) {
+        s.phase = "COMPLETE";
+        s.outcome = "defeat";
+        log(s, "The price of the pact claims its last hero.");
+      } else if (up.every((x) => s.plans[x.id])) resolveRound(s);
+      return;
+    }
+    case "UPGRADE":
+      settleUpgrade(s);
+      return;
+    case "MENTOR":
+      settleMentor(s);
+      return;
+    case "SHRINE":
+      if (s.shrine && s.shrine.answered.length >= s.players.length) {
+        delete s.shrine;
+        s.phase = "MAP";
+      }
+      return;
+    case "SHOP":
+      decidePurchase(s);
+      if (!s.shop!.proposal && s.shop!.leaving.length >= s.players.length) {
+        delete s.shop;
+        s.phase = "MAP";
+      }
+      return;
+    case "AUCTION": {
+      // Only rooms from before the shop still hold an auction. A lot the
+      // leaver was bidding on or buying is withdrawn rather than re-run.
+      const a = s.auction;
+      if (!a || a.stage === "sold") return;
+      const involved = a.active.includes(left) || a.owner === left;
+      a.active = a.active.filter((x) => x !== left);
+      a.acted = a.acted.filter((x) => x !== left);
+      delete a.approvals[left];
+      if (a.stage === "interest") {
+        if (a.acted.length >= s.players.length) nominate(s);
+      } else if (involved) {
+        a.stage = "sold";
+        a.owner = undefined;
+        log(s, "The lot is withdrawn.");
+      } else if (a.stage === "approval") {
+        const votes = Object.values(a.approvals);
+        if (votes.filter(Boolean).length > s.players.length / 2) purchase(s);
+      }
+      return;
+    }
+  }
 }
 /**
  * Camp is one shared decision. Training used to be free, which made it the
@@ -284,6 +397,48 @@ function finishVote(s: RunState, result: string) {
     log(s, `Camp choice: ${result}.`);
     s.phase = "MAP";
   }
+}
+/** Buys or drops the proposed provision once the votes cast decide it. */
+function settleService(s: RunState) {
+  const proposal = s.serviceVote;
+  if (!proposal) return;
+  const yes = Object.values(proposal.votes).filter(Boolean).length;
+  const no = Object.values(proposal.votes).filter((v) => !v).length;
+  if (yes > s.players.length / 2) {
+    const service = services.find((x) => x.id === proposal.id)!;
+    spend(s, service.price);
+    if ("supply" in service)
+      for (const hero of s.players) hero.items.push(service.supply);
+    if ("heal" in service)
+      for (const hero of s.players)
+        if (hero.hp > 0) hero.hp = Math.min(hero.maxHp, hero.hp + service.heal);
+    if ("relic" in service)
+      s.teamRelics = [...(s.teamRelics ?? []), service.relic];
+    log(s, `The pact buys ${service.name}.`);
+    delete s.serviceVote;
+  } else if (no >= Math.ceil(s.players.length / 2)) {
+    log(s, "The pact declines the provisions.");
+    delete s.serviceVote;
+  }
+}
+/** Applies every hero's upgrade once the last one has chosen. */
+function settleUpgrade(s: RunState) {
+  if (!s.players.every((x) => s.votes[x.id])) return;
+  for (const x of s.players) {
+    const choice = s.votes[x.id];
+    if (choice !== "none") x.upgrades = [...(x.upgrades ?? []), choice];
+  }
+  s.votes = {};
+  s.phase = "REWARD";
+  log(s, "New instincts settle in. The route waits.");
+}
+/** Closes the training ground once every hero has answered the mentor. */
+function settleMentor(s: RunState) {
+  if (!s.players.every((x) => (s.trained ?? []).includes(x.id))) return;
+  s.mentorId = null;
+  s.mentorClass = null;
+  s.trained = [];
+  s.phase = "MAP";
 }
 /** Atomic reducer: invalid intents never mutate caller state. Clock is supplied by transport. */
 export function reduce(
@@ -460,25 +615,7 @@ export function reduce(
       if (!proposal || p.id in proposal.votes)
         throw Error("No unanswered provision vote");
       proposal.votes[p.id] = intent.approve;
-      const yes = Object.values(proposal.votes).filter(Boolean).length;
-      const no = Object.values(proposal.votes).filter((v) => !v).length;
-      if (yes > s.players.length / 2) {
-        const service = services.find((x) => x.id === proposal.id)!;
-        spend(s, service.price);
-        if ("supply" in service)
-          for (const hero of s.players) hero.items.push(service.supply);
-        if ("heal" in service)
-          for (const hero of s.players)
-            if (hero.hp > 0)
-              hero.hp = Math.min(hero.maxHp, hero.hp + service.heal);
-        if ("relic" in service)
-          s.teamRelics = [...(s.teamRelics ?? []), service.relic];
-        log(s, `The pact buys ${service.name}.`);
-        delete s.serviceVote;
-      } else if (no >= Math.ceil(s.players.length / 2)) {
-        log(s, "The pact declines the provisions.");
-        delete s.serviceVote;
-      }
+      settleService(s);
       break;
     }
     case "answerTrade": {
@@ -525,15 +662,7 @@ export function reduce(
       if (!upgradeOffer(p).some((u) => u.id === intent.choice))
         throw Error("That branch is not on offer");
       s.votes[p.id] = intent.choice;
-      if (s.players.every((x) => s.votes[x.id])) {
-        for (const x of s.players) {
-          const choice = s.votes[x.id];
-          if (choice !== "none") x.upgrades = [...(x.upgrades ?? []), choice];
-        }
-        s.votes = {};
-        s.phase = "REWARD";
-        log(s, "New instincts settle in. The route waits.");
-      }
+      settleUpgrade(s);
       break;
     }
     case "train": {
@@ -574,12 +703,7 @@ export function reduce(
         }
       } else log(s, `${p.name} declines the ${teaching.name}.`);
       s.trained = [...(s.trained ?? []), p.id];
-      if (s.players.every((x) => (s.trained ?? []).includes(x.id))) {
-        s.mentorId = null;
-        s.mentorClass = null;
-        s.trained = [];
-        s.phase = "MAP";
-      }
+      settleMentor(s);
       break;
     }
     case "continue":

@@ -43,6 +43,7 @@ export default function App() {
     new URLSearchParams(location.search).get("room") ?? "",
   );
   const [busy, setBusy] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [inventory, setInventory] = useState(false);
   useEffect(() => {
@@ -119,17 +120,30 @@ export default function App() {
       setBusy(false);
     }
   }
-  function leave() {
-    if (credentials) leaveRoom(credentials);
+  /** Lets go of the room on this device only; the hero stays in it. */
+  function forget() {
     localStorage.removeItem("pact.session");
     setCredentials(null);
+    setConfirmLeave(false);
     history.replaceState(null, "", location.pathname);
+  }
+  function leave() {
+    if (credentials) leaveRoom(credentials);
+    forget();
+  }
+  /**
+   * Leaving mid-run takes the hero out of the run for good, so it is asked
+   * first. A lobby seat or a finished run costs nothing to give up.
+   */
+  function requestLeave() {
+    const phase = room.state?.phase;
+    if (phase === "LOBBY" || phase === "COMPLETE") leave();
+    else setConfirmLeave(true);
   }
   // Left from another tab: this one lets go too instead of reconnecting.
   useEffect(() => {
     if (room.connection !== "left") return;
-    localStorage.removeItem("pact.session");
-    setCredentials(null);
+    forget();
   }, [room.connection]);
   const combatExit = useCombatExit(room.state);
   const s = combatExit.state;
@@ -182,8 +196,8 @@ export default function App() {
               <button onClick={() => setInventory(!inventory)}>Builds</button>
             </>
           )}
-          {s?.phase === "LOBBY" && (
-            <button onClick={leave}>Leave pact</button>
+          {s && s.phase !== "COMPLETE" && (
+            <button onClick={requestLeave}>Leave pact</button>
           )}
           <button
             aria-label="Open settings"
@@ -262,7 +276,11 @@ export default function App() {
               : "Finding your pact…"}
           </h1>
           <p>Rejoining the same room restores your hero.</p>
-          <button onClick={leave}>Return to hall</button>
+          {room.connection === "superseded" ? (
+            <button onClick={forget}>Return to hall</button>
+          ) : (
+            <button onClick={requestLeave}>Leave pact</button>
+          )}
         </main>
       ) : (
         <>
@@ -276,6 +294,7 @@ export default function App() {
                 {...props!}
                 reducedMotion={settings.reducedMotion}
                 cinematics={settings.cinematics}
+                onLeave={requestLeave}
                 onSettled={combatExit.ending ? combatExit.finish : undefined}
               />
             )}{" "}
@@ -332,7 +351,11 @@ export default function App() {
                   : "Reconnecting…"}
               </strong>
               <p>Your hero and treasury remain in the room.</p>
-              <button onClick={leave}>Return to hall</button>
+              {room.connection === "superseded" ? (
+                <button onClick={forget}>Return to hall</button>
+              ) : (
+                <button onClick={requestLeave}>Leave pact</button>
+              )}
             </div>
           )}
         </>
@@ -369,6 +392,31 @@ export default function App() {
                 )}
               </div>
             ))}
+          </section>
+        </div>
+      )}
+      {confirmLeave && credentials && (
+        <div className="modal-backdrop">
+          <section
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Leave the run"
+          >
+            <h2>Leave the run?</h2>
+            <p>
+              Your hero walks out for good and takes their gear. The party keeps
+              the treasury and carries on without you. You cannot rejoin this
+              run.
+            </p>
+            <div className="leave-actions">
+              <button autoFocus onClick={() => setConfirmLeave(false)}>
+                Stay
+              </button>
+              <button className="primary" onClick={leave}>
+                Leave pact
+              </button>
+            </div>
           </section>
         </div>
       )}

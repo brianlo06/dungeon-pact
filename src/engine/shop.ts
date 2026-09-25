@@ -127,6 +127,16 @@ export function approvePurchase(s: RunState, player: string, approve: boolean) {
   if (!offer || player in offer.votes)
     throw Error("No unanswered purchase proposal");
   offer.votes[player] = approve;
+  decidePurchase(s);
+}
+/**
+ * Settles the open proposal if its votes already decide it. Also run when a
+ * hero leaves, since a smaller party can mean the votes cast are enough.
+ */
+export function decidePurchase(s: RunState) {
+  const shop = s.shop!,
+    offer = shop.proposal;
+  if (!offer) return;
   const yes = Object.values(offer.votes).filter(Boolean).length;
   const no = Object.values(offer.votes).filter((v) => !v).length;
   if (

@@ -281,6 +281,14 @@ small {
   display: flex;
   justify-content: space-between;
 }
+.leave-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.leave-actions button {
+  flex: 1;
+}
 .or {
   text-align: center;
   font-size: 10px;

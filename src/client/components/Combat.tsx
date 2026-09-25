@@ -100,6 +100,7 @@ export function Combat({
   bossIntros = true,
   lab,
   onSettled,
+  onLeave,
 }: {
   s: Snapshot;
   send: (i: Intent) => void;
@@ -113,6 +114,11 @@ export function Combat({
    */
   bossIntros?: boolean;
   onSettled?: () => void;
+  /**
+   * Asks to leave the pact. The page's top bar is hidden in a fight, so this
+   * strip is the only place a way out can be seen.
+   */
+  onLeave?: () => void;
   /** The Battle Lab's hooks into the stage. Never set in the game. */
   lab?: LabHooks;
 }) {
@@ -594,6 +600,11 @@ export function Combat({
                 </button>
               ))}
             </span>
+          )}
+          {onLeave && (
+            <button className="strip-history" onClick={onLeave}>
+              Leave
+            </button>
           )}
           <button
             className="strip-history"

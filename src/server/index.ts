@@ -74,7 +74,21 @@ export class PactRoom extends DurableObject<Env> {
       new WebSocketRequestResponsePair("ping", "pong"),
     );
   }
+  /**
+   * Whether this room still holds a run. A deleted room has lost its tables
+   * as well as its rows until the object is next constructed.
+   */
+  private exists() {
+    try {
+      return (
+        this.ctx.storage.sql.exec("SELECT id FROM run").toArray().length > 0
+      );
+    } catch {
+      return false;
+    }
+  }
   private read() {
+    if (!this.exists()) throw Error("Room not found");
     const rows = this.ctx.storage.sql
       .exec<{ state: string }>("SELECT state FROM run WHERE id=1")
       .toArray();
@@ -210,19 +224,20 @@ export class PactRoom extends DurableObject<Env> {
     return { player: id, token: bearer, room: s.room };
   }
   /**
-   * A player leaves the room. Before the run starts their seat is given back
-   * and their token stops working; after it, the hero stays with the party and
-   * only this device lets go. Either way their open sockets are closed with
-   * 4002, which the client treats as final rather than reconnecting.
+   * A player leaves the room: their hero goes (see `removePlayer`), their token
+   * stops working, and their open sockets are closed with 4004, which the
+   * client treats as final rather than reconnecting. 4004 and not 4002: the
+   * idle sweep closes with 4002 and expects a reconnect, and sharing the code
+   * sent every idle player back to the hall. The last one out deletes the room.
    */
   async leave(bearer: string) {
     const hash = await digest(bearer);
     const session = this.ctx.storage.sql
       .exec<Session>("SELECT * FROM sessions WHERE hash=?", hash)
       .toArray()[0];
-    if (!session) return { left: false };
+    if (!session || !this.exists()) return { left: false };
     const s = this.read();
-    const removed = removePlayer(s, session.player);
+    const removed = removePlayer(s, session.player, Date.now());
     if (removed)
       this.ctx.storage.transactionSync(() => {
         this.save(s);
@@ -236,7 +251,13 @@ export class PactRoom extends DurableObject<Env> {
         );
       });
     for (const ws of this.ctx.getWebSockets(session.player))
-      ws.close(4002, "Left the pact");
+      ws.close(4004, "Left the pact");
+    if (removed && !s.players.length) {
+      for (const ws of this.ctx.getWebSockets())
+        ws.close(4003, "This room has expired.");
+      await this.ctx.storage.deleteAll();
+      return { left: true };
+    }
     if (removed) {
       await this.touch();
       this.publish(s);
@@ -387,7 +408,8 @@ export class PactRoom extends DurableObject<Env> {
     } catch {
       // Already closed; nothing to answer.
     }
-    this.publish(this.read());
+    // The last player out deletes the room before their socket finishes closing.
+    if (this.exists()) this.publish(this.read());
   }
   webSocketError(ws: WebSocket) {
     ws.close(1011, "Connection error");

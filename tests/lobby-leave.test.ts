@@ -28,7 +28,7 @@ it("frees the seat for someone else in a full room", () => {
   expect(s.players.map((p) => p.id)).toEqual(["a", "c", "d", "e"]);
 });
 
-it("keeps a hero with the party once the run has started", () => {
+it("takes the hero out of the run once it has started", () => {
   let s = createRun("LEAVEROOM", "test-leave-run");
   addPlayer(s, "host", "Host");
   addPlayer(s, "friend", "Friend");
@@ -36,9 +36,9 @@ it("keeps a hero with the party once the run has started", () => {
   s = reduce(s, "friend", { type: "ready", ready: true }, 0);
   s = reduce(s, "host", { type: "start" }, 0);
   const revision = s.revision;
-  expect(removePlayer(s, "friend")).toBe(false);
-  expect(s.players).toHaveLength(2);
-  expect(s.revision).toBe(revision);
+  expect(removePlayer(s, "friend")).toBe(true);
+  expect(s.players.map((p) => p.id)).toEqual(["host"]);
+  expect(s.revision).toBeGreaterThan(revision);
 });
 
 it("ignores a player who is not in the room", () => {
