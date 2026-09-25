@@ -37,6 +37,53 @@ export interface FanAbility {
   cost: string;
 }
 
+/**
+ * Keeps an ability's description on screen. It opens away from the hero, on
+ * the side the fan was placed; but the fan is placed to clear the figures, not
+ * to leave room for a 200px note beyond it, so a fan opened toward the edge of
+ * the stage pushed the note off it. Measured on hover, since the camera's zoom
+ * decides how much room there is. A note that does not fit on its own side
+ * goes past the far edge of the whole fan instead, and failing that is held
+ * inside the stage.
+ */
+function fitDetail(button: HTMLElement, fan: HTMLElement | null) {
+  const detail = button.nextElementSibling as HTMLElement | null;
+  const slip = button.parentElement;
+  const stage = button.closest(".stage");
+  if (!detail || !slip || !fan) return;
+  for (const k of ["left", "right", "top", "bottom", "transform"] as const)
+    detail.style[k] = "";
+  const margin = 8;
+  const clip = stage?.getBoundingClientRect();
+  const minX = Math.max(margin, (clip?.left ?? 0) + margin);
+  const maxX = Math.min(innerWidth, clip?.right ?? innerWidth) - margin;
+  const minY = Math.max(margin, (clip?.top ?? 0) + margin);
+  const maxY = Math.min(innerHeight, clip?.bottom ?? innerHeight) - margin;
+  const r = detail.getBoundingClientRect();
+  const s = slip.getBoundingClientRect();
+  // The camera scales the world; styles are written in its unscaled pixels.
+  const scale = s.width / (slip.offsetWidth || s.width) || 1;
+  const beside = !slip.closest(".fan-common");
+  let left = r.left;
+  if (r.left < minX || r.right > maxX) {
+    if (beside) {
+      const b = fan.getBoundingClientRect();
+      left =
+        r.left < minX ? b.right + 10 * scale : b.left - 10 * scale - r.width;
+    }
+    left = Math.min(Math.max(left, minX), maxX - r.width);
+  }
+  const shiftY = Math.max(minY - r.top, Math.min(0, maxY - r.bottom));
+  if (left === r.left && !shiftY) return;
+  detail.style.right = "auto";
+  detail.style.transform = "none";
+  detail.style.left = `${(left - s.left) / scale}px`;
+  if (shiftY) {
+    detail.style.bottom = "auto";
+    detail.style.top = `${(r.top + shiftY - s.top) / scale}px`;
+  }
+}
+
 export function ActionFan({
   me,
   place,
@@ -225,6 +272,14 @@ export function ActionFan({
               <li
                 key={o.ability.id}
                 className="fan-slip"
+                // A blocked action's button is disabled, and a disabled button
+                // gets no mouse events; its slip still does.
+                onMouseEnter={(e) =>
+                  fitDetail(
+                    e.currentTarget.firstElementChild as HTMLElement,
+                    block.current,
+                  )
+                }
                 style={
                   (mode === "target" ? {} : cell(i)) as React.CSSProperties
                 }
@@ -239,6 +294,7 @@ export function ActionFan({
                   aria-selected={isChosen}
                   disabled={disabled || !!o.blocked}
                   onClick={() => onChoose(o.ability.id)}
+                  onFocus={(e) => fitDetail(e.currentTarget, block.current)}
                   title={o.ability.description}
                 >
                   <strong>{o.ability.name}</strong>
@@ -261,6 +317,14 @@ export function ActionFan({
               <li
                 key={o.ability.id}
                 className="fan-slip"
+                // A blocked action's button is disabled, and a disabled button
+                // gets no mouse events; its slip still does.
+                onMouseEnter={(e) =>
+                  fitDetail(
+                    e.currentTarget.firstElementChild as HTMLElement,
+                    block.current,
+                  )
+                }
                 data-common=""
                 data-chosen={o.ability.id === chosen.id ? "" : undefined}
                 data-blocked={o.blocked ? "" : undefined}
@@ -271,6 +335,7 @@ export function ActionFan({
                   aria-selected={o.ability.id === chosen.id}
                   disabled={disabled || !!o.blocked}
                   onClick={() => onChoose(o.ability.id)}
+                  onFocus={(e) => fitDetail(e.currentTarget, block.current)}
                   title={`${o.ability.name} — ${o.ability.description}`}
                 >
                   <strong>{o.ability.name}</strong>
